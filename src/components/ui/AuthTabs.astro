@@ -1,0 +1,55 @@
+---
+interface Tab {
+  label: string;
+  href: string;
+}
+
+interface Props {
+  tabs: Tab[];
+  active: string;
+}
+
+const { tabs, active } = Astro.props;
+---
+
+<nav class="auth-tabs" role="tablist">
+  {tabs.map((tab) => (
+    <a
+      href={tab.href}
+      role="tab"
+      aria-selected={tab.href === active}
+      class:list={['auth-tab', { 'auth-tab--active': tab.href === active }]}
+    >
+      {tab.label}
+    </a>
+  ))}
+</nav>
+
+<style>
+  .auth-tabs {
+    display: flex;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 2rem;
+  }
+
+  .auth-tab {
+    flex: 1;
+    padding-bottom: 0.75rem;
+    text-align: center;
+    border-bottom: 3px solid transparent;
+    font-weight: 700;
+    font-size: 0.875rem;
+    color: var(--text-muted);
+    text-decoration: none;
+    transition: color 0.2s, border-color 0.2s;
+  }
+
+  .auth-tab:hover {
+    color: var(--text-main);
+  }
+
+  .auth-tab--active {
+    color: var(--primary);
+    border-bottom-color: var(--primary);
+  }
+</style>

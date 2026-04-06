@@ -1,0 +1,89 @@
+---
+interface Props {
+  title: string;
+}
+
+const { title } = Astro.props;
+---
+
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="robots" content="noindex" />
+    <title>{title} — Maggy Flowers</title>
+
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800;900&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&display=swap"
+      rel="stylesheet"
+    />
+  </head>
+  <body>
+    <slot />
+  </body>
+</html>
+
+<style is:global>
+  /* ── Design tokens ──────────────────────────────────────────────────── */
+  :root {
+    --primary:       #eb4763;
+    --primary-dark:  #d63a54;
+    --bg:            #f8f6f6;
+    --bg-light:      #f8f6f6;
+    --bg-dark:       #211114;
+    --surface:       #ffffff;
+    --border:        #e5dcdd;
+    --text-main:     #181112;
+    --text-muted:    #886369;
+
+    --radius-sm: 0.25rem;
+    --radius:    0.5rem;
+    --radius-lg: 0.75rem;
+  }
+
+  /* ── Reset mínimo ───────────────────────────────────────────────────── */
+  *, *::before, *::after {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+  }
+
+  html, body {
+    height: 100%;
+  }
+
+  body {
+    font-family: 'Be Vietnam Pro', sans-serif;
+    font-size: 1rem;
+    color: var(--text-main);
+    background: var(--bg);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    overflow: hidden;
+  }
+
+  /* Material Symbols: filled style */
+  .material-symbols-outlined {
+    font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+    font-size: 1.5rem;
+    line-height: 1;
+    vertical-align: middle;
+    user-select: none;
+  }
+</style>
+
+<style>
+  /* Layout raíz del body: pantalla completa dividida */
+  :global(body) {
+    display: flex;
+    flex-direction: column;
+  }
+</style>

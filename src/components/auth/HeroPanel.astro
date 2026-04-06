@@ -1,0 +1,193 @@
+---
+// Panel izquierdo decorativo del layout de autenticación
+---
+
+<aside class="hero-panel">
+  <div class="hero-bg">
+    <img
+      src="https://lh3.googleusercontent.com/aida-public/AB6AXuCjSe0_Qz6_SN8vKCVuFwTExt2M0w1wiF_Yg7YsXCnG2_JNpq1VS4Q6oD3DcwFJ_CyxqK9QhQUQBqmcstzzYb-pdGI-knucx9G7SPBnTRDMf_5VvwCEUcpWWtEwPYIAUJaSxCpWVhwO1hj3Cb6O1OTJSkCbRJrF2uIeNVDncz7So3lB6yWvVQ_M33YPUJfStR-0PRDtfDdz4gtxWubxJVjoSa14Sn3KGcrkt18cq00BYpI1Z4lSOj_LCWU_ehKK1IaYcyt54NVnsaA"
+      alt="Arreglo floral elegante con rosas rosadas"
+      class="hero-img"
+      loading="eager"
+    />
+    <div class="hero-overlay"></div>
+    <div class="hero-gradient"></div>
+  </div>
+
+  <div class="hero-content">
+    <div class="hero-logo">
+      <span class="material-symbols-outlined logo-icon">local_florist</span>
+      <span class="logo-name">Maggy Flowers</span>
+    </div>
+
+    <h1 class="hero-title">Descubre el arte floral</h1>
+    <p class="hero-desc">
+      Únete a nuestra comunidad de apasionados por las flores.
+      Aprende técnicas exclusivas y crea arreglos inolvidables.
+    </p>
+
+    <div class="social-proof">
+      <div class="avatars">
+        <img
+          src="https://lh3.googleusercontent.com/aida-public/AB6AXuBtCF34oXfbOelUGT14XU6eS6Bx5ViNYzYuHOG-2vElTg-ZfGxfCdzzGk6vloZ98gFI1eKhuBRcid2lIm1lyHSQ-_VvXeKnrMwAV4KmZg6OQX7LZ1g-AreIxtLYt0frmSGMP52zqMJ1yAAISQgd1ehzkHrKjZcsz6vZ2PelyuaigYBef_zpDrJ_EAvnsygemPNvToD3iFCOowF8EgAC7knJ-EvnQE_8Cfebbk78qXjZ5D4JbWKH6zLyA9e9AlAUoXnEDuxx176KFE0"
+          alt="Estudiante"
+          class="avatar"
+        />
+        <img
+          src="https://lh3.googleusercontent.com/aida-public/AB6AXuDav3vuvTX2AzXUEd6deWzrODz-For6Y0o0DjMD2Mxrr5UxPYRmsmq642z_Ob9oEabVHW-u5slnGW0clR6_wkNujBDfx1165QPUmlZSvp2YAIwSAumNfzAbKZAR2ZnsB2lv_ghrYVvAR_MRp3LWAmoxsHDCUPKv0ws64LAf4dtBRqepuS3dPhX-2it4W76CLOsIpNuRdrWXGZe41ns044MnuTcPgTlgna7ZtxiJ1Dp2tieC4YwOlP-DEc98fG4RR8fsUsBFiUmKs_M"
+          alt="Estudiante"
+          class="avatar"
+        />
+        <img
+          src="https://lh3.googleusercontent.com/aida-public/AB6AXuBNy3Z5gUwnxYEZsgMaIflQkFMSGU1n_0tBwnpI68FS9KCDc83ao-kPkIlEcw12GRzNrJWyOWErISBPApb0uNy5PzDC4UR1cJ7rR27jO1qtrFeG50MaBp7-53etnR9S2d3ft-4TUxLn1OpB_D2ZPoTn7e-nbHbKmxvfcNx7u2B5sUlsMJlSfkuhRM3nSVuyCecV0GfGZkSKEtjHBsEkaLPAlpn354510ERvCys8EHbksbx1zbzB9mFZCH90g1dO5XgTlV8kdFjyap8"
+          alt="Estudiante"
+          class="avatar"
+        />
+        <div class="avatar avatar-count">+2k</div>
+      </div>
+      <div class="proof-text">
+        <div class="stars" aria-label="5 estrellas">
+          {'★'.repeat(5)}
+        </div>
+        <span>Estudiantes felices</span>
+      </div>
+    </div>
+  </div>
+</aside>
+
+<style>
+  .hero-panel {
+    display: none;
+    position: relative;
+    overflow: hidden;
+  }
+
+  @media (min-width: 1024px) {
+    .hero-panel {
+      display: flex;
+      width: 50%;
+      align-items: center;
+      justify-content: center;
+    }
+  }
+
+  /* ── Background ── */
+  .hero-bg {
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+  }
+
+  .hero-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    opacity: 0.9;
+  }
+
+  .hero-overlay {
+    position: absolute;
+    inset: 0;
+    background: color-mix(in srgb, var(--primary) 25%, transparent);
+    mix-blend-mode: overlay;
+  }
+
+  .hero-gradient {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(to top, rgba(33, 17, 20, 0.55) 0%, transparent 60%);
+  }
+
+  /* ── Content ── */
+  .hero-content {
+    position: relative;
+    z-index: 10;
+    padding: 3rem;
+    color: white;
+    max-width: 28rem;
+  }
+
+  .hero-logo {
+    display: flex;
+    align-items: center;
+    gap: 0.625rem;
+    margin-bottom: 2.5rem;
+    font-weight: 700;
+    font-size: 1.125rem;
+    letter-spacing: -0.01em;
+  }
+
+  .logo-icon {
+    font-size: 1.75rem;
+  }
+
+  .hero-title {
+    font-size: 2.75rem;
+    font-weight: 900;
+    line-height: 1.1;
+    letter-spacing: -0.04em;
+    margin-bottom: 1rem;
+    text-shadow: 0 2px 12px rgba(0 0 0 / 0.3);
+  }
+
+  .hero-desc {
+    font-size: 1.0625rem;
+    line-height: 1.65;
+    opacity: 0.88;
+    text-shadow: 0 1px 4px rgba(0 0 0 / 0.25);
+    margin-bottom: 2rem;
+  }
+
+  /* ── Social proof ── */
+  .social-proof {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+  }
+
+  .avatars {
+    display: flex;
+    align-items: center;
+  }
+
+  .avatar {
+    width: 2.5rem;
+    height: 2.5rem;
+    border-radius: 50%;
+    border: 2px solid white;
+    object-fit: cover;
+    margin-left: -0.625rem;
+  }
+
+  .avatar:first-child {
+    margin-left: 0;
+  }
+
+  .avatar-count {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(255 255 255 / 0.2);
+    backdrop-filter: blur(4px);
+    font-size: 0.6875rem;
+    font-weight: 700;
+  }
+
+  .proof-text {
+    display: flex;
+    flex-direction: column;
+    gap: 0.125rem;
+  }
+
+  .stars {
+    color: #fde047;
+    font-size: 0.8125rem;
+    letter-spacing: 0.05em;
+  }
+
+  .proof-text span {
+    font-size: 0.8125rem;
+    font-weight: 600;
+    opacity: 0.9;
+  }
+</style>
