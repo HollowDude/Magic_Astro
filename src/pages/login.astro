@@ -1,7 +1,7 @@
 ---
 import AuthLayout from '@/layouts/AuthLayout.astro';
 import HeroPanel from '@/components/auth/HeroPanel.astro';
-import LoginForm from '@/components/auth/LoginForm';   // ← .tsx, no .astro
+import LoginForm from '@/components/auth/LoginForm';  
 import { getSession } from '@/services/session.service';
 
 const session = getSession(Astro.cookies);

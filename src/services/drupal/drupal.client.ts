@@ -1,10 +1,15 @@
 /**
  * Cliente HTTP base para el servidor Drupal.
- * Centraliza la URL base, headers comunes y manejo de errores de red,
- * de modo que los servicios no dependan directamente de fetch ni de env vars.
+ *
+ * CAMBIO respecto a la versión anterior:
+ *   Ahora soporta formBody (application/x-www-form-urlencoded) además de JSON,
+ *   necesario para los endpoints OAuth2 (/oauth/token, /oauth/revoke).
+ *
+ *   OAuth2 RFC 6749 exige form-urlencoded en el token endpoint.
+ *   Si mandás JSON, Drupal Simple OAuth responde 400 directamente.
  */
 
-const DRUPAL_BASE_URL = import.meta.env.DRUPAL_BASE_URL;
+const DRUPAL_BASE_URL = import.meta.env.DRUPAL_BASE_URL as string;
 
 if (!DRUPAL_BASE_URL) {
   throw new Error('La variable de entorno DRUPAL_BASE_URL no está definida.');
@@ -12,11 +17,12 @@ if (!DRUPAL_BASE_URL) {
 
 export interface RequestOptions {
   method?: 'GET' | 'POST' | 'PATCH' | 'DELETE';
+  /** Body como JSON (se serializa con JSON.stringify) */
   body?: unknown;
-  /** Headers extra que se fusionan con los por defecto */
+  /** Body como form-urlencoded (para /oauth/token, /oauth/revoke) */
+  formBody?: Record<string, string>;
+  /** Headers extra fusionados con los por defecto */
   headers?: Record<string, string>;
-  /** Cookie de sesión de Drupal para peticiones autenticadas */
-  sessionCookie?: string;
 }
 
 export interface RawResponse<T> {
@@ -27,23 +33,36 @@ export interface RawResponse<T> {
 
 /**
  * Hace una petición a la API de Drupal.
- * Lanza un error si hay fallo de red.
- * Devuelve el body parseado + status + headers para que el servicio decida.
+ * - Si se pasa `formBody`, el Content-Type es application/x-www-form-urlencoded.
+ * - Si se pasa `body`, el Content-Type es application/json.
+ * - Los headers extra (incluido Authorization: Bearer) se fusionan encima.
+ *
+ * Lanza un Error si hay fallo de red (fetch rechazado).
+ * Devuelve status + data parseado para que el servicio decida qué hacer.
  */
 export async function drupalFetch<T = unknown>(
   path: string,
   options: RequestOptions = {},
 ): Promise<RawResponse<T>> {
-  const { method = 'GET', body, headers: extraHeaders = {}, sessionCookie } = options;
+  const { method = 'GET', body, formBody, headers: extraHeaders = {} } = options;
+
+  // Determinamos Content-Type según el tipo de body
+  const isForm = formBody !== undefined;
+  const contentType = isForm ? 'application/x-www-form-urlencoded' : 'application/json';
 
   const headers: Record<string, string> = {
-    'Content-Type': 'application/json',
-    Accept: 'application/json',
-    ...extraHeaders,
+    'Content-Type': contentType,
+    Accept:         'application/json',
+    ...extraHeaders, // aquí pueden llegar Authorization: Bearer, Cookie, etc.
   };
 
-  if (sessionCookie) {
-    headers['Cookie'] = sessionCookie;
+  // Serialización del body
+  let serializedBody: string | undefined;
+  if (isForm && formBody) {
+    // URLSearchParams serializa automáticamente a key=value&key2=value2
+    serializedBody = new URLSearchParams(formBody).toString();
+  } else if (body !== undefined) {
+    serializedBody = JSON.stringify(body);
   }
 
   const url = `${DRUPAL_BASE_URL}${path}`;
@@ -53,21 +72,21 @@ export async function drupalFetch<T = unknown>(
     response = await fetch(url, {
       method,
       headers,
-      body: body !== undefined ? JSON.stringify(body) : undefined,
+      body: serializedBody,
     });
   } catch (networkError) {
     throw new Error(
       `No se pudo conectar con Drupal en ${DRUPAL_BASE_URL}. ` +
-        `Comprueba que el contenedor Docker esté corriendo. (${networkError})`,
+      `Verificá que el servidor esté corriendo. (${networkError})`,
     );
   }
 
-  // Drupal puede devolver texto vacío en algunos endpoints
   const text = await response.text();
   let data: T;
   try {
     data = text ? (JSON.parse(text) as T) : ({} as T);
   } catch {
+    // Algunos endpoints devuelven texto plano (ej: /oauth/revoke devuelve vacío en éxito)
     data = text as unknown as T;
   }
 
