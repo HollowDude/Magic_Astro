@@ -1,0 +1,172 @@
+---
+// src/components/home/CategoriesSection.astro
+
+const categories = [
+  {
+    name: 'Ramos',
+    image: 'https://lh3.googleusercontent.com/aida-public/AB6AXuCmSYYm6DwqmuEvACGvGQMbHXA50Zt6Fhup8LAzyVnercdLUUTewNOdfTzhBk_Szydjrng9MQzgWw6Qis7b1zpo3isorg5byGPvthyKnnmpMQ646X-uPxe7FG3Ds86-_bQ50H5VlwuPI5gGuXk9iVBakZ_WYqdhZeaIeb2FqwW2Te8Td-6B6MKQP8H6b4SwBACoPyg3JKhsxkSJ8IGpy525qVZN7Rtqt0wM2wFlE5HA8x89sO7xOzTg7MIXFAFY3LGRmMs038B8LjM',
+    badge: null,
+    href: '/shop?cat=ramos',
+  },
+  {
+    name: 'Arreglos especiales',
+    image: 'https://lh3.googleusercontent.com/aida-public/AB6AXuCjntsRTrZn3ghnPQffXtX6sbbslPDiUVeeneQu9uUeT0X5Dw-D_ESxSv8omHUQIWNI7t1jUfzb02ZM5-c-9zo1EUkdTxjKsgITFES7_f_sJ5ce12O9VnJKgunZdmFh2ckY2Jf1K_iHjDQy8AC4-B8V6GESCYCElFBqrqK-31I3-v8jyQEWjP9hVM6GM-W0gf9Ne4v593ku9yyGKFayPzvfB4rW6Yvy7Y92WBHCe0WRP6DH4vn5mQeIY7qcOAjpDbyUtjcRaNFzIsA',
+    badge: null,
+    href: '/shop?cat=arreglos',
+  },
+  {
+    name: 'Personalizaciones',
+    image: 'https://lh3.googleusercontent.com/aida-public/AB6AXuCD0rm3JvZDe66l7CSZ9PHTn53UYfLE9SjSUNa9Im0P5gHWDu-_OEUvqtFCU_dT_5cpEMdPW_2goSiPmIsIeqoYwod8UWeRLNOMJjm1qQqQajEbz5b0IshzzDa-VvJE2j-Jiz07d1uw8gtOmdT_KIuzvsDf4iFs_MyRj3UMj0b3rt_bHKhxmhLzjaxRSYnpLeswu5I8opJP8BFlkft-2elAmP-Bh_fwKQccvM-L7WiFBGf5TgU3-zy1QUTKGg33HI1pSG4LXdLn_b5I',
+    badge: null,
+    href: '/shop?cat=personalizaciones',
+  },
+  {
+    name: 'Ofertas',
+    image: 'https://lh3.googleusercontent.com/aida-public/AB6AXuCDlY-Jxvv0CFvW9Pv7kZKePUsZnZDn5rSQVvzjbFUY6ZFKMIlaoE-HrF5R9hoPJOA-dvHC3DkVQCY1OGvLrIXkoDfGD4YJeJFLn_k6ZeL-J1vWo1Qc8isdQ_BXy2efXrHa3pmPzSuz1_XOHcWeJYBvE1AOmwCKy1Ve14ttCtVi-U1h2NQyMa-xm_fIsAm6p-1X7eq-LhuglsAYiE83zwvwP096PCATF7U71Zr3oJmLMR8hHzlUYQlYTp4sWF2mh0N_7YXd5EDVegs',
+    badge: 'SALE',
+    href: '/shop?cat=ofertas',
+  },
+];
+---
+
+<section class="categories-section">
+  <div class="categories-container">
+    <div class="categories-header">
+      <div>
+        <h2 class="section-title">Categorías Destacadas</h2>
+        <p class="section-subtitle">Encuentra el detalle perfecto para cada momento.</p>
+      </div>
+      <a class="see-all" href="/shop">Ver todo</a>
+    </div>
+
+    <div class="categories-grid">
+      {categories.map((cat) => (
+        <a href={cat.href} class="category-card group">
+          <div class="category-img-wrap">
+            <div
+              class="category-img"
+              style={`background-image: url('${cat.image}')`}
+            />
+            {cat.badge && (
+              <span class="category-badge">{cat.badge}</span>
+            )}
+          </div>
+          <div class="category-name">
+            <h3>{cat.name}</h3>
+          </div>
+        </a>
+      ))}
+    </div>
+  </div>
+</section>
+
+<style>
+  .categories-section {
+    width: 100%;
+    max-width: 80rem;
+    margin: 0 auto;
+    padding: 4rem 1rem;
+  }
+
+  @media (min-width: 640px)  { .categories-section { padding-inline: 1.5rem; } }
+  @media (min-width: 1024px) { .categories-section { padding-inline: 2rem; } }
+
+  .categories-header {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    margin-bottom: 2.5rem;
+    padding-inline: 0.5rem;
+  }
+
+  .section-title {
+    font-family: 'Oddval Text', Georgia, serif;
+    font-size: clamp(1.75rem, 3vw, 2.5rem);
+    font-weight: 600;
+    letter-spacing: -0.02em;
+    color: #6d5157;
+    margin: 0;
+  }
+
+  .section-subtitle {
+    margin-top: 0.5rem;
+    color: #886369;
+    font-size: 0.9375rem;
+  }
+
+  .see-all {
+    display: none;
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: var(--primary);
+    text-decoration: none;
+    transition: text-decoration 0.2s;
+  }
+  .see-all:hover { text-decoration: underline; }
+
+  @media (min-width: 640px) { .see-all { display: block; } }
+
+  .categories-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1rem;
+  }
+
+  @media (min-width: 768px)  { .categories-grid { grid-template-columns: repeat(4, 1fr); } }
+  @media (min-width: 1024px) { .categories-grid { gap: 2rem; } }
+
+  .category-card {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    cursor: pointer;
+    text-decoration: none;
+    color: inherit;
+  }
+
+  .category-img-wrap {
+    position: relative;
+    aspect-ratio: 4 / 5;
+    width: 100%;
+    overflow: hidden;
+    border-radius: 0.75rem;
+    background: #f3f4f6;
+    box-shadow: 0 1px 3px rgba(0 0 0 / 0.08);
+    transition: box-shadow 0.2s;
+  }
+  .category-card:hover .category-img-wrap { box-shadow: 0 4px 16px rgba(0 0 0 / 0.12); }
+
+  .category-img {
+    width: 100%;
+    height: 100%;
+    background-size: cover;
+    background-position: center;
+    transition: transform 0.5s ease;
+  }
+  .category-card:hover .category-img { transform: scale(1.1); }
+
+  .category-badge {
+    position: absolute;
+    top: 0.75rem;
+    right: 0.75rem;
+    background: var(--primary);
+    color: white;
+    font-size: 0.75rem;
+    font-weight: 700;
+    padding: 0.25rem 0.75rem;
+    border-radius: 9999px;
+    box-shadow: 0 2px 6px rgba(0 0 0 / 0.15);
+  }
+
+  .category-name {
+    text-align: center;
+  }
+
+  @media (min-width: 768px) { .category-name { text-align: left; } }
+
+  .category-name h3 {
+    font-size: 1.125rem;
+    font-weight: 700;
+    color: #181112;
+  }
+</style>

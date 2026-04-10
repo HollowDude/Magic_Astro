@@ -1,0 +1,218 @@
+---
+// src/components/home/TestimonialsSection.astro
+
+const testimonials = [
+  {
+    quote: 'Los arreglos para mi boda superaron todas mis expectativas. Maggy capturó exactamente la esencia que queríamos transmitir. ¡Simplemente mágico!',
+    name: 'Sofía Ramírez',
+    role: 'Novia feliz',
+    stars: 5,
+    image: 'https://lh3.googleusercontent.com/aida-public/AB6AXuB8sOzYcf7lpFFFmNAjTm-ZGrF_KX3wCugH1Zedvhn2nISZDQCzVDJEavO2wYlmpKa3W8wasvMe_39B4YIjxQYmoVBh3W1t--xhKaPq5vIqVXFP5hVtihqqW9W3Fd_G011H9DUqeYOvrtQ_ttC-P_XH4sMmNBqxG97dF50UPcP3mlCMKl6yK5jSf7iUL2ufFnKMQFCkYpsQonkg38lxrtuMnHuiEX3HvvQK9zNo8HC7NtedBPAECN6YdDF5LNrLuENxLtwPO3K0jN4',
+  },
+  {
+    quote: 'El curso online de diseño floral es increíble. Aprendí técnicas que nunca imaginé y ahora puedo hacer mis propios arreglos en casa. ¡Muy recomendado!',
+    name: 'Camila Torres',
+    role: 'Alumna de la Academia',
+    stars: 5,
+    image: 'https://lh3.googleusercontent.com/aida-public/AB6AXuBypl5WNo8bUB4mV5Xcc7BclX62dJp9mfdzY_aSWMuq4oF6Q0q-qzb2xbQfRlXiN_O79pRbHyw6DncU8vTl7dW3F97by-lobGH2q0JYhrr5e_q5U1rg-V2Sv8aXfBFVvMu1msOIx7sJo_WE8gt4UaqDfQAJXWYenb9MKR1N9-Fqxhin1d8X44E3cIWgWhdMtZ72_uPWRdpD85jLuOLWcLzEd8ebSdAcpnKFrpPtc4mlqR8SaKJc51dp2yHZfzbvqXjxZzqpCM7te3A',
+  },
+  {
+    quote: 'Compré un ramo para el aniversario de mis padres y quedaron fascinados. La frescura y la combinación de colores fueron perfectas. Gracias Maggy.',
+    name: 'Alejandro M.',
+    role: 'Cliente frecuente',
+    stars: 4,
+    image: 'https://lh3.googleusercontent.com/aida-public/AB6AXuBDYzpSzQlUSt13nIjOXA4HTRLicQYfj-CvFHOGMdAZAhS6SpQWArIF07aEwVwhn5FQvcmiknKvYO82muJTTotCtwQ55zGap6LJEdCgV6bd9dCFil3Lwdkign6lJ0Wfn8-KnMHZWL93oQ2RIOwySuzggcGA7ynYQTk_wRcyQnFFOB4b5yYnPEgJMbG4jgcotOzJXSM-QiOHjN2t7sXdwf6L2IwbwqsUdlOsZ4x-mHA9fN_CAT8Z9tkKoBS_RqT2t9hWPRC-oGY31gg',
+  },
+];
+---
+
+<section class="testimonials-section">
+  <div class="testimonials-container">
+    <div class="testimonials-header">
+      <div>
+        <h2 class="section-title">Lo que dicen nuestros clientes</h2>
+        <p class="section-subtitle">Sus palabras son nuestra mejor inspiración.</p>
+      </div>
+      <div class="nav-arrows">
+        <button class="arrow-btn" aria-label="Anterior">
+          <span class="material-symbols-outlined">arrow_back</span>
+        </button>
+        <button class="arrow-btn" aria-label="Siguiente">
+          <span class="material-symbols-outlined">arrow_forward</span>
+        </button>
+      </div>
+    </div>
+
+    <div class="testimonials-grid">
+      {testimonials.map((t) => (
+        <div class="testimonial-card">
+          <!-- Stars -->
+          <div class="stars" aria-label={`${t.stars} estrellas`}>
+            {Array.from({ length: 5 }).map((_, i) => (
+              <span
+                class="material-symbols-outlined star-icon"
+                style={`font-variation-settings: 'FILL' ${i < t.stars ? 1 : 0}, 'wght' 400, 'GRAD' 0, 'opsz' 24`}
+              >
+                star
+              </span>
+            ))}
+          </div>
+
+          <!-- Quote -->
+          <p class="testimonial-quote">"{t.quote}"</p>
+
+          <!-- Author -->
+          <div class="testimonial-author">
+            <div class="author-avatar">
+              <img src={t.image} alt={t.name} loading="lazy" />
+            </div>
+            <div>
+              <h4 class="author-name">{t.name}</h4>
+              <span class="author-role">{t.role}</span>
+            </div>
+          </div>
+        </div>
+      ))}
+    </div>
+  </div>
+</section>
+
+<style>
+  .testimonials-section {
+    background: color-mix(in srgb, var(--primary) 6%, transparent);
+    padding: 5rem 1rem;
+  }
+
+  @media (min-width: 640px)  { .testimonials-section { padding-inline: 1.5rem; } }
+  @media (min-width: 1024px) { .testimonials-section { padding-inline: 2rem; } }
+
+  .testimonials-container {
+    max-width: 80rem;
+    margin: 0 auto;
+  }
+
+  .testimonials-header {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    margin-bottom: 3rem;
+    text-align: center;
+  }
+
+  @media (min-width: 768px) {
+    .testimonials-header {
+      flex-direction: row;
+      text-align: left;
+    }
+  }
+
+  .section-title {
+    font-family: 'Oddval Text', Georgia, serif;
+    font-size: clamp(1.75rem, 3vw, 2.5rem);
+    font-weight: 600;
+    letter-spacing: -0.02em;
+    color: #6d5157;
+    margin: 0;
+  }
+
+  .section-subtitle {
+    margin-top: 0.5rem;
+    color: #886369;
+  }
+
+  .nav-arrows {
+    display: flex;
+    gap: 0.5rem;
+    flex-shrink: 0;
+  }
+
+  .arrow-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 2.5rem;
+    height: 2.5rem;
+    border-radius: 9999px;
+    background: white;
+    color: #181112;
+    border: none;
+    cursor: pointer;
+    box-shadow: 0 1px 4px rgba(0 0 0 / 0.08);
+    transition: background 0.2s, color 0.2s;
+  }
+  .arrow-btn:hover {
+    background: var(--primary);
+    color: white;
+  }
+  .arrow-btn .material-symbols-outlined { font-size: 1.25rem; }
+
+  .testimonials-grid {
+    display: grid;
+    gap: 1.5rem;
+    grid-template-columns: 1fr;
+  }
+
+  @media (min-width: 768px) { .testimonials-grid { grid-template-columns: repeat(3, 1fr); } }
+
+  .testimonial-card {
+    background: white;
+    border-radius: 1rem;
+    padding: 2rem;
+    box-shadow: 0 1px 4px rgba(0 0 0 / 0.06);
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+  }
+
+  .stars {
+    display: flex;
+    gap: 0.125rem;
+    color: #facc15;
+  }
+
+  .star-icon {
+    font-size: 1rem;
+  }
+
+  .testimonial-quote {
+    color: #886369;
+    font-style: italic;
+    line-height: 1.65;
+    font-size: 0.9375rem;
+    flex: 1;
+  }
+
+  .testimonial-author {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+  }
+
+  .author-avatar {
+    width: 2.5rem;
+    height: 2.5rem;
+    border-radius: 9999px;
+    overflow: hidden;
+    background: #e5e7eb;
+    flex-shrink: 0;
+  }
+
+  .author-avatar img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .author-name {
+    font-weight: 700;
+    color: #181112;
+    font-size: 0.9375rem;
+  }
+
+  .author-role {
+    font-size: 0.75rem;
+    color: #886369;
+  }
+</style>

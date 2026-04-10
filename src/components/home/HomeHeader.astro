@@ -1,0 +1,14 @@
+---
+import HeaderClient from '@/components/home/HeaderClient';
+import { getSession } from '@/services/session.service';
+
+const session     = getSession(Astro.cookies);
+const isLoggedIn  = !!session;
+const currentPath = Astro.url.pathname;
+---
+
+<HeaderClient
+  isLoggedIn={isLoggedIn}
+  currentPath={currentPath}
+  client:load
+/>

@@ -1,0 +1,108 @@
+---
+// src/components/home/CustomizationsSection.astro
+---
+
+<section class="custom-section">
+  <div class="custom-container">
+    <div class="custom-img-wrap">
+      <div
+        class="custom-img"
+        style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuDxs5NlWSf1_sZqYDP3MuvYSmKhli00fhQbpnpt7Sw1ROJhZ32ColhwrVhmOojwXVfr_S9aYkX9Q4IqwrPEmHNj8ThynAA_3HjaJW06mOUgvW_1C5h8T49djElHDEFM3BPC6WZ-4-wj_JWSY1dDUPX9oPGjZexXpMyabJLeo3d8Y3Y50YOLQ8ZNJUkAWVNYT8gfFrFD1wCcdGw4lBixS7VivWxBMSkoVBZQ9iX_ABacSbIFLgee1zQ-sA5whi4Dm9J28DVr53lQgAo')"
+      />
+    </div>
+
+    <div class="custom-text">
+      <h2 class="custom-title">Personalizaciones &amp; Eventos</h2>
+      <p class="custom-desc">
+        Hacemos realidad tus sueños florales. Diseñamos arreglos únicos adaptados a tus gustos y
+        necesidades, ideales para bodas, celebraciones, eventos corporativos o regalos especiales.
+        Cuéntanos tu idea y nosotros pondremos la magia.
+      </p>
+      <a href="/contact" class="custom-cta">Contáctenos</a>
+    </div>
+  </div>
+</section>
+
+<style>
+  .custom-section {
+    background: color-mix(in srgb, var(--primary) 8%, transparent);
+    padding: 5rem 1rem;
+  }
+
+  @media (min-width: 640px)  { .custom-section { padding-inline: 1.5rem; } }
+  @media (min-width: 1024px) { .custom-section { padding-inline: 2rem; } }
+
+  .custom-container {
+    max-width: 80rem;
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 3rem;
+  }
+
+  @media (min-width: 1024px) {
+    .custom-container { flex-direction: row; }
+  }
+
+  .custom-img-wrap {
+    width: 100%;
+    aspect-ratio: 4 / 3;
+    overflow: hidden;
+    border-radius: 1rem;
+    background: #f3f4f6;
+    box-shadow: 0 4px 24px rgba(0 0 0 / 0.1);
+    flex-shrink: 0;
+  }
+
+  @media (min-width: 1024px) { .custom-img-wrap { width: 50%; } }
+
+  .custom-img {
+    width: 100%;
+    height: 100%;
+    background-size: cover;
+    background-position: center;
+  }
+
+  .custom-text {
+    width: 100%;
+  }
+
+  @media (min-width: 1024px) { .custom-text { width: 50%; } }
+
+  .custom-title {
+    font-family: 'Oddval Text', Georgia, serif;
+    font-size: clamp(1.75rem, 3vw, 2.5rem);
+    font-weight: 600;
+    letter-spacing: -0.02em;
+    color: #6d5157;
+    margin-bottom: 1rem;
+  }
+
+  .custom-desc {
+    font-size: 1.125rem;
+    line-height: 1.65;
+    color: #886369;
+    margin-bottom: 1.5rem;
+  }
+
+  .custom-cta {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    height: 3rem;
+    min-width: 10rem;
+    padding: 0 2rem;
+    border-radius: 9999px;
+    background: var(--primary);
+    color: white;
+    font-size: 1rem;
+    font-weight: 700;
+    text-decoration: none;
+    transition: transform 0.2s, background 0.2s;
+  }
+  .custom-cta:hover {
+    transform: scale(1.05);
+    background: var(--primary-dark);
+  }
+</style>

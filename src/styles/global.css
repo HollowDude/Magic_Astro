@@ -2,9 +2,6 @@
    Tailwind 4 + fuente local + tokens de diseño
    ------------------------------------------------- */
 
-/* ── Fuente local: Oddval Text ─────────────────────────────────────
-   Copiá los archivos a:  public/fonts/OddvalText-Semibold.woff2
-                          public/fonts/OddvalText-Semibold.woff     */
 @font-face {
   font-family: 'Oddval Text';
   src:
@@ -15,11 +12,22 @@
   font-display: swap;
 }
 
-/* ── Tailwind 4 (sintaxis nueva, sin las 3 directivas viejas) ─────── */
 @import "tailwindcss";
 
-/* ── Tema: colores y fuentes en el sistema de Tailwind 4 ─────────── */
 @theme {
+  /* ── Brand palette (Tailwind class aliases) ─────────────────── */
+  --color-primary:          #eb4763;
+  --color-primary-dark:     #d63a54;
+  --color-primary-light:    #fbdadd;
+  --color-primary2:         #fbdadd;
+  --color-sage:             #9eb395;
+  --color-sage-light:       #e8f7ee;
+  --color-background-light: #fdf8f9;
+  --color-background-dark:  #211114;
+  --color-text-main:        #181112;
+  --color-text-muted:       #886369;
+
+  /* ── Named brand tokens (existing) ─────────────────────────── */
   --color-brand-primary:    #eb4763;
   --color-brand-primary-dk: #d63a54;
   --color-brand-blush:      #fdeff1;
@@ -29,7 +37,8 @@
   --color-brand-sage:       #8da399;
   --color-brand-sage-lt:    #e8f7ee;
 
-  --font-display: 'Oddval Text', Georgia, serif;
+  /* ── Fonts ──────────────────────────────────────────────────── */
+  --font-display: 'Be Vietnam Pro', sans-serif;
   --font-body:    'Be Vietnam Pro', sans-serif;
 
   --text-display:  63px;
@@ -67,9 +76,9 @@
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
   html, body { height: 100%; }
   body {
-    font-family: var(--font-body);
-    color: var(--headline);
-    background: #ffffff;
+    font-family: 'Be Vietnam Pro', sans-serif;
+    color: #181112;
+    background: #fdf8f9;
     -webkit-font-smoothing: antialiased;
   }
   .material-symbols-outlined {
@@ -79,29 +88,40 @@
     vertical-align: middle;
     user-select: none;
   }
+  ::selection {
+    background: #eb4763;
+    color: white;
+  }
 }
 
 /* ── Utilidades tipográficas ─────────────────────────────────────── */
 @layer utilities {
   .heading-display {
-    font-family: var(--font-display);
+    font-family: 'Be Vietnam Pro', sans-serif;
     font-size: var(--text-display);
     line-height: 1.1;
     font-weight: 600;
     color: var(--headline);
   }
   .heading-subtitle {
-    font-family: var(--font-body);
+    font-family: 'Be Vietnam Pro', sans-serif;
     font-size: var(--text-subtitle);
     font-weight: 500;
     color: var(--primary);
   }
   .text-body-brand {
-    font-family: var(--font-body);
+    font-family: 'Be Vietnam Pro', sans-serif;
     font-size: var(--text-body-lg);
     line-height: 43px;
     font-weight: 400;
     color: var(--body-color);
+  }
+  .hide-scrollbar {
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+  .hide-scrollbar::-webkit-scrollbar {
+    display: none;
   }
 }
 
@@ -109,7 +129,7 @@
 @layer components {
   .btn-primary {
     display: inline-flex; align-items: center; justify-content: center; gap: .5rem;
-    font-family: var(--font-body); font-size: var(--text-btn); font-weight: 500;
+    font-family: 'Be Vietnam Pro', sans-serif; font-size: var(--text-btn); font-weight: 500;
     color: #fff; background: var(--primary); border-radius: .5rem;
     padding-inline: 1.5rem; height: 3rem; border: none; cursor: pointer;
     transition: background .2s, transform .1s, box-shadow .2s;
@@ -124,7 +144,7 @@
 
   .btn-buy {
     display: inline-flex; align-items: center; justify-content: center;
-    font-family: var(--font-body); font-size: var(--text-btn); font-weight: 500;
+    font-family: 'Be Vietnam Pro', sans-serif; font-size: var(--text-btn); font-weight: 500;
     color: var(--muted); background: var(--blush); border-radius: .5rem;
     padding-inline: 1.5rem; height: 3rem;
     border: 1px solid color-mix(in srgb, var(--muted) 30%, transparent);
@@ -134,7 +154,7 @@
 
   .btn-featured {
     display: inline-flex; align-items: center; justify-content: center;
-    font-family: var(--font-body); font-size: var(--text-btn-lg); font-weight: 500;
+    font-family: 'Be Vietnam Pro', sans-serif; font-size: var(--text-btn-lg); font-weight: 500;
     color: #fff; background: var(--primary); border-radius: .5rem;
     padding-inline: 2rem; height: 3.5rem; border: none; cursor: pointer;
     transition: background .2s;
