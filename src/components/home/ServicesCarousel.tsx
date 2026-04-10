@@ -29,21 +29,29 @@ const services = [
   },
 ];
 
-const TOTAL      = services.length;
-const GAP        = 20;    // px between cards
-const ARROW_SIZE = 44;    // px — diameter of arrow button
+const TOTAL     = services.length;
+const GAP       = 20;
+const CARD_H    = 360;
+const IMG_H     = 260;
+const ARROW_D   = 44;  // arrow circle diameter
+// Arrow is centered at the clip boundary (window left/right edge).
+// Padding on the outer wrapper = ARROW_D/2 so arrows fit without clipping.
+const SIDE_PAD  = ARROW_D / 2 + 8; // 30px — gives arrows breathing room
 
-// Badge bg: using --surface (#ffffff) tinted with a whisper of the brand blush
-// Closest neutral from globals: white (#ffffff). We apply a very subtle warm tint.
-const BADGE_BG   = '#f8f5f5'; // white-gray warm — between --surface and --blush
+// Badge background: whitish-gray warm.
+// From globals: between --surface (#fff) and --blush (#fdeff1).
+// Using --border (#f0e4e6) as subtle tint reference → slightly lighter: #f6f2f2
+const BADGE_BG  = '#f6f2f2';
+
+// Triangle color: --muted (#ad808a) — declared in globals, grayish-pink
+const MUTED     = '#ad808a';
 
 export default function ServicesCarousel() {
   const [active, setActive] = useState(0);
   const wrapRef             = useRef<HTMLDivElement>(null);
   const [wrapW, setWrapW]   = useState(0);
 
-  // Card takes ~56% of the window; the remaining 44% is split as peek on each side
-  const cardW = wrapW > 0 ? Math.round(wrapW * 0.56) : 420;
+  const cardW = wrapW > 0 ? Math.round(wrapW * 0.58) : 420;
   const step  = cardW + GAP;
 
   useEffect(() => {
@@ -65,14 +73,13 @@ export default function ServicesCarousel() {
     return d;
   };
 
-  // Image area height (everything except the badge) used to center arrows
-  const IMG_H  = 260; // px  ← matches imgWrap flex height
-  const CARD_H = 360; // px  ← total card height
+  // Arrow vertical center = middle of the image area
+  const arrowTop = IMG_H / 2 - ARROW_D / 2;
 
   return (
     <section style={s.section}>
 
-      {/* ── Header ── */}
+      {/* Header */}
       <div style={s.header}>
         <span style={s.eyebrow}>Experiencias &amp; Servicios</span>
         <h2 style={s.title}>Todo lo que ofrecemos</h2>
@@ -81,16 +88,20 @@ export default function ServicesCarousel() {
         </p>
       </div>
 
-      {/* ── Outer wrapper — arrows are absolute children straddling the clip edge ── */}
-      <div style={{ position: 'relative', maxWidth: 960, margin: '0 auto', paddingInline: '1.5rem', marginBottom: '2.25rem' }}>
+      {/* ── Stage ──────────────────────────────────────────────────────────────
+          Outer wrapper: position relative, overflow visible, padded so arrows
+          (which straddle the window edge) don't get clipped by the section.
+          Inner window: overflow hidden — clips the side cards.
+          Arrows: absolute children of outer wrapper, centered on window edges.
+      ─────────────────────────────────────────────────────────────────────── */}
+      <div style={{ position: 'relative', paddingInline: SIDE_PAD, maxWidth: 980, margin: '0 auto', marginBottom: '2.25rem' }}>
 
         {/* Clipping window */}
-        <div ref={wrapRef} style={{ ...s.window, height: CARD_H }}>
+        <div ref={wrapRef} style={{ position: 'relative', overflow: 'hidden', height: CARD_H, width: '100%' }}>
           {services.map((svc, i) => {
             const rel      = relPos(i);
             const isCenter = rel === 0;
             const show     = Math.abs(rel) <= 1;
-            const offsetX  = rel * step;
 
             return (
               <div
@@ -98,73 +109,73 @@ export default function ServicesCarousel() {
                 onClick={() => !isCenter && setActive(i)}
                 aria-hidden={!show}
                 style={{
-                  ...s.card,
-                  width:      cardW,
-                  height:     CARD_H,
+                  position:   'absolute',
+                  top:        0,
                   left:       '50%',
                   marginLeft: -cardW / 2,
-                  transform:  `translateX(${offsetX}px)`,
+                  width:      cardW,
+                  height:     CARD_H,
+                  borderRadius: '1rem',
+                  overflow:   'hidden',
+                  display:    'flex',
+                  flexDirection: 'column',
+                  transform:  `translateX(${rel * step}px)`,
                   opacity:    show ? 1 : 0,
                   pointerEvents: show ? 'auto' : 'none',
                   zIndex:     isCenter ? 10 : 5,
-                  // Shadow only for center card: offset bottom-right
-                  boxShadow:  isCenter
-                    ? '6px 10px 28px rgba(109,81,87,0.16)'
-                    : 'none',
-                  cursor: isCenter ? 'default' : 'pointer',
+                  // Shadow only on center card: offset bottom-right
+                  boxShadow:  isCenter ? '8px 12px 32px rgba(109,81,87,0.15)' : 'none',
+                  cursor:     isCenter ? 'default' : 'pointer',
+                  transition: 'transform 0.42s cubic-bezier(0.4,0,0.2,1), opacity 0.3s ease, box-shadow 0.35s ease',
                 }}
               >
                 {/* Image */}
-                <div style={{ ...s.imgWrap, height: IMG_H }}>
-                  <div style={{ ...s.img, backgroundImage: `url('${svc.image}')` }} />
-                  {!isCenter && <div style={s.dimOverlay} />}
+                <div style={{ position: 'relative', width: '100%', height: IMG_H, flexShrink: 0, overflow: 'hidden' }}>
+                  <div style={{ width: '100%', height: '100%', backgroundImage: `url('${svc.image}')`, backgroundSize: 'cover', backgroundPosition: 'center' }} />
+                  {!isCenter && (
+                    <div style={{ position: 'absolute', inset: 0, background: 'rgba(255,255,255,0.38)', pointerEvents: 'none' }} />
+                  )}
                 </div>
 
-                {/* Badge — whitish-gray warm background */}
-                <div style={{ ...s.badge, background: BADGE_BG }}>
-                  <p style={s.cardTitle}>{svc.title}</p>
-                  <p style={s.cardDesc}>{svc.description}</p>
+                {/* Badge */}
+                <div style={{ flex: '1 1 0', padding: '0.875rem 1rem 1rem', background: BADGE_BG }}>
+                  <p style={{ fontFamily: FONT, fontSize: '0.9375rem', fontWeight: 700, color: HEADLINE, margin: '0 0 0.3rem' }}>
+                    {svc.title}
+                  </p>
+                  <p style={{ fontFamily: FONT, fontSize: '0.8125rem', color: BODY, lineHeight: 1.55, margin: 0 }}>
+                    {svc.description}
+                  </p>
                 </div>
               </div>
             );
           })}
         </div>
 
-        {/* ── Arrow LEFT — centered vertically in the image area, at left edge of window ── */}
+        {/* ── Arrow LEFT
+            - Absolute child of outer wrapper (overflow: visible)
+            - `left: 0` = left edge of the window (= right edge of left padding)
+            - translateX(-50%) centers it on that edge
+            - So half of the circle sits on the side card, half "outside"        */}
         <button
           onClick={prev}
           aria-label="Anterior"
-          style={{
-            ...s.arrowBtn,
-            left:  -ARROW_SIZE / 2,
-            top:   IMG_H / 2 - ARROW_SIZE / 2,
-          }}
+          style={{ ...s.arrowBtn, left: SIDE_PAD, top: arrowTop, transform: 'translateX(-50%)' }}
         >
-          {/* Filled black triangle pointing LEFT */}
-          <svg width="14" height="16" viewBox="0 0 14 16" fill="none">
-            <polygon points="14,0 14,16 0,8" fill="#181112" />
-          </svg>
+          <RoundedTriangle dir="left" color={MUTED} />
         </button>
 
-        {/* ── Arrow RIGHT ── */}
+        {/* Arrow RIGHT */}
         <button
           onClick={next}
           aria-label="Siguiente"
-          style={{
-            ...s.arrowBtn,
-            right: -ARROW_SIZE / 2,
-            top:   IMG_H / 2 - ARROW_SIZE / 2,
-          }}
+          style={{ ...s.arrowBtn, right: SIDE_PAD, top: arrowTop, transform: 'translateX(50%)' }}
         >
-          {/* Filled black triangle pointing RIGHT */}
-          <svg width="14" height="16" viewBox="0 0 14 16" fill="none">
-            <polygon points="0,0 0,16 14,8" fill="#181112" />
-          </svg>
+          <RoundedTriangle dir="right" color={MUTED} />
         </button>
 
       </div>
 
-      {/* ── Dots ── */}
+      {/* Dots */}
       <div style={s.dots} role="tablist">
         {services.map((_, i) => (
           <button
@@ -176,15 +187,38 @@ export default function ServicesCarousel() {
             style={{
               ...s.dot,
               width:      i === active ? '2rem' : '0.625rem',
-              background: i === active
-                ? '#eb4763'
-                : 'color-mix(in srgb, #eb4763 28%, transparent)',
+              background: i === active ? '#eb4763' : 'color-mix(in srgb, #eb4763 28%, transparent)',
             }}
           />
         ))}
       </div>
 
     </section>
+  );
+}
+
+/* ── Rounded triangle SVG ────────────────────────────────────────────────────
+   Technique: draw the polygon with stroke-linejoin="round" + stroke-width
+   matching fill color. Inset the points slightly so rounding stays in bounds.
+   Result: a clean filled triangle with softly rounded corners.
+────────────────────────────────────────────────────────────────────────────── */
+function RoundedTriangle({ dir, color }: { dir: 'left' | 'right'; color: string }) {
+  // Inset points 3px from bounding box edges to leave room for rounded stroke
+  const pts = dir === 'left'
+    ? '13,3 13,15 3,9'   // pointing left
+    : '3,3 3,15 13,9';   // pointing right
+
+  return (
+    <svg width="16" height="18" viewBox="0 0 16 18" fill="none" style={{ display: 'block' }}>
+      <polygon
+        points={pts}
+        fill={color}
+        stroke={color}
+        strokeWidth="4"
+        strokeLinejoin="round"
+        strokeLinecap="round"
+      />
+    </svg>
   );
 }
 
@@ -231,78 +265,17 @@ const s: Record<string, React.CSSProperties> = {
     margin: 0,
   },
 
-  // Clips neighbors — only half of adjacent cards visible
-  window: {
-    position: 'relative',
-    overflow: 'hidden',
-    width: '100%',
-    marginBottom: 20,
-  },
-
-  card: {
-    position: 'absolute',
-    top: 0,
-    borderRadius: '1rem',
-    overflow: 'hidden',
-    display: 'flex',
-    flexDirection: 'column',
-    transition: [
-      'transform 0.42s cubic-bezier(0.4,0,0.2,1)',
-      'opacity 0.3s ease',
-      'box-shadow 0.35s ease',
-    ].join(', '),
-  },
-
-  imgWrap: {
-    position: 'relative',
-    flexShrink: 0,
-    overflow: 'hidden',
-    width: '100%',
-  },
-  img: {
-    width: '100%',
-    height: '100%',
-    backgroundSize: 'cover',
-    backgroundPosition: 'center',
-  },
-  dimOverlay: {
-    position: 'absolute',
-    inset: 0,
-    background: 'rgba(255,255,255,0.4)',
-    pointerEvents: 'none',
-  },
-
-  badge: {
-    flex: '1 1 0',
-    padding: '0.875rem 1rem 1rem',
-  },
-  cardTitle: {
-    fontFamily: FONT,
-    fontSize: '0.9375rem',
-    fontWeight: 700,
-    color: HEADLINE,
-    margin: '0 0 0.3rem',
-  },
-  cardDesc: {
-    fontFamily: FONT,
-    fontSize: '0.8125rem',
-    color: BODY,
-    lineHeight: 1.55,
-    margin: 0,
-  },
-
-  // Arrow button: white circle, straddling the clip edge of the window
   arrowBtn: {
     position: 'absolute',
-    display: 'flex',
+    display:  'flex',
     alignItems: 'center',
     justifyContent: 'center',
-    width:  ARROW_SIZE,
-    height: ARROW_SIZE,
+    width:  ARROW_D,
+    height: ARROW_D,
     borderRadius: '9999px',
     background: 'white',
     border: 'none',
-    boxShadow: '0 2px 10px rgba(0,0,0,0.14)',
+    boxShadow: '0 2px 10px rgba(0,0,0,0.13)',
     cursor: 'pointer',
     zIndex: 20,
     transition: 'box-shadow 0.2s, transform 0.15s',
