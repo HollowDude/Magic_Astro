@@ -1,29 +1,12 @@
 ---
-/* src/components/home/FeaturedProducts.astro
-   Componente de referencia — usa exclusivamente CSS vars del global.css */
+/* src/components/home/FeaturedProducts.astro [cite: 1] */
+import { getProducts } from '../../services/drupal/drupal.commerce';
 
-const products = [
-  {
-    name: 'Ramo Primavera',
-    price: '$45.00',
-    image: 'https://lh3.googleusercontent.com/aida-public/AB6AXuAuox5dt2-WG3Swm62CKV3Rielzculg2z5fVIoghGDmTMWn07V7ApkIdWnJv5-HRHYAzox8DrWDE7IY0gInOIK-NPmKyAj1hRFNwnMdA6a1FnT79IP72jELvMELzcQV-mLJASVvpzYEoUp-6C-eTViSRtY8Kvm0F2ewYqBYPkHwMv1SRljg4sowwgM6lAoYS4F8AeuKzrVJ2HxvVx_Rze6h97RsKWEDm7vt39j_ekmzdQTShCxGPMw8Z9ZtD9RrVAuYQKYhNPaobZY',
-  },
-  {
-    name: 'Rosas Clásicas',
-    price: '$65.00',
-    image: 'https://lh3.googleusercontent.com/aida-public/AB6AXuA8UmaSJXajebzp2pAuB4XcwdkdCi9MAS8KNbkJew5Zs9tpROwajVrUb4tyTaCgROGddNtu3ou27jem3mTwKIX_dlUKVOfqp5xz1njSvpYTFRK26WU2ofzZiQ_Xu3OdNaxExtiYegTC_8QrLYPvfxQEd3Fu8QS1q4Ml-TyhXudBnapR_SYrELVpqToUuSoAbHigIaAyWaSscQT-mIOe-bSDLC2sXo_-7-AVqYG8Wxgd1d2F-zMX8gbOin7WdeHpz1COSldXQAcTarc',
-  },
-  {
-    name: 'Arreglo Silvestre',
-    price: '$38.00',
-    image: 'https://lh3.googleusercontent.com/aida-public/AB6AXuCeB0evwgFUFS2vtPEjAcbe9BgKSGSAwzGS1W7Ca-n3q1Q7VJxFi09l6cX5vcTfWai_d3H-wcXjbT5pbU00nchGrbg5IrCsOkkZOnINnIIl6xEhzH4c-QoL-CJVQXB4_2_YVDeoAdrZeDmxI-_SdtE6LxWSaaIvZRiAdh3MO485BgtdscOzphmj4m-9EmuO_LHYGzZsB1gshTjzDvpGJcy1XTt8Vyy1uMYePF2zt4GQrau1euQ-WIGGQXPviOLFmbt-SxD-nuqYQsY',
-  },
-  {
-    name: 'Lirios Blancos',
-    price: '$52.00',
-    image: 'https://lh3.googleusercontent.com/aida-public/AB6AXuBq7lg97235cYAAVMQOCz72RDRpW8Y4Umm8hgmTFJZCt0Xl18U9bQlL2JdArgxYBEnF8i4YjPkRAaML-MH1PT8xPtDo4vm5hM4OXcPN1E-Tg_5CfGhSUvCkAWHTyRN9_pml17c5RGlBm8-TgezVzutyFI6AZHMEiryVbpET0j7daPYIdjm71hz1rtBuNSvIL6_g60hAijsniAk-oKLX-72ae44afh1kD0VIkVZtVuEsHkjgNev0ANSVAl8t7zlSM21eN2sMrg0wVsY',
-  },
-];
+// Definimos la base de la URL para las imágenes
+const DRUPAL_BASE_URL = 'http://localhost:8080';
+
+// Obtenemos los productos del tipo 'flores' de forma asíncrona [cite: 2]
+const products = await getProducts('flores');
 ---
 
 <section class="fp-section">
@@ -35,26 +18,38 @@ const products = [
     </div>
 
     <div class="fp-grid">
-      {products.map((product) => (
-        <article class="fp-card">
-          <div class="fp-img-wrap">
-            <div
-              class="fp-img"
-              style={`background-image: url('${product.image}')`}
-              role="img"
-              aria-label={product.name}
-            />
-          </div>
+      {products.map((product) => {
+        // Extraemos la variación principal y el precio formateado
+        const defaultVariation = product.variations?.[0];
+        const price = defaultVariation?.price?.formatted || 'Consultar precio';
+        
+        // Construimos la URL de la imagen. 
+        // Nota: Asegúrate de incluir 'field_image' en tus 'includes' de la API.
+        const imageUrl = product.field_image?.uri?.url 
+          ? `${DRUPAL_BASE_URL}${product.field_image.uri.url}`
+          : '/placeholder-flower.jpg';
 
-          <div class="fp-body">
-            <h3 class="fp-name">{product.name}</h3>
-            <div class="fp-footer">
-              <span class="fp-price">{product.price}</span>
-              <button class="fp-btn">Comprar</button>
+        return (
+          <article class="fp-card">
+            <div class="fp-img-wrap">
+              <div
+                class="fp-img"
+                style={`background-image: url('${imageUrl}')`} [cite: 3]
+                role="img"
+                aria-label={product.title}
+              />
             </div>
-          </div>
-        </article>
-      ))}
+
+            <div class="fp-body">
+              <h3 class="fp-name">{product.title}</h3>
+              <div class="fp-footer">
+                <span class="fp-price">{price}</span> [cite: 4]
+                <button class="fp-btn">Comprar</button>
+              </div>
+            </div>
+          </article>
+        );
+      })}
     </div>
   </div>
 </section>
@@ -62,22 +57,21 @@ const products = [
 <style>
   .fp-section {
     width: 100%;
-    padding: 4rem 1rem 5rem;
+    padding: 4rem 1rem 5rem; [cite: 5]
     background: var(--bg);
   }
-  @media (min-width: 640px)  { .fp-section { padding-inline: 1.5rem; } }
-  @media (min-width: 1024px) { .fp-section { padding-inline: 2rem; } }
+  @media (min-width: 640px)  { .fp-section { padding-inline: 1.5rem; [cite: 6] } }
+  @media (min-width: 1024px) { .fp-section { padding-inline: 2rem; [cite: 7] } }
 
   .fp-container {
     max-width: 80rem;
-    margin: 0 auto;
+    margin: 0 auto; [cite: 8]
   }
 
-  /* Título con línea decorativa */
   .fp-heading {
     display: flex;
     align-items: center;
-    gap: 1.25rem;
+    gap: 1.25rem; [cite: 9]
     margin-bottom: 2.75rem;
   }
 
@@ -85,7 +79,7 @@ const products = [
     font-family: var(--font-heading);
     font-weight: 600;
     font-size: clamp(2rem, 4vw, 2.75rem);
-    color: var(--headline);
+    color: var(--headline); [cite: 10]
     letter-spacing: -0.02em;
     white-space: nowrap;
     margin: 0;
@@ -95,44 +89,41 @@ const products = [
   .fp-line {
     flex: 1;
     height: 2px;
-    background: var(--primary);
+    background: var(--primary); [cite: 11]
     border-radius: 9999px;
     min-width: 2rem;
     margin-top: 0.25rem;
   }
 
-  /* Grid */
   .fp-grid {
     display: grid;
-    grid-template-columns: 1fr;
+    grid-template-columns: 1fr; [cite: 12]
     gap: 1.25rem;
   }
-  @media (min-width: 540px)  { .fp-grid { grid-template-columns: repeat(2, 1fr); } }
-  @media (min-width: 1024px) { .fp-grid { grid-template-columns: repeat(4, 1fr); gap: 1.5rem; } }
+  @media (min-width: 540px)  { .fp-grid { grid-template-columns: repeat(2, 1fr); [cite: 13] } }
+  @media (min-width: 1024px) { .fp-grid { grid-template-columns: repeat(4, 1fr); gap: 1.5rem; [cite: 14] } }
 
-  /* Tarjeta */
   .fp-card {
     background: var(--blush);
     border-radius: 1rem;
     overflow: hidden;
     display: flex;
-    flex-direction: column;
+    flex-direction: column; [cite: 15]
     transition: box-shadow 0.25s ease, transform 0.25s ease;
-    cursor: pointer;
+    cursor: pointer; [cite: 16]
   }
   .fp-card:hover {
     box-shadow: 0 12px 36px color-mix(in srgb, var(--headline) 15%, transparent);
-    transform: translateY(-4px);
+    transform: translateY(-4px); [cite: 17]
   }
   .fp-card:hover .fp-btn {
-    background: var(--primary);
+    background: var(--primary); [cite: 18]
   }
 
-  /* Imagen */
   .fp-img-wrap {
     width: 100%;
     aspect-ratio: 1;
-    padding: 0.75rem 0.75rem 0;
+    padding: 0.75rem 0.75rem 0; [cite: 19]
   }
   .fp-img {
     width: 100%;
@@ -140,18 +131,17 @@ const products = [
     border-radius: 0.625rem;
     background-size: cover;
     background-position: center;
-    transition: transform 0.4s ease;
+    transition: transform 0.4s ease; [cite: 20]
   }
   .fp-card:hover .fp-img {
-    transform: scale(1.03);
+    transform: scale(1.03); [cite: 21]
   }
 
-  /* Body */
   .fp-body {
     padding: 0.875rem 1rem 1rem;
     display: flex;
     flex-direction: column;
-    gap: 0.625rem;
+    gap: 0.625rem; [cite: 22]
     flex: 1;
   }
 
@@ -159,7 +149,7 @@ const products = [
     font-family: var(--font-body);
     font-size: 1rem;
     font-weight: 700;
-    color: var(--headline);
+    color: var(--headline); [cite: 23]
     margin: 0;
     line-height: 1.3;
   }
@@ -168,7 +158,7 @@ const products = [
     display: flex;
     align-items: center;
     justify-content: space-between;
-    margin-top: auto;
+    margin-top: auto; [cite: 24]
     padding-top: 0.25rem;
   }
 
@@ -176,13 +166,12 @@ const products = [
     font-family: var(--font-body);
     font-size: 1.0625rem;
     font-weight: 700;
-    color: var(--primary);
+    color: var(--primary); [cite: 25]
   }
 
-  /* Botón comprar — usa --muted (#ad808a) como color base */
   .fp-btn {
     font-family: var(--font-body);
-    font-size: 0.875rem;
+    font-size: 0.875rem; [cite: 26]
     font-weight: 600;
     color: #fff;
     background: var(--muted);
@@ -190,7 +179,7 @@ const products = [
     border-radius: 0.5rem;
     padding: 0.5rem 1.125rem;
     cursor: pointer;
-    transition: background 0.2s ease;
+    transition: background 0.2s ease; [cite: 27]
     letter-spacing: 0.01em;
   }
 </style>
