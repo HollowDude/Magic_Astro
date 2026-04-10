@@ -1,33 +1,75 @@
 /* src/styles/global.css
    Tailwind 4 + fuente local + tokens de diseño
-   ------------------------------------------------- */
+   ─────────────────────────────────────────────
+   FUENTES:
+     Oddval Text  → titulares de sección  (--font-heading)
+     Be Vietnam Pro → todo lo demás       (--font-body)
 
+   PALETA (spec color_y_tipografía.docx):
+     #eb4763  primary     botones destacados, interacciones, líneas, subtítulos
+     #d63a54  primary-dk  hover de primary
+     #fdeff1  blush       fondos secciones, tarjetas, etiquetas
+     #6d5157  headline    titulares, nombres de productos
+     #89656b  body-color  cuerpos de texto
+     #ad808a  muted       botones "comprar"
+     #8da399  sage        fondo de algunas secciones
+     #e8f7ee  sage-light  fondo de etiquetas
+     #ffffff  white       fondo general de la página
+   ──────────────────────────────────────────── */
+
+/* ── Oddval Text ─────────────────────────────────────────────────
+   Si los archivos están en una carpeta con espacios, usar el path
+   exacto. Ajustar el nombre del archivo si difiere.
+   Ruta esperada: public/fonts/Oddval Text Font Family/
+   ─────────────────────────────────────────────────────────────── */
 @font-face {
   font-family: 'Oddval Text';
   src:
-    url('/fonts/OddvalText-Semibold.woff2') format('woff2'),
-    url('/fonts/OddvalText-Semibold.woff')  format('woff');
+    url('/fonts/Oddval Text Font Family/OddvalText-SemiBold.otf') format('opentype'),
+    url('/fonts/Oddval Text Font Family/OddvalText-SemiBold.ttf') format('truetype');
   font-weight: 600;
   font-style: normal;
   font-display: swap;
 }
 
+@font-face {
+  font-family: 'Oddval Text';
+  src:
+    url('/fonts/Oddval Text Font Family/OddvalText-SemiBoldItalic.otf') format('opentype'),
+    url('/fonts/Oddval Text Font Family/OddvalText-SemiBoldItalic.ttf') format('truetype');
+  font-weight: 600;
+  font-style: italic;
+  font-display: swap;
+}
+
 @import "tailwindcss";
 
+/* ── Tokens Tailwind 4 (@theme) ──────────────────────────────────
+   Genera clases utilitarias: text-primary, bg-blush, font-heading…
+   ─────────────────────────────────────────────────────────────── */
 @theme {
-  /* ── Brand palette (Tailwind class aliases) ─────────────────── */
+  /* Paleta */
   --color-primary:          #eb4763;
   --color-primary-dark:     #d63a54;
-  --color-primary-light:    #fbdadd;
-  --color-primary2:         #fbdadd;
-  --color-sage:             #9eb395;
+  --color-blush:            #fdeff1;
+  --color-headline:         #6d5157;
+  --color-body-color:       #89656b;
+  --color-muted:            #ad808a;
+  --color-sage:             #8da399;
   --color-sage-light:       #e8f7ee;
-  --color-background-light: #fdf8f9;
-  --color-background-dark:  #211114;
-  --color-text-main:        #181112;
-  --color-text-muted:       #886369;
+  --color-white:            #ffffff;
 
-  /* ── Named brand tokens (existing) ─────────────────────────── */
+  /* Aliases semánticos (para clases text-text-main, bg-background…) */
+  --color-text-main:        #6d5157;   /* titulares y nombres */
+  --color-text-muted:       #89656b;   /* cuerpos de texto */
+  --color-background:       #ffffff;   /* fondo general */
+  --color-background-light: #ffffff;
+  --color-background-dark:  #211114;   /* footer oscuro */
+  --color-surface:          #ffffff;
+  --color-border:           #f0e4e6;
+
+  /* Alias legacy (no romper componentes existentes) */
+  --color-primary2:         #fdeff1;
   --color-brand-primary:    #eb4763;
   --color-brand-primary-dk: #d63a54;
   --color-brand-blush:      #fdeff1;
@@ -37,19 +79,24 @@
   --color-brand-sage:       #8da399;
   --color-brand-sage-lt:    #e8f7ee;
 
-  /* ── Fonts ──────────────────────────────────────────────────── */
-  --font-display: 'Be Vietnam Pro', sans-serif;
-  --font-body:    'Be Vietnam Pro', sans-serif;
+  /* Tipografías */
+  --font-heading: 'Oddval Text', Georgia, serif;    /* titulares de sección */
+  --font-body:    'Be Vietnam Pro', sans-serif;      /* todo lo demás */
+  --font-display: 'Oddval Text', Georgia, serif;    /* alias (no romper) */
 
-  --text-display:  63px;
-  --text-subtitle: 28px;
-  --text-body-lg:  26px;
-  --text-btn:      22px;
-  --text-btn-lg:   32px;
+  /* Escalas tipográficas del spec */
+  --text-display:  63px;   /* Oddval Text – heading de sección */
+  --text-subtitle: 28px;   /* Be Vietnam Pro – subtítulos */
+  --text-body-lg:  26px;   /* Be Vietnam Pro – cuerpos de texto */
+  --text-btn:      22px;   /* Be Vietnam Pro – botones */
+  --text-btn-lg:   32px;   /* Be Vietnam Pro – botones destacados */
 }
 
-/* ── CSS variables (alias para componentes existentes) ───────────── */
+/* ── Variables CSS (alias para componentes con var(--…)) ──────────
+   Cualquier componente puede usar estas sin importar Tailwind.
+   ─────────────────────────────────────────────────────────────── */
 :root {
+  /* Paleta */
   --primary:      #eb4763;
   --primary-dark: #d63a54;
   --blush:        #fdeff1;
@@ -59,13 +106,26 @@
   --sage:         #8da399;
   --sage-light:   #e8f7ee;
 
+  /* Semánticos */
   --bg:        #ffffff;
   --bg-light:  #ffffff;
   --surface:   #ffffff;
   --border:    #f0e4e6;
-  --text-main: #6d5157;
-  --text-muted:#89656b;
+  --text-main: #6d5157;   /* titulares y nombres de productos */
+  --text-muted:#89656b;   /* cuerpos de texto */
 
+  /* Tipografías */
+  --font-heading: 'Oddval Text', Georgia, serif;
+  --font-body:    'Be Vietnam Pro', sans-serif;
+
+  /* Escalas */
+  --text-display:  63px;
+  --text-subtitle: 28px;
+  --text-body-lg:  26px;
+  --text-btn:      22px;
+  --text-btn-lg:   32px;
+
+  /* Radios */
   --radius-sm: 0.25rem;
   --radius:    0.5rem;
   --radius-lg: 0.75rem;
@@ -75,12 +135,14 @@
 @layer base {
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
   html, body { height: 100%; }
+
   body {
-    font-family: 'Be Vietnam Pro', sans-serif;
-    color: #181112;
-    background: #fdf8f9;
+    font-family: var(--font-body);
+    color: var(--body-color);
+    background: var(--bg);
     -webkit-font-smoothing: antialiased;
   }
+
   .material-symbols-outlined {
     font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
     font-size: 1.5rem;
@@ -88,34 +150,41 @@
     vertical-align: middle;
     user-select: none;
   }
+
   ::selection {
-    background: #eb4763;
+    background: var(--primary);
     color: white;
   }
 }
 
 /* ── Utilidades tipográficas ─────────────────────────────────────── */
 @layer utilities {
+  /* Titular de sección — Oddval Text Semibold 63px #6d5157 */
   .heading-display {
-    font-family: 'Be Vietnam Pro', sans-serif;
+    font-family: var(--font-heading);
     font-size: var(--text-display);
     line-height: 1.1;
     font-weight: 600;
     color: var(--headline);
   }
+
+  /* Subtítulo — Be Vietnam Pro Medium 28px #eb4763 */
   .heading-subtitle {
-    font-family: 'Be Vietnam Pro', sans-serif;
+    font-family: var(--font-body);
     font-size: var(--text-subtitle);
     font-weight: 500;
     color: var(--primary);
   }
+
+  /* Cuerpo de texto — Be Vietnam Pro Regular 26px #89656b, interlineado 43px */
   .text-body-brand {
-    font-family: 'Be Vietnam Pro', sans-serif;
+    font-family: var(--font-body);
     font-size: var(--text-body-lg);
     line-height: 43px;
     font-weight: 400;
     color: var(--body-color);
   }
+
   .hide-scrollbar {
     scrollbar-width: none;
     -ms-overflow-style: none;
@@ -127,56 +196,101 @@
 
 /* ── Componentes ─────────────────────────────────────────────────── */
 @layer components {
+
+  /* Botón principal — Be Vietnam Pro Medium 22px blanco sobre #eb4763 */
   .btn-primary {
-    display: inline-flex; align-items: center; justify-content: center; gap: .5rem;
-    font-family: 'Be Vietnam Pro', sans-serif; font-size: var(--text-btn); font-weight: 500;
-    color: #fff; background: var(--primary); border-radius: .5rem;
-    padding-inline: 1.5rem; height: 3rem; border: none; cursor: pointer;
-    transition: background .2s, transform .1s, box-shadow .2s;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    font-family: var(--font-body);
+    font-size: var(--text-btn);
+    font-weight: 500;
+    color: #fff;
+    background: var(--primary);
+    border-radius: 0.5rem;
+    padding-inline: 1.5rem;
+    height: 3rem;
+    border: none;
+    cursor: pointer;
+    transition: background 0.2s, transform 0.1s, box-shadow 0.2s;
     box-shadow: 0 4px 14px color-mix(in srgb, var(--primary) 35%, transparent);
   }
   .btn-primary:hover:not(:disabled) {
     background: var(--primary-dark);
     box-shadow: 0 6px 20px color-mix(in srgb, var(--primary) 45%, transparent);
   }
-  .btn-primary:active:not(:disabled) { transform: scale(.98); }
-  .btn-primary:disabled { opacity: .7; cursor: not-allowed; }
+  .btn-primary:active:not(:disabled) { transform: scale(0.98); }
+  .btn-primary:disabled { opacity: 0.7; cursor: not-allowed; }
 
+  /* Botón "comprar" — Be Vietnam Pro Medium 22px #ad808a sobre #fdeff1 */
   .btn-buy {
-    display: inline-flex; align-items: center; justify-content: center;
-    font-family: 'Be Vietnam Pro', sans-serif; font-size: var(--text-btn); font-weight: 500;
-    color: var(--muted); background: var(--blush); border-radius: .5rem;
-    padding-inline: 1.5rem; height: 3rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-family: var(--font-body);
+    font-size: var(--text-btn);
+    font-weight: 500;
+    color: var(--muted);
+    background: var(--blush);
+    border-radius: 0.5rem;
+    padding-inline: 1.5rem;
+    height: 3rem;
     border: 1px solid color-mix(in srgb, var(--muted) 30%, transparent);
-    cursor: pointer; transition: all .2s;
+    cursor: pointer;
+    transition: all 0.2s;
   }
   .btn-buy:hover { background: var(--primary); color: #fff; }
 
+  /* Botón destacado — Be Vietnam Pro Medium 32px blanco */
   .btn-featured {
-    display: inline-flex; align-items: center; justify-content: center;
-    font-family: 'Be Vietnam Pro', sans-serif; font-size: var(--text-btn-lg); font-weight: 500;
-    color: #fff; background: var(--primary); border-radius: .5rem;
-    padding-inline: 2rem; height: 3.5rem; border: none; cursor: pointer;
-    transition: background .2s;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-family: var(--font-body);
+    font-size: var(--text-btn-lg);
+    font-weight: 500;
+    color: #fff;
+    background: var(--primary);
+    border-radius: 0.5rem;
+    padding-inline: 2rem;
+    height: 3.5rem;
+    border: none;
+    cursor: pointer;
+    transition: background 0.2s;
   }
   .btn-featured:hover { background: var(--primary-dark); }
 
+  /* Tarjeta base */
   .card {
-    background: var(--blush); border-radius: 1rem; overflow: hidden;
+    background: var(--blush);
+    border-radius: 1rem;
+    overflow: hidden;
     border: 1px solid color-mix(in srgb, var(--primary) 10%, transparent);
-    box-shadow: 0 2px 8px rgba(0 0 0 / .05);
+    box-shadow: 0 2px 8px rgba(0 0 0 / 0.05);
   }
 
+  /* Etiquetas */
   .tag-green {
-    display: inline-flex; align-items: center; gap: .25rem;
-    padding: .25rem .75rem; border-radius: 9999px;
-    background: var(--sage-light); color: var(--sage);
-    font-size: .875rem; font-weight: 500;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    padding: 0.25rem 0.75rem;
+    border-radius: 9999px;
+    background: var(--sage-light);
+    color: var(--sage);
+    font-size: 0.875rem;
+    font-weight: 500;
   }
   .tag-pink {
-    display: inline-flex; align-items: center; gap: .25rem;
-    padding: .25rem .75rem; border-radius: 9999px;
-    background: var(--blush); color: var(--primary);
-    font-size: .875rem; font-weight: 500;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    padding: 0.25rem 0.75rem;
+    border-radius: 9999px;
+    background: var(--blush);
+    color: var(--primary);
+    font-size: 0.875rem;
+    font-weight: 500;
   }
 }
