@@ -1,10 +1,18 @@
-// ─── Petición de login ─────────────────────────────────────────────────────
+// src/types/auth.ts
+
+// ─── Credenciales ──────────────────────────────────────────────────────────
 export interface LoginCredentials {
   username: string;
   password: string;
 }
 
-// ─── Respuesta de Drupal al autenticar ─────────────────────────────────────
+export interface RegisterCredentials {
+  username: string;
+  email: string;
+  password: string;
+}
+
+// ─── Respuesta de Drupal: login (REST /user/login) ─────────────────────────
 export interface DrupalLoginResponse {
   current_user: {
     uid: string;
@@ -15,7 +23,22 @@ export interface DrupalLoginResponse {
   logout_token: string;
 }
 
-// ─── Usuario de sesión (lo que guardamos en la cookie) ──────────────────────
+// ─── Respuesta de Drupal: registro (JSON:API /jsonapi/user/user) ───────────
+// El tipo completo lo maneja internamente register.service.ts
+// Se exporta solo para tests o extensiones futuras
+export interface DrupalRegisterResponse {
+  data: {
+    type: string;
+    id: string;
+    attributes: {
+      drupal_internal__uid: number;
+      name: string;
+      mail: string;
+    };
+  };
+}
+
+// ─── Usuario de sesión (cookie HTTP-only) ──────────────────────────────────
 export interface SessionUser {
   uid: string;
   name: string;
@@ -24,7 +47,7 @@ export interface SessionUser {
   logoutToken: string;
 }
 
-// ─── Resultado genérico de un servicio ─────────────────────────────────────
+// ─── Resultado genérico de servicio ────────────────────────────────────────
 export type ServiceResult<T> =
   | { ok: true; data: T }
   | { ok: false; error: string; statusCode?: number };

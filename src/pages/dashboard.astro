@@ -168,7 +168,6 @@ if (!session) {
       <div class="user-info">
         <div>
           <div class="user-name">{session.name}</div>
-          <div class="user-role">{session.roles.filter(r => r !== 'authenticated').join(', ') || 'Estudiante'}</div>
         </div>
         <button class="logout-btn" id="logout-btn">
           <span class="material-symbols-outlined">logout</span>

@@ -1,10 +1,14 @@
 import { defineConfig } from 'astro/config';
 import react from '@astrojs/react';
+import tailwindcss from '@tailwindcss/vite';
 
 export default defineConfig({
   integrations: [react()],
-  output: 'server', // SSR necesario para endpoints y cookies
+  output: 'server',
   server: {
     port: 4321,
+  },
+  vite: {
+    plugins: [tailwindcss()],
   },
 });
