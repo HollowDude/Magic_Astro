@@ -1,6 +1,27 @@
 // src/components/home/ServicesCarousel.tsx
+//
+// Recibe props opcionales del bloque Drupal "homepage_servicios_section"
+// para el header de la sección (titulo, subTitulo, eslogan).
+// Si Drupal no devuelve data, usa los valores de FALLBACK internos.
+// La lista de servicios sigue siendo estática (no hay un entity type para ellos).
+
 import { useState, useCallback, useEffect, useRef } from 'react';
 
+// ── Props del header (vienen del bloque Drupal) ───────────────────────────────
+interface Props {
+  titulo?:    string | null;   // field_titulo_ss   — eyebrow label (opcional)
+  subTitulo?: string | null;   // field_sub_titulo_ss — h2 principal
+  eslogan?:   string | null;   // field_eslogan_ss   — párrafo descriptivo (opcional)
+}
+
+// ── Fallbacks ─────────────────────────────────────────────────────────────────
+const FALLBACK: Required<Props> = {
+  titulo:    'Experiencias & Servicios',
+  subTitulo: 'Todo lo que ofrecemos',
+  eslogan:   'Descubre cómo podemos ayudarte a florecer en cada ocasión especial.',
+};
+
+// ── Lista estática de servicios ───────────────────────────────────────────────
 const services = [
   {
     title: 'Arreglos florales',
@@ -29,24 +50,20 @@ const services = [
   },
 ];
 
-const TOTAL     = services.length;
-const GAP       = 20;
-const CARD_H    = 360;
-const IMG_H     = 260;
-const ARROW_D   = 44;  // arrow circle diameter
-// Arrow is centered at the clip boundary (window left/right edge).
-// Padding on the outer wrapper = ARROW_D/2 so arrows fit without clipping.
-const SIDE_PAD  = ARROW_D / 2 + 8; // 30px — gives arrows breathing room
+const TOTAL    = services.length;
+const GAP      = 20;
+const CARD_H   = 360;
+const IMG_H    = 260;
+const ARROW_D  = 44;
+const SIDE_PAD = ARROW_D / 2 + 8;
+const BADGE_BG = '#f6f2f2';
+const MUTED    = '#ad808a';
 
-// Badge background: whitish-gray warm.
-// From globals: between --surface (#fff) and --blush (#fdeff1).
-// Using --border (#f0e4e6) as subtle tint reference → slightly lighter: #f6f2f2
-const BADGE_BG  = '#f6f2f2';
-
-// Triangle color: --muted (#ad808a) — declared in globals, grayish-pink
-const MUTED     = '#ad808a';
-
-export default function ServicesCarousel() {
+export default function ServicesCarousel({
+  titulo    = FALLBACK.titulo,
+  subTitulo = FALLBACK.subTitulo,
+  eslogan   = FALLBACK.eslogan,
+}: Props) {
   const [active, setActive] = useState(0);
   const wrapRef             = useRef<HTMLDivElement>(null);
   const [wrapW, setWrapW]   = useState(0);
@@ -73,27 +90,21 @@ export default function ServicesCarousel() {
     return d;
   };
 
-  // Arrow vertical center = middle of the image area
   const arrowTop = IMG_H / 2 - ARROW_D / 2;
 
   return (
     <section style={s.section}>
 
-      {/* Header */}
+      {/* Header — datos del bloque Drupal con fallback */}
       <div style={s.header}>
-        <span style={s.eyebrow}>Experiencias &amp; Servicios</span>
-        <h2 style={s.title}>Todo lo que ofrecemos</h2>
-        <p style={s.subtitle}>
-          Descubre cómo podemos ayudarte a florecer en cada ocasión especial.
-        </p>
+        <span style={s.eyebrow}>{titulo ?? FALLBACK.titulo}</span>
+        <h2 style={s.title}>{subTitulo ?? FALLBACK.subTitulo}</h2>
+        {(eslogan ?? FALLBACK.eslogan) && (
+          <p style={s.subtitle}>{eslogan ?? FALLBACK.eslogan}</p>
+        )}
       </div>
 
-      {/* ── Stage ──────────────────────────────────────────────────────────────
-          Outer wrapper: position relative, overflow visible, padded so arrows
-          (which straddle the window edge) don't get clipped by the section.
-          Inner window: overflow hidden — clips the side cards.
-          Arrows: absolute children of outer wrapper, centered on window edges.
-      ─────────────────────────────────────────────────────────────────────── */}
+      {/* Stage */}
       <div style={{ position: 'relative', paddingInline: SIDE_PAD, maxWidth: 980, margin: '0 auto', marginBottom: '2.25rem' }}>
 
         {/* Clipping window */}
@@ -123,13 +134,11 @@ export default function ServicesCarousel() {
                   opacity:    show ? 1 : 0,
                   pointerEvents: show ? 'auto' : 'none',
                   zIndex:     isCenter ? 10 : 5,
-                  // Shadow only on center card: offset bottom-right
                   boxShadow:  isCenter ? '8px 12px 32px rgba(109,81,87,0.15)' : 'none',
                   cursor:     isCenter ? 'default' : 'pointer',
                   transition: 'transform 0.42s cubic-bezier(0.4,0,0.2,1), opacity 0.3s ease, box-shadow 0.35s ease',
                 }}
               >
-                {/* Image */}
                 <div style={{ position: 'relative', width: '100%', height: IMG_H, flexShrink: 0, overflow: 'hidden' }}>
                   <div style={{ width: '100%', height: '100%', backgroundImage: `url('${svc.image}')`, backgroundSize: 'cover', backgroundPosition: 'center' }} />
                   {!isCenter && (
@@ -137,7 +146,6 @@ export default function ServicesCarousel() {
                   )}
                 </div>
 
-                {/* Badge */}
                 <div style={{ flex: '1 1 0', padding: '0.875rem 1rem 1rem', background: BADGE_BG }}>
                   <p style={{ fontFamily: FONT, fontSize: '0.9375rem', fontWeight: 700, color: HEADLINE, margin: '0 0 0.3rem' }}>
                     {svc.title}
@@ -151,11 +159,7 @@ export default function ServicesCarousel() {
           })}
         </div>
 
-        {/* ── Arrow LEFT
-            - Absolute child of outer wrapper (overflow: visible)
-            - `left: 0` = left edge of the window (= right edge of left padding)
-            - translateX(-50%) centers it on that edge
-            - So half of the circle sits on the side card, half "outside"        */}
+        {/* Arrow LEFT */}
         <button
           onClick={prev}
           aria-label="Anterior"
@@ -197,16 +201,11 @@ export default function ServicesCarousel() {
   );
 }
 
-/* ── Rounded triangle SVG ────────────────────────────────────────────────────
-   Technique: draw the polygon with stroke-linejoin="round" + stroke-width
-   matching fill color. Inset the points slightly so rounding stays in bounds.
-   Result: a clean filled triangle with softly rounded corners.
-────────────────────────────────────────────────────────────────────────────── */
+// ── Rounded triangle SVG (idéntico al original) ───────────────────────────────
 function RoundedTriangle({ dir, color }: { dir: 'left' | 'right'; color: string }) {
-  // Inset points 3px from bounding box edges to leave room for rounded stroke
   const pts = dir === 'left'
-    ? '13,3 13,15 3,9'   // pointing left
-    : '3,3 3,15 13,9';   // pointing right
+    ? '13,3 13,15 3,9'
+    : '3,3 3,15 13,9';
 
   return (
     <svg width="16" height="18" viewBox="0 0 16 18" fill="none" style={{ display: 'block' }}>
@@ -222,7 +221,7 @@ function RoundedTriangle({ dir, color }: { dir: 'left' | 'right'; color: string 
   );
 }
 
-/* ── Tokens ── */
+// ── Tokens ────────────────────────────────────────────────────────────────────
 const PRIMARY  = '#eb4763';
 const HEADLINE = '#6d5157';
 const BODY     = '#89656b';
@@ -234,7 +233,6 @@ const s: Record<string, React.CSSProperties> = {
     padding: '5rem 0 4rem',
     overflow: 'hidden',
   },
-
   header: {
     textAlign: 'center',
     marginBottom: '3rem',
@@ -264,7 +262,6 @@ const s: Record<string, React.CSSProperties> = {
     color: BODY,
     margin: 0,
   },
-
   arrowBtn: {
     position: 'absolute',
     display:  'flex',
@@ -280,7 +277,6 @@ const s: Record<string, React.CSSProperties> = {
     zIndex: 20,
     transition: 'box-shadow 0.2s, transform 0.15s',
   },
-
   dots: {
     display: 'flex',
     justifyContent: 'center',

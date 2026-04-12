@@ -9,13 +9,29 @@
 //     → /admin/people/permissions
 //   • El bloque debe estar publicado (status = true) en
 //     → /admin/content/block
+//
+// ── Para el bloque Comentarios ────────────────────────────────────────────
+//   • El content type "comentario" debe existir en Drupal
+//   • Los nodos de tipo "comentario" deben estar publicados
+//   • Primero crear nodos Comentario, luego referenciarlos en el bloque
 // ──────────────────────────────────────────────────────────────────────────
 
 import { DrupalJsonApiParams } from 'drupal-jsonapi-params';
 import Jsona from 'jsona';
 import { drupalFetch } from './drupal.client';
 import { drupalFileUrl } from '@/types/commerce';
-import type { BlockContentBase, HomepageHeroBlock, HeroData, HeroSlide } from '@/types/blocks';
+import type {
+  BlockContentBase,
+  HomepageHeroBlock,
+  HomepagePersonalizationBlock,
+  HomepageServiciosBlock,
+  HomepageComentariosBlock,
+  HeroData,
+  HeroSlide,
+  PersonalizationData,
+  ServiciosData,
+  ComentariosData,
+} from '@/types/blocks';
 
 const dataFormatter = new Jsona();
 
@@ -38,6 +54,7 @@ interface BlockTypeConfig {
 }
 
 const BLOCK_CONFIGS = {
+  // ── Bloque 1: Hero Section ─────────────────────────────────────────────────
   homepage_hero_section: {
     bundle:      'homepage_hero_section',
     includes:    ['field_carrusel_de_fotos'],
@@ -54,13 +71,65 @@ const BLOCK_CONFIGS = {
       'file--file': ['filename', 'uri', 'filemime'],
     },
   },
-  // ── Ejemplo para una futura sección ───────────────────────────────────────
-  // about_intro: {
-  //   bundle:      'about_intro',
-  //   includes:    ['field_foto_principal'],
-  //   blockFields: ['info', 'status', 'field_titulo', 'field_texto', 'field_foto_principal'],
-  //   relatedFields: { 'file--file': ['filename', 'uri', 'filemime'] },
-  // },
+
+  // ── Bloque 2: Personalization Section ──────────────────────────────────────
+  homepage_personalization_section: {
+    bundle:      'homepage_personalization_section',
+    includes:    ['field_foto'],
+    blockFields: [
+      'info',
+      'status',
+      'field_titulo',
+      'field_descripcion_ps',
+      'field_foto',
+      'drupal_internal__id',
+    ],
+    relatedFields: {
+      'file--file': ['filename', 'uri', 'filemime'],
+    },
+  },
+
+  // ── Bloque 3: Servicios Section ────────────────────────────────────────────
+  // Solo texto: eyebrow, título principal y eslogan del header de la sección.
+  homepage_servicios_section: {
+    bundle:      'homepage_servicios_section',
+    includes:    [],
+    blockFields: [
+      'info',
+      'status',
+      'field_titulo_ss',
+      'field_sub_titulo_ss',
+      'field_eslogan_ss',
+      'drupal_internal__id',
+    ],
+    // Sin entidades relacionadas, pero declarado explícitamente para que
+    // TypeScript pueda inferir correctamente el tipo de la unión de configs.
+    relatedFields: {} as Record<string, string[]>,
+  },
+
+  // ── Bloque 4: Comentarios Section ──────────────────────────────────────────
+  // Incluye la referencia a entidades node--comentario.
+  // Jsona aplana automáticamente las relaciones incluidas.
+  homepage_comentarios_section: {
+    bundle:      'homepage_comentarios_section',
+    includes:    ['field_comentarios'],
+    blockFields: [
+      'info',
+      'status',
+      'field_titulo_cs',
+      'field_descripcion_cs',
+      'field_comentarios',
+      'drupal_internal__id',
+    ],
+    relatedFields: {
+      // Sparse fieldsets para los nodos Comentario referenciados
+      'node--comentario': [
+        'field_nombre_persona',
+        'field_role_de_la_persona',
+        'field_comentario',
+      ],
+    },
+  },
 } satisfies Record<string, BlockTypeConfig>;
 
 export type BlockTypeKey = keyof typeof BLOCK_CONFIGS;
@@ -70,7 +139,6 @@ export type BlockTypeKey = keyof typeof BLOCK_CONFIGS;
 /**
  * Obtiene el primer bloque publicado de un bundle dado.
  * Para bloques de configuración (singletons) esto es suficiente.
- * Para múltiples bloques del mismo tipo, usar `getBlockContents`.
  *
  * @param blockTypeKey  Clave de BLOCK_CONFIGS
  * @returns El bloque deserializado o null si no existe / error
@@ -93,7 +161,6 @@ export async function getBlockContents<
 >(blockTypeKey: BlockTypeKey, limit = 10): Promise<T[]> {
   const config = BLOCK_CONFIGS[blockTypeKey];
 
-  // ── Query JSON:API ────────────────────────────────────────────────────────
   const apiParams = new DrupalJsonApiParams();
 
   apiParams
@@ -113,7 +180,6 @@ export async function getBlockContents<
 
   const path = `/jsonapi/block_content/${config.bundle}?${apiParams.getQueryString()}`;
 
-  // ── Fetch ─────────────────────────────────────────────────────────────────
   let raw: Awaited<ReturnType<typeof drupalFetch<Record<string, unknown>>>>;
 
   try {
@@ -133,10 +199,8 @@ export async function getBlockContents<
     return [];
   }
 
-  // ── Deserializar ──────────────────────────────────────────────────────────
   try {
     const result = dataFormatter.deserialize(raw.data);
-    // Jsona devuelve array o objeto según si hay uno o varios resultados
     return (Array.isArray(result) ? result : [result]) as T[];
   } catch (err) {
     console.error(`[Blocks] Error al deserializar "${blockTypeKey}":`, err);
@@ -147,8 +211,8 @@ export async function getBlockContents<
 // ── Helpers tipados por block type ────────────────────────────────────────────
 
 /**
- * Obtiene el bloque Homepage Hero Section y lo normaliza en HeroData,
- * lista para pasarle directamente al componente HeroCarousel.
+ * Bloque 1 — Homepage Hero Section
+ * Normaliza el bloque a HeroData para el componente HeroCarousel.
  */
 export async function getHomepageHeroData(baseUrl: string): Promise<HeroData | null> {
   const block = await getBlockContent<HomepageHeroBlock>('homepage_hero_section');
@@ -164,5 +228,58 @@ export async function getHomepageHeroData(baseUrl: string): Promise<HeroData | n
     slogan:      block.field_eslogan ?? null,
     description: block.field_descripcion,
     slides,
+  };
+}
+
+/**
+ * Bloque 2 — Homepage Personalization Section
+ * Normaliza el bloque a PersonalizationData para el componente CustomizationsSection.
+ */
+export async function getPersonalizationData(baseUrl: string): Promise<PersonalizationData | null> {
+  const block = await getBlockContent<HomepagePersonalizationBlock>('homepage_personalization_section');
+  if (!block) return null;
+
+  return {
+    titulo:    block.field_titulo ?? null,
+    descripcion: block.field_descripcion_ps,
+    fotoUrl:   block.field_foto ? drupalFileUrl(block.field_foto, baseUrl) : null,
+  };
+}
+
+/**
+ * Bloque 3 — Homepage Servicios Section
+ * Normaliza el bloque a ServiciosData para el componente ServicesCarousel.
+ */
+export async function getServiciosData(): Promise<ServiciosData | null> {
+  const block = await getBlockContent<HomepageServiciosBlock>('homepage_servicios_section');
+  if (!block) return null;
+
+  return {
+    titulo:    block.field_titulo_ss ?? null,
+    subTitulo: block.field_sub_titulo_ss,
+    eslogan:   block.field_eslogan_ss ?? null,
+  };
+}
+
+/**
+ * Bloque 4 — Homepage Comentarios Section
+ * Normaliza el bloque y los nodos Comentario referenciados a ComentariosData.
+ *
+ * IMPORTANTE: Los nodos de tipo "comentario" deben estar publicados en Drupal
+ * antes de ser referenciables desde este bloque. JSON:API no incluirá
+ * automáticamente entidades no publicadas.
+ */
+export async function getComentariosData(): Promise<ComentariosData | null> {
+  const block = await getBlockContent<HomepageComentariosBlock>('homepage_comentarios_section');
+  if (!block) return null;
+
+  return {
+    titulo:      block.field_titulo_cs,
+    descripcion: block.field_descripcion_cs,
+    comentarios: (block.field_comentarios ?? []).map((c) => ({
+      nombre:   c.field_nombre_persona,
+      rol:      c.field_role_de_la_persona ?? null,
+      comentario: c.field_comentario,
+    })),
   };
 }

@@ -1,0 +1,19 @@
+---
+// src/components/home/ServicesSection.astro
+//
+// Wrapper SSR: obtiene el bloque "homepage_servicios_section" de Drupal
+// y pasa el header (titulo, subTitulo, eslogan) al carrusel interactivo.
+// Si Drupal no responde, ServicesCarousel usa sus propios fallbacks internos.
+
+import ServicesCarousel from '@/components/home/ServicesCarousel';
+import { getServiciosData } from '@/services/drupal/drupal.blocks';
+
+const data = await getServiciosData();
+---
+
+<ServicesCarousel
+  titulo={data?.titulo}
+  subTitulo={data?.subTitulo}
+  eslogan={data?.eslogan}
+  client:load
+/>

@@ -1,14 +1,20 @@
 ---
+// src/components/home/HomeHeader.astro
 import HeaderClient from '@/components/home/HeaderClient';
 import { getSession } from '@/services/session.service';
+import { getLangFromUrl } from '@/i18n/utils';
 
 const session     = getSession(Astro.cookies);
 const isLoggedIn  = !!session;
 const currentPath = Astro.url.pathname;
+// Astro.currentLocale está disponible cuando i18n está configurado en astro.config.mjs.
+// getLangFromUrl como fallback por si acaso.
+const lang = (Astro.currentLocale ?? getLangFromUrl(Astro.url)) as 'es' | 'en';
 ---
 
 <HeaderClient
   isLoggedIn={isLoggedIn}
   currentPath={currentPath}
+  lang={lang}
   client:load
 />

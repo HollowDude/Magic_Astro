@@ -1,34 +1,44 @@
 // src/components/home/HeaderClient.tsx
 import { useState, useEffect, useRef } from 'react';
+import { ui, defaultLang, languages } from '@/i18n/ui';
+import { getLocalizedPath, getNavLinks } from '@/i18n/utils';
+import type { Lang, UiKey } from '@/i18n/ui';
 
+// ── Props ─────────────────────────────────────────────────────────────────────
 interface Props {
-  isLoggedIn: boolean;
+  isLoggedIn:  boolean;
   currentPath: string;
+  lang:        Lang;
 }
 
-const NAV_LINKS = [
-  { label: 'Tienda',         href: '/shop'      },
-  { label: 'Cursos',         href: '/courses'   },
-  { label: 'Portafolio',     href: '/portfolio' },
-  { label: 'Sobre Nosotros', href: '/about'     },
-];
+// ── Helpers ───────────────────────────────────────────────────────────────────
+
+/** Función de traducción inline para el componente cliente */
+function t(lang: Lang, key: UiKey): string {
+  return (ui[lang] as Record<string, string>)[key]
+    ?? (ui[defaultLang] as Record<string, string>)[key]
+    ?? key;
+}
 
 const PRIMARY   = '#eb4763';
-const ICON_SIZE = '2.375rem';   // diameter of the resting circle
-const PILL_OPEN = '13.5rem';    // expanded width
+const ICON_SIZE = '2.375rem';
+const PILL_OPEN = '13.5rem';
+const ARROW_D   = 44;
 
-export default function HeaderClient({ isLoggedIn, currentPath }: Props) {
+export default function HeaderClient({ isLoggedIn, currentPath, lang }: Props) {
   const [mobileOpen,   setMobileOpen]   = useState(false);
   const [searchOpen,   setSearchOpen]   = useState(false);
   const [searchValue,  setSearchValue]  = useState('');
   const [modalVisible, setModalVisible] = useState(false);
 
-  const inputRef   = useRef<HTMLInputElement>(null);
-  const pillRef    = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
+  const pillRef  = useRef<HTMLDivElement>(null);
+
+  const navLinks = getNavLinks(lang);
 
   const openSearch = () => {
     setSearchOpen(true);
-    setTimeout(() => inputRef.current?.focus(), 220);   // wait for pill to open
+    setTimeout(() => inputRef.current?.focus(), 220);
   };
 
   const closeSearch = () => {
@@ -60,57 +70,53 @@ export default function HeaderClient({ isLoggedIn, currentPath }: Props) {
   const isActive = (href: string) =>
     currentPath === href || currentPath.startsWith(href + '/');
 
+  /** Cambia al idioma destino manteniendo la ruta actual */
+  const switchLang = (targetLang: Lang) => {
+    if (targetLang === lang) return;
+    window.location.href = getLocalizedPath(currentPath, targetLang);
+  };
+
   return (
     <>
       <header style={s.header}>
 
         {/* ── Left: logo + nav ── */}
         <div style={s.left}>
-          <a href="/" style={s.logo}>
+          <a href={lang === 'es' ? '/' : '/en'} style={s.logo}>
             <span className="material-symbols-outlined" style={s.logoIcon}>local_florist</span>
             <span style={s.logoText}>Maggy Flowers</span>
           </a>
 
           <nav style={s.nav} className="desktop-nav">
-            {NAV_LINKS.map((link) => (
+            {navLinks.map((link) => (
               <a
                 key={link.href}
                 href={link.href}
                 style={{ ...s.navLink, ...(isActive(link.href) ? s.navLinkActive : {}) }}
               >
-                {link.label}
+                {t(lang, link.key)}
                 {isActive(link.href) && <span style={s.navDot} />}
               </a>
             ))}
           </nav>
         </div>
 
-        {/* ── Right: search + auth ── */}
+        {/* ── Right: search + language selector + auth + hamburger ── */}
         <div style={s.right}>
 
-          {/* ── Search pill ──────────────────────────────────────────────
-              The pill is right-anchored via the parent's flex-end.
-              The ICON sits on the LEFT of the pill flex row.
-              The INPUT fills the right portion as the pill expands left.
-          ─────────────────────────────────────────────────────────────── */}
+          {/* ── Search pill ── */}
           <div ref={pillRef} style={{ position: 'relative' }}>
-
             <div
               style={{
                 display: 'flex',
                 alignItems: 'center',
                 height: ICON_SIZE,
-                // width goes from a circle to a wide pill
                 width: searchOpen ? PILL_OPEN : ICON_SIZE,
                 borderRadius: '9999px',
                 overflow: 'hidden',
                 border: `1.5px solid ${searchOpen ? 'rgba(235,71,99,0.28)' : 'transparent'}`,
-                background: searchOpen
-                  ? 'white'
-                  : 'rgba(235,71,99,0.07)',
-                boxShadow: searchOpen
-                  ? '0 4px 20px rgba(235,71,99,0.1)'
-                  : 'none',
+                background: searchOpen ? 'white' : 'rgba(235,71,99,0.07)',
+                boxShadow: searchOpen ? '0 4px 20px rgba(235,71,99,0.1)' : 'none',
                 transition: [
                   'width 0.38s cubic-bezier(0.4,0,0.2,1)',
                   'border-color 0.25s ease',
@@ -119,10 +125,9 @@ export default function HeaderClient({ isLoggedIn, currentPath }: Props) {
                 ].join(', '),
               }}
             >
-              {/* ── Lupa button — LEFT side of pill ── */}
               <button
                 onClick={searchOpen ? closeSearch : openSearch}
-                aria-label={searchOpen ? 'Cerrar búsqueda' : 'Abrir búsqueda'}
+                aria-label={t(lang, searchOpen ? 'header.search.close' : 'header.search.open')}
                 style={{
                   flexShrink: 0,
                   display: 'flex',
@@ -138,26 +143,18 @@ export default function HeaderClient({ isLoggedIn, currentPath }: Props) {
                   borderRadius: '9999px',
                 }}
               >
-                <span
-                  className="material-symbols-outlined"
-                  style={{
-                    fontSize: '1.25rem',
-                    lineHeight: 1,
-                    display: 'block',
-                  }}
-                >
+                <span className="material-symbols-outlined" style={{ fontSize: '1.25rem', lineHeight: 1, display: 'block' }}>
                   search
                 </span>
               </button>
 
-              {/* ── Input — RIGHT of the icon ── */}
               <input
                 ref={inputRef}
                 type="search"
                 value={searchValue}
                 onChange={(e) => setSearchValue(e.target.value)}
-                placeholder="Buscar flores..."
-                aria-label="Buscar"
+                placeholder={t(lang, 'header.search.placeholder')}
+                aria-label={t(lang, 'header.search.open')}
                 style={{
                   flex: 1,
                   minWidth: 0,
@@ -168,46 +165,63 @@ export default function HeaderClient({ isLoggedIn, currentPath }: Props) {
                   fontSize: '0.875rem',
                   fontFamily: "'Be Vietnam Pro', sans-serif",
                   color: '#181112',
-                  // fade + slide in from the right
                   opacity:      searchOpen ? 1 : 0,
                   transform:    searchOpen ? 'translateX(0)' : 'translateX(-6px)',
                   pointerEvents: searchOpen ? 'auto' : 'none',
-                  transition: [
-                    'opacity 0.22s ease 0.16s',
-                    'transform 0.28s ease 0.12s',
-                  ].join(', '),
+                  transition: 'opacity 0.22s ease 0.16s, transform 0.28s ease 0.12s',
                 }}
               />
             </div>
 
-            {/* ── Modal de resultados ── */}
             {modalVisible && (
               <div style={s.modal}>
                 <div style={s.modalRow}>
-                  <span
-                    className="material-symbols-outlined"
-                    style={{ fontSize: '1.75rem', color: PRIMARY, opacity: 0.5, lineHeight: 1, flexShrink: 0 }}
-                  >
+                  <span className="material-symbols-outlined" style={{ fontSize: '1.75rem', color: PRIMARY, opacity: 0.5, lineHeight: 1, flexShrink: 0 }}>
                     manage_search
                   </span>
                   <div>
                     <p style={s.modalTitle}>"{searchValue}"</p>
-                    <p style={s.modalSub}>Los resultados aparecerán aquí pronto.</p>
+                    <p style={s.modalSub}>{t(lang, 'header.search.results')}</p>
                   </div>
                 </div>
               </div>
             )}
           </div>
 
+          {/* ── Selector de idioma ── */}
+          <div style={s.langSelector} role="group" aria-label={t(lang, 'lang.select')}>
+            {(Object.keys(languages) as Lang[]).map((l, i, arr) => (
+              <>
+                <button
+                  key={l}
+                  onClick={() => switchLang(l)}
+                  disabled={l === lang}
+                  aria-current={l === lang ? 'true' : undefined}
+                  style={{
+                    ...s.langBtn,
+                    color:      l === lang ? PRIMARY : '#886369',
+                    fontWeight: l === lang ? 700 : 500,
+                    cursor:     l === lang ? 'default' : 'pointer',
+                  }}
+                >
+                  {l.toUpperCase()}
+                </button>
+                {i < arr.length - 1 && (
+                  <span key={`sep-${l}`} style={s.langDivider}>|</span>
+                )}
+              </>
+            ))}
+          </div>
+
           {/* ── Auth ── */}
           {isLoggedIn ? (
             <>
-              <a href="/dashboard" style={s.iconBtn} aria-label="Mi perfil">
+              <a href={lang === 'es' ? '/dashboard' : '/en/dashboard'} style={s.iconBtn} aria-label={t(lang, 'header.profile')}>
                 <span className="material-symbols-outlined" style={{ fontSize: '1.25rem', lineHeight: 1 }}>
                   account_circle
                 </span>
               </a>
-              <button style={{ ...s.iconBtn, position: 'relative' }} aria-label="Carrito" disabled>
+              <button style={{ ...s.iconBtn, position: 'relative' }} aria-label={t(lang, 'header.cart')} disabled>
                 <span className="material-symbols-outlined" style={{ fontSize: '1.25rem', lineHeight: 1 }}>
                   shopping_bag
                 </span>
@@ -216,16 +230,16 @@ export default function HeaderClient({ isLoggedIn, currentPath }: Props) {
             </>
           ) : (
             <button disabled style={s.loginBtn} title="Próximamente">
-              Iniciar sesión
+              {t(lang, 'header.login')}
             </button>
           )}
 
-          {/* ── Hamburger (mobile) ── */}
+          {/* ── Hamburger (solo mobile — display controlado solo por CSS, sin inline display) ── */}
           <button
             onClick={() => setMobileOpen((v) => !v)}
-            style={s.iconBtn}
+            style={s.hamburgerBtn}
             className="hamburger-btn"
-            aria-label="Menú"
+            aria-label={t(lang, 'header.menu')}
           >
             <span className="material-symbols-outlined" style={{ fontSize: '1.25rem', lineHeight: 1 }}>
               {mobileOpen ? 'close' : 'menu'}
@@ -238,22 +252,48 @@ export default function HeaderClient({ isLoggedIn, currentPath }: Props) {
       {mobileOpen && (
         <div style={s.overlay} onClick={() => setMobileOpen(false)}>
           <nav style={s.drawer} onClick={(e) => e.stopPropagation()}>
-            {NAV_LINKS.map((link) => (
+            {navLinks.map((link) => (
               <a
                 key={link.href}
                 href={link.href}
                 style={{ ...s.mobileLink, ...(isActive(link.href) ? s.mobileLinkActive : {}) }}
               >
-                {link.label}
+                {t(lang, link.key)}
               </a>
             ))}
+
+            {/* Selector de idioma en mobile drawer */}
+            <div style={s.mobileLangRow}>
+              {(Object.keys(languages) as Lang[]).map((l, i, arr) => (
+                <>
+                  <button
+                    key={l}
+                    onClick={() => switchLang(l)}
+                    disabled={l === lang}
+                    style={{
+                      ...s.mobileLangBtn,
+                      color:      l === lang ? PRIMARY : '#886369',
+                      fontWeight: l === lang ? 700 : 500,
+                    }}
+                  >
+                    {languages[l]}
+                  </button>
+                  {i < arr.length - 1 && (
+                    <span key={`msep-${l}`} style={{ color: '#d0c0c3', fontSize: '0.75rem' }}>|</span>
+                  )}
+                </>
+              ))}
+            </div>
           </nav>
         </div>
       )}
 
       <style>{`
+        /* ── Desktop nav visible, hamburger oculto ── */
         .desktop-nav   { display: flex; }
-        .hamburger-btn { display: none; }
+        .hamburger-btn { display: none !important; }
+
+        /* ── Mobile: invertir visibilidades ── */
         @media (max-width: 767px) {
           .desktop-nav   { display: none !important; }
           .hamburger-btn { display: flex !important; }
@@ -332,7 +372,6 @@ const s: Record<string, React.CSSProperties> = {
     background: PRIMARY,
   },
 
-  // right section — flex-end so pill grows leftward naturally
   right: {
     display: 'flex',
     alignItems: 'center',
@@ -340,10 +379,37 @@ const s: Record<string, React.CSSProperties> = {
     flexShrink: 0,
   },
 
+  /* ── Language selector ── */
+  langSelector: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '0.25rem',
+    padding: '0.25rem 0.625rem',
+    borderRadius: '9999px',
+    background: 'rgba(235,71,99,0.07)',
+    marginInline: '0.25rem',
+  },
+  langBtn: {
+    background: 'none',
+    border: 'none',
+    fontFamily: "'Be Vietnam Pro', sans-serif",
+    fontSize: '0.8125rem',
+    letterSpacing: '0.04em',
+    padding: '0.125rem 0.125rem',
+    lineHeight: 1,
+    transition: 'color 0.2s',
+  },
+  langDivider: {
+    color: 'rgba(136,99,105,0.4)',
+    fontSize: '0.6875rem',
+    userSelect: 'none',
+    lineHeight: 1,
+  },
+
   modal: {
     position: 'absolute',
     top: 'calc(100% + 0.5rem)',
-    left: 0,               // aligns with left edge of pill (= icon)
+    left: 0,
     right: 0,
     background: 'white',
     borderRadius: '0.875rem',
@@ -382,6 +448,21 @@ const s: Record<string, React.CSSProperties> = {
     cursor: 'pointer',
     textDecoration: 'none',
     transition: 'background 0.2s, color 0.2s',
+    flexShrink: 0,
+  },
+
+  // ⚠️  SIN display: aquí — la visibilidad la controla SOLO el CSS class .hamburger-btn
+  // Inline styles siempre ganan sobre clases CSS, por eso se separó.
+  hamburgerBtn: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    width: ICON_SIZE,
+    height: ICON_SIZE,
+    borderRadius: '9999px',
+    background: 'rgba(235,71,99,0.07)',
+    color: '#3a1a20',
+    border: 'none',
+    cursor: 'pointer',
     flexShrink: 0,
   },
 
@@ -449,5 +530,23 @@ const s: Record<string, React.CSSProperties> = {
   mobileLinkActive: {
     color: PRIMARY,
     background: 'rgba(235,71,99,0.04)',
+  },
+
+  mobileLangRow: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '0.5rem',
+    padding: '1rem 1.5rem',
+    marginTop: 'auto',
+    borderTop: '1px solid #f0e4e6',
+  },
+  mobileLangBtn: {
+    background: 'none',
+    border: 'none',
+    fontFamily: "'Be Vietnam Pro', sans-serif",
+    fontSize: '0.9375rem',
+    cursor: 'pointer',
+    padding: 0,
+    transition: 'color 0.2s',
   },
 };

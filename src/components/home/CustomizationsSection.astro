@@ -1,5 +1,19 @@
 ---
 // src/components/home/CustomizationsSection.astro
+//
+// Wrapper SSR: obtiene el bloque "homepage_personalization_section" de Drupal
+// y renderiza la sección. Si Drupal no responde, usa contenido de fallback.
+
+import { getPersonalizationData } from '@/services/drupal/drupal.blocks';
+
+const DRUPAL_BASE_URL = import.meta.env.DRUPAL_BASE_URL as string;
+
+const data = await getPersonalizationData(DRUPAL_BASE_URL);
+
+// ── Fallback cuando Drupal no devuelve data ────────────────────────────────
+const titulo    = data?.titulo    ?? null;
+const descripcion = data?.descripcion ?? 'Hacemos realidad tus sueños florales. Diseñamos arreglos únicos adaptados a tus gustos y necesidades, ideales para bodas, celebraciones, eventos corporativos o regalos especiales. Cuéntanos tu idea y nosotros pondremos la magia.';
+const fotoUrl   = data?.fotoUrl   ?? 'https://lh3.googleusercontent.com/aida-public/AB6AXuDxs5NlWSf1_sZqYDP3MuvYSmKhli00fhQbpnpt7Sw1ROJhZ32ColhwrVhmOojwXVfr_S9aYkX9Q4IqwrPEmHNj8ThynAA_3HjaJW06mOUgvW_1C5h8T49djElHDEFM3BPC6WZ-4-wj_JWSY1dDUPX9oPGjZexXpMyabJLeo3d8Y3Y50YOLQ8ZNJUkAWVNYT8gfFrFD1wCcdGw4lBixS7VivWxBMSkoVBZQ9iX_ABacSbIFLgee1zQ-sA5whi4Dm9J28DVr53lQgAo';
 ---
 
 <section class="custom-section">
@@ -11,7 +25,7 @@
       <div class="custom-img-wrap">
         <div
           class="custom-img"
-          style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuDxs5NlWSf1_sZqYDP3MuvYSmKhli00fhQbpnpt7Sw1ROJhZ32ColhwrVhmOojwXVfr_S9aYkX9Q4IqwrPEmHNj8ThynAA_3HjaJW06mOUgvW_1C5h8T49djElHDEFM3BPC6WZ-4-wj_JWSY1dDUPX9oPGjZexXpMyabJLeo3d8Y3Y50YOLQ8ZNJUkAWVNYT8gfFrFD1wCcdGw4lBixS7VivWxBMSkoVBZQ9iX_ABacSbIFLgee1zQ-sA5whi4Dm9J28DVr53lQgAo')"
+          style={`background-image: url('${fotoUrl}')`}
         />
       </div>
     </div>
@@ -19,13 +33,9 @@
     <!-- Texto -->
     <div class="custom-text">
       <h2 class="custom-title">
-        Personalizaciones<br />&amp; Eventos
+        {titulo ?? <>Personalizaciones<br />&amp; Eventos</>}
       </h2>
-      <p class="custom-desc">
-        Hacemos realidad tus sueños florales. Diseñamos arreglos únicos adaptados a tus gustos y
-        necesidades, ideales para bodas, celebraciones, eventos corporativos o regalos especiales.
-        Cuéntanos tu idea y nosotros pondremos la magia.
-      </p>
+      <p class="custom-desc">{descripcion}</p>
       <a href="/contact" class="custom-cta">Contáctenos</a>
     </div>
 
@@ -61,7 +71,6 @@
     position: relative;
     flex-shrink: 0;
     width: 100%;
-    /* Espacio extra abajo e izquierda para que la imagen pueda desbordarse */
     padding-bottom: 1.75rem;
     padding-left: 1rem;
   }
@@ -69,20 +78,19 @@
     .custom-img-outer { width: 46%; }
   }
 
-  /* Marco decorativo — borde redondeado rosa, desplazado arriba-derecha */
+  /* Marco decorativo */
   .custom-frame {
     position: absolute;
-    /* se desplaza arriba y a la derecha respecto al origen del outer */
     top: 0;
-    left: 2rem;         /* desplazado a la derecha del borde izquierdo */
+    left: 2rem;
     right: 0;
-    bottom: 4rem;      /* no llega al fondo (ahí desborda la imagen) */
+    bottom: 4rem;
     border: 2px solid var(--primary);
     border-radius: 1rem;
     pointer-events: none;
   }
 
-  /* Imagen — desplazada abajo-izquierda respecto al marco */
+  /* Imagen desplazada abajo-izquierda respecto al marco */
   .custom-img-wrap {
     position: relative;
     aspect-ratio: 4 / 3;
@@ -90,9 +98,8 @@
     border-radius: 1rem;
     background: #f3f4f6;
     box-shadow: 0 8px 32px rgba(0 0 0 / 0.13);
-    /* desplazamiento: abajo y a la izquierda del marco */
     margin-top: 2.00rem;
-    margin-right: 2.00rem;  /* crea el hueco a la derecha donde se ve el marco */
+    margin-right: 2.00rem;
     margin-bottom: 0;
   }
 
