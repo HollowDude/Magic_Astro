@@ -2,7 +2,7 @@
 // src/pages/index.astro
 import HomeLayout from '@/layouts/HomeLayout.astro';
 import HomeHeader from '@/components/home/HomeHeader.astro';
-import HeroCarousel from '@/components/home/HeroCarousel';
+import HeroSection from '@/components/home/HeroSection.astro';       // ← nuevo wrapper
 import CategoriesSection from '@/components/home/CategoriesSection.astro';
 import FeaturedProducts from '@/components/home/FeaturedProducts.astro';
 import CustomizationsSection from '@/components/home/CustomizationsSection.astro';
@@ -15,7 +15,7 @@ import TestimonialsSection from '@/components/home/TestimonialsSection.astro';
     <HomeHeader />
 
     <main>
-      <HeroCarousel client:load />
+      <HeroSection />                          <!-- fetchea bloque de Drupal SSR -->
       <CategoriesSection />
       <FeaturedProducts />
       <CustomizationsSection />
@@ -42,12 +42,7 @@ import TestimonialsSection from '@/components/home/TestimonialsSection.astro';
 </HomeLayout>
 
 <style>
-  .site-wrapper {
-    display: flex;
-    flex-direction: column;
-    min-height: 100vh;
-  }
-
+  .site-wrapper { display: flex; flex-direction: column; min-height: 100vh; }
   main { flex: 1; }
 
   .site-footer {
@@ -56,7 +51,6 @@ import TestimonialsSection from '@/components/home/TestimonialsSection.astro';
     padding: 2.5rem 1rem;
     margin-top: auto;
   }
-
   .footer-inner {
     max-width: 80rem;
     margin: 0 auto;
@@ -66,45 +60,19 @@ import TestimonialsSection from '@/components/home/TestimonialsSection.astro';
     gap: 1.25rem;
     text-align: center;
   }
-
   @media (min-width: 768px) {
-    .footer-inner {
-      flex-direction: row;
-      justify-content: space-between;
-      text-align: left;
-    }
+    .footer-inner { flex-direction: row; justify-content: space-between; text-align: left; }
   }
-
   .footer-brand {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    color: white;
-    font-weight: 700;
-    font-size: 1.125rem;
+    display: flex; align-items: center; gap: 0.5rem;
+    color: white; font-weight: 700; font-size: 1.125rem;
   }
-
-  .footer-icon {
-    color: #eb4763;
-    font-size: 1.5rem;
-  }
-
-  .footer-copy {
-    font-size: 0.8125rem;
-    color: rgba(255 255 255 / 0.5);
-  }
-
-  .footer-links {
-    display: flex;
-    gap: 1.5rem;
-  }
-
+  .footer-icon { color: #eb4763; font-size: 1.5rem; }
+  .footer-copy { font-size: 0.8125rem; color: rgba(255 255 255 / 0.5); }
+  .footer-links { display: flex; gap: 1.5rem; }
   .footer-links a {
-    font-size: 0.875rem;
-    font-weight: 500;
-    color: rgba(255 255 255 / 0.6);
-    text-decoration: none;
-    transition: color 0.2s;
+    font-size: 0.875rem; font-weight: 500;
+    color: rgba(255 255 255 / 0.6); text-decoration: none; transition: color 0.2s;
   }
   .footer-links a:hover { color: #eb4763; }
 </style>

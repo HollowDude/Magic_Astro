@@ -1,32 +1,12 @@
 ---
 // src/components/home/CategoriesSection.astro
+import { getCategoriasDeFlores } from '@/services/drupal/drupal.taxonomy';
+import { drupalFileUrl } from '@/types/commerce';
 
-const categories = [
-  {
-    name: 'Ramos',
-    image: 'https://lh3.googleusercontent.com/aida-public/AB6AXuCmSYYm6DwqmuEvACGvGQMbHXA50Zt6Fhup8LAzyVnercdLUUTewNOdfTzhBk_Szydjrng9MQzgWw6Qis7b1zpo3isorg5byGPvthyKnnmpMQ646X-uPxe7FG3Ds86-_bQ50H5VlwuPI5gGuXk9iVBakZ_WYqdhZeaIeb2FqwW2Te8Td-6B6MKQP8H6b4SwBACoPyg3JKhsxkSJ8IGpy525qVZN7Rtqt0wM2wFlE5HA8x89sO7xOzTg7MIXFAFY3LGRmMs038B8LjM',
-    badge: null,
-    href: '/shop?cat=ramos',
-  },
-  {
-    name: 'Arreglos especiales',
-    image: 'https://lh3.googleusercontent.com/aida-public/AB6AXuCjntsRTrZn3ghnPQffXtX6sbbslPDiUVeeneQu9uUeT0X5Dw-D_ESxSv8omHUQIWNI7t1jUfzb02ZM5-c-9zo1EUkdTxjKsgITFES7_f_sJ5ce12O9VnJKgunZdmFh2ckY2Jf1K_iHjDQy8AC4-B8V6GESCYCElFBqrqK-31I3-v8jyQEWjP9hVM6GM-W0gf9Ne4v593ku9yyGKFayPzvfB4rW6Yvy7Y92WBHCe0WRP6DH4vn5mQeIY7qcOAjpDbyUtjcRaNFzIsA',
-    badge: null,
-    href: '/shop?cat=arreglos',
-  },
-  {
-    name: 'Personalizaciones',
-    image: 'https://lh3.googleusercontent.com/aida-public/AB6AXuCD0rm3JvZDe66l7CSZ9PHTn53UYfLE9SjSUNa9Im0P5gHWDu-_OEUvqtFCU_dT_5cpEMdPW_2goSiPmIsIeqoYwod8UWeRLNOMJjm1qQqQajEbz5b0IshzzDa-VvJE2j-Jiz07d1uw8gtOmdT_KIuzvsDf4iFs_MyRj3UMj0b3rt_bHKhxmhLzjaxRSYnpLeswu5I8opJP8BFlkft-2elAmP-Bh_fwKQccvM-L7WiFBGf5TgU3-zy1QUTKGg33HI1pSG4LXdLn_b5I',
-    badge: null,
-    href: '/shop?cat=personalizaciones',
-  },
-  {
-    name: 'Ofertas',
-    image: 'https://lh3.googleusercontent.com/aida-public/AB6AXuCDlY-Jxvv0CFvW9Pv7kZKePUsZnZDn5rSQVvzjbFUY6ZFKMIlaoE-HrF5R9hoPJOA-dvHC3DkVQCY1OGvLrIXkoDfGD4YJeJFLn_k6ZeL-J1vWo1Qc8isdQ_BXy2efXrHa3pmPzSuz1_XOHcWeJYBvE1AOmwCKy1Ve14ttCtVi-U1h2NQyMa-xm_fIsAm6p-1X7eq-LhuglsAYiE83zwvwP096PCATF7U71Zr3oJmLMR8hHzlUYQlYTp4sWF2mh0N_7YXd5EDVegs',
-    badge: 'SALE',
-    href: '/shop?cat=ofertas',
-  },
-];
+// Sin trailing slash: 'http://localhost:8080'
+const DRUPAL_BASE_URL = import.meta.env.DRUPAL_BASE_URL as string;
+
+const categorias = await getCategoriasDeFlores(4);
 ---
 
 <section class="categories-section">
@@ -39,24 +19,40 @@ const categories = [
       <a class="see-all" href="/shop">Ver todo</a>
     </div>
 
-    <div class="categories-grid">
-      {categories.map((cat) => (
-        <a href={cat.href} class="category-card group">
-          <div class="category-img-wrap">
-            <div
-              class="category-img"
-              style={`background-image: url('${cat.image}')`}
-            />
-            {cat.badge && (
-              <span class="category-badge">{cat.badge}</span>
-            )}
-          </div>
-          <div class="category-name">
-            <h3>{cat.name}</h3>
-          </div>
-        </a>
-      ))}
-    </div>
+    {categorias.length === 0 ? (
+      <p class="categories-empty">No hay categorías disponibles por el momento.</p>
+    ) : (
+      <div class="categories-grid">
+        {categorias.map((cat) => {
+          const imageUrl = cat.field_foto
+            ? drupalFileUrl(cat.field_foto, DRUPAL_BASE_URL)
+            : null;
+
+          // Slug para el filtro en la tienda: usamos el tid como fallback seguro
+          const slug = encodeURIComponent(cat.name.toLowerCase().replace(/\s+/g, '-'));
+
+          return (
+            <a href={`/shop?cat=${slug}`} class="category-card">
+              <div class="category-img-wrap">
+                {imageUrl ? (
+                  <div
+                    class="category-img"
+                    style={`background-image: url('${imageUrl}')`}
+                  />
+                ) : (
+                  <div class="category-img category-img--placeholder">
+                    <span class="material-symbols-outlined placeholder-icon">local_florist</span>
+                  </div>
+                )}
+              </div>
+              <div class="category-name">
+                <h3>{cat.name}</h3>
+              </div>
+            </a>
+          );
+        })}
+      </div>
+    )}
   </div>
 </section>
 
@@ -106,6 +102,13 @@ const categories = [
 
   @media (min-width: 640px) { .see-all { display: block; } }
 
+  .categories-empty {
+    text-align: center;
+    color: var(--text-muted);
+    padding: 3rem 0;
+    font-size: 1rem;
+  }
+
   .categories-grid {
     display: grid;
     grid-template-columns: repeat(2, 1fr);
@@ -145,17 +148,17 @@ const categories = [
   }
   .category-card:hover .category-img { transform: scale(1.1); }
 
-  .category-badge {
-    position: absolute;
-    top: 0.75rem;
-    right: 0.75rem;
-    background: var(--primary);
-    color: white;
-    font-size: 0.75rem;
-    font-weight: 700;
-    padding: 0.25rem 0.75rem;
-    border-radius: 9999px;
-    box-shadow: 0 2px 6px rgba(0 0 0 / 0.15);
+  /* Placeholder cuando el término no tiene foto asignada */
+  .category-img--placeholder {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: color-mix(in srgb, var(--primary) 8%, var(--blush));
+  }
+  .placeholder-icon {
+    font-size: 3rem;
+    color: var(--primary);
+    opacity: 0.35;
   }
 
   .category-name {

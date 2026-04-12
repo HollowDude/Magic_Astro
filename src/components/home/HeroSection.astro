@@ -1,130 +1,24 @@
 ---
 // src/components/home/HeroSection.astro
+//
+// Wrapper SSR: obtiene el block_content "homepage_hero_section" de Drupal
+// y pasa la data normalizada al carrusel interactivo (React, client:load).
+//
+// Si Drupal no responde o el bloque no existe, HeroCarousel usa su fallback
+// interno, así la página nunca queda en blanco.
+
+import HeroCarousel from '@/components/home/HeroCarousel';
+import { getHomepageHeroData } from '@/services/drupal/drupal.blocks';
+
+const DRUPAL_BASE_URL = import.meta.env.DRUPAL_BASE_URL as string;
+
+const hero = await getHomepageHeroData(DRUPAL_BASE_URL);
 ---
 
-<section class="hero-wrapper">
-  <div
-    class="hero-inner"
-    style='background-image: linear-gradient(rgba(0,0,0,0.3), rgba(0,0,0,0.5)), url("https://lh3.googleusercontent.com/aida-public/AB6AXuAmfhRgp0YzWzhd83FdBXzXp9ckxvZH0OoBp-ZhpwTJwEFtuj4ws5sLcGmm5i04XI-5LZYEM31EFKcadzdHmPys2agdyWua0gCEFM-f6d3Yiv9P7iRFcf15FXOeRQzM34cxehEOdIobG2AfUzRMMUPbVJd51FgqUQehzPT7Fdt-3a6mDCvLPsGhFqNP-or_J-9ziCaw3COOgI0T8TrdOZY9Sf_VGuFcgt0S5g-PAvzHiAoQn9MLH2qPvNrXyRWIpHJ7Hw907RF0JmI"); background-size: cover; background-position: center;'
-  >
-    <div class="hero-content">
-      <h1 class="hero-title">Bienvenida a Maggy Flowers</h1>
-      <h2 class="hero-subtitle">Donde las flores se convierten en magia</h2>
-      <p class="hero-desc">
-        Creamos diseños florales artificiales y naturales para regalar, decorar y celebrar momentos
-        inolvidables. Y además, te enseñamos a hacer lo mismo desde cero, con confianza, creatividad
-        y propósito.
-      </p>
-      <div class="hero-ctas">
-        <a href="/shop" class="cta-primary">Ver ofertas</a>
-        <a href="/courses" class="cta-secondary">Explorar cursos</a>
-      </div>
-    </div>
-  </div>
-</section>
-
-<style>
-  .hero-wrapper {
-    width: 100%;
-    padding: 1rem 1rem 0;
-  }
-
-  @media (min-width: 1024px) {
-    .hero-wrapper { padding: 1rem 2rem 0; }
-  }
-
-  .hero-inner {
-    position: relative;
-    display: flex;
-    min-height: 560px;
-    width: 100%;
-    align-items: center;
-    justify-content: center;
-    overflow: hidden;
-    border-radius: 1rem;
-    text-align: center;
-    padding: 5rem 1.5rem;
-    box-shadow: 0 8px 32px rgba(0 0 0 / 0.18);
-  }
-
-  .hero-content {
-    position: relative;
-    z-index: 10;
-    display: flex;
-    max-width: 56rem;
-    flex-direction: column;
-    align-items: center;
-    gap: 1.5rem;
-  }
-
-  .hero-title {
-    font-size: 2.25rem;
-    font-weight: 900;
-    line-height: 1.15;
-    letter-spacing: -0.02em;
-    color: white;
-  }
-
-  @media (min-width: 640px) { .hero-title { font-size: 3rem; } }
-  @media (min-width: 768px) { .hero-title { font-size: 3.75rem; } }
-
-  .hero-subtitle {
-    font-size: 1.75rem;
-    font-weight: 900;
-    line-height: 1.2;
-    letter-spacing: -0.02em;
-    color: #fbdadd;
-  }
-
-  @media (min-width: 640px) { .hero-subtitle { font-size: 1.875rem; } }
-  @media (min-width: 768px) { .hero-subtitle { font-size: 2.25rem; } }
-
-  .hero-desc {
-    max-width: 42rem;
-    font-size: 1.125rem;
-    line-height: 1.65;
-    color: rgba(255 255 255 / 0.9);
-  }
-
-  @media (min-width: 640px) { .hero-desc { font-size: 1.25rem; } }
-
-  .hero-ctas {
-    margin-top: 1rem;
-    display: flex;
-    flex-direction: column;
-    gap: 1rem;
-  }
-
-  @media (min-width: 640px) {
-    .hero-ctas { flex-direction: row; }
-  }
-
-  .cta-primary,
-  .cta-secondary {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    height: 3rem;
-    min-width: 10rem;
-    padding: 0 2rem;
-    border-radius: 9999px;
-    font-size: 1rem;
-    font-weight: 700;
-    text-decoration: none;
-    cursor: pointer;
-    border: none;
-    transition: transform 0.2s, background 0.2s;
-  }
-
-  .cta-primary {
-    background: var(--primary);
-    color: white;
-  }
-  .cta-primary:hover { transform: scale(1.05); background: color-mix(in srgb, var(--primary) 90%, transparent); }
-
-  .cta-secondary {
-    background: white;
-    color: #181112;
-  }
-  .cta-secondary:hover { transform: scale(1.05); background: #f3f4f6; }
-</style>
+<HeroCarousel
+  title={hero?.title}
+  slogan={hero?.slogan}
+  description={hero?.description}
+  slides={hero?.slides}
+  client:load
+/>
