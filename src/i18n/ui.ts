@@ -1,6 +1,5 @@
 // src/i18n/ui.ts
 // Diccionario de traducciones para la UI del sitio.
-// Agregar nuevas claves aquí y usarlas con useTranslations().
 
 export const languages = {
   es: 'Español',
@@ -14,6 +13,7 @@ export const defaultLang: Lang = 'es';
 export const ui = {
   es: {
     // ── Navegación ──────────────────────────────────────────────────────────
+    'nav.home':      'Inicio',
     'nav.shop':      'Tienda',
     'nav.courses':   'Cursos',
     'nav.portfolio': 'Portafolio',
@@ -43,9 +43,41 @@ export const ui = {
     'hero.slide.events':   'Eventos especiales',
     'hero.slide.nav':      'Navegación de slides',
     'hero.slide.label':    'Slide',
+
+    // ── Tienda ───────────────────────────────────────────────────────────────
+    'shop.title':                  'Tienda',
+    'shop.description':            'Encuentra el arreglo floral perfecto para cada ocasión.',
+    'shop.sort.label':             'Ordenar por:',
+    'shop.sort.featured':          'Destacados',
+    'shop.sort.price_asc':         'Precio: menor a mayor',
+    'shop.sort.price_desc':        'Precio: mayor a menor',
+    'shop.sort.newest':            'Más nuevos',
+    'shop.filters.toggle':         'Filtros',
+    'shop.filters.apply':          'Ver resultados',
+    'shop.filters.categories':     'Categorías',
+    'shop.filters.price':          'Precio',
+    'shop.filters.price.under50':  'Menos de $50',
+    'shop.filters.price.50_100':   '$50 – $100',
+    'shop.filters.price.100_200':  '$100 – $200',
+    'shop.filters.price.over200':  'Más de $200',
+    'shop.filters.colors':         'Paleta de colores',
+    'shop.filters.type':           'Tipo',
+    'shop.filters.type.natural':   'Natural',
+    'shop.filters.type.artificial':'Artificial',
+    'shop.filters.type.seco':      'Seco',
+    'shop.filters.clear':          'Limpiar filtros',
+    'shop.add_to_cart':            'Añadir al carrito',
+    'shop.price_on_request':       'Consultar precio',
+    'shop.no_products':            'No hay productos que coincidan con los filtros.',
+    'shop.showing':                'Mostrando',
+    'shop.of':                     'de',
+    'shop.results':                'resultados',
+    'shop.pagination.prev':        'Anterior',
+    'shop.pagination.next':        'Siguiente',
   },
   en: {
     // ── Navigation ──────────────────────────────────────────────────────────
+    'nav.home':      'Home',
     'nav.shop':      'Shop',
     'nav.courses':   'Courses',
     'nav.portfolio': 'Portfolio',
@@ -64,7 +96,7 @@ export const ui = {
     // ── Language ─────────────────────────────────────────────────────────────
     'lang.select': 'Select language',
 
-    // ── Hero Section (fallbacks cuando Drupal no responde) ──────────────────
+    // ── Hero Section ─────────────────────────────────────────────────────────
     'hero.title':          'Welcome to Maggy Flowers',
     'hero.slogan':         'Where flowers become magic',
     'hero.description':    'We create artificial and natural floral designs for gifting, decorating, and celebrating unforgettable moments. We also teach you to do the same from scratch — with confidence, creativity, and purpose.',
@@ -75,6 +107,37 @@ export const ui = {
     'hero.slide.events':   'Special events',
     'hero.slide.nav':      'Slide navigation',
     'hero.slide.label':    'Slide',
+
+    // ── Shop ─────────────────────────────────────────────────────────────────
+    'shop.title':                  'Shop',
+    'shop.description':            'Find the perfect floral arrangement for every occasion.',
+    'shop.sort.label':             'Sort by:',
+    'shop.sort.featured':          'Featured',
+    'shop.sort.price_asc':         'Price: Low to High',
+    'shop.sort.price_desc':        'Price: High to Low',
+    'shop.sort.newest':            'Newest',
+    'shop.filters.toggle':         'Filters',
+    'shop.filters.apply':          'View results',
+    'shop.filters.categories':     'Categories',
+    'shop.filters.price':          'Price',
+    'shop.filters.price.under50':  'Under $50',
+    'shop.filters.price.50_100':   '$50 – $100',
+    'shop.filters.price.100_200':  '$100 – $200',
+    'shop.filters.price.over200':  'Over $200',
+    'shop.filters.colors':         'Color Palette',
+    'shop.filters.type':           'Type',
+    'shop.filters.type.natural':   'Natural',
+    'shop.filters.type.artificial':'Artificial',
+    'shop.filters.type.seco':      'Dried',
+    'shop.filters.clear':          'Clear filters',
+    'shop.add_to_cart':            'Add to cart',
+    'shop.price_on_request':       'Price on request',
+    'shop.no_products':            'No products match your filters.',
+    'shop.showing':                'Showing',
+    'shop.of':                     'of',
+    'shop.results':                'results',
+    'shop.pagination.prev':        'Previous',
+    'shop.pagination.next':        'Next',
   },
 } as const;
 

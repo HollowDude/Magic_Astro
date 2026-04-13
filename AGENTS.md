@@ -16,8 +16,9 @@
   - Design Tokens: Strictly use Tailwind classes or CSS variables defined in `@theme`.
   - Icons: Use `.material-symbols-outlined` or `.material-symbols-rounded` classes.
 - **Authentication:**
-  - SSR-based using `src/services/session.service.ts`. 
-  - Sessions stored in `mf_session` HTTP-only base64 cookies.
+  - SSR-based using `src/services/session.service.ts`.
+  - Currently uses Drupal's native **cookie-based session authentication** (POST `/user/login`).
+  - Sessions stored in `mf_session` HTTP-only base64 encoded cookies. **Note:** These are Base64 *encoded*, not encrypted. Consider using `jose` for encryption if sensitive data is stored.
   - **Security:** Never store JWT/Secrets in `localStorage`.
 - **Data Fetching:**
   - Use `drupalFetch` for all Drupal requests.

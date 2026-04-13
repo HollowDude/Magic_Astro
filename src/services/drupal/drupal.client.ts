@@ -56,7 +56,7 @@ export interface RawResponse<T> {
  * Si el idioma es el default de Drupal, no agrega prefijo.
  */
 function langPrefix(lang: string | undefined): string {
-  if (!lang) return '';
+  if (!lang || lang === DRUPAL_DEFAULT_LANG) return '';
   return `/${lang}`;
 }
 
