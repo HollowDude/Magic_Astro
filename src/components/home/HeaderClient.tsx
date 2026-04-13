@@ -3,6 +3,8 @@ import { useState, useEffect, useRef } from 'react';
 import { ui, defaultLang, languages } from '@/i18n/ui';
 import { getLocalizedPath, getNavLinks } from '@/i18n/utils';
 import type { Lang, UiKey } from '@/i18n/ui';
+// Agregar este import al inicio del archivo
+import { Fragment } from 'react';
 
 // ── Props ─────────────────────────────────────────────────────────────────────
 interface Props {
@@ -191,7 +193,7 @@ export default function HeaderClient({ isLoggedIn, currentPath, lang }: Props) {
           {/* ── Selector de idioma ── */}
           <div style={s.langSelector} role="group" aria-label={t(lang, 'lang.select')}>
             {(Object.keys(languages) as Lang[]).map((l, i, arr) => (
-              <>
+              <Fragment key={l}>
                 <button
                   key={l}
                   onClick={() => switchLang(l)}
@@ -209,7 +211,7 @@ export default function HeaderClient({ isLoggedIn, currentPath, lang }: Props) {
                 {i < arr.length - 1 && (
                   <span key={`sep-${l}`} style={s.langDivider}>|</span>
                 )}
-              </>
+              </Fragment>
             ))}
           </div>
 
@@ -265,7 +267,7 @@ export default function HeaderClient({ isLoggedIn, currentPath, lang }: Props) {
             {/* Selector de idioma en mobile drawer */}
             <div style={s.mobileLangRow}>
               {(Object.keys(languages) as Lang[]).map((l, i, arr) => (
-                <>
+                <Fragment key={l}>
                   <button
                     key={l}
                     onClick={() => switchLang(l)}
@@ -281,7 +283,7 @@ export default function HeaderClient({ isLoggedIn, currentPath, lang }: Props) {
                   {i < arr.length - 1 && (
                     <span key={`msep-${l}`} style={{ color: '#d0c0c3', fontSize: '0.75rem' }}>|</span>
                   )}
-                </>
+                </Fragment>
               ))}
             </div>
           </nav>

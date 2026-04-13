@@ -1,103 +1,75 @@
 ---
 // src/components/home/TestimonialsSection.astro
-//
-// Wrapper SSR: obtiene el bloque "homepage_comentarios_section" de Drupal,
-// que incluye los nodos referenciados de tipo "Comentario".
-// Si Drupal no responde, usa contenido de fallback estático.
-
 import { getComentariosData } from '@/services/drupal/drupal.blocks';
+import { getLangFromUrl } from '@/i18n/utils';
+import type { Lang } from '@/i18n/ui';
 
-const data = await getComentariosData();
+const lang = (Astro.currentLocale ?? getLangFromUrl(Astro.url)) as Lang;
+const data = await getComentariosData(lang);
 
-// ── Fallback cuando Drupal no devuelve data ────────────────────────────────
-const titulo      = data?.titulo      ?? 'Lo que dicen nuestros clientes';
-const descripcion = data?.descripcion ?? 'Sus palabras son nuestra mejor inspiración.';
-const comentarios = data?.comentarios?.length
-  ? data.comentarios
-  : [
-      {
-        nombre:     'Sofía Ramírez',
-        rol:        'Novia feliz',
-        comentario: 'Los arreglos para mi boda superaron todas mis expectativas. Maggy capturó exactamente la esencia que queríamos transmitir. ¡Simplemente mágico!',
-      },
-      {
-        nombre:     'Camila Torres',
-        rol:        'Alumna de la Academia',
-        comentario: 'El curso online de diseño floral es increíble. Aprendí técnicas que nunca imaginé y ahora puedo hacer mis propios arreglos en casa. ¡Muy recomendado!',
-      },
-      {
-        nombre:     'Alejandro M.',
-        rol:        'Cliente frecuente',
-        comentario: 'Compré un ramo para el aniversario de mis padres y quedaron fascinados. La frescura y la combinación de colores fueron perfectas. Gracias Maggy.',
-      },
-    ];
+const fallbacks = {
+  es: {
+    titulo:      'Lo que dicen nuestros clientes',
+    descripcion: 'Sus palabras son nuestra mejor inspiración.',
+    comentarios: [
+      { nombre: 'Sofía Ramírez',   rol: 'Novia feliz',            comentario: 'Los arreglos para mi boda superaron todas mis expectativas. Maggy capturó exactamente la esencia que queríamos transmitir. ¡Simplemente mágico!' },
+      { nombre: 'Camila Torres',   rol: 'Alumna de la Academia',  comentario: 'El curso online de diseño floral es increíble. Aprendí técnicas que nunca imaginé y ahora puedo hacer mis propios arreglos en casa. ¡Muy recomendado!' },
+      { nombre: 'Alejandro M.',    rol: 'Cliente frecuente',      comentario: 'Compré un ramo para el aniversario de mis padres y quedaron fascinados. La frescura y la combinación de colores fueron perfectas. Gracias Maggy.' },
+    ],
+  },
+  en: {
+    titulo:      'What our customers say',
+    descripcion: 'Their words are our greatest inspiration.',
+    comentarios: [
+      { nombre: 'Sophia R.',   rol: 'Happy bride',         comentario: 'The arrangements for my wedding exceeded all my expectations. Maggy captured exactly the essence we wanted to convey. Simply magical!' },
+      { nombre: 'Camila T.',   rol: 'Academy student',     comentario: 'The online floral design course is incredible. I learned techniques I never imagined and can now make my own arrangements at home. Highly recommended!' },
+      { nombre: 'Alex M.',     rol: 'Frequent customer',   comentario: 'I bought a bouquet for my parents\' anniversary and they were thrilled. The freshness and color combination were perfect. Thank you Maggy.' },
+    ],
+  },
+} as const;
+
+const f = fallbacks[lang];
+const titulo      = data?.titulo      ?? f.titulo;
+const descripcion = data?.descripcion ?? f.descripcion;
+const comentarios = data?.comentarios?.length ? data.comentarios : f.comentarios;
 ---
 
 <section class="testimonials-section">
   <div class="testimonials-container">
 
-    <!-- Header -->
     <div class="testimonials-header">
       <div>
         <h2 class="section-title">{titulo}</h2>
         <p class="section-subtitle">{descripcion}</p>
       </div>
 
-      <!-- Flechas: círculo blanco con triángulo redondeado (igual que ServicesCarousel) -->
       <div class="nav-arrows">
-        <button class="arrow-btn" aria-label="Anterior">
+        <button class="arrow-btn" aria-label={lang === 'en' ? 'Previous' : 'Anterior'}>
           <svg width="16" height="18" viewBox="0 0 16 18" fill="none">
-            <polygon
-              points="13,3 13,15 3,9"
-              fill="#ad808a"
-              stroke="#ad808a"
-              stroke-width="4"
-              stroke-linejoin="round"
-              stroke-linecap="round"
-            />
+            <polygon points="13,3 13,15 3,9" fill="#ad808a" stroke="#ad808a" stroke-width="4" stroke-linejoin="round" stroke-linecap="round" />
           </svg>
         </button>
-        <button class="arrow-btn" aria-label="Siguiente">
+        <button class="arrow-btn" aria-label={lang === 'en' ? 'Next' : 'Siguiente'}>
           <svg width="16" height="18" viewBox="0 0 16 18" fill="none">
-            <polygon
-              points="3,3 3,15 13,9"
-              fill="#ad808a"
-              stroke="#ad808a"
-              stroke-width="4"
-              stroke-linejoin="round"
-              stroke-linecap="round"
-            />
+            <polygon points="3,3 3,15 13,9" fill="#ad808a" stroke="#ad808a" stroke-width="4" stroke-linejoin="round" stroke-linecap="round" />
           </svg>
         </button>
       </div>
     </div>
 
-    <!-- Grid de cards -->
     <div class="testimonials-grid">
       {comentarios.map((t) => (
         <div class="testimonial-card">
-
-          <!-- Estrellas: siempre 5 (no hay campo de rating en el content type) -->
-          <div class="stars" aria-label="5 estrellas">
+          <div class="stars" aria-label={lang === 'en' ? '5 stars' : '5 estrellas'}>
             {Array.from({ length: 5 }).map(() => (
-              <span
-                class="material-symbols-outlined star-icon"
-                style="color: #f59e0b; font-variation-settings: 'FILL' 1, 'wght' 400, 'GRAD' 0, 'opsz' 24"
-              >
-                star
-              </span>
+              <span class="material-symbols-outlined star-icon" style="color: #f59e0b; font-variation-settings: 'FILL' 1, 'wght' 400, 'GRAD' 0, 'opsz' 24">star</span>
             ))}
           </div>
-
-          <!-- Cita: campo field_comentario (texto plano, sin HTML) -->
           <p class="testimonial-quote">"{t.comentario}"</p>
-
-          <!-- Autor alineado a la derecha -->
           <div class="testimonial-author">
             <h4 class="author-name">{t.nombre}</h4>
             {t.rol && <span class="author-role">{t.rol}</span>}
           </div>
-
         </div>
       ))}
     </div>
@@ -106,145 +78,33 @@ const comentarios = data?.comentarios?.length
 </section>
 
 <style>
-  /* ── Sección: fondo sage ── */
-  /* var(--sage) = #8da399 declarado en src/styles/global.css */
-  .testimonials-section {
-    background: var(--sage);
-    padding: 5rem 1rem;
-  }
-
+  .testimonials-section { background: var(--sage); padding: 5rem 1rem; }
   @media (min-width: 640px)  { .testimonials-section { padding-inline: 1.5rem; } }
   @media (min-width: 1024px) { .testimonials-section { padding-inline: 2rem; } }
 
-  /* ── Contenedor ── */
-  .testimonials-container {
-    max-width: 80rem;
-    margin: 0 auto;
-  }
+  .testimonials-container { max-width: 80rem; margin: 0 auto; }
 
-  /* ── Header ── */
-  .testimonials-header {
-    display: flex;
-    flex-direction: column;
-    align-items: flex-start;
-    justify-content: space-between;
-    gap: 1.25rem;
-    margin-bottom: 3rem;
-  }
+  .testimonials-header { display: flex; flex-direction: column; align-items: flex-start; justify-content: space-between; gap: 1.25rem; margin-bottom: 3rem; }
+  @media (min-width: 768px) { .testimonials-header { flex-direction: row; align-items: flex-end; } }
 
-  @media (min-width: 768px) {
-    .testimonials-header {
-      flex-direction: row;
-      align-items: flex-end;
-    }
-  }
+  .section-title { font-family: var(--font-heading); font-size: clamp(1.75rem, 3vw, 2.5rem); font-weight: 600; letter-spacing: -0.02em; color: #ffffff; margin: 0; }
+  .section-subtitle { margin-top: 0.4rem; color: rgba(255, 255, 255, 0.82); font-size: 0.9375rem; font-family: var(--font-body); }
 
-  .section-title {
-    font-family: var(--font-heading);
-    font-size: clamp(1.75rem, 3vw, 2.5rem);
-    font-weight: 600;
-    letter-spacing: -0.02em;
-    color: #ffffff;
-    margin: 0;
-  }
+  .nav-arrows { display: flex; gap: 0.5rem; flex-shrink: 0; }
+  .arrow-btn { display: flex; align-items: center; justify-content: center; width: 2.75rem; height: 2.75rem; border-radius: 9999px; background: white; border: none; cursor: pointer; box-shadow: 0 2px 10px rgba(0, 0, 0, 0.13); transition: box-shadow 0.2s, transform 0.15s; }
+  .arrow-btn:hover { box-shadow: 0 4px 16px rgba(0, 0, 0, 0.18); transform: scale(1.06); }
 
-  .section-subtitle {
-    margin-top: 0.4rem;
-    color: rgba(255, 255, 255, 0.82);
-    font-size: 0.9375rem;
-    font-family: var(--font-body);
-  }
+  .testimonials-grid { display: grid; gap: 1.5rem; grid-template-columns: 1fr; }
+  @media (min-width: 768px) { .testimonials-grid { grid-template-columns: repeat(3, 1fr); } }
 
-  /* ── Flechas: círculo blanco idéntico a ServicesCarousel ── */
-  .nav-arrows {
-    display: flex;
-    gap: 0.5rem;
-    flex-shrink: 0;
-  }
+  .testimonial-card { background: white; border-radius: 1rem; padding: 2rem; box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08); display: flex; flex-direction: column; gap: 1.25rem; }
 
-  .arrow-btn {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 2.75rem;
-    height: 2.75rem;
-    border-radius: 9999px;
-    background: white;
-    border: none;
-    cursor: pointer;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.13);
-    transition: box-shadow 0.2s, transform 0.15s;
-  }
+  .stars { display: flex; gap: 0.1rem; }
+  .star-icon { font-size: 1.25rem; line-height: 1; }
 
-  .arrow-btn:hover {
-    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.18);
-    transform: scale(1.06);
-  }
+  .testimonial-quote { color: var(--body-color); font-family: var(--font-body); font-size: 0.9375rem; line-height: 1.65; flex: 1; margin: 0; white-space: pre-line; }
 
-  /* ── Grid ── */
-  .testimonials-grid {
-    display: grid;
-    gap: 1.5rem;
-    grid-template-columns: 1fr;
-  }
-
-  @media (min-width: 768px) {
-    .testimonials-grid { grid-template-columns: repeat(3, 1fr); }
-  }
-
-  /* ── Card ── */
-  .testimonial-card {
-    background: white;
-    border-radius: 1rem;
-    padding: 2rem;
-    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
-    display: flex;
-    flex-direction: column;
-    gap: 1.25rem;
-  }
-
-  /* ── Estrellas ── */
-  .stars {
-    display: flex;
-    gap: 0.1rem;
-  }
-
-  .star-icon {
-    font-size: 1.25rem;
-    line-height: 1;
-  }
-
-  /* ── Cita (field_comentario = texto plano, sin HTML) ── */
-  .testimonial-quote {
-    color: var(--body-color);
-    font-family: var(--font-body);
-    font-size: 0.9375rem;
-    line-height: 1.65;
-    flex: 1;
-    margin: 0;
-    /* Garantiza que no se rendericen etiquetas HTML si vienen del campo */
-    white-space: pre-line;
-  }
-
-  /* ── Autor alineado a la derecha ── */
-  .testimonial-author {
-    display: flex;
-    flex-direction: column;
-    align-items: flex-end;
-    gap: 0.15rem;
-  }
-
-  .author-name {
-    font-family: var(--font-body);
-    font-weight: 700;
-    font-size: 0.9375rem;
-    color: var(--headline);
-    margin: 0;
-  }
-
-  .author-role {
-    font-family: var(--font-body);
-    font-size: 0.8125rem;
-    color: var(--body-color);
-  }
+  .testimonial-author { display: flex; flex-direction: column; align-items: flex-end; gap: 0.15rem; }
+  .author-name { font-family: var(--font-body); font-weight: 700; font-size: 0.9375rem; color: var(--headline); margin: 0; }
+  .author-role { font-family: var(--font-body); font-size: 0.8125rem; color: var(--body-color); }
 </style>

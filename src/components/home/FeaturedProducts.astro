@@ -2,34 +2,49 @@
 // src/components/home/FeaturedProducts.astro
 import { getFloresProducts } from '@/services/drupal/drupal.commerce';
 import { getProductThumbnail } from '@/types/commerce';
+import { getLangFromUrl } from '@/i18n/utils';
+import type { Lang } from '@/i18n/ui';
 
-// La env var ya la usa drupal.client.ts — la reutilizamos para construir URLs absolutas.
-// Sin trailing slash: 'http://localhost:8080'
 const DRUPAL_BASE_URL = import.meta.env.DRUPAL_BASE_URL as string;
 
-const products = await getFloresProducts();
+const lang = (Astro.currentLocale ?? getLangFromUrl(Astro.url)) as Lang;
+const products = await getFloresProducts(lang);
+
+const labels = {
+  es: {
+    title:    'Productos destacados',
+    empty:    'No hay productos disponibles por el momento.',
+    buyBtn:   'Comprar',
+    priceAlt: 'Consultar precio',
+  },
+  en: {
+    title:    'Featured Products',
+    empty:    'No products available at the moment.',
+    buyBtn:   'Buy',
+    priceAlt: 'Price on request',
+  },
+} as const;
+
+const t = labels[lang];
 ---
 
 <section class="fp-section">
   <div class="fp-container">
 
     <div class="fp-heading">
-      <h2 class="fp-title">Productos destacados</h2>
+      <h2 class="fp-title">{t.title}</h2>
       <span class="fp-line" aria-hidden="true"></span>
     </div>
 
     {products.length === 0 ? (
-      <p class="fp-empty">No hay productos disponibles por el momento.</p>
+      <p class="fp-empty">{t.empty}</p>
     ) : (
       <div class="fp-grid">
         {products.map((product) => {
-          // Tomamos la primera variación para precio y color
           const defaultVariation = product.variations?.[0];
-          const price  = defaultVariation?.price?.formatted ?? 'Consultar precio';
+          const price  = defaultVariation?.price?.formatted ?? t.priceAlt;
           const color  = defaultVariation?.field_color_de_la_flor?.name ?? null;
           const tipo   = defaultVariation?.field_tipo ?? null;
-
-          // Thumbnail: primer archivo de la galería de la primera variación
           const thumbnail = getProductThumbnail(product, DRUPAL_BASE_URL);
 
           return (
@@ -47,11 +62,7 @@ const products = await getFloresProducts();
                     <span class="material-symbols-outlined placeholder-icon">local_florist</span>
                   </div>
                 )}
-
-                {/* Badges de tipo */}
-                {tipo && (
-                  <span class="fp-badge">{tipo}</span>
-                )}
+                {tipo && <span class="fp-badge">{tipo}</span>}
               </div>
 
               <div class="fp-body">
@@ -64,10 +75,9 @@ const products = await getFloresProducts();
                     </span>
                   )}
                 </div>
-
                 <div class="fp-footer">
                   <span class="fp-price">{price}</span>
-                  <button class="fp-btn">Comprar</button>
+                  <button class="fp-btn">{t.buyBtn}</button>
                 </div>
               </div>
             </article>
@@ -88,18 +98,9 @@ const products = await getFloresProducts();
   @media (min-width: 640px)  { .fp-section { padding-inline: 1.5rem; } }
   @media (min-width: 1024px) { .fp-section { padding-inline: 2rem; } }
 
-  .fp-container {
-    max-width: 80rem;
-    margin: 0 auto;
-  }
+  .fp-container { max-width: 80rem; margin: 0 auto; }
 
-  /* ── Heading ── */
-  .fp-heading {
-    display: flex;
-    align-items: center;
-    gap: 1.25rem;
-    margin-bottom: 2.75rem;
-  }
+  .fp-heading { display: flex; align-items: center; gap: 1.25rem; margin-bottom: 2.75rem; }
 
   .fp-title {
     font-family: var(--font-heading);
@@ -113,166 +114,69 @@ const products = await getFloresProducts();
   }
 
   .fp-line {
-    flex: 1;
-    height: 2px;
-    background: var(--primary);
-    border-radius: 9999px;
-    min-width: 2rem;
-    margin-top: 0.25rem;
+    flex: 1; height: 2px;
+    background: var(--primary); border-radius: 9999px;
+    min-width: 2rem; margin-top: 0.25rem;
   }
 
-  /* ── Empty state ── */
-  .fp-empty {
-    text-align: center;
-    color: var(--text-muted);
-    padding: 3rem 0;
-    font-size: 1rem;
-  }
+  .fp-empty { text-align: center; color: var(--text-muted); padding: 3rem 0; font-size: 1rem; }
 
-  /* ── Grid ── */
-  .fp-grid {
-    display: grid;
-    grid-template-columns: 1fr;
-    gap: 1.25rem;
-  }
+  .fp-grid { display: grid; grid-template-columns: 1fr; gap: 1.25rem; }
   @media (min-width: 540px)  { .fp-grid { grid-template-columns: repeat(2, 1fr); } }
   @media (min-width: 1024px) { .fp-grid { grid-template-columns: repeat(4, 1fr); gap: 1.5rem; } }
 
-  /* ── Card ── */
   .fp-card {
-    background: var(--blush);
-    border-radius: 1rem;
-    overflow: hidden;
-    display: flex;
-    flex-direction: column;
-    transition: box-shadow 0.25s ease, transform 0.25s ease;
-    cursor: pointer;
+    background: var(--blush); border-radius: 1rem; overflow: hidden;
+    display: flex; flex-direction: column;
+    transition: box-shadow 0.25s ease, transform 0.25s ease; cursor: pointer;
   }
   .fp-card:hover {
     box-shadow: 0 12px 36px color-mix(in srgb, var(--headline) 15%, transparent);
     transform: translateY(-4px);
   }
-  .fp-card:hover .fp-btn {
-    background: var(--primary);
-  }
+  .fp-card:hover .fp-btn { background: var(--primary); }
 
-  /* ── Imagen ── */
-  .fp-img-wrap {
-    position: relative;
-    width: 100%;
-    aspect-ratio: 1;
-    padding: 0.75rem 0.75rem 0;
-  }
+  .fp-img-wrap { position: relative; width: 100%; aspect-ratio: 1; padding: 0.75rem 0.75rem 0; }
 
   .fp-img {
-    width: 100%;
-    height: 100%;
-    border-radius: 0.625rem;
-    background-size: cover;
-    background-position: center;
+    width: 100%; height: 100%; border-radius: 0.625rem;
+    background-size: cover; background-position: center;
     transition: transform 0.4s ease;
   }
-  .fp-card:hover .fp-img {
-    transform: scale(1.03);
-  }
+  .fp-card:hover .fp-img { transform: scale(1.03); }
 
-  /* Placeholder cuando no hay imagen */
   .fp-img--placeholder {
     background: color-mix(in srgb, var(--primary) 8%, var(--blush));
-    display: flex;
-    align-items: center;
-    justify-content: center;
+    display: flex; align-items: center; justify-content: center;
   }
-  .placeholder-icon {
-    font-size: 3rem;
-    color: var(--primary);
-    opacity: 0.35;
-  }
+  .placeholder-icon { font-size: 3rem; color: var(--primary); opacity: 0.35; }
 
-  /* Badge de tipo (natural / artificial / seco) */
   .fp-badge {
-    position: absolute;
-    top: 1.25rem;
-    left: 1.25rem;
-    background: var(--primary);
-    color: white;
-    font-size: 0.6875rem;
-    font-weight: 700;
-    letter-spacing: 0.06em;
-    text-transform: uppercase;
-    padding: 0.2rem 0.6rem;
-    border-radius: 9999px;
+    position: absolute; top: 1.25rem; left: 1.25rem;
+    background: var(--primary); color: white;
+    font-size: 0.6875rem; font-weight: 700;
+    letter-spacing: 0.06em; text-transform: uppercase;
+    padding: 0.2rem 0.6rem; border-radius: 9999px;
     box-shadow: 0 2px 6px rgba(0 0 0 / 0.15);
   }
 
-  /* ── Body ── */
-  .fp-body {
-    padding: 0.875rem 1rem 1rem;
-    display: flex;
-    flex-direction: column;
-    gap: 0.625rem;
-    flex: 1;
-  }
+  .fp-body { padding: 0.875rem 1rem 1rem; display: flex; flex-direction: column; gap: 0.625rem; flex: 1; }
 
-  .fp-meta {
-    display: flex;
-    flex-direction: column;
-    gap: 0.3rem;
-  }
+  .fp-meta { display: flex; flex-direction: column; gap: 0.3rem; }
 
-  .fp-name {
-    font-family: var(--font-body);
-    font-size: 1rem;
-    font-weight: 700;
-    color: var(--headline);
-    margin: 0;
-    line-height: 1.3;
-  }
+  .fp-name { font-family: var(--font-body); font-size: 1rem; font-weight: 700; color: var(--headline); margin: 0; line-height: 1.3; }
 
-  /* Tag de color */
-  .fp-color-tag {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.35rem;
-    font-size: 0.75rem;
-    font-weight: 500;
-    color: var(--text-muted);
-  }
-  .fp-color-dot {
-    width: 0.5rem;
-    height: 0.5rem;
-    border-radius: 9999px;
-    background: var(--primary);
-    flex-shrink: 0;
-  }
+  .fp-color-tag { display: inline-flex; align-items: center; gap: 0.35rem; font-size: 0.75rem; font-weight: 500; color: var(--text-muted); }
+  .fp-color-dot { width: 0.5rem; height: 0.5rem; border-radius: 9999px; background: var(--primary); flex-shrink: 0; }
 
-  /* ── Footer ── */
-  .fp-footer {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    margin-top: auto;
-    padding-top: 0.25rem;
-  }
+  .fp-footer { display: flex; align-items: center; justify-content: space-between; margin-top: auto; padding-top: 0.25rem; }
 
-  .fp-price {
-    font-family: var(--font-body);
-    font-size: 1.0625rem;
-    font-weight: 700;
-    color: var(--primary);
-  }
+  .fp-price { font-family: var(--font-body); font-size: 1.0625rem; font-weight: 700; color: var(--primary); }
 
   .fp-btn {
-    font-family: var(--font-body);
-    font-size: 0.875rem;
-    font-weight: 600;
-    color: #fff;
-    background: var(--muted);
-    border: none;
-    border-radius: 0.5rem;
-    padding: 0.5rem 1.125rem;
-    cursor: pointer;
-    transition: background 0.2s ease;
-    letter-spacing: 0.01em;
+    font-family: var(--font-body); font-size: 0.875rem; font-weight: 600; color: #fff;
+    background: var(--muted); border: none; border-radius: 0.5rem;
+    padding: 0.5rem 1.125rem; cursor: pointer;
+    transition: background 0.2s ease; letter-spacing: 0.01em;
   }
 </style>

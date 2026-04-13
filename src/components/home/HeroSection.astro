@@ -3,11 +3,12 @@
 import HeroCarousel from '@/components/home/HeroCarousel';
 import { getHomepageHeroData } from '@/services/drupal/drupal.blocks';
 import { getLangFromUrl } from '@/i18n/utils';
+import type { Lang } from '@/i18n/ui';
 
 const DRUPAL_BASE_URL = import.meta.env.DRUPAL_BASE_URL as string;
 
-const hero = await getHomepageHeroData(DRUPAL_BASE_URL);
-const lang = (Astro.currentLocale ?? getLangFromUrl(Astro.url)) as 'es' | 'en';
+const lang = (Astro.currentLocale ?? getLangFromUrl(Astro.url)) as Lang;
+const hero = await getHomepageHeroData(DRUPAL_BASE_URL, lang);
 ---
 
 <HeroCarousel

@@ -1,14 +1,12 @@
 ---
 // src/components/home/ServicesSection.astro
-//
-// Wrapper SSR: obtiene el bloque "homepage_servicios_section" de Drupal
-// y pasa el header (titulo, subTitulo, eslogan) al carrusel interactivo.
-// Si Drupal no responde, ServicesCarousel usa sus propios fallbacks internos.
-
 import ServicesCarousel from '@/components/home/ServicesCarousel';
 import { getServiciosData } from '@/services/drupal/drupal.blocks';
+import { getLangFromUrl } from '@/i18n/utils';
+import type { Lang } from '@/i18n/ui';
 
-const data = await getServiciosData();
+const lang = (Astro.currentLocale ?? getLangFromUrl(Astro.url)) as Lang;
+const data = await getServiciosData(lang);
 ---
 
 <ServicesCarousel

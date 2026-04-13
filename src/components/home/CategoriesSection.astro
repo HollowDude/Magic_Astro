@@ -2,25 +2,39 @@
 // src/components/home/CategoriesSection.astro
 import { getCategoriasDeFlores } from '@/services/drupal/drupal.taxonomy';
 import { drupalFileUrl } from '@/types/commerce';
+import { getLangFromUrl } from '@/i18n/utils';
+import type { Lang } from '@/i18n/ui';
 
-// Sin trailing slash: 'http://localhost:8080'
 const DRUPAL_BASE_URL = import.meta.env.DRUPAL_BASE_URL as string;
 
-const categorias = await getCategoriasDeFlores(4);
+const lang = (Astro.currentLocale ?? getLangFromUrl(Astro.url)) as Lang;
+const categorias = await getCategoriasDeFlores(4, lang);
 ---
 
 <section class="categories-section">
   <div class="categories-container">
     <div class="categories-header">
       <div>
-        <h2 class="section-title">Categorías Destacadas</h2>
-        <p class="section-subtitle">Encuentra el detalle perfecto para cada momento.</p>
+        <h2 class="section-title">
+          {lang === 'en' ? 'Featured Categories' : 'Categorías Destacadas'}
+        </h2>
+        <p class="section-subtitle">
+          {lang === 'en'
+            ? 'Find the perfect detail for every moment.'
+            : 'Encuentra el detalle perfecto para cada momento.'}
+        </p>
       </div>
-      <a class="see-all" href="/shop">Ver todo</a>
+      <a class="see-all" href={lang === 'en' ? '/en/shop' : '/shop'}>
+        {lang === 'en' ? 'See all' : 'Ver todo'}
+      </a>
     </div>
 
     {categorias.length === 0 ? (
-      <p class="categories-empty">No hay categorías disponibles por el momento.</p>
+      <p class="categories-empty">
+        {lang === 'en'
+          ? 'No categories available at the moment.'
+          : 'No hay categorías disponibles por el momento.'}
+      </p>
     ) : (
       <div class="categories-grid">
         {categorias.map((cat) => {
@@ -28,11 +42,11 @@ const categorias = await getCategoriasDeFlores(4);
             ? drupalFileUrl(cat.field_foto, DRUPAL_BASE_URL)
             : null;
 
-          // Slug para el filtro en la tienda: usamos el tid como fallback seguro
           const slug = encodeURIComponent(cat.name.toLowerCase().replace(/\s+/g, '-'));
+          const shopHref = lang === 'en' ? `/en/shop?cat=${slug}` : `/shop?cat=${slug}`;
 
           return (
-            <a href={`/shop?cat=${slug}`} class="category-card">
+            <a href={shopHref} class="category-card">
               <div class="category-img-wrap">
                 {imageUrl ? (
                   <div
@@ -148,7 +162,6 @@ const categorias = await getCategoriasDeFlores(4);
   }
   .category-card:hover .category-img { transform: scale(1.1); }
 
-  /* Placeholder cuando el término no tiene foto asignada */
   .category-img--placeholder {
     display: flex;
     align-items: center;
@@ -161,10 +174,7 @@ const categorias = await getCategoriasDeFlores(4);
     opacity: 0.35;
   }
 
-  .category-name {
-    text-align: center;
-  }
-
+  .category-name { text-align: center; }
   @media (min-width: 768px) { .category-name { text-align: left; } }
 
   .category-name h3 {
