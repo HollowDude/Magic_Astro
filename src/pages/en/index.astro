@@ -1,0 +1,78 @@
+---
+// src/pages/en/index.astro
+import HomeLayout from '@/layouts/HomeLayout.astro';
+import HomeHeader from '@/components/home/HomeHeader.astro';
+import HeroSection from '@/components/home/HeroSection.astro';
+import CategoriesSection from '@/components/home/CategoriesSection.astro';
+import FeaturedProducts from '@/components/home/FeaturedProducts.astro';
+import CustomizationsSection from '@/components/home/CustomizationsSection.astro';
+import ServicesSection from '@/components/home/ServicesSection.astro';
+import TestimonialsSection from '@/components/home/TestimonialsSection.astro';
+---
+
+<HomeLayout title="Home">
+  <div class="site-wrapper">
+    <HomeHeader />
+
+    <main>
+      <HeroSection />
+      <CategoriesSection />
+      <FeaturedProducts />
+      <CustomizationsSection />
+      <ServicesSection />
+      <TestimonialsSection />
+    </main>
+
+    <footer class="site-footer">
+      <div class="footer-inner">
+        <div class="footer-brand">
+          <span class="material-symbols-outlined footer-icon">local_florist</span>
+          <span class="footer-name">Maggy Flowers</span>
+        </div>
+        <p class="footer-copy">© {new Date().getFullYear()} Maggy Flowers. All rights reserved.</p>
+        <nav class="footer-links">
+          <a href="/en/shop">Shop</a>
+          <a href="/en/courses">Courses</a>
+          <a href="/en/about">About</a>
+          <a href="/en/contact">Contact</a>
+        </nav>
+      </div>
+    </footer>
+  </div>
+</HomeLayout>
+
+<style>
+  .site-wrapper { display: flex; flex-direction: column; min-height: 100vh; }
+  main { flex: 1; }
+
+  .site-footer {
+    background: #211114;
+    color: rgba(255 255 255 / 0.7);
+    padding: 2.5rem 1rem;
+    margin-top: auto;
+  }
+  .footer-inner {
+    max-width: 80rem;
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1.25rem;
+    text-align: center;
+  }
+  @media (min-width: 768px) {
+    .footer-inner { flex-direction: row; justify-content: space-between; text-align: left; }
+  }
+  .footer-brand {
+    display: flex; align-items: center; gap: 0.5rem;
+    color: white; font-weight: 700; font-size: 1.125rem;
+  }
+  .footer-icon { color: #eb4763; font-size: 1.5rem; }
+  .footer-copy { font-size: 0.8125rem; color: rgba(255 255 255 / 0.5); }
+  .footer-links { display: flex; gap: 1.5rem; }
+  .footer-links a {
+    font-size: 0.875rem; font-weight: 500;
+    color: rgba(255 255 255 / 0.6); text-decoration: none; transition: color 0.2s;
+  }
+  .footer-links a:hover { color: #eb4763; }
+</style>

@@ -1,50 +1,64 @@
 // src/components/home/HeroCarousel.tsx
 import { useState, useEffect, useCallback } from 'react';
 import type { HeroSlide } from '@/types/blocks';
+import { ui, defaultLang } from '@/i18n/ui';
+import type { Lang, UiKey } from '@/i18n/ui';
+
+// ── Helpers ───────────────────────────────────────────────────────────────────
+
+function t(lang: Lang, key: UiKey): string {
+  return (ui[lang] as Record<string, string>)[key]
+    ?? (ui[defaultLang] as Record<string, string>)[key]
+    ?? key;
+}
 
 // ── Props ─────────────────────────────────────────────────────────────────────
 
 interface Props {
-  title:       string;
-  slogan:      string | null;
-  description: string;
-  slides:      HeroSlide[];
+  title?:       string;
+  slogan?:      string | null;
+  description?: string;
+  slides?:      HeroSlide[];
+  lang?:        Lang;
 }
-
-// ── Fallback para cuando Drupal no devuelve data ──────────────────────────────
-// Permite usar el componente en modo standalone sin romper la página.
-
-const FALLBACK: Props = {
-  title:       'Bienvenida a Maggy Flowers',
-  slogan:      'Donde las flores se convierten en magia',
-  description: 'Creamos diseños florales artificiales y naturales para regalar, decorar y celebrar momentos inolvidables. Y además, te enseñamos a hacer lo mismo desde cero, con confianza, creatividad y propósito.',
-  slides: [
-    {
-      image: 'https://lh3.googleusercontent.com/aida-public/AB6AXuAmfhRgp0YzWzhd83FdBXzXp9ckxvZH0OoBp-ZhpwTJwEFtuj4ws5sLcGmm5i04XI-5LZYEM31EFKcadzdHmPys2agdyWua0gCEFM-f6d3Yiv9P7iRFcf15FXOeRQzM34cxehEOdIobG2AfUzRMMUPbVJd51FgqUQehzPT7Fdt-3a6mDCvLPsGhFqNP-or_J-9ziCaw3COOgI0T8TrdOZY9Sf_VGuFcgt0S5g-PAvzHiAoQn9MLH2qPvNrXyRWIpHJ7Hw907RF0JmI',
-      label: 'Flores naturales',
-    },
-    {
-      image: 'https://lh3.googleusercontent.com/aida-public/AB6AXuCjSe0_Qz6_SN8vKCVuFwTExt2M0w1wiF_Yg7YsXCnG2_JNpq1VS4Q6oD3DcwFJ_CyxqK9QhQUQBqmcstzzYb-pdGI-knucx9G7SPBnTRDMf_5VvwCEUcpWWtEwPYIAUJaSxCpWVhwO1hj3Cb6O1OTJSkCbRJrF2uIeNVDncz7So3lB6yWvVQ_M33YPUJfStR-0PRDtfDdz4gtxWubxJVjoSa14Sn3KGcrkt18cq00BYpI1Z4lSOj_LCWU_ehKK1IaYcyt54NVnsaA',
-      label: 'Arreglos exclusivos',
-    },
-    {
-      image: 'https://lh3.googleusercontent.com/aida-public/AB6AXuDxs5NlWSf1_sZqYDP3MuvYSmKhli00fhQbpnpt7Sw1ROJhZ32ColhwrVhmOojwXVfr_S9aYkX9Q4IqwrPEmHNj8ThynAA_3HjaJW06mOUgvW_1C5h8T49djElHDEFM3BPC6WZ-4-wj_JWSY1dDUPX9oPGjZexXpMyabJLeo3d8Y3Y50YOLQ8ZNJUkAWVNYT8gfFrFD1wCcdGw4lBixS7VivWxBMSkoVBZQ9iX_ABacSbIFLgee1zQ-sA5whi4Dm9J28DVr53lQgAo',
-      label: 'Eventos especiales',
-    },
-  ],
-};
 
 const INTERVAL = 5000;
 
 export default function HeroCarousel({
-  title       = FALLBACK.title,
-  slogan      = FALLBACK.slogan,
-  description = FALLBACK.description,
-  slides      = FALLBACK.slides,
-}: Partial<Props>) {
+  title,
+  slogan,
+  description,
+  slides,
+  lang = 'es',
+}: Props) {
+  // Fallbacks desde el diccionario i18n según el idioma activo
+  const fallbackTitle       = t(lang, 'hero.title');
+  const fallbackSlogan      = t(lang, 'hero.slogan');
+  const fallbackDescription = t(lang, 'hero.description');
+  const fallbackSlides: HeroSlide[] = [
+    {
+      image: 'https://lh3.googleusercontent.com/aida-public/AB6AXuAmfhRgp0YzWzhd83FdBXzXp9ckxvZH0OoBp-ZhpwTJwEFtuj4ws5sLcGmm5i04XI-5LZYEM31EFKcadzdHmPys2agdyWua0gCEFM-f6d3Yiv9P7iRFcf15FXOeRQzM34cxehEOdIobG2AfUzRMMUPbVJd51FgqUQehzPT7Fdt-3a6mDCvLPsGhFqNP-or_J-9ziCaw3COOgI0T8TrdOZY9Sf_VGuFcgt0S5g-PAvzHiAoQn9MLH2qPvNrXyRWIpHJ7Hw907RF0JmI',
+      label: t(lang, 'hero.slide.natural'),
+    },
+    {
+      image: 'https://lh3.googleusercontent.com/aida-public/AB6AXuCjSe0_Qz6_SN8vKCVuFwTExt2M0w1wiF_Yg7YsXCnG2_JNpq1VS4Q6oD3DcwFJ_CyxqK9QhQUQBqmcstzzYb-pdGI-knucx9G7SPBnTRDMf_5VvwCEUcpWWtEwPYIAUJaSxCpWVhwO1hj3Cb6O1OTJSkCbRJrF2uIeNVDncz7So3lB6yWvVQ_M33YPUJfStR-0PRDtfDdz4gtxWubxJVjoSa14Sn3KGcrkt18cq00BYpI1Z4lSOj_LCWU_ehKK1IaYcyt54NVnsaA',
+      label: t(lang, 'hero.slide.exclusive'),
+    },
+    {
+      image: 'https://lh3.googleusercontent.com/aida-public/AB6AXuDxs5NlWSf1_sZqYDP3MuvYSmKhli00fhQbpnpt7Sw1ROJhZ32ColhwrVhmOojwXVfr_S9aYkX9Q4IqwrPEmHNj8ThynAA_3HjaJW06mOUgvW_1C5h8T49djElHDEFM3BPC6WZ-4-wj_JWSY1dDUPX9oPGjZexXpMyabJLeo3d8Y3Y50YOLQ8ZNJUkAWVNYT8gfFrFD1wCcdGw4lBixS7VivWxBMSkoVBZQ9iX_ABacSbIFLgee1zQ-sA5whi4Dm9J28DVr53lQgAo',
+      label: t(lang, 'hero.slide.events'),
+    },
+  ];
 
-  // Si no llegan slides (error de red, etc.) usamos el fallback
-  const activeSlides = slides.length > 0 ? slides : FALLBACK.slides;
+  const activeTitle       = title       ?? fallbackTitle;
+  const activeSlogan      = slogan      ?? fallbackSlogan;
+  const activeDescription = description ?? fallbackDescription;
+  const activeSlides      = (slides && slides.length > 0) ? slides : fallbackSlides;
+
+  // Rutas de CTAs según idioma
+  const prefix      = lang === 'es' ? '' : '/en';
+  const shopHref    = `${prefix}/shop`;
+  const coursesHref = `${prefix}/courses`;
 
   const [active,      setActive]      = useState(0);
   const [prev,        setPrev]        = useState<number | null>(null);
@@ -58,7 +72,6 @@ export default function HeroCarousel({
     setTimeout(() => { setPrev(null); setIsAnimating(false); }, 700);
   }, [active, isAnimating]);
 
-  /* Auto-play */
   useEffect(() => {
     const timer = setInterval(() => {
       setActive((cur) => {
@@ -74,7 +87,6 @@ export default function HeroCarousel({
 
   return (
     <section style={s.section}>
-      {/* Slides */}
       {activeSlides.map((slide, i) => {
         const isCurrent = i === active;
         const isPrev    = i === prev;
@@ -94,29 +106,26 @@ export default function HeroCarousel({
         );
       })}
 
-      {/* Dark overlay */}
       <div style={s.overlay} />
 
-      {/* Content */}
       <div style={s.content}>
-        <h1 style={s.title}>{title}</h1>
-        {slogan && <h2 style={s.subtitle}>{slogan}</h2>}
-        <p style={s.desc}>{description}</p>
+        <h1 style={s.title}>{activeTitle}</h1>
+        {activeSlogan && <h2 style={s.subtitle}>{activeSlogan}</h2>}
+        <p style={s.desc}>{activeDescription}</p>
         <div style={s.ctas}>
-          <a href="/shop"    style={s.ctaPrimary}>Ver ofertas</a>
-          <a href="/courses" style={s.ctaSecondary}>Explorar cursos</a>
+          <a href={shopHref}    style={s.ctaPrimary}>{t(lang, 'hero.cta.shop')}</a>
+          <a href={coursesHref} style={s.ctaSecondary}>{t(lang, 'hero.cta.courses')}</a>
         </div>
       </div>
 
-      {/* Dot indicators — solo si hay más de 1 slide */}
       {activeSlides.length > 1 && (
-        <div style={s.dots} role="tablist" aria-label="Slide navigation">
+        <div style={s.dots} role="tablist" aria-label={t(lang, 'hero.slide.nav')}>
           {activeSlides.map((slide, i) => (
             <button
               key={i}
               role="tab"
               aria-selected={i === active}
-              aria-label={`Slide ${i + 1}: ${slide.label}`}
+              aria-label={`${t(lang, 'hero.slide.label')} ${i + 1}: ${slide.label}`}
               onClick={() => goTo(i)}
               style={{
                 ...s.dot,
@@ -245,11 +254,11 @@ const s: Record<string, React.CSSProperties> = {
     alignItems:'center',
   },
   dot: {
-    height:     '0.5rem',
+    height:      '0.5rem',
     borderRadius:'9999px',
-    border:     'none',
-    cursor:     'pointer',
-    padding:    0,
-    transition: 'width 0.35s ease, background 0.35s ease',
+    border:      'none',
+    cursor:      'pointer',
+    padding:     0,
+    transition:  'width 0.35s ease, background 0.35s ease',
   },
 };

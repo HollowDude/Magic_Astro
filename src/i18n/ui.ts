@@ -31,6 +31,18 @@ export const ui = {
 
     // ── Idioma ──────────────────────────────────────────────────────────────
     'lang.select': 'Seleccionar idioma',
+
+    // ── Hero Section (fallbacks cuando Drupal no responde) ──────────────────
+    'hero.title':          'Bienvenida a Maggy Flowers',
+    'hero.slogan':         'Donde las flores se convierten en magia',
+    'hero.description':    'Creamos diseños florales artificiales y naturales para regalar, decorar y celebrar momentos inolvidables. Y además, te enseñamos a hacer lo mismo desde cero, con confianza, creatividad y propósito.',
+    'hero.cta.shop':       'Ver ofertas',
+    'hero.cta.courses':    'Explorar cursos',
+    'hero.slide.natural':  'Flores naturales',
+    'hero.slide.exclusive':'Arreglos exclusivos',
+    'hero.slide.events':   'Eventos especiales',
+    'hero.slide.nav':      'Navegación de slides',
+    'hero.slide.label':    'Slide',
   },
   en: {
     // ── Navigation ──────────────────────────────────────────────────────────
@@ -51,6 +63,18 @@ export const ui = {
 
     // ── Language ─────────────────────────────────────────────────────────────
     'lang.select': 'Select language',
+
+    // ── Hero Section (fallbacks cuando Drupal no responde) ──────────────────
+    'hero.title':          'Welcome to Maggy Flowers',
+    'hero.slogan':         'Where flowers become magic',
+    'hero.description':    'We create artificial and natural floral designs for gifting, decorating, and celebrating unforgettable moments. We also teach you to do the same from scratch — with confidence, creativity, and purpose.',
+    'hero.cta.shop':       'Browse offers',
+    'hero.cta.courses':    'Explore courses',
+    'hero.slide.natural':  'Natural flowers',
+    'hero.slide.exclusive':'Exclusive arrangements',
+    'hero.slide.events':   'Special events',
+    'hero.slide.nav':      'Slide navigation',
+    'hero.slide.label':    'Slide',
   },
 } as const;
 

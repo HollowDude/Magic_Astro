@@ -1,18 +1,13 @@
 ---
 // src/components/home/HeroSection.astro
-//
-// Wrapper SSR: obtiene el block_content "homepage_hero_section" de Drupal
-// y pasa la data normalizada al carrusel interactivo (React, client:load).
-//
-// Si Drupal no responde o el bloque no existe, HeroCarousel usa su fallback
-// interno, así la página nunca queda en blanco.
-
 import HeroCarousel from '@/components/home/HeroCarousel';
 import { getHomepageHeroData } from '@/services/drupal/drupal.blocks';
+import { getLangFromUrl } from '@/i18n/utils';
 
 const DRUPAL_BASE_URL = import.meta.env.DRUPAL_BASE_URL as string;
 
 const hero = await getHomepageHeroData(DRUPAL_BASE_URL);
+const lang = (Astro.currentLocale ?? getLangFromUrl(Astro.url)) as 'es' | 'en';
 ---
 
 <HeroCarousel
@@ -20,5 +15,6 @@ const hero = await getHomepageHeroData(DRUPAL_BASE_URL);
   slogan={hero?.slogan}
   description={hero?.description}
   slides={hero?.slides}
+  lang={lang}
   client:load
 />
