@@ -139,8 +139,8 @@ function SidebarContent({
                   aria-pressed={active}
                   onClick={() => onColorToggle(name)}
                   style={{
-                    width: '2rem',
-                    height: '2rem',
+                    width: '1.5rem',
+                    height: '1.5rem',
                     borderRadius: '9999px',
                     background: hex || MUTED,
                     border: `2px solid ${active ? PRIMARY : 'rgba(0,0,0,0.1)'}`,

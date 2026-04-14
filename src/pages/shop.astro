@@ -25,16 +25,6 @@ const [rawProducts, rawCategories] = await Promise.all([
 const products: ProductCardData[] = rawProducts.map(p => {
   const v = p.variations?.[0];
 
-  // ── Categoría ──────────────────────────────────────────────────────────────
-  // Ajusta 'field_categoria' al nombre real del campo en tu Drupal si difiere.
-  // El campo debe ser una referencia al vocabulario categorias_de_flores.
-  // Si no existe en el tipo aún, agrégalo a FloresProduct en types/commerce.ts
-  // y al include/fields de PRODUCT_CONFIGS.flores en drupal.commerce.ts.
-  const category: string | null =
-    (p as Record<string, unknown> & typeof p)['field_categoria']
-      ? ((p as Record<string, unknown>)['field_categoria'] as { name: string })?.name ?? null
-      : null;
-
   return {
     id:          p.id,
     title:       p.title,
@@ -45,7 +35,7 @@ const products: ProductCardData[] = rawProducts.map(p => {
     tipo:        v?.field_tipo                    ?? null,
     colorName:   v?.field_color_de_la_flor?.name  ?? null,
     colorHex:    v?.field_color_de_la_flor?.field_color_hex ?? null,
-    category,
+    category: p.field_categoria?.name ?? null,
   };
 });
 

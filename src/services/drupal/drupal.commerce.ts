@@ -30,8 +30,9 @@ const PRODUCT_CONFIGS = {
       'variations',
       'variations.field_galeria_de_fotos',
       'variations.field_color_de_la_flor',
+      'field_categoria', 
     ],
-    productFields: ['title', 'body', 'variations'],
+    productFields: ['title', 'body', 'variations','field_categoria'],
     variationFields: [
       'sku',
       'price',
@@ -43,6 +44,7 @@ const PRODUCT_CONFIGS = {
     relatedFields: {
       'file--file':               ['filename', 'uri', 'filemime'],
       'taxonomy_term--colores':   ['name', 'field_color_hex'],
+      'taxonomy_term--categorias_de_flores': ['name'],
     },
   },
 } satisfies Record<string, ProductTypeConfig>;

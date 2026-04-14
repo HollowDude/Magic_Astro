@@ -17,6 +17,15 @@ export interface DrupalFile {
   filemime: string;
 }
 
+export interface CommerceProduct<V extends CommerceVariationBase = CommerceVariationBase> {
+  type: string;
+  id: string;
+  title: string;
+  field_categoria?: { type: string; id: string; name: string } | null; // ← agregar
+  body?: { value: string; format: string; processed: string };
+  variations: V[];
+}
+
 /**
  * Término de taxonomía del vocabulario Colores.
  * field_color_hex es opcional — agrégalo en Drupal si lo necesitás.
