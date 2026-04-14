@@ -2,16 +2,33 @@
 // src/components/home/ServicesSection.astro
 import ServicesCarousel from '@/components/home/ServicesCarousel';
 import { getServiciosData } from '@/services/drupal/drupal.blocks';
+import { getServices } from '@/services/drupal/drupal.service';
+import { drupalFileUrl } from '@/types/commerce';
 import { getLangFromUrl } from '@/i18n/utils';
 import type { Lang } from '@/i18n/ui';
 
+const DRUPAL_BASE_URL = import.meta.env.DRUPAL_BASE_URL as string;
+
 const lang = (Astro.currentLocale ?? getLangFromUrl(Astro.url)) as Lang;
-const data = await getServiciosData(lang);
+
+// Fetch paralelo: cabecera del bloque + nodos de servicios
+const [data, rawServices] = await Promise.all([
+  getServiciosData(lang),
+  getServices(10, lang),
+]);
+
+// Normalizar para el componente: imagen como URL absoluta o null
+const services = rawServices.map((s) => ({
+  title:       s.title,
+  description: s.field_description,
+  image:       s.field_image ? drupalFileUrl(s.field_image, DRUPAL_BASE_URL) : null,
+}));
 ---
 
 <ServicesCarousel
   titulo={data?.titulo}
   subTitulo={data?.subTitulo}
   eslogan={data?.eslogan}
+  services={services}
   client:load
 />

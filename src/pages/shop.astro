@@ -15,22 +15,29 @@ const lang = 'es' as const;
 const t    = useTranslations(lang);
 const DRUPAL_BASE_URL = import.meta.env.DRUPAL_BASE_URL as string;
 
-// Parámetro inicial de categoría desde URL (?cat=...)
 const catParam = Astro.url.searchParams.get('cat') ?? '';
 
-// Fetch paralelo
 const [rawProducts, rawCategories] = await Promise.all([
   getFloresProducts(lang),
   getCategoriasDeFlores(10, lang),
 ]);
 
-// Normalizar productos para el cliente React
 const products: ProductCardData[] = rawProducts.map(p => {
   const v = p.variations?.[0];
+
+  // ── Categoría ──────────────────────────────────────────────────────────────
+  // Ajusta 'field_categoria' al nombre real del campo en tu Drupal si difiere.
+  // El campo debe ser una referencia al vocabulario categorias_de_flores.
+  // Si no existe en el tipo aún, agrégalo a FloresProduct en types/commerce.ts
+  // y al include/fields de PRODUCT_CONFIGS.flores en drupal.commerce.ts.
+  const category: string | null =
+    (p as Record<string, unknown> & typeof p)['field_categoria']
+      ? ((p as Record<string, unknown>)['field_categoria'] as { name: string })?.name ?? null
+      : null;
+
   return {
     id:          p.id,
     title:       p.title,
-    subtitle:    v?.field_color_de_la_flor?.name  ?? null,
     price:       v?.price?.formatted              ?? '',
     priceNumber: parseFloat(v?.price?.number      ?? '0'),
     thumbnail:   getProductThumbnail(p, DRUPAL_BASE_URL),
@@ -38,10 +45,10 @@ const products: ProductCardData[] = rawProducts.map(p => {
     tipo:        v?.field_tipo                    ?? null,
     colorName:   v?.field_color_de_la_flor?.name  ?? null,
     colorHex:    v?.field_color_de_la_flor?.field_color_hex ?? null,
+    category,
   };
 });
 
-// Normalizar categorías
 const categories: ShopCategory[] = rawCategories.map(c => ({
   id:   String(c.drupal_internal__tid),
   name: c.name,
@@ -55,7 +62,6 @@ const categories: ShopCategory[] = rawCategories.map(c => ({
 
     <main class="shop-main">
 
-      <!-- Hero de sección -->
       <div class="shop-hero">
         <Breadcrumb crumbs={[
           { label: t('nav.home'), href: '/' },
@@ -70,7 +76,6 @@ const categories: ShopCategory[] = rawCategories.map(c => ({
         </div>
       </div>
 
-      <!-- Isla React: filtros + grid + paginación -->
       <ShopClient
         products={products}
         categories={categories}
@@ -111,9 +116,7 @@ const categories: ShopCategory[] = rawCategories.map(c => ({
   @media (min-width: 640px)  { .shop-main { padding-inline: 1.5rem; } }
   @media (min-width: 1024px) { .shop-main { padding-inline: 2rem; } }
 
-  /* Hero de sección */
   .shop-hero { margin-bottom: 2.5rem; }
-
   .shop-hero-inner {
     display: flex;
     align-items: flex-end;
@@ -122,7 +125,6 @@ const categories: ShopCategory[] = rawCategories.map(c => ({
     gap: 1rem;
     margin-top: 1.25rem;
   }
-
   .shop-title {
     font-family: var(--font-heading);
     font-size: clamp(2rem, 4vw, 2.75rem);
@@ -132,7 +134,6 @@ const categories: ShopCategory[] = rawCategories.map(c => ({
     margin: 0 0 0.375rem;
     line-height: 1.1;
   }
-
   .shop-desc {
     font-family: var(--font-body);
     font-size: 0.9375rem;
@@ -141,25 +142,9 @@ const categories: ShopCategory[] = rawCategories.map(c => ({
     max-width: 36rem;
   }
 
-  /* Footer */
-  .site-footer {
-    background: #211114;
-    color: rgba(255 255 255 / 0.7);
-    padding: 2.5rem 1rem;
-    margin-top: auto;
-  }
-  .footer-inner {
-    max-width: 80rem;
-    margin: 0 auto;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 1.25rem;
-    text-align: center;
-  }
-  @media (min-width: 768px) {
-    .footer-inner { flex-direction: row; justify-content: space-between; text-align: left; }
-  }
+  .site-footer { background: #211114; color: rgba(255 255 255 / 0.7); padding: 2.5rem 1rem; margin-top: auto; }
+  .footer-inner { max-width: 80rem; margin: 0 auto; display: flex; flex-direction: column; align-items: center; gap: 1.25rem; text-align: center; }
+  @media (min-width: 768px) { .footer-inner { flex-direction: row; justify-content: space-between; text-align: left; } }
   .footer-brand { display: flex; align-items: center; gap: 0.5rem; color: white; font-weight: 700; font-size: 1.125rem; }
   .footer-icon  { color: #eb4763; font-size: 1.5rem; }
   .footer-copy  { font-size: 0.8125rem; color: rgba(255 255 255 / 0.5); }

@@ -3,26 +3,34 @@
 // Recibe props opcionales del bloque Drupal "homepage_servicios_section"
 // para el header de la sección (titulo, subTitulo, eslogan).
 // Si Drupal no devuelve data, usa los valores de FALLBACK internos.
-// La lista de servicios sigue siendo estática (no hay un entity type para ellos).
+//
+// También recibe la lista de servicios desde Drupal (node--services).
+// Si la lista viene vacía, usa los servicios estáticos como fallback.
 
 import { useState, useCallback, useEffect, useRef } from 'react';
+import type { ServiceItem } from '@/services/drupal/drupal.service';
 
-// ── Props del header (vienen del bloque Drupal) ───────────────────────────────
+// ── Props ──────────────────────────────────────────────────────────────────────
+
 interface Props {
-  titulo?:    string | null;   // field_titulo_ss   — eyebrow label (opcional)
-  subTitulo?: string | null;   // field_sub_titulo_ss — h2 principal
-  eslogan?:   string | null;   // field_eslogan_ss   — párrafo descriptivo (opcional)
+  titulo?:    string | null;
+  subTitulo?: string | null;
+  eslogan?:   string | null;
+  /** Servicios normalizados desde Drupal. Si viene vacío, se usan los estáticos. */
+  services?:  ServiceItem[];
 }
 
-// ── Fallbacks ─────────────────────────────────────────────────────────────────
-const FALLBACK: Required<Props> = {
+// ── Fallbacks del header ───────────────────────────────────────────────────────
+
+const FALLBACK_HEADER = {
   titulo:    'Experiencias & Servicios',
   subTitulo: 'Todo lo que ofrecemos',
   eslogan:   'Descubre cómo podemos ayudarte a florecer en cada ocasión especial.',
 };
 
-// ── Lista estática de servicios ───────────────────────────────────────────────
-const services = [
+// ── Servicios estáticos (se usan solo si Drupal no devuelve ninguno) ───────────
+
+const STATIC_SERVICES: ServiceItem[] = [
   {
     title: 'Arreglos florales',
     description: 'Arreglos florales naturales y artificiales diseñados con pasión para cualquier ocasión.',
@@ -50,20 +58,27 @@ const services = [
   },
 ];
 
-const TOTAL    = services.length;
+// ── Constantes de layout ──────────────────────────────────────────────────────
+
 const GAP      = 20;
-const CARD_H   = 360;
+const CARD_H   = 380;   // altura total de la card (aumentada levemente para dar espacio a la descripción)
 const IMG_H    = 260;
+const BODY_H   = CARD_H - IMG_H; // 120px para título + descripción
 const ARROW_D  = 44;
 const SIDE_PAD = ARROW_D / 2 + 8;
 const BADGE_BG = '#f6f2f2';
 const MUTED    = '#ad808a';
 
 export default function ServicesCarousel({
-  titulo    = FALLBACK.titulo,
-  subTitulo = FALLBACK.subTitulo,
-  eslogan   = FALLBACK.eslogan,
+  titulo,
+  subTitulo,
+  eslogan,
+  services: servicesProp = [],
 }: Props) {
+  // Usar los de Drupal si vienen; si no, caer a los estáticos
+  const activeServices = servicesProp.length > 0 ? servicesProp : STATIC_SERVICES;
+  const TOTAL = activeServices.length;
+
   const [active, setActive] = useState(0);
   const wrapRef             = useRef<HTMLDivElement>(null);
   const [wrapW, setWrapW]   = useState(0);
@@ -80,8 +95,8 @@ export default function ServicesCarousel({
     return () => ro.disconnect();
   }, []);
 
-  const prev = useCallback(() => setActive(i => (i - 1 + TOTAL) % TOTAL), []);
-  const next = useCallback(() => setActive(i => (i + 1) % TOTAL), []);
+  const prev = useCallback(() => setActive(i => (i - 1 + TOTAL) % TOTAL), [TOTAL]);
+  const next = useCallback(() => setActive(i => (i + 1) % TOTAL), [TOTAL]);
 
   const relPos = (i: number) => {
     let d = i - active;
@@ -97,10 +112,10 @@ export default function ServicesCarousel({
 
       {/* Header — datos del bloque Drupal con fallback */}
       <div style={s.header}>
-        <span style={s.eyebrow}>{titulo ?? FALLBACK.titulo}</span>
-        <h2 style={s.title}>{subTitulo ?? FALLBACK.subTitulo}</h2>
-        {(eslogan ?? FALLBACK.eslogan) && (
-          <p style={s.subtitle}>{eslogan ?? FALLBACK.eslogan}</p>
+        <span style={s.eyebrow}>{titulo ?? FALLBACK_HEADER.titulo}</span>
+        <h2 style={s.title}>{subTitulo ?? FALLBACK_HEADER.subTitulo}</h2>
+        {(eslogan ?? FALLBACK_HEADER.eslogan) && (
+          <p style={s.subtitle}>{eslogan ?? FALLBACK_HEADER.eslogan}</p>
         )}
       </div>
 
@@ -109,7 +124,7 @@ export default function ServicesCarousel({
 
         {/* Clipping window */}
         <div ref={wrapRef} style={{ position: 'relative', overflow: 'hidden', height: CARD_H, width: '100%' }}>
-          {services.map((svc, i) => {
+          {activeServices.map((svc, i) => {
             const rel      = relPos(i);
             const isCenter = rel === 0;
             const show     = Math.abs(rel) <= 1;
@@ -120,37 +135,95 @@ export default function ServicesCarousel({
                 onClick={() => !isCenter && setActive(i)}
                 aria-hidden={!show}
                 style={{
-                  position:   'absolute',
-                  top:        0,
-                  left:       '50%',
-                  marginLeft: -cardW / 2,
-                  width:      cardW,
-                  height:     CARD_H,
-                  borderRadius: '1rem',
-                  overflow:   'hidden',
-                  display:    'flex',
+                  position:      'absolute',
+                  top:           0,
+                  left:          '50%',
+                  marginLeft:    -cardW / 2,
+                  width:         cardW,
+                  height:        CARD_H,
+                  borderRadius:  '1rem',
+                  overflow:      'hidden',
+                  display:       'flex',
                   flexDirection: 'column',
-                  transform:  `translateX(${rel * step}px)`,
-                  opacity:    show ? 1 : 0,
+                  transform:     `translateX(${rel * step}px)`,
+                  opacity:       show ? 1 : 0,
                   pointerEvents: show ? 'auto' : 'none',
-                  zIndex:     isCenter ? 10 : 5,
-                  boxShadow:  isCenter ? '8px 12px 32px rgba(109,81,87,0.15)' : 'none',
-                  cursor:     isCenter ? 'default' : 'pointer',
-                  transition: 'transform 0.42s cubic-bezier(0.4,0,0.2,1), opacity 0.3s ease, box-shadow 0.35s ease',
+                  zIndex:        isCenter ? 10 : 5,
+                  boxShadow:     isCenter ? '8px 12px 32px rgba(109,81,87,0.15)' : 'none',
+                  cursor:        isCenter ? 'default' : 'pointer',
+                  transition:    'transform 0.42s cubic-bezier(0.4,0,0.2,1), opacity 0.3s ease, box-shadow 0.35s ease',
                 }}
               >
+                {/* ── Imagen o placeholder ── */}
                 <div style={{ position: 'relative', width: '100%', height: IMG_H, flexShrink: 0, overflow: 'hidden' }}>
-                  <div style={{ width: '100%', height: '100%', backgroundImage: `url('${svc.image}')`, backgroundSize: 'cover', backgroundPosition: 'center' }} />
+                  {svc.image ? (
+                    <div style={{
+                      width: '100%',
+                      height: '100%',
+                      backgroundImage: `url('${svc.image}')`,
+                      backgroundSize: 'cover',
+                      backgroundPosition: 'center',
+                    }} />
+                  ) : (
+                    /* Placeholder igual al de CategoriesSection y FeaturedProducts */
+                    <div style={{
+                      width: '100%',
+                      height: '100%',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      background: `color-mix(in srgb, ${PRIMARY} 8%, ${BLUSH})`,
+                    }}>
+                      <span
+                        className="material-symbols-outlined"
+                        style={{ fontSize: '3rem', color: PRIMARY, opacity: 0.35, lineHeight: 1 }}
+                      >
+                        local_florist
+                      </span>
+                    </div>
+                  )}
+
+                  {/* Overlay para cards laterales */}
                   {!isCenter && (
                     <div style={{ position: 'absolute', inset: 0, background: 'rgba(255,255,255,0.38)', pointerEvents: 'none' }} />
                   )}
                 </div>
 
-                <div style={{ flex: '1 1 0', padding: '0.875rem 1rem 1rem', background: BADGE_BG }}>
-                  <p style={{ fontFamily: FONT, fontSize: '0.9375rem', fontWeight: 700, color: HEADLINE, margin: '0 0 0.3rem' }}>
+                {/* ── Cuerpo: título + descripción con scroll ── */}
+                <div style={{
+                  height:          BODY_H,
+                  padding:         '0.875rem 1rem 1rem',
+                  background:      BADGE_BG,
+                  display:         'flex',
+                  flexDirection:   'column',
+                  gap:             '0.3rem',
+                  overflow:        'hidden',
+                }}>
+                  <p style={{
+                    fontFamily: FONT,
+                    fontSize:   '0.9375rem',
+                    fontWeight: 700,
+                    color:      HEADLINE,
+                    margin:     0,
+                    flexShrink: 0,
+                  }}>
                     {svc.title}
                   </p>
-                  <p style={{ fontFamily: FONT, fontSize: '0.8125rem', color: BODY, lineHeight: 1.55, margin: 0 }}>
+
+                  {/* Descripción con scroll si el texto es largo */}
+                  <p style={{
+                    fontFamily:  FONT,
+                    fontSize:    '0.8125rem',
+                    color:       BODY,
+                    lineHeight:  1.55,
+                    margin:      0,
+                    flex:        '1 1 0',
+                    overflowY:   'auto',
+                    paddingRight: '0.25rem', // espacio para la scrollbar
+                    /* Ocultar scrollbar visualmente pero mantener funcionalidad */
+                    scrollbarWidth: 'thin',
+                    scrollbarColor: `${MUTED} transparent`,
+                  } as React.CSSProperties}>
                     {svc.description}
                   </p>
                 </div>
@@ -181,7 +254,7 @@ export default function ServicesCarousel({
 
       {/* Dots */}
       <div style={s.dots} role="tablist">
-        {services.map((_, i) => (
+        {activeServices.map((_, i) => (
           <button
             key={i}
             role="tab"
@@ -201,7 +274,8 @@ export default function ServicesCarousel({
   );
 }
 
-// ── Rounded triangle SVG (idéntico al original) ───────────────────────────────
+// ── Rounded triangle SVG ──────────────────────────────────────────────────────
+
 function RoundedTriangle({ dir, color }: { dir: 'left' | 'right'; color: string }) {
   const pts = dir === 'left'
     ? '13,3 13,15 3,9'
@@ -222,7 +296,9 @@ function RoundedTriangle({ dir, color }: { dir: 'left' | 'right'; color: string 
 }
 
 // ── Tokens ────────────────────────────────────────────────────────────────────
+
 const PRIMARY  = '#eb4763';
+const BLUSH    = '#fdeff1';
 const HEADLINE = '#6d5157';
 const BODY     = '#89656b';
 const FONT     = "'Be Vietnam Pro', sans-serif";
@@ -264,10 +340,10 @@ const s: Record<string, React.CSSProperties> = {
   },
   arrowBtn: {
     position: 'absolute',
-    display:  'flex',
+    display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
-    width:  ARROW_D,
+    width: ARROW_D,
     height: ARROW_D,
     borderRadius: '9999px',
     background: 'white',

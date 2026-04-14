@@ -37,10 +37,15 @@ const BODY      = '#89656b';
 const MUTED     = '#ad808a';
 const BLUSH     = '#fdeff1';
 const BORDER    = '#f0e4e6';
-const BG        = '#f8f6f6';
 const FONT      = "'Be Vietnam Pro', sans-serif";
 
-// ── Sidebar (componente puro de presentación) ─────────────────────────────────
+// ── Helper: convierte un nombre de categoría en slug (igual que en shop.astro) ─
+
+function toSlug(name: string): string {
+  return name.toLowerCase().replace(/\s+/g, '-');
+}
+
+// ── Sidebar ───────────────────────────────────────────────────────────────────
 
 interface SidebarProps {
   lang: Lang;
@@ -267,11 +272,10 @@ function Pagination({ page, totalPages, lang, onChange }: PaginationProps) {
   );
 }
 
-// ── ShopClient (componente principal) ─────────────────────────────────────────
+// ── ShopClient ────────────────────────────────────────────────────────────────
 
 export default function ShopClient({ products, categories, lang, initialCat = '' }: Props) {
 
-  // Rangos de precio
   const priceRanges = useMemo(() => [
     { key: 'under50',  label: t(lang, 'shop.filters.price.under50'),  min: 0,   max: 50        },
     { key: '50_100',   label: t(lang, 'shop.filters.price.50_100'),   min: 50,  max: 100       },
@@ -279,7 +283,6 @@ export default function ShopClient({ products, categories, lang, initialCat = ''
     { key: 'over200',  label: t(lang, 'shop.filters.price.over200'),  min: 200, max: Infinity  },
   ], [lang]);
 
-  // Colores y tipos disponibles (derivados de los productos)
   const availableColors = useMemo(() => {
     const map = new Map<string, string>();
     products.forEach(p => { if (p.colorName) map.set(p.colorName, p.colorHex ?? ''); });
@@ -292,7 +295,6 @@ export default function ShopClient({ products, categories, lang, initialCat = ''
     return Array.from(set);
   }, [products]);
 
-  // Estado de filtros
   const [selectedCat,    setSelectedCat]    = useState<string>(initialCat);
   const [selectedPrice,  setSelectedPrice]  = useState<string>('');
   const [selectedColors, setSelectedColors] = useState<Set<string>>(new Set());
@@ -340,22 +342,21 @@ export default function ShopClient({ products, categories, lang, initialCat = ''
     setPage(1);
   }
 
-  // Productos filtrados y ordenados
   const filtered = useMemo(() => {
     let result = [...products];
 
+    // ── Filtro de categoría ──────────────────────────────────────────────────
+    // Compara el slug de la categoría del producto directamente con selectedCat.
+    // product.category contiene el nombre del taxonomy term; lo convertimos a slug
+    // con la misma función que se usó al construir los ShopCategory en shop.astro.
     if (selectedCat) {
-      const cat = categories.find(c => c.slug === selectedCat);
-      if (cat) {
-        const q = cat.name.toLowerCase();
-        result = result.filter(p =>
-          p.title.toLowerCase().includes(q) ||
-          (p.subtitle && p.subtitle.toLowerCase().includes(q)) ||
-          (p.tipo && p.tipo.toLowerCase().includes(q))
-        );
-      }
+      result = result.filter(p => {
+        if (!p.category) return false;
+        return toSlug(p.category) === selectedCat;
+      });
     }
 
+    // ── Filtro de precio ─────────────────────────────────────────────────────
     if (selectedPrice) {
       const range = priceRanges.find(r => r.key === selectedPrice);
       if (range) {
@@ -363,21 +364,24 @@ export default function ShopClient({ products, categories, lang, initialCat = ''
       }
     }
 
+    // ── Filtro de color ──────────────────────────────────────────────────────
     if (selectedColors.size > 0) {
       result = result.filter(p => p.colorName && selectedColors.has(p.colorName));
     }
 
+    // ── Filtro de tipo ───────────────────────────────────────────────────────
     if (selectedTipos.size > 0) {
       result = result.filter(p => p.tipo && selectedTipos.has(p.tipo));
     }
 
+    // ── Ordenamiento ─────────────────────────────────────────────────────────
     switch (sortBy) {
       case 'price_asc':  result.sort((a, b) => a.priceNumber - b.priceNumber); break;
       case 'price_desc': result.sort((a, b) => b.priceNumber - a.priceNumber); break;
     }
 
     return result;
-  }, [products, selectedCat, selectedPrice, selectedColors, selectedTipos, sortBy, categories, priceRanges]);
+  }, [products, selectedCat, selectedPrice, selectedColors, selectedTipos, sortBy, priceRanges]);
 
   const totalPages = Math.max(1, Math.ceil(filtered.length / ITEMS_PER_PAGE));
   const paginated  = filtered.slice((page - 1) * ITEMS_PER_PAGE, page * ITEMS_PER_PAGE);
@@ -405,15 +409,15 @@ export default function ShopClient({ products, categories, lang, initialCat = ''
     <>
       <div style={s.layout}>
 
-        {/* ── Sidebar desktop ── */}
+        {/* Sidebar desktop */}
         <aside style={s.desktopSidebar} className="shop-desktop-sidebar">
           <SidebarContent {...sidebarProps} />
         </aside>
 
-        {/* ── Contenido principal ── */}
+        {/* Contenido principal */}
         <div style={{ flex: 1, minWidth: 0 }}>
 
-          {/* Barra superior: contador + filtros mobile + sort */}
+          {/* Barra superior */}
           <div style={s.topBar}>
             <p style={s.resultsText}>
               {t(lang, 'shop.showing')}{' '}
@@ -456,11 +460,7 @@ export default function ShopClient({ products, categories, lang, initialCat = ''
 
                 {sortOpen && (
                   <>
-                    {/* Click-outside overlay */}
-                    <div
-                      onClick={() => setSortOpen(false)}
-                      style={{ position: 'fixed', inset: 0, zIndex: 9 }}
-                    />
+                    <div onClick={() => setSortOpen(false)} style={{ position: 'fixed', inset: 0, zIndex: 9 }} />
                     <div style={s.sortDropdown}>
                       {(Object.keys(sortLabels) as SortKey[]).map(key => (
                         <button
@@ -511,13 +511,10 @@ export default function ShopClient({ products, categories, lang, initialCat = ''
         </div>
       </div>
 
-      {/* ── Drawer mobile ── */}
+      {/* Drawer mobile */}
       {filtersOpen && (
         <>
-          <div
-            onClick={() => setFiltersOpen(false)}
-            style={s.drawerOverlay}
-          />
+          <div onClick={() => setFiltersOpen(false)} style={s.drawerOverlay} />
           <aside style={s.mobileDrawer}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1.5rem', flexShrink: 0 }}>
               <h2 style={{ fontFamily: FONT, fontSize: '1.125rem', fontWeight: 700, color: HEADLINE, margin: 0 }}>
@@ -531,23 +528,16 @@ export default function ShopClient({ products, categories, lang, initialCat = ''
                 <span className="material-symbols-outlined" style={{ fontSize: '1.5rem', lineHeight: 1 }}>close</span>
               </button>
             </div>
-
             <div style={{ flex: 1, overflowY: 'auto', paddingRight: '0.25rem' }}>
               <SidebarContent {...sidebarProps} />
             </div>
-
-            <button
-              type="button"
-              onClick={() => setFiltersOpen(false)}
-              style={s.applyBtn}
-            >
+            <button type="button" onClick={() => setFiltersOpen(false)} style={s.applyBtn}>
               {t(lang, 'shop.filters.apply')} ({filtered.length})
             </button>
           </aside>
         </>
       )}
 
-      {/* ── Responsive CSS ── */}
       <style>{`
         .shop-desktop-sidebar { display: none !important; }
         .shop-filter-toggle   { display: flex !important; }
@@ -556,11 +546,9 @@ export default function ShopClient({ products, categories, lang, initialCat = ''
           grid-template-columns: 1fr;
           gap: 1.25rem;
         }
-
         @media (min-width: 540px) {
           .shop-grid { grid-template-columns: repeat(2, 1fr); }
         }
-
         @media (min-width: 1024px) {
           .shop-desktop-sidebar { display: block !important; }
           .shop-filter-toggle   { display: none !important; }
@@ -585,7 +573,6 @@ const s: Record<string, CSSProperties> = {
     position: 'sticky',
     top: '5rem',
   },
-
   filterTitle: {
     fontFamily: FONT,
     fontSize: '0.875rem',
@@ -631,7 +618,6 @@ const s: Record<string, CSSProperties> = {
     cursor: 'pointer',
     transition: 'border-color 0.2s, color 0.2s',
   },
-
   topBar: {
     display: 'flex',
     alignItems: 'center',
@@ -706,7 +692,6 @@ const s: Record<string, CSSProperties> = {
     textAlign: 'left',
     transition: 'background 0.15s, color 0.15s',
   } as CSSProperties,
-
   emptyState: {
     display: 'flex',
     flexDirection: 'column',
@@ -715,7 +700,6 @@ const s: Record<string, CSSProperties> = {
     padding: '5rem 1rem',
     textAlign: 'center',
   },
-
   pageBtn: {
     display: 'flex',
     alignItems: 'center',
@@ -731,7 +715,6 @@ const s: Record<string, CSSProperties> = {
     color: HEADLINE,
     transition: 'background 0.15s, color 0.15s, border-color 0.15s',
   },
-
   drawerOverlay: {
     position: 'fixed',
     inset: 0,

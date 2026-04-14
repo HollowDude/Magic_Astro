@@ -8,24 +8,20 @@ function t(lang: Lang, key: UiKey): string {
     ?? key;
 }
 
-// ── Tipos exportados para reutilización ───────────────────────────────────────
+// ── Tipos exportados ──────────────────────────────────────────────────────────
 
 export interface ProductCardData {
   id: string;
   title: string;
-  /** Subtítulo — ej: nombre del color o composición */
-  subtitle: string | null;
-  /** Precio formateado — ej: "$85.00" */
   price: string;
-  /** Precio numérico para filtrado/ordenamiento */
   priceNumber: number;
   thumbnail: string | null;
-  /** Badge opcional — ej: "Nuevo", "Bestseller" */
   badge: string | null;
-  /** field_tipo: 'natural' | 'artificial' | 'seco' */
   tipo: string | null;
   colorName: string | null;
   colorHex: string | null;
+  /** Nombre de la categoría del producto (taxonomy term) */
+  category: string | null;
 }
 
 interface Props {
@@ -33,17 +29,23 @@ interface Props {
   lang?: Lang;
 }
 
-// ── Tokens de color (no dependen de variables CSS para funcionar en shadow DOM) ─
+// ── Tokens ────────────────────────────────────────────────────────────────────
 const PRIMARY      = '#eb4763';
 const PRIMARY_DARK = '#d63a54';
 const HEADLINE     = '#6d5157';
 const MUTED        = '#ad808a';
 const BLUSH        = '#fdeff1';
 const BORDER       = '#f0e4e6';
-const FONT         = "'Be Vietnam Pro', sans-serif";
+const FONT_BODY    = "'Be Vietnam Pro', sans-serif";
+const FONT_HEADING = "'Oddval Text', Georgia, serif";
 
 export default function ProductCard({ product, lang = 'es' }: Props) {
   const wishlistLabel = lang === 'es' ? 'Agregar a favoritos' : 'Add to wishlist';
+
+  // Color dot: relleno con hex si hay color, vacío con borde si no
+  const dotFill    = product.colorHex || (product.colorName ? MUTED : 'transparent');
+  const dotBorder  = product.colorHex || (product.colorName ? MUTED : BORDER);
+  const dotTitle   = product.colorName ?? undefined;
 
   return (
     <article className="pc-card">
@@ -66,28 +68,41 @@ export default function ProductCard({ product, lang = 'es' }: Props) {
           <span className="pc-badge">{product.badge}</span>
         )}
 
-        <button className="pc-fav" aria-label={wishlistLabel} type="button">
-          <span className="material-symbols-outlined" style={{ fontSize: '1.125rem', lineHeight: 1 }}>
-            favorite
-          </span>
-        </button>
+        {/* Color dot en la imagen — tooltip nativo del navegador con el nombre */}
+        <div
+          className="pc-color-dot"
+          title={dotTitle}
+          aria-label={product.colorName ?? undefined}
+          style={{
+            background:  dotFill,
+            border:      `2px solid ${dotBorder}`,
+            cursor:      product.colorName ? 'help' : 'default',
+          }}
+        />
       </div>
 
       {/* Cuerpo */}
       <div className="pc-body">
         <div className="pc-meta">
           <div style={{ minWidth: 0 }}>
-            <h3 className="pc-title">{product.title}</h3>
-            {product.subtitle && (
-              <p className="pc-subtitle">{product.subtitle}</p>
+            {/* Categoría */}
+            {product.category && (
+              <p className="pc-category">{product.category}</p>
             )}
+            {/* Título con --font-heading */}
+            <h3 className="pc-title">{product.title}</h3>
           </div>
           <span className="pc-price">
             {product.price || t(lang, 'shop.price_on_request')}
           </span>
         </div>
 
-        <button className="pc-cart" type="button" disabled title={lang === 'es' ? 'Próximamente' : 'Coming soon'}>
+        <button
+          className="pc-cart"
+          type="button"
+          disabled
+          title={lang === 'es' ? 'Próximamente' : 'Coming soon'}
+        >
           <span className="material-symbols-outlined" style={{ fontSize: '1.125rem', lineHeight: 1 }}>
             shopping_bag
           </span>
@@ -136,13 +151,13 @@ export default function ProductCard({ product, lang = 'es' }: Props) {
         }
         .pc-ph-icon { font-size: 3rem !important; color: ${PRIMARY}; opacity: 0.35; }
 
-        /* Badge */
+        /* Badge tipo */
         .pc-badge {
           position: absolute;
           top: 0.75rem;
           left: 0.75rem;
           padding: 0.2rem 0.625rem;
-          font-family: ${FONT};
+          font-family: ${FONT_BODY};
           font-size: 0.6875rem;
           font-weight: 700;
           text-transform: uppercase;
@@ -151,6 +166,21 @@ export default function ProductCard({ product, lang = 'es' }: Props) {
           color: white;
           border-radius: 9999px;
           box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+        }
+
+        /* Círculo de color — esquina inferior izquierda de la imagen */
+        .pc-color-dot {
+          position: absolute;
+          bottom: 1rem;
+          left: 1rem;
+          width: 1.125rem;
+          height: 1.125rem;
+          border-radius: 9999px;
+          box-shadow: 0 1px 4px rgba(0,0,0,0.18);
+          transition: transform 0.2s ease;
+        }
+        .pc-card:hover .pc-color-dot {
+          transform: scale(1.15);
         }
 
         /* Botón favorito */
@@ -189,10 +219,26 @@ export default function ProductCard({ product, lang = 'es' }: Props) {
           align-items: flex-start;
           gap: 0.625rem;
         }
-        .pc-title {
-          font-family: ${FONT};
-          font-size: 1rem;
+
+        /* Categoría — eyebrow pequeño sobre el título */
+        .pc-category {
+          font-family: ${FONT_BODY};
+          font-size: 0.6875rem;
           font-weight: 700;
+          text-transform: uppercase;
+          letter-spacing: 0.06em;
+          color: ${PRIMARY};
+          margin: 0 0 0.2rem;
+          overflow: hidden;
+          text-overflow: ellipsis;
+          white-space: nowrap;
+        }
+
+        /* Título con fuente de titulares */
+        .pc-title {
+          font-family: ${FONT_HEADING};
+          font-size: 1rem;
+          font-weight: 600;
           color: ${HEADLINE};
           margin: 0;
           line-height: 1.3;
@@ -202,14 +248,9 @@ export default function ProductCard({ product, lang = 'es' }: Props) {
           white-space: nowrap;
         }
         .pc-card:hover .pc-title { color: ${PRIMARY}; }
-        .pc-subtitle {
-          font-family: ${FONT};
-          font-size: 0.8125rem;
-          color: ${MUTED};
-          margin: 0.2rem 0 0;
-        }
+
         .pc-price {
-          font-family: ${FONT};
+          font-family: ${FONT_BODY};
           font-size: 1rem;
           font-weight: 700;
           color: ${HEADLINE};
@@ -225,7 +266,7 @@ export default function ProductCard({ product, lang = 'es' }: Props) {
           color: white;
           border: none;
           border-radius: 0.5rem;
-          font-family: ${FONT};
+          font-family: ${FONT_BODY};
           font-size: 0.875rem;
           font-weight: 700;
           cursor: not-allowed;

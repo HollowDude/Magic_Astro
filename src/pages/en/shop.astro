@@ -24,10 +24,17 @@ const [rawProducts, rawCategories] = await Promise.all([
 
 const products: ProductCardData[] = rawProducts.map(p => {
   const v = p.variations?.[0];
+
+  // ── Categoría ──────────────────────────────────────────────────────────────
+  // Ajusta 'field_categoria' al nombre real del campo en tu Drupal si difiere.
+  const category: string | null =
+    (p as Record<string, unknown> & typeof p)['field_categoria']
+      ? ((p as Record<string, unknown>)['field_categoria'] as { name: string })?.name ?? null
+      : null;
+
   return {
     id:          p.id,
     title:       p.title,
-    subtitle:    v?.field_color_de_la_flor?.name  ?? null,
     price:       v?.price?.formatted              ?? '',
     priceNumber: parseFloat(v?.price?.number      ?? '0'),
     thumbnail:   getProductThumbnail(p, DRUPAL_BASE_URL),
@@ -35,6 +42,7 @@ const products: ProductCardData[] = rawProducts.map(p => {
     tipo:        v?.field_tipo                    ?? null,
     colorName:   v?.field_color_de_la_flor?.name  ?? null,
     colorHex:    v?.field_color_de_la_flor?.field_color_hex ?? null,
+    category,
   };
 });
 
