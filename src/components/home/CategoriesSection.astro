@@ -90,18 +90,19 @@ const categorias = await getCategoriasDeFlores(4, lang);
   }
 
   .section-title {
-    font-family: 'Oddval Text', Georgia, serif;
+    font-family: var(--font-heading);
     font-size: clamp(1.75rem, 3vw, 2.5rem);
     font-weight: 600;
     letter-spacing: -0.02em;
-    color: #6d5157;
+    color: var(--headline);
     margin: 0;
   }
 
   .section-subtitle {
     margin-top: 0.5rem;
-    color: #886369;
+    color: var(--body-color);
     font-size: 0.9375rem;
+    font-family: var(--font-body);
   }
 
   .see-all {
@@ -180,5 +181,7 @@ const categorias = await getCategoriasDeFlores(4, lang);
   .category-name h3 {
     font-size: 1.125rem;
     font-weight: 700;
+    font-family: var(--font-body);
+    color: var(--headline);
   }
 </style>

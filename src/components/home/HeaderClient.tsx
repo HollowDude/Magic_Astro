@@ -28,11 +28,10 @@ function t(lang: Lang, key: UiKey): string {
     ?? key;
 }
 
-const PRIMARY   = '#eb4763';
 const ICON_SIZE = '2.375rem';
 const PILL_OPEN = '13.5rem';
 
-// ── Textos inline (evita tocar ui.ts) ────────────────────────────────────────
+// ── Textos inline ─────────────────────────────────────────────────────────────
 const SEARCH_STRINGS = {
   es: {
     loading:   'Buscando...',
@@ -52,7 +51,7 @@ const SEARCH_STRINGS = {
 
 const DEBOUNCE_MS = 350;
 
-// ── Componente SearchResultPanel ──────────────────────────────────────────────
+// ── SearchResultPanel ─────────────────────────────────────────────────────────
 
 interface SearchPanelProps {
   lang:        Lang;
@@ -91,12 +90,12 @@ function SearchResultPanel({
         <div style={sp.empty}>
           <span
             className="material-symbols-outlined"
-            style={{ fontSize: '1.5rem', color: PRIMARY, opacity: 0.4, lineHeight: 1 }}
+            style={{ fontSize: '1.5rem', color: 'var(--primary)', opacity: 0.4, lineHeight: 1 }}
           >
             search_off
           </span>
           <p style={sp.emptyText}>
-            {ss.noResults} <strong style={{ color: '#6d5157' }}>"{query}"</strong>
+            {ss.noResults} <strong style={{ color: 'var(--headline)' }}>"{query}"</strong>
           </p>
         </div>
       )}
@@ -111,7 +110,8 @@ function SearchResultPanel({
                   href={`${lang === 'en' ? '/en' : ''}/shop`}
                   style={sp.item}
                   onMouseEnter={(e) => {
-                    (e.currentTarget as HTMLAnchorElement).style.background = 'rgba(235,71,99,0.05)';
+                    (e.currentTarget as HTMLAnchorElement).style.background =
+                      'color-mix(in srgb, var(--primary) 5%, transparent)';
                   }}
                   onMouseLeave={(e) => {
                     (e.currentTarget as HTMLAnchorElement).style.background = 'transparent';
@@ -130,7 +130,7 @@ function SearchResultPanel({
                       <div style={sp.thumbPh}>
                         <span
                           className="material-symbols-outlined"
-                          style={{ fontSize: '1.25rem', color: PRIMARY, opacity: 0.4, lineHeight: 1 }}
+                          style={{ fontSize: '1.25rem', color: 'var(--primary)', opacity: 0.4, lineHeight: 1 }}
                         >
                           local_florist
                         </span>
@@ -151,7 +151,7 @@ function SearchResultPanel({
                   {/* Chevron */}
                   <span
                     className="material-symbols-outlined"
-                    style={{ fontSize: '1rem', color: '#ad808a', opacity: 0.5, lineHeight: 1, flexShrink: 0 }}
+                    style={{ fontSize: '1rem', color: 'var(--muted)', opacity: 0.5, lineHeight: 1, flexShrink: 0 }}
                   >
                     chevron_right
                   </span>
@@ -191,7 +191,7 @@ const sp: Record<string, React.CSSProperties> = {
     minWidth:     '18rem',
     background:   'white',
     borderRadius: '0.875rem',
-    boxShadow:    '0 8px 32px rgba(0,0,0,0.1), 0 0 0 1px rgba(235,71,99,0.08)',
+    boxShadow:    '0 8px 32px rgba(0,0,0,0.1), 0 0 0 1px color-mix(in srgb, var(--primary) 8%, transparent)',
     zIndex:       100,
     overflow:     'hidden',
     padding:      '0.75rem 0',
@@ -216,7 +216,7 @@ const sp: Record<string, React.CSSProperties> = {
     borderRadius: '0.5rem',
     overflow:     'hidden',
     flexShrink:   0,
-    background:   '#fdeff1',
+    background:   'var(--blush)',
   },
   thumbImg: {
     width:      '100%',
@@ -236,34 +236,34 @@ const sp: Record<string, React.CSSProperties> = {
     minWidth: 0,
   },
   itemTitle: {
-    fontFamily:   "'Be Vietnam Pro', sans-serif",
+    fontFamily:   'var(--font-body)',
     fontSize:     '0.875rem',
     fontWeight:   600,
-    color:        '#6d5157',
+    color:        'var(--headline)',
     margin:       0,
     overflow:     'hidden',
     textOverflow: 'ellipsis',
     whiteSpace:   'nowrap',
   },
   itemPrice: {
-    fontFamily: "'Be Vietnam Pro', sans-serif",
+    fontFamily: 'var(--font-body)',
     fontSize:   '0.75rem',
-    color:      '#ad808a',
+    color:      'var(--muted)',
     margin:     0,
     marginTop:  '0.15rem',
   },
   footer: {
-    borderTop: '1px solid #f0e4e6',
-    marginTop: '0.375rem',
+    borderTop:  '1px solid var(--border)',
+    marginTop:  '0.375rem',
     paddingTop: '0.375rem',
-    padding:   '0.5rem 1rem 0.125rem',
+    padding:    '0.5rem 1rem 0.125rem',
   },
   showMore: {
     display:        'block',
-    fontFamily:     "'Be Vietnam Pro', sans-serif",
+    fontFamily:     'var(--font-body)',
     fontSize:       '0.8125rem',
     fontWeight:     700,
-    color:          PRIMARY,
+    color:          'var(--primary)',
     textDecoration: 'none',
     textAlign:      'center' as const,
     padding:        '0.375rem 0',
@@ -278,20 +278,20 @@ const sp: Record<string, React.CSSProperties> = {
     padding:    '0.5rem 1rem',
   },
   skeletonImg: {
-    width:        '2.75rem',
-    height:       '2.75rem',
-    borderRadius: '0.5rem',
-    flexShrink:   0,
-    background:   'linear-gradient(90deg, #f0e4e6 25%, #fdeff1 50%, #f0e4e6 75%)',
+    width:          '2.75rem',
+    height:         '2.75rem',
+    borderRadius:   '0.5rem',
+    flexShrink:     0,
+    background:     'linear-gradient(90deg, var(--border) 25%, var(--blush) 50%, var(--border) 75%)',
     backgroundSize: '200% 100%',
-    animation:    'shimmer 1.4s ease-in-out infinite',
+    animation:      'shimmer 1.4s ease-in-out infinite',
   },
   skeletonLine: {
-    height:       '0.625rem',
-    borderRadius: '9999px',
-    background:   'linear-gradient(90deg, #f0e4e6 25%, #fdeff1 50%, #f0e4e6 75%)',
+    height:         '0.625rem',
+    borderRadius:   '9999px',
+    background:     'linear-gradient(90deg, var(--border) 25%, var(--blush) 50%, var(--border) 75%)',
     backgroundSize: '200% 100%',
-    animation:    'shimmer 1.4s ease-in-out infinite',
+    animation:      'shimmer 1.4s ease-in-out infinite',
   },
   empty: {
     display:        'flex',
@@ -302,9 +302,9 @@ const sp: Record<string, React.CSSProperties> = {
     textAlign:      'center' as const,
   },
   emptyText: {
-    fontFamily: "'Be Vietnam Pro', sans-serif",
+    fontFamily: 'var(--font-body)',
     fontSize:   '0.875rem',
-    color:      '#89656b',
+    color:      'var(--body-color)',
     margin:     0,
   },
 };
@@ -326,7 +326,6 @@ export default function HeaderClient({ isLoggedIn, currentPath, lang }: Props) {
   const navLinks = getNavLinks(lang);
   const shopHref = lang === 'en' ? '/en/shop' : '/shop';
 
-  // ── Search open/close ───────────────────────────────────────────────────────
   const openSearch = () => {
     setSearchOpen(true);
     setTimeout(() => inputRef.current?.focus(), 220);
@@ -342,7 +341,6 @@ export default function HeaderClient({ isLoggedIn, currentPath, lang }: Props) {
     inputRef.current?.blur();
   }, []);
 
-  // ── Cerrar al click fuera ───────────────────────────────────────────────────
   useEffect(() => {
     if (!searchOpen) return;
     const down = (e: MouseEvent) => {
@@ -352,16 +350,13 @@ export default function HeaderClient({ isLoggedIn, currentPath, lang }: Props) {
     return () => document.removeEventListener('mousedown', down);
   }, [searchOpen, closeSearch]);
 
-  // ── Cerrar con Escape ───────────────────────────────────────────────────────
   useEffect(() => {
     const esc = (e: KeyboardEvent) => { if (e.key === 'Escape') closeSearch(); };
     document.addEventListener('keydown', esc);
     return () => document.removeEventListener('keydown', esc);
   }, [closeSearch]);
 
-  // ── Búsqueda con debounce ───────────────────────────────────────────────────
   useEffect(() => {
-    // Limpiar si menos de 3 caracteres
     if (searchValue.length < 3) {
       if (debounceRef.current) clearTimeout(debounceRef.current);
       setSearchResults([]);
@@ -370,10 +365,8 @@ export default function HeaderClient({ isLoggedIn, currentPath, lang }: Props) {
       return;
     }
 
-    // Mostrar loading inmediato para feedback visual rápido
     setSearchLoading(true);
 
-    // Cancelar petición anterior y programar nueva
     if (debounceRef.current) clearTimeout(debounceRef.current);
 
     debounceRef.current = setTimeout(async () => {
@@ -405,7 +398,6 @@ export default function HeaderClient({ isLoggedIn, currentPath, lang }: Props) {
     window.location.href = getLocalizedPath(currentPath, targetLang);
   };
 
-  // ¿Mostrar el panel de resultados?
   const showPanel = searchOpen && searchValue.length >= 3;
 
   return (
@@ -446,9 +438,15 @@ export default function HeaderClient({ isLoggedIn, currentPath, lang }: Props) {
                 width:        searchOpen ? PILL_OPEN : ICON_SIZE,
                 borderRadius: '9999px',
                 overflow:     'hidden',
-                border:       `1.5px solid ${searchOpen ? 'rgba(235,71,99,0.28)' : 'transparent'}`,
-                background:   searchOpen ? 'white' : 'rgba(235,71,99,0.07)',
-                boxShadow:    searchOpen ? '0 4px 20px rgba(235,71,99,0.1)' : 'none',
+                border:       searchOpen
+                  ? '1.5px solid color-mix(in srgb, var(--primary) 28%, transparent)'
+                  : '1.5px solid transparent',
+                background:   searchOpen
+                  ? 'white'
+                  : 'color-mix(in srgb, var(--primary) 7%, transparent)',
+                boxShadow:    searchOpen
+                  ? '0 4px 20px color-mix(in srgb, var(--primary) 10%, transparent)'
+                  : 'none',
                 transition:   [
                   'width 0.38s cubic-bezier(0.4,0,0.2,1)',
                   'border-color 0.25s ease',
@@ -470,13 +468,12 @@ export default function HeaderClient({ isLoggedIn, currentPath, lang }: Props) {
                   border:         'none',
                   background:     'transparent',
                   cursor:         'pointer',
-                  color:          searchOpen ? PRIMARY : '#3a1a20',
+                  color:          searchOpen ? 'var(--primary)' : 'var(--text-main)',
                   transition:     'color 0.2s',
                   borderRadius:   '9999px',
                 }}
               >
                 <span className="material-symbols-outlined" style={{ fontSize: '1.25rem', lineHeight: 1, display: 'block' }}>
-                  {/* Mostrar X solo si hay texto, sino lupa */}
                   {searchOpen && searchValue.length > 0 ? 'close' : 'search'}
                 </span>
               </button>
@@ -499,8 +496,8 @@ export default function HeaderClient({ isLoggedIn, currentPath, lang }: Props) {
                   outline:       'none',
                   padding:       '0 1rem 0 0',
                   fontSize:      '0.875rem',
-                  fontFamily:    "'Be Vietnam Pro', sans-serif",
-                  color:         '#181112',
+                  fontFamily:    'var(--font-body)',
+                  color:         'var(--text-main)',
                   opacity:       searchOpen ? 1 : 0,
                   transform:     searchOpen ? 'translateX(0)' : 'translateX(-6px)',
                   pointerEvents: searchOpen ? 'auto' : 'none',
@@ -508,17 +505,17 @@ export default function HeaderClient({ isLoggedIn, currentPath, lang }: Props) {
                 }}
               />
 
-              {/* Spinner dentro de la pill mientras carga */}
+              {/* Spinner */}
               {searchLoading && (
                 <div style={{
-                  flexShrink:   0,
-                  width:        '1rem',
-                  height:       '1rem',
-                  marginRight:  '0.75rem',
-                  borderRadius: '9999px',
-                  border:       `2px solid rgba(235,71,99,0.2)`,
-                  borderTopColor: PRIMARY,
-                  animation:    'spin 0.7s linear infinite',
+                  flexShrink:     0,
+                  width:          '1rem',
+                  height:         '1rem',
+                  marginRight:    '0.75rem',
+                  borderRadius:   '9999px',
+                  border:         '2px solid color-mix(in srgb, var(--primary) 20%, transparent)',
+                  borderTopColor: 'var(--primary)',
+                  animation:      'spin 0.7s linear infinite',
                 }} />
               )}
             </div>
@@ -546,7 +543,7 @@ export default function HeaderClient({ isLoggedIn, currentPath, lang }: Props) {
                   aria-current={l === lang ? 'true' : undefined}
                   style={{
                     ...s.langBtn,
-                    color:      l === lang ? PRIMARY : '#886369',
+                    color:      l === lang ? 'var(--primary)' : 'var(--muted)',
                     fontWeight: l === lang ? 700 : 500,
                     cursor:     l === lang ? 'default' : 'pointer',
                   }}
@@ -617,14 +614,14 @@ export default function HeaderClient({ isLoggedIn, currentPath, lang }: Props) {
                     disabled={l === lang}
                     style={{
                       ...s.mobileLangBtn,
-                      color:      l === lang ? PRIMARY : '#886369',
+                      color:      l === lang ? 'var(--primary)' : 'var(--muted)',
                       fontWeight: l === lang ? 700 : 500,
                     }}
                   >
                     {languages[l]}
                   </button>
                   {i < arr.length - 1 && (
-                    <span key={`msep-${l}`} style={{ color: '#d0c0c3', fontSize: '0.75rem' }}>|</span>
+                    <span key={`msep-${l}`} style={{ color: 'var(--border)', fontSize: '0.75rem' }}>|</span>
                   )}
                 </Fragment>
               ))}
@@ -651,18 +648,18 @@ export default function HeaderClient({ isLoggedIn, currentPath, lang }: Props) {
 /* ─── Styles ─────────────────────────────────────────────────── */
 const s: Record<string, React.CSSProperties> = {
   header: {
-    position:           'sticky',
-    top:                0,
-    zIndex:             50,
-    display:            'flex',
-    alignItems:         'center',
-    justifyContent:     'space-between',
-    gap:                '1rem',
-    padding:            '0.625rem 2.5rem',
-    background:         'rgba(255,255,255,0.87)',
-    backdropFilter:     'blur(14px)',
+    position:             'sticky',
+    top:                  0,
+    zIndex:               50,
+    display:              'flex',
+    alignItems:           'center',
+    justifyContent:       'space-between',
+    gap:                  '1rem',
+    padding:              '0.625rem 2.5rem',
+    background:           'rgba(255,255,255,0.87)',
+    backdropFilter:       'blur(14px)',
     WebkitBackdropFilter: 'blur(14px)',
-    borderBottom:       '1px solid rgba(235,71,99,0.1)',
+    borderBottom:         '1px solid color-mix(in srgb, var(--primary) 10%, transparent)',
   },
   left: {
     display:    'flex',
@@ -675,15 +672,16 @@ const s: Record<string, React.CSSProperties> = {
     alignItems:     'center',
     gap:            '0.5rem',
     textDecoration: 'none',
-    color:          '#181112',
+    color:          'var(--text-main)',
     flexShrink:     0,
   },
-  logoIcon: { fontSize: '1.875rem', color: PRIMARY, lineHeight: 1 },
+  logoIcon: { fontSize: '1.875rem', color: 'var(--primary)', lineHeight: 1 },
   logoText: {
     fontSize:      '1.0625rem',
     fontWeight:    800,
     letterSpacing: '-0.02em',
-    fontFamily:    "'Be Vietnam Pro', sans-serif",
+    fontFamily:    'var(--font-body)',
+    color:         'var(--text-main)',
   },
   nav: {
     alignItems: 'center',
@@ -696,22 +694,22 @@ const s: Record<string, React.CSSProperties> = {
     gap:            '3px',
     fontSize:       '0.9375rem',
     fontWeight:     500,
-    color:          '#181112',
+    color:          'var(--text-main)',
     textDecoration: 'none',
-    fontFamily:     "'Be Vietnam Pro', sans-serif",
+    fontFamily:     'var(--font-body)',
     letterSpacing:  '-0.01em',
     whiteSpace:     'nowrap',
     transition:     'color 0.2s',
   },
   navLinkActive: {
-    color:      PRIMARY,
+    color:      'var(--primary)',
     fontWeight: 700,
   },
   navDot: {
     width:        '4px',
     height:       '4px',
     borderRadius: '9999px',
-    background:   PRIMARY,
+    background:   'var(--primary)',
   },
   right: {
     display:    'flex',
@@ -725,21 +723,21 @@ const s: Record<string, React.CSSProperties> = {
     gap:          '0.25rem',
     padding:      '0.25rem 0.625rem',
     borderRadius: '9999px',
-    background:   'rgba(235,71,99,0.07)',
+    background:   'color-mix(in srgb, var(--primary) 7%, transparent)',
     marginInline: '0.25rem',
   },
   langBtn: {
-    background:  'none',
-    border:      'none',
-    fontFamily:  "'Be Vietnam Pro', sans-serif",
-    fontSize:    '0.8125rem',
+    background:    'none',
+    border:        'none',
+    fontFamily:    'var(--font-body)',
+    fontSize:      '0.8125rem',
     letterSpacing: '0.04em',
-    padding:     '0.125rem 0.125rem',
-    lineHeight:  1,
-    transition:  'color 0.2s',
+    padding:       '0.125rem 0.125rem',
+    lineHeight:    1,
+    transition:    'color 0.2s',
   },
   langDivider: {
-    color:      'rgba(136,99,105,0.4)',
+    color:      'color-mix(in srgb, var(--muted) 40%, transparent)',
     fontSize:   '0.6875rem',
     userSelect: 'none',
     lineHeight: 1,
@@ -751,8 +749,8 @@ const s: Record<string, React.CSSProperties> = {
     width:           ICON_SIZE,
     height:          ICON_SIZE,
     borderRadius:    '9999px',
-    background:      'rgba(235,71,99,0.07)',
-    color:           '#3a1a20',
+    background:      'color-mix(in srgb, var(--primary) 7%, transparent)',
+    color:           'var(--text-main)',
     border:          'none',
     cursor:          'pointer',
     textDecoration:  'none',
@@ -765,36 +763,36 @@ const s: Record<string, React.CSSProperties> = {
     width:          ICON_SIZE,
     height:         ICON_SIZE,
     borderRadius:   '9999px',
-    background:     'rgba(235,71,99,0.07)',
-    color:          '#3a1a20',
+    background:     'color-mix(in srgb, var(--primary) 7%, transparent)',
+    color:          'var(--text-main)',
     border:         'none',
     cursor:         'pointer',
     flexShrink:     0,
   },
   badge: {
-    position:     'absolute',
-    top:          '-0.25rem',
-    right:        '-0.25rem',
-    display:      'flex',
-    alignItems:   'center',
+    position:       'absolute',
+    top:            '-0.25rem',
+    right:          '-0.25rem',
+    display:        'flex',
+    alignItems:     'center',
     justifyContent: 'center',
-    width:        '1rem',
-    height:       '1rem',
-    borderRadius: '9999px',
-    background:   PRIMARY,
-    color:        'white',
-    fontSize:     '0.5625rem',
-    fontWeight:   700,
-    fontFamily:   "'Be Vietnam Pro', sans-serif",
+    width:          '1rem',
+    height:         '1rem',
+    borderRadius:   '9999px',
+    background:     'var(--primary)',
+    color:          'white',
+    fontSize:       '0.5625rem',
+    fontWeight:     700,
+    fontFamily:     'var(--font-body)',
   },
   loginBtn: {
     height:       '2.125rem',
     padding:      '0 1.125rem',
     borderRadius: '9999px',
-    background:   PRIMARY,
+    background:   'var(--primary)',
     color:        'white',
     border:       'none',
-    fontFamily:   "'Be Vietnam Pro', sans-serif",
+    fontFamily:   'var(--font-body)',
     fontSize:     '0.875rem',
     fontWeight:   700,
     cursor:       'not-allowed',
@@ -802,50 +800,50 @@ const s: Record<string, React.CSSProperties> = {
     whiteSpace:   'nowrap',
   },
   overlay: {
-    position:        'fixed',
-    inset:           0,
-    zIndex:          40,
-    background:      'rgba(33,17,20,0.4)',
-    backdropFilter:  'blur(4px)',
+    position:       'fixed',
+    inset:          0,
+    zIndex:         40,
+    background:     'rgba(33,17,20,0.4)',
+    backdropFilter: 'blur(4px)',
   },
   drawer: {
-    position:       'absolute',
-    top:            0,
-    right:          0,
-    width:          '16rem',
-    height:         '100%',
-    background:     'white',
-    display:        'flex',
-    flexDirection:  'column',
-    paddingTop:     '5rem',
-    boxShadow:      '-4px 0 24px rgba(0,0,0,0.1)',
+    position:      'absolute',
+    top:           0,
+    right:         0,
+    width:         '16rem',
+    height:        '100%',
+    background:    'white',
+    display:       'flex',
+    flexDirection: 'column',
+    paddingTop:    '5rem',
+    boxShadow:     '-4px 0 24px rgba(0,0,0,0.1)',
   },
   mobileLink: {
     padding:        '1rem 1.5rem',
     fontSize:       '1rem',
     fontWeight:     600,
-    color:          '#181112',
+    color:          'var(--text-main)',
     textDecoration: 'none',
-    borderBottom:   '1px solid #f0e4e6',
-    fontFamily:     "'Be Vietnam Pro', sans-serif",
+    borderBottom:   '1px solid var(--border)',
+    fontFamily:     'var(--font-body)',
     transition:     'color 0.2s, background 0.2s',
   },
   mobileLinkActive: {
-    color:      PRIMARY,
-    background: 'rgba(235,71,99,0.04)',
+    color:      'var(--primary)',
+    background: 'color-mix(in srgb, var(--primary) 4%, transparent)',
   },
   mobileLangRow: {
-    display:     'flex',
-    alignItems:  'center',
-    gap:         '0.5rem',
-    padding:     '1rem 1.5rem',
-    marginTop:   'auto',
-    borderTop:   '1px solid #f0e4e6',
+    display:    'flex',
+    alignItems: 'center',
+    gap:        '0.5rem',
+    padding:    '1rem 1.5rem',
+    marginTop:  'auto',
+    borderTop:  '1px solid var(--border)',
   },
   mobileLangBtn: {
     background: 'none',
     border:     'none',
-    fontFamily: "'Be Vietnam Pro', sans-serif",
+    fontFamily: 'var(--font-body)',
     fontSize:   '0.9375rem',
     cursor:     'pointer',
     padding:    0,

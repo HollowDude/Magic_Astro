@@ -31,7 +31,6 @@ export default function HeroCarousel({
   slides,
   lang = 'es',
 }: Props) {
-  // Fallbacks desde el diccionario i18n según el idioma activo
   const fallbackTitle       = t(lang, 'hero.title');
   const fallbackSlogan      = t(lang, 'hero.slogan');
   const fallbackDescription = t(lang, 'hero.description');
@@ -55,7 +54,6 @@ export default function HeroCarousel({
   const activeDescription = description ?? fallbackDescription;
   const activeSlides      = (slides && slides.length > 0) ? slides : fallbackSlides;
 
-  // Rutas de CTAs según idioma
   const prefix      = lang === 'es' ? '' : '/en';
   const shopHref    = `${prefix}/shop`;
   const coursesHref = `${prefix}/courses`;
@@ -182,16 +180,17 @@ const s: Record<string, React.CSSProperties> = {
     letterSpacing: '-0.03em',
     color:         'white',
     textShadow:    '0 2px 16px rgba(0,0,0,0.3)',
-    fontFamily:    "'Be Vietnam Pro', sans-serif",
+    fontFamily:    'var(--font-body)',
     margin:        0,
   },
   subtitle: {
     fontSize:      'clamp(1.25rem, 3vw, 2rem)',
     fontWeight:    700,
     lineHeight:    1.25,
+    // Blush semitransparente sobre el overlay oscuro del hero — no existe como token
     color:         '#fbdadd',
     letterSpacing: '-0.02em',
-    fontFamily:    "'Be Vietnam Pro', sans-serif",
+    fontFamily:    'var(--font-body)',
     margin:        0,
   },
   desc: {
@@ -199,7 +198,7 @@ const s: Record<string, React.CSSProperties> = {
     fontSize:   'clamp(1rem, 2vw, 1.125rem)',
     lineHeight: 1.7,
     color:      'rgba(255,255,255,0.88)',
-    fontFamily: "'Be Vietnam Pro', sans-serif",
+    fontFamily: 'var(--font-body)',
     margin:     0,
   },
   ctas: {
@@ -217,13 +216,13 @@ const s: Record<string, React.CSSProperties> = {
     minWidth:        '10rem',
     padding:         '0 2rem',
     borderRadius:    '9999px',
-    background:      '#eb4763',
+    background:      'var(--primary)',
     color:           'white',
     fontSize:        '1rem',
     fontWeight:      700,
     textDecoration:  'none',
-    fontFamily:      "'Be Vietnam Pro', sans-serif",
-    boxShadow:       '0 4px 18px rgba(235,71,99,0.45)',
+    fontFamily:      'var(--font-body)',
+    boxShadow:       '0 4px 18px color-mix(in srgb, var(--primary) 45%, transparent)',
     transition:      'transform 0.2s, background 0.2s',
   },
   ctaSecondary: {
@@ -239,7 +238,7 @@ const s: Record<string, React.CSSProperties> = {
     fontSize:        '1rem',
     fontWeight:      700,
     textDecoration:  'none',
-    fontFamily:      "'Be Vietnam Pro', sans-serif",
+    fontFamily:      'var(--font-body)',
     backdropFilter:  'blur(4px)',
     transition:      'transform 0.2s, background 0.2s',
   },

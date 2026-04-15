@@ -27,9 +27,9 @@ export default function Alert({ type = 'error', message }: AlertProps) {
           animation: fadeIn 0.2s ease;
         }
         .alert--error {
-          background: color-mix(in srgb, #eb4763 12%, transparent);
+          background: color-mix(in srgb, var(--primary) 12%, transparent);
           color: #c0304a;
-          border: 1px solid color-mix(in srgb, #eb4763 30%, transparent);
+          border: 1px solid color-mix(in srgb, var(--primary) 30%, transparent);
         }
         .alert--success {
           background: color-mix(in srgb, #22c55e 12%, transparent);

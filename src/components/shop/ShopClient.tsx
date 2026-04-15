@@ -31,15 +31,8 @@ interface Props {
 type SortKey = 'featured' | 'price_asc' | 'price_desc' | 'newest';
 
 const ITEMS_PER_PAGE = 9;
-const PRIMARY   = '#eb4763';
-const HEADLINE  = '#6d5157';
-const BODY      = '#89656b';
-const MUTED     = '#ad808a';
-const BLUSH     = '#fdeff1';
-const BORDER    = '#f0e4e6';
-const FONT      = "'Be Vietnam Pro', sans-serif";
 
-// ── Helper: convierte un nombre de categoría en slug (igual que en shop.astro) ─
+// ── Helper ────────────────────────────────────────────────────────────────────
 
 function toSlug(name: string): string {
   return name.toLowerCase().replace(/\s+/g, '-');
@@ -73,7 +66,7 @@ function SidebarContent({
   onCatChange, onPriceChange, onColorToggle, onTipoToggle, onClear,
 }: SidebarProps) {
   const inputStyle: CSSProperties = {
-    accentColor: PRIMARY,
+    accentColor: 'var(--primary)' as string,
     width: '1rem',
     height: '1rem',
     cursor: 'pointer',
@@ -142,11 +135,11 @@ function SidebarContent({
                     width: '1.5rem',
                     height: '1.5rem',
                     borderRadius: '9999px',
-                    background: hex || MUTED,
-                    border: `2px solid ${active ? PRIMARY : 'rgba(0,0,0,0.1)'}`,
+                    background: hex || 'var(--muted)',
+                    border: `2px solid ${active ? 'var(--primary)' : 'rgba(0,0,0,0.1)'}`,
                     cursor: 'pointer',
                     boxShadow: active
-                      ? `0 0 0 2px white, 0 0 0 4px ${PRIMARY}`
+                      ? '0 0 0 2px white, 0 0 0 4px var(--primary)'
                       : '0 1px 3px rgba(0,0,0,0.1)',
                     transform: active ? 'scale(1.15)' : 'scale(1)',
                     transition: 'transform 0.15s, box-shadow 0.15s, border-color 0.15s',
@@ -237,7 +230,7 @@ function Pagination({ page, totalPages, lang, onChange }: PaginationProps) {
         p === '...' ? (
           <span
             key={`ellipsis-${i}`}
-            style={{ ...s.pageBtn, border: 'none', background: 'none', color: MUTED, cursor: 'default' }}
+            style={{ ...s.pageBtn, border: 'none', background: 'none', color: 'var(--muted)', cursor: 'default' }}
           >
             …
           </span>
@@ -247,10 +240,10 @@ function Pagination({ page, totalPages, lang, onChange }: PaginationProps) {
             onClick={() => onChange(p)}
             style={{
               ...s.pageBtn,
-              background: page === p ? PRIMARY : 'white',
-              color: page === p ? 'white' : HEADLINE,
+              background: page === p ? 'var(--primary)' : 'white',
+              color:      page === p ? 'white' : 'var(--headline)',
               fontWeight: page === p ? 700 : 500,
-              borderColor: page === p ? PRIMARY : BORDER,
+              borderColor: page === p ? 'var(--primary)' : 'var(--border)',
             }}
           >
             {p}
@@ -345,10 +338,6 @@ export default function ShopClient({ products, categories, lang, initialCat = ''
   const filtered = useMemo(() => {
     let result = [...products];
 
-    // ── Filtro de categoría ──────────────────────────────────────────────────
-    // Compara el slug de la categoría del producto directamente con selectedCat.
-    // product.category contiene el nombre del taxonomy term; lo convertimos a slug
-    // con la misma función que se usó al construir los ShopCategory en shop.astro.
     if (selectedCat) {
       result = result.filter(p => {
         if (!p.category) return false;
@@ -356,7 +345,6 @@ export default function ShopClient({ products, categories, lang, initialCat = ''
       });
     }
 
-    // ── Filtro de precio ─────────────────────────────────────────────────────
     if (selectedPrice) {
       const range = priceRanges.find(r => r.key === selectedPrice);
       if (range) {
@@ -364,17 +352,14 @@ export default function ShopClient({ products, categories, lang, initialCat = ''
       }
     }
 
-    // ── Filtro de color ──────────────────────────────────────────────────────
     if (selectedColors.size > 0) {
       result = result.filter(p => p.colorName && selectedColors.has(p.colorName));
     }
 
-    // ── Filtro de tipo ───────────────────────────────────────────────────────
     if (selectedTipos.size > 0) {
       result = result.filter(p => p.tipo && selectedTipos.has(p.tipo));
     }
 
-    // ── Ordenamiento ─────────────────────────────────────────────────────────
     switch (sortBy) {
       case 'price_asc':  result.sort((a, b) => a.priceNumber - b.priceNumber); break;
       case 'price_desc': result.sort((a, b) => b.priceNumber - a.priceNumber); break;
@@ -421,9 +406,9 @@ export default function ShopClient({ products, categories, lang, initialCat = ''
           <div style={s.topBar}>
             <p style={s.resultsText}>
               {t(lang, 'shop.showing')}{' '}
-              <strong style={{ color: HEADLINE }}>{paginated.length}</strong>{' '}
+              <strong style={{ color: 'var(--headline)' }}>{paginated.length}</strong>{' '}
               {t(lang, 'shop.of')}{' '}
-              <strong style={{ color: HEADLINE }}>{filtered.length}</strong>{' '}
+              <strong style={{ color: 'var(--headline)' }}>{filtered.length}</strong>{' '}
               {t(lang, 'shop.results')}
             </p>
 
@@ -449,11 +434,11 @@ export default function ShopClient({ products, categories, lang, initialCat = ''
                   onClick={() => setSortOpen(v => !v)}
                   style={s.sortBtn}
                 >
-                  <span style={{ fontFamily: FONT, fontSize: '0.875rem', color: HEADLINE }}>
+                  <span style={{ fontFamily: 'var(--font-body)', fontSize: '0.875rem', color: 'var(--headline)' }}>
                     {t(lang, 'shop.sort.label')}{' '}
                     <strong style={{ fontWeight: 700 }}>{sortLabels[sortBy]}</strong>
                   </span>
-                  <span className="material-symbols-outlined" style={{ fontSize: '1.25rem', lineHeight: 1, color: MUTED }}>
+                  <span className="material-symbols-outlined" style={{ fontSize: '1.25rem', lineHeight: 1, color: 'var(--muted)' }}>
                     keyboard_arrow_down
                   </span>
                 </button>
@@ -469,9 +454,11 @@ export default function ShopClient({ products, categories, lang, initialCat = ''
                           onClick={() => { setSortBy(key); setSortOpen(false); setPage(1); }}
                           style={{
                             ...s.sortOption,
-                            color:      sortBy === key ? PRIMARY  : HEADLINE,
-                            fontWeight: sortBy === key ? 700      : 500,
-                            background: sortBy === key ? `color-mix(in srgb, ${PRIMARY} 6%, white)` : 'transparent',
+                            color:      sortBy === key ? 'var(--primary)' : 'var(--headline)',
+                            fontWeight: sortBy === key ? 700 : 500,
+                            background: sortBy === key
+                              ? 'color-mix(in srgb, var(--primary) 6%, white)'
+                              : 'transparent',
                           }}
                         >
                           {sortLabels[key]}
@@ -487,10 +474,10 @@ export default function ShopClient({ products, categories, lang, initialCat = ''
           {/* Grid de productos */}
           {paginated.length === 0 ? (
             <div style={s.emptyState}>
-              <span className="material-symbols-outlined" style={{ fontSize: '3.5rem', color: MUTED, opacity: 0.4 }}>
+              <span className="material-symbols-outlined" style={{ fontSize: '3.5rem', color: 'var(--muted)', opacity: 0.4 }}>
                 search_off
               </span>
-              <p style={{ fontFamily: FONT, color: BODY, fontSize: '1rem', marginTop: '1rem', marginBottom: 0 }}>
+              <p style={{ fontFamily: 'var(--font-body)', color: 'var(--body-color)', fontSize: '1rem', marginTop: '1rem', marginBottom: 0 }}>
                 {t(lang, 'shop.no_products')}
               </p>
               {hasFilters && (
@@ -517,13 +504,13 @@ export default function ShopClient({ products, categories, lang, initialCat = ''
           <div onClick={() => setFiltersOpen(false)} style={s.drawerOverlay} />
           <aside style={s.mobileDrawer}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1.5rem', flexShrink: 0 }}>
-              <h2 style={{ fontFamily: FONT, fontSize: '1.125rem', fontWeight: 700, color: HEADLINE, margin: 0 }}>
+              <h2 style={{ fontFamily: 'var(--font-body)', fontSize: '1.125rem', fontWeight: 700, color: 'var(--headline)', margin: 0 }}>
                 {t(lang, 'shop.filters.toggle')}
               </h2>
               <button
                 type="button"
                 onClick={() => setFiltersOpen(false)}
-                style={{ background: 'none', border: 'none', cursor: 'pointer', color: HEADLINE, padding: '0.25rem', display: 'flex' }}
+                style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--headline)', padding: '0.25rem', display: 'flex' }}
               >
                 <span className="material-symbols-outlined" style={{ fontSize: '1.5rem', lineHeight: 1 }}>close</span>
               </button>
@@ -574,13 +561,13 @@ const s: Record<string, CSSProperties> = {
     top: '5rem',
   },
   filterTitle: {
-    fontFamily: FONT,
+    fontFamily: 'var(--font-body)',
     fontSize: '0.875rem',
     fontWeight: 700,
-    color: HEADLINE,
+    color: 'var(--headline)',
     margin: 0,
     paddingBottom: '0.625rem',
-    borderBottom: `1px solid ${BORDER}`,
+    borderBottom: '1px solid var(--border)',
     textTransform: 'uppercase',
     letterSpacing: '0.05em',
   },
@@ -597,9 +584,9 @@ const s: Record<string, CSSProperties> = {
     cursor: 'pointer',
   } as CSSProperties,
   filterText: {
-    fontFamily: FONT,
+    fontFamily: 'var(--font-body)',
     fontSize: '0.875rem',
-    color: BODY,
+    color: 'var(--body-color)',
   } as CSSProperties,
   clearBtn: {
     display: 'flex',
@@ -609,12 +596,12 @@ const s: Record<string, CSSProperties> = {
     width: '100%',
     padding: '0.5rem',
     background: 'none',
-    border: `1px solid ${BORDER}`,
+    border: '1px solid var(--border)',
     borderRadius: '0.5rem',
-    fontFamily: FONT,
+    fontFamily: 'var(--font-body)',
     fontSize: '0.8125rem',
     fontWeight: 600,
-    color: MUTED,
+    color: 'var(--muted)',
     cursor: 'pointer',
     transition: 'border-color 0.2s, color 0.2s',
   },
@@ -627,9 +614,9 @@ const s: Record<string, CSSProperties> = {
     marginBottom: '1.5rem',
   },
   resultsText: {
-    fontFamily: FONT,
+    fontFamily: 'var(--font-body)',
     fontSize: '0.875rem',
-    color: BODY,
+    color: 'var(--body-color)',
     margin: 0,
   },
   filterToggleBtn: {
@@ -637,13 +624,13 @@ const s: Record<string, CSSProperties> = {
     alignItems: 'center',
     gap: '0.375rem',
     padding: '0.5rem 0.875rem',
-    background: BLUSH,
-    border: `1px solid ${BORDER}`,
+    background: 'var(--blush)',
+    border: '1px solid var(--border)',
     borderRadius: '0.5rem',
-    fontFamily: FONT,
+    fontFamily: 'var(--font-body)',
     fontSize: '0.875rem',
     fontWeight: 600,
-    color: HEADLINE,
+    color: 'var(--headline)',
     cursor: 'pointer',
   },
   filterDot: {
@@ -653,7 +640,7 @@ const s: Record<string, CSSProperties> = {
     width: '0.5rem',
     height: '0.5rem',
     borderRadius: '9999px',
-    background: PRIMARY,
+    background: 'var(--primary)',
     border: '2px solid white',
   },
   sortBtn: {
@@ -662,7 +649,7 @@ const s: Record<string, CSSProperties> = {
     gap: '0.5rem',
     padding: '0.5rem 0.875rem',
     background: 'white',
-    border: `1px solid ${BORDER}`,
+    border: '1px solid var(--border)',
     borderRadius: '0.5rem',
     cursor: 'pointer',
     transition: 'border-color 0.2s',
@@ -673,9 +660,9 @@ const s: Record<string, CSSProperties> = {
     right: 0,
     top: 'calc(100% + 0.375rem)',
     background: 'white',
-    border: `1px solid ${BORDER}`,
+    border: '1px solid var(--border)',
     borderRadius: '0.625rem',
-    boxShadow: '0 8px 32px rgba(109,81,87,0.12)',
+    boxShadow: '0 8px 32px color-mix(in srgb, var(--headline) 12%, transparent)',
     zIndex: 10,
     overflow: 'hidden',
     minWidth: '12rem',
@@ -686,7 +673,7 @@ const s: Record<string, CSSProperties> = {
     padding: '0.625rem 1rem',
     background: 'transparent',
     border: 'none',
-    fontFamily: FONT,
+    fontFamily: 'var(--font-body)',
     fontSize: '0.875rem',
     cursor: 'pointer',
     textAlign: 'left',
@@ -707,12 +694,12 @@ const s: Record<string, CSSProperties> = {
     width: '2.5rem',
     height: '2.5rem',
     borderRadius: '0.5rem',
-    border: `1px solid ${BORDER}`,
+    border: '1px solid var(--border)',
     background: 'white',
-    fontFamily: FONT,
+    fontFamily: 'var(--font-body)',
     fontSize: '0.875rem',
     cursor: 'pointer',
-    color: HEADLINE,
+    color: 'var(--headline)',
     transition: 'background 0.15s, color 0.15s, border-color 0.15s',
   },
   drawerOverlay: {
@@ -741,11 +728,11 @@ const s: Record<string, CSSProperties> = {
     marginTop: '1.25rem',
     width: '100%',
     height: '2.875rem',
-    background: PRIMARY,
+    background: 'var(--primary)',
     color: 'white',
     border: 'none',
     borderRadius: '0.5rem',
-    fontFamily: FONT,
+    fontFamily: 'var(--font-body)',
     fontSize: '0.9375rem',
     fontWeight: 700,
     cursor: 'pointer',

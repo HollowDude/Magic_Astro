@@ -1,12 +1,4 @@
 // src/components/home/ServicesCarousel.tsx
-//
-// Recibe props opcionales del bloque Drupal "homepage_servicios_section"
-// para el header de la sección (titulo, subTitulo, eslogan).
-// Si Drupal no devuelve data, usa los valores de FALLBACK internos.
-//
-// También recibe la lista de servicios desde Drupal (node--services).
-// Si la lista viene vacía, usa los servicios estáticos como fallback.
-
 import { useState, useCallback, useEffect, useRef } from 'react';
 import type { ServiceItem } from '@/services/drupal/drupal.service';
 
@@ -16,7 +8,6 @@ interface Props {
   titulo?:    string | null;
   subTitulo?: string | null;
   eslogan?:   string | null;
-  /** Servicios normalizados desde Drupal. Si viene vacío, se usan los estáticos. */
   services?:  ServiceItem[];
 }
 
@@ -28,7 +19,7 @@ const FALLBACK_HEADER = {
   eslogan:   'Descubre cómo podemos ayudarte a florecer en cada ocasión especial.',
 };
 
-// ── Servicios estáticos (se usan solo si Drupal no devuelve ninguno) ───────────
+// ── Servicios estáticos ────────────────────────────────────────────────────────
 
 const STATIC_SERVICES: ServiceItem[] = [
   {
@@ -61,13 +52,18 @@ const STATIC_SERVICES: ServiceItem[] = [
 // ── Constantes de layout ──────────────────────────────────────────────────────
 
 const GAP      = 20;
-const CARD_H   = 380;   // altura total de la card (aumentada levemente para dar espacio a la descripción)
+const CARD_H   = 380;
 const IMG_H    = 260;
-const BODY_H   = CARD_H - IMG_H; // 120px para título + descripción
+const BODY_H   = CARD_H - IMG_H;
 const ARROW_D  = 44;
 const SIDE_PAD = ARROW_D / 2 + 8;
-const BADGE_BG = '#f6f2f2';
-const MUTED    = '#ad808a';
+
+// ── Tokens de diseño — referenciados como CSS variables ───────────────────────
+// Los valores literales se usan únicamente en los pocos lugares donde
+// React necesita resolver el color en JS (ej: SVG fill, accentColor).
+// Todo lo demás usa var(--token) para seguir el sistema de diseño de global.css.
+const PRIMARY_HEX = '#eb4763'; // Solo para SVG fill y accentColor de inputs
+const MUTED_HEX   = '#ad808a'; // Solo para SVG fill de flechas
 
 export default function ServicesCarousel({
   titulo,
@@ -75,7 +71,6 @@ export default function ServicesCarousel({
   eslogan,
   services: servicesProp = [],
 }: Props) {
-  // Usar los de Drupal si vienen; si no, caer a los estáticos
   const activeServices = servicesProp.length > 0 ? servicesProp : STATIC_SERVICES;
   const TOTAL = activeServices.length;
 
@@ -110,7 +105,7 @@ export default function ServicesCarousel({
   return (
     <section style={s.section}>
 
-      {/* Header — datos del bloque Drupal con fallback */}
+      {/* Header */}
       <div style={s.header}>
         <span style={s.eyebrow}>{titulo ?? FALLBACK_HEADER.titulo}</span>
         <h2 style={s.title}>{subTitulo ?? FALLBACK_HEADER.subTitulo}</h2>
@@ -149,12 +144,12 @@ export default function ServicesCarousel({
                   opacity:       show ? 1 : 0,
                   pointerEvents: show ? 'auto' : 'none',
                   zIndex:        isCenter ? 10 : 5,
-                  boxShadow:     isCenter ? '8px 12px 32px rgba(109,81,87,0.15)' : 'none',
+                  boxShadow:     isCenter ? '8px 12px 32px color-mix(in srgb, var(--headline) 15%, transparent)' : 'none',
                   cursor:        isCenter ? 'default' : 'pointer',
                   transition:    'transform 0.42s cubic-bezier(0.4,0,0.2,1), opacity 0.3s ease, box-shadow 0.35s ease',
                 }}
               >
-                {/* ── Imagen o placeholder ── */}
+                {/* Imagen o placeholder */}
                 <div style={{ position: 'relative', width: '100%', height: IMG_H, flexShrink: 0, overflow: 'hidden' }}>
                   {svc.image ? (
                     <div style={{
@@ -165,64 +160,60 @@ export default function ServicesCarousel({
                       backgroundPosition: 'center',
                     }} />
                   ) : (
-                    /* Placeholder igual al de CategoriesSection y FeaturedProducts */
                     <div style={{
                       width: '100%',
                       height: '100%',
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'center',
-                      background: `color-mix(in srgb, ${PRIMARY} 8%, ${BLUSH})`,
+                      background: 'color-mix(in srgb, var(--primary) 8%, var(--blush))',
                     }}>
                       <span
                         className="material-symbols-outlined"
-                        style={{ fontSize: '3rem', color: PRIMARY, opacity: 0.35, lineHeight: 1 }}
+                        style={{ fontSize: '3rem', color: 'var(--primary)', opacity: 0.35, lineHeight: 1 }}
                       >
                         local_florist
                       </span>
                     </div>
                   )}
 
-                  {/* Overlay para cards laterales */}
                   {!isCenter && (
                     <div style={{ position: 'absolute', inset: 0, background: 'rgba(255,255,255,0.38)', pointerEvents: 'none' }} />
                   )}
                 </div>
 
-                {/* ── Cuerpo: título + descripción con scroll ── */}
+                {/* Cuerpo */}
                 <div style={{
                   height:          BODY_H,
                   padding:         '0.875rem 1rem 1rem',
-                  background:      BADGE_BG,
+                  background:      'var(--blush)',
                   display:         'flex',
                   flexDirection:   'column',
                   gap:             '0.3rem',
                   overflow:        'hidden',
                 }}>
                   <p style={{
-                    fontFamily: FONT,
+                    fontFamily: 'var(--font-body)',
                     fontSize:   '0.9375rem',
                     fontWeight: 700,
-                    color:      HEADLINE,
+                    color:      'var(--headline)',
                     margin:     0,
                     flexShrink: 0,
                   }}>
                     {svc.title}
                   </p>
 
-                  {/* Descripción con scroll si el texto es largo */}
                   <p style={{
-                    fontFamily:  FONT,
+                    fontFamily:  'var(--font-body)',
                     fontSize:    '0.8125rem',
-                    color:       BODY,
+                    color:       'var(--body-color)',
                     lineHeight:  1.55,
                     margin:      0,
                     flex:        '1 1 0',
                     overflowY:   'auto',
-                    paddingRight: '0.25rem', // espacio para la scrollbar
-                    /* Ocultar scrollbar visualmente pero mantener funcionalidad */
+                    paddingRight: '0.25rem',
                     scrollbarWidth: 'thin',
-                    scrollbarColor: `${MUTED} transparent`,
+                    scrollbarColor: `var(--muted) transparent`,
                   } as React.CSSProperties}>
                     {svc.description}
                   </p>
@@ -238,7 +229,7 @@ export default function ServicesCarousel({
           aria-label="Anterior"
           style={{ ...s.arrowBtn, left: SIDE_PAD, top: arrowTop, transform: 'translateX(-50%)' }}
         >
-          <RoundedTriangle dir="left" color={MUTED} />
+          <RoundedTriangle dir="left" />
         </button>
 
         {/* Arrow RIGHT */}
@@ -247,7 +238,7 @@ export default function ServicesCarousel({
           aria-label="Siguiente"
           style={{ ...s.arrowBtn, right: SIDE_PAD, top: arrowTop, transform: 'translateX(50%)' }}
         >
-          <RoundedTriangle dir="right" color={MUTED} />
+          <RoundedTriangle dir="right" />
         </button>
 
       </div>
@@ -264,7 +255,9 @@ export default function ServicesCarousel({
             style={{
               ...s.dot,
               width:      i === active ? '2rem' : '0.625rem',
-              background: i === active ? '#eb4763' : 'color-mix(in srgb, #eb4763 28%, transparent)',
+              background: i === active
+                ? 'var(--primary)'
+                : 'color-mix(in srgb, var(--primary) 28%, transparent)',
             }}
           />
         ))}
@@ -276,7 +269,9 @@ export default function ServicesCarousel({
 
 // ── Rounded triangle SVG ──────────────────────────────────────────────────────
 
-function RoundedTriangle({ dir, color }: { dir: 'left' | 'right'; color: string }) {
+function RoundedTriangle({ dir }: { dir: 'left' | 'right' }) {
+  // El SVG fill requiere un valor de color literal; usamos la variable del token
+  // via currentColor para que herede el color del botón padre.
   const pts = dir === 'left'
     ? '13,3 13,15 3,9'
     : '3,3 3,15 13,9';
@@ -285,8 +280,8 @@ function RoundedTriangle({ dir, color }: { dir: 'left' | 'right'; color: string 
     <svg width="16" height="18" viewBox="0 0 16 18" fill="none" style={{ display: 'block' }}>
       <polygon
         points={pts}
-        fill={color}
-        stroke={color}
+        fill="var(--muted)"
+        stroke="var(--muted)"
         strokeWidth="4"
         strokeLinejoin="round"
         strokeLinecap="round"
@@ -295,17 +290,11 @@ function RoundedTriangle({ dir, color }: { dir: 'left' | 'right'; color: string 
   );
 }
 
-// ── Tokens ────────────────────────────────────────────────────────────────────
-
-const PRIMARY  = '#eb4763';
-const BLUSH    = '#fdeff1';
-const HEADLINE = '#6d5157';
-const BODY     = '#89656b';
-const FONT     = "'Be Vietnam Pro', sans-serif";
+// ── Estilos estáticos ─────────────────────────────────────────────────────────
 
 const s: Record<string, React.CSSProperties> = {
   section: {
-    background: '#ffffff',
+    background: 'var(--bg)',
     padding: '5rem 0 4rem',
     overflow: 'hidden',
   },
@@ -316,26 +305,26 @@ const s: Record<string, React.CSSProperties> = {
   },
   eyebrow: {
     display: 'block',
-    fontFamily: FONT,
+    fontFamily: 'var(--font-body)',
     fontSize: '0.8125rem',
     fontWeight: 700,
     letterSpacing: '0.08em',
     textTransform: 'uppercase',
-    color: PRIMARY,
+    color: 'var(--primary)',
     marginBottom: '0.5rem',
   },
   title: {
-    fontFamily: FONT,
+    fontFamily: 'var(--font-body)',
     fontSize: 'clamp(2rem, 5vw, 3rem)',
     fontWeight: 900,
     letterSpacing: '-0.03em',
-    color: HEADLINE,
+    color: 'var(--headline)',
     margin: '0 0 0.75rem',
   },
   subtitle: {
-    fontFamily: FONT,
+    fontFamily: 'var(--font-body)',
     fontSize: '1rem',
-    color: BODY,
+    color: 'var(--body-color)',
     margin: 0,
   },
   arrowBtn: {
