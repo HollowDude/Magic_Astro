@@ -14,18 +14,19 @@ const labels = {
   es: {
     title:    'Productos destacados',
     empty:    'No hay productos disponibles por el momento.',
-    buyBtn:   'Comprar',
+    buyBtn:   'Ver producto',
     priceAlt: 'Consultar precio',
   },
   en: {
     title:    'Featured Products',
     empty:    'No products available at the moment.',
-    buyBtn:   'Buy',
+    buyBtn:   'View product',
     priceAlt: 'Price on request',
   },
 } as const;
 
 const t = labels[lang];
+const prefix = lang === 'en' ? '/en' : '';
 ---
 
 <section class="fp-section">
@@ -42,13 +43,17 @@ const t = labels[lang];
       <div class="fp-grid">
         {products.map((product) => {
           const defaultVariation = product.variations?.[0];
-          const price  = defaultVariation?.price?.formatted ?? t.priceAlt;
-          const color  = defaultVariation?.field_color_de_la_flor?.name ?? null;
-          const tipo   = defaultVariation?.field_tipo ?? null;
+          const price     = defaultVariation?.price?.formatted ?? t.priceAlt;
+          const color     = defaultVariation?.field_color_de_la_flor?.name ?? null;
+          const tipo      = defaultVariation?.field_tipo ?? null;
           const thumbnail = getProductThumbnail(product, DRUPAL_BASE_URL);
+          const href      = `${prefix}/${product.id}`;
 
           return (
             <article class="fp-card">
+              {/* Overlay de enlace que cubre toda la tarjeta */}
+              <a href={href} class="fp-card-overlay" aria-label={product.title} tabindex="0"></a>
+
               <div class="fp-img-wrap">
                 {thumbnail ? (
                   <div
@@ -77,7 +82,10 @@ const t = labels[lang];
                 </div>
                 <div class="fp-footer">
                   <span class="fp-price">{price}</span>
-                  <button class="fp-btn">{t.buyBtn}</button>
+                  {/* z-index: 2 para estar sobre el overlay pero seguir siendo clicable */}
+                  <a href={href} class="fp-btn" tabindex="-1" aria-hidden="true">
+                    {t.buyBtn}
+                  </a>
                 </div>
               </div>
             </article>
@@ -125,17 +133,38 @@ const t = labels[lang];
   @media (min-width: 540px)  { .fp-grid { grid-template-columns: repeat(2, 1fr); } }
   @media (min-width: 1024px) { .fp-grid { grid-template-columns: repeat(4, 1fr); gap: 1.5rem; } }
 
+  /* ── Tarjeta ── */
   .fp-card {
-    background: var(--blush); border-radius: 1rem; overflow: hidden;
-    display: flex; flex-direction: column;
-    transition: box-shadow 0.25s ease, transform 0.25s ease; cursor: pointer;
+    background: var(--blush);
+    border-radius: 1rem;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    position: relative;         /* necesario para el overlay */
+    transition: box-shadow 0.25s ease, transform 0.25s ease;
+    cursor: pointer;
   }
   .fp-card:hover {
     box-shadow: 0 12px 36px color-mix(in srgb, var(--headline) 15%, transparent);
     transform: translateY(-4px);
   }
-  .fp-card:hover .fp-btn { background: var(--primary); }
+  .fp-card:hover .fp-btn { background: var(--primary); color: white; }
+  .fp-card:hover .fp-img { transform: scale(1.08); }
 
+  /* Overlay de enlace — cubre toda la tarjeta */
+  .fp-card-overlay {
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    border-radius: 1rem;
+    /* focus ring visible para accesibilidad */
+    outline-offset: 3px;
+  }
+  .fp-card-overlay:focus-visible {
+    outline: 2.5px solid var(--primary);
+  }
+
+  /* Imagen */
   .fp-img-wrap { position: relative; width: 100%; aspect-ratio: 1; padding: 0.75rem 0.75rem 0; }
 
   .fp-img {
@@ -143,7 +172,6 @@ const t = labels[lang];
     background-size: cover; background-position: center;
     transition: transform 0.4s ease;
   }
-  .fp-card:hover .fp-img { transform: scale(1.03); }
 
   .fp-img--placeholder {
     background: color-mix(in srgb, var(--primary) 8%, var(--blush));
@@ -173,10 +201,23 @@ const t = labels[lang];
 
   .fp-price { font-family: var(--font-body); font-size: 1.0625rem; font-weight: 700; color: var(--primary); }
 
+  /* Botón: z-index: 2 para estar sobre el overlay */
   .fp-btn {
-    font-family: var(--font-body); font-size: 0.875rem; font-weight: 600; color: #fff;
-    background: var(--muted); border: none; border-radius: 0.5rem;
-    padding: 0.5rem 1.125rem; cursor: pointer;
-    transition: background 0.2s ease; letter-spacing: 0.01em;
+    position: relative;
+    z-index: 2;
+    font-family: var(--font-body);
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: #fff;
+    background: var(--muted);
+    border: none;
+    border-radius: 0.5rem;
+    padding: 0.5rem 1.125rem;
+    cursor: pointer;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    transition: background 0.2s ease, color 0.2s ease;
+    letter-spacing: 0.01em;
   }
 </style>

@@ -1,9 +1,9 @@
 // src/components/shop/ProductDetail.tsx
 //
 // Island de React para la página de detalle del producto.
-// Maneja: galería interactiva, personalización (textarea), acciones.
+// Maneja: galería interactiva, zoom al hover, personalización (textarea), acciones.
 
-import { useState } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { ui, defaultLang } from '@/i18n/ui';
 import type { Lang, UiKey } from '@/i18n/ui';
 
@@ -17,17 +17,11 @@ function t(lang: Lang, key: UiKey): string {
 
 // ── Tipos públicos ────────────────────────────────────────────────────────────
 
-/**
- * Datos del producto ya normalizados por la página Astro.
- * Desacoplados del modelo de Drupal para que el componente sea reutilizable.
- */
 export interface ProductDetailData {
   id: string;
   title: string;
   price: string;
-  /** HTML procesado de body.processed — renderizado con dangerouslySetInnerHTML */
   description: string;
-  /** URLs absolutas de las imágenes del producto */
   images: string[];
   badge: string | null;
   tipo: string | null;
@@ -44,22 +38,44 @@ interface Props {
 // ── Componente ────────────────────────────────────────────────────────────────
 
 export default function ProductDetail({ product, lang }: Props) {
-  const [activeImg, setActiveImg]   = useState(0);
-  const [message,   setMessage]     = useState('');
-  const [imgLoaded, setImgLoaded]   = useState(false);
+  const [activeImg, setActiveImg] = useState(0);
+  const [message,   setMessage]   = useState('');
+  const [imgLoaded, setImgLoaded] = useState(false);
+
+  // Zoom state
+  const [isZooming, setIsZooming] = useState(false);
+  const [zoomPos, setZoomPos]     = useState({ x: 50, y: 50 });
+  const imgWrapRef                = useRef<HTMLDivElement>(null);
+  const mainImgRef                = useRef<HTMLImageElement>(null);
 
   const MAX_CHARS = 150;
   const images    = product.images;
   const hasImages = images.length > 0;
 
+  // ── Corrige el problema de imágenes cacheadas que no disparan onLoad ────────
+  useEffect(() => {
+    setImgLoaded(false);
+    // Si el navegador ya tiene la imagen cacheada, .complete = true inmediatamente
+    const img = mainImgRef.current;
+    if (img && img.complete && img.naturalWidth > 0) {
+      setImgLoaded(true);
+    }
+  }, [activeImg]);
+
   function handleThumb(i: number) {
     if (i === activeImg) return;
-    setImgLoaded(false);
     setActiveImg(i);
   }
 
+  // ── Zoom: calcula la posición del ratón relativa al contenedor ───────────────
+  const handleMouseMove = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
+    const rect = e.currentTarget.getBoundingClientRect();
+    const x = Math.max(0, Math.min(100, ((e.clientX - rect.left) / rect.width) * 100));
+    const y = Math.max(0, Math.min(100, ((e.clientY - rect.top)  / rect.height) * 100));
+    setZoomPos({ x, y });
+  }, []);
+
   const contactHref = lang === 'en' ? '/en/contact' : '/contact';
-  const shopHref    = lang === 'en' ? '/en/' : '/';
 
   const tipoLabel = product.tipo
     ? (ui[lang] as Record<string, string>)[`shop.filters.type.${product.tipo}`] ?? product.tipo
@@ -71,15 +87,33 @@ export default function ProductDetail({ product, lang }: Props) {
       {/* ═══════════════ GALERÍA ═══════════════ */}
       <div className="pd-gallery">
 
-        {/* Imagen principal */}
-        <div className="pd-main-wrap">
+        {/* Imagen principal con zoom */}
+        <div
+          ref={imgWrapRef}
+          className={`pd-main-wrap${isZooming && imgLoaded ? ' pd-main-wrap--zooming' : ''}`}
+          onMouseEnter={() => hasImages && setIsZooming(true)}
+          onMouseLeave={() => setIsZooming(false)}
+          onMouseMove={handleMouseMove}
+          title={isZooming ? undefined : 'Pasa el cursor para hacer zoom'}
+        >
           {hasImages ? (
             <img
-              key={activeImg}
+              key={activeImg}           /* fuerza remount al cambiar índice */
+              ref={mainImgRef}
               src={images[activeImg]}
               alt={product.title}
               className={`pd-main-img${imgLoaded ? ' pd-main-img--loaded' : ''}`}
+              style={
+                isZooming && imgLoaded
+                  ? {
+                      transformOrigin: `${zoomPos.x}% ${zoomPos.y}%`,
+                      transform: 'scale(2.2)',
+                      cursor: 'crosshair',
+                    }
+                  : undefined
+              }
               onLoad={() => setImgLoaded(true)}
+              draggable={false}
             />
           ) : (
             <div className="pd-main-ph">
@@ -94,6 +128,16 @@ export default function ProductDetail({ product, lang }: Props) {
 
           {product.badge && (
             <span className="pd-badge">{product.badge}</span>
+          )}
+
+          {/* Indicador de zoom */}
+          {hasImages && imgLoaded && !isZooming && (
+            <span className="pd-zoom-hint">
+              <span className="material-symbols-outlined" style={{ fontSize: '1rem', lineHeight: 1 }}>
+                zoom_in
+              </span>
+              Zoom
+            </span>
           )}
         </div>
 
@@ -118,15 +162,12 @@ export default function ProductDetail({ product, lang }: Props) {
       {/* ═══════════════ INFO ═══════════════ */}
       <div className="pd-info">
 
-        {/* Categoría */}
         {product.category && (
           <p className="pd-category">{product.category}</p>
         )}
 
-        {/* Título */}
         <h1 className="pd-title">{product.title}</h1>
 
-        {/* Precio + color */}
         <div className="pd-price-row">
           <span className="pd-price">
             {product.price || t(lang, 'shop.price_on_request')}
@@ -151,7 +192,6 @@ export default function ProductDetail({ product, lang }: Props) {
           </div>
         </div>
 
-        {/* Descripción */}
         {product.description && (
           <div
             className="pd-desc"
@@ -199,7 +239,6 @@ export default function ProductDetail({ product, lang }: Props) {
           </a>
         </div>
 
-        {/* Nota de envío */}
         <p className="pd-shipping">
           <span className="material-symbols-outlined" style={{ fontSize: '1rem', lineHeight: 1 }}>
             local_shipping
@@ -210,7 +249,6 @@ export default function ProductDetail({ product, lang }: Props) {
 
       {/* ═══════════════ ESTILOS ═══════════════ */}
       <style>{`
-        /* Layout grid — apilado en mobile, 2 col en lg */
         .pd-grid {
           display: grid;
           grid-template-columns: 1fr;
@@ -239,6 +277,14 @@ export default function ProductDetail({ product, lang }: Props) {
           border-radius: 1rem;
           overflow: hidden;
           background: var(--blush);
+          cursor: crosshair;
+          /* Evita que el zoom "desborde" fuera del contenedor */
+          isolation: isolate;
+        }
+
+        /* Cursor normal cuando no hay imagen */
+        .pd-main-wrap:not(.pd-main-wrap--zooming) {
+          cursor: default;
         }
 
         .pd-main-img {
@@ -247,11 +293,23 @@ export default function ProductDetail({ product, lang }: Props) {
           object-fit: cover;
           opacity: 0;
           transform: scale(1.02);
-          transition: opacity 0.4s ease, transform 0.5s ease;
+          /* Transición de entrada de imagen */
+          transition: opacity 0.35s ease, transform 0.4s ease;
+          /* Transición suave del zoom */
+          will-change: transform, transform-origin;
+          display: block;
+          user-select: none;
+          pointer-events: none;
         }
         .pd-main-img--loaded {
           opacity: 1;
           transform: scale(1);
+        }
+
+        /* Cuando el zoom está activo, deshabilitar la transición de transform
+           para que siga el cursor en tiempo real sin lag */
+        .pd-main-wrap--zooming .pd-main-img {
+          transition: opacity 0.35s ease;
         }
 
         .pd-main-ph {
@@ -276,8 +334,36 @@ export default function ProductDetail({ product, lang }: Props) {
           letter-spacing: 0.1em;
           text-transform: uppercase;
           color: var(--primary);
+          z-index: 2;
+          pointer-events: none;
         }
 
+        /* Indicador de zoom */
+        .pd-zoom-hint {
+          position: absolute;
+          bottom: 0.75rem;
+          right: 0.75rem;
+          display: flex;
+          align-items: center;
+          gap: 0.25rem;
+          padding: 0.25rem 0.625rem;
+          background: rgba(255,255,255,0.82);
+          backdrop-filter: blur(6px);
+          border-radius: 9999px;
+          font-family: var(--font-body);
+          font-size: 0.6875rem;
+          font-weight: 600;
+          color: var(--headline);
+          pointer-events: none;
+          opacity: 0;
+          transition: opacity 0.2s ease;
+          z-index: 2;
+        }
+        .pd-main-wrap:hover .pd-zoom-hint {
+          opacity: 1;
+        }
+
+        /* Miniaturas */
         .pd-thumbs {
           display: grid;
           grid-template-columns: repeat(4, 1fr);
@@ -288,15 +374,16 @@ export default function ProductDetail({ product, lang }: Props) {
           aspect-ratio: 1;
           border-radius: 0.625rem;
           overflow: hidden;
-          border: 2px solid transparent;
+          border: 2.5px solid transparent;
           padding: 0;
           cursor: pointer;
-          opacity: 0.6;
+          opacity: 0.55;
           background: var(--blush);
-          transition: border-color 0.2s, opacity 0.2s, box-shadow 0.2s;
+          transition: border-color 0.2s, opacity 0.2s, box-shadow 0.2s, transform 0.15s;
         }
         .pd-thumb:hover {
           opacity: 0.85;
+          transform: translateY(-1px);
         }
         .pd-thumb--active {
           border-color: var(--primary);
@@ -392,7 +479,6 @@ export default function ProductDetail({ product, lang }: Props) {
           flex-shrink: 0;
         }
 
-        /* Descripción HTML de Drupal */
         .pd-desc {
           font-family: var(--font-body);
           font-size: 0.9375rem;
@@ -408,11 +494,7 @@ export default function ProductDetail({ product, lang }: Props) {
           flex-direction: column;
           gap: 0.3rem;
         }
-        .pd-desc li {
-          color: var(--body-color);
-          font-size: 0.9375rem;
-          line-height: 1.6;
-        }
+        .pd-desc li { color: var(--body-color); font-size: 0.9375rem; line-height: 1.6; }
         .pd-desc strong { color: var(--headline); font-weight: 700; }
 
         /* Personalización */
@@ -446,7 +528,7 @@ export default function ProductDetail({ product, lang }: Props) {
           border: 1.5px solid var(--border);
           background: white;
           padding: 0.75rem 0.875rem;
-          padding-bottom: 1.75rem; /* space for char counter */
+          padding-bottom: 1.75rem;
           font-family: var(--font-body);
           font-size: 0.875rem;
           color: var(--headline);
@@ -534,7 +616,6 @@ export default function ProductDetail({ product, lang }: Props) {
           background: color-mix(in srgb, var(--primary) 4%, white);
         }
 
-        /* Nota envío */
         .pd-shipping {
           display: flex;
           align-items: center;
