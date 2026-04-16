@@ -74,6 +74,16 @@ export const ui = {
     'shop.results':                'resultados',
     'shop.pagination.prev':        'Anterior',
     'shop.pagination.next':        'Siguiente',
+
+    // ── Detalle de producto ──────────────────────────────────────────────────
+    'product.personalization.label':       'Personalización (Tarjeta o Cinta)',
+    'product.personalization.hint':        'Escribe el mensaje que deseas incluir en la tarjeta o cinta decorativa (máx. 150 caracteres).',
+    'product.personalization.placeholder': 'Ej: Feliz aniversario, con todo mi amor...',
+    'product.contact':                     'Contáctenos',
+    'product.free_shipping':               'Envío gratis en pedidos superiores a $100',
+    'product.related.title':               'Productos Relacionados',
+    'product.related.see_all':             'Ver todo',
+    'product.not_found':                   'Producto no encontrado.',
   },
   en: {
     // ── Navigation ──────────────────────────────────────────────────────────
@@ -138,6 +148,16 @@ export const ui = {
     'shop.results':                'results',
     'shop.pagination.prev':        'Previous',
     'shop.pagination.next':        'Next',
+
+    // ── Product Detail ────────────────────────────────────────────────────────
+    'product.personalization.label':       'Personalization (Card or Ribbon)',
+    'product.personalization.hint':        'Write the message you want included on the card or decorative ribbon (max. 150 characters).',
+    'product.personalization.placeholder': 'E.g.: Happy anniversary, with all my love...',
+    'product.contact':                     'Contact Us',
+    'product.free_shipping':               'Free shipping on orders over $100',
+    'product.related.title':               'Related Products',
+    'product.related.see_all':             'See all',
+    'product.not_found':                   'Product not found.',
   },
 } as const;
 

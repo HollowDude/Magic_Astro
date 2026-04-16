@@ -26,15 +26,27 @@ export interface ProductCardData {
 interface Props {
   product: ProductCardData;
   lang?: Lang;
+  /** URL de la página de detalle. Si se provee, la tarjeta entera es clicable. */
+  href?: string;
 }
 
-export default function ProductCard({ product, lang = 'es' }: Props) {
+export default function ProductCard({ product, lang = 'es', href }: Props) {
   const dotFill    = product.colorHex || (product.colorName ? 'var(--muted)' : 'transparent');
   const dotBorder  = product.colorHex || (product.colorName ? 'var(--muted)' : 'var(--border)');
   const dotTitle   = product.colorName ?? undefined;
 
   return (
     <article className="pc-card">
+
+      {/* Overlay de enlace — cubre toda la tarjeta cuando se provee href */}
+      {href && (
+        <a
+          href={href}
+          aria-label={product.title}
+          className="pc-card-overlay"
+        />
+      )}
+
       {/* Imagen */}
       <div className="pc-img-wrap">
         {product.thumbnail ? (
@@ -101,11 +113,20 @@ export default function ProductCard({ product, lang = 'es' }: Props) {
           border-radius: 0.75rem;
           overflow: hidden;
           border: 1px solid var(--border);
+          position: relative; /* necesario para el overlay */
           transition: box-shadow 0.3s ease, transform 0.25s ease;
         }
         .pc-card:hover {
           box-shadow: 0 12px 36px color-mix(in srgb, var(--headline) 12%, transparent);
           transform: translateY(-3px);
+        }
+
+        /* Overlay clicable — cubre la tarjeta completa */
+        .pc-card-overlay {
+          position: absolute;
+          inset: 0;
+          z-index: 1;
+          border-radius: 0.75rem;
         }
 
         /* Imagen */
@@ -166,28 +187,6 @@ export default function ProductCard({ product, lang = 'es' }: Props) {
           transform: scale(1.15);
         }
 
-        /* Botón favorito */
-        .pc-fav {
-          position: absolute;
-          bottom: 1rem;
-          right: 1rem;
-          width: 2.375rem;
-          height: 2.375rem;
-          border-radius: 9999px;
-          background: rgba(255,255,255,0.92);
-          border: none;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          cursor: pointer;
-          color: var(--headline);
-          box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-          transform: translateY(3.5rem);
-          transition: transform 0.3s ease, background 0.2s, color 0.2s;
-        }
-        .pc-card:hover .pc-fav { transform: translateY(0); }
-        .pc-fav:hover { background: var(--primary); color: white; }
-
         /* Cuerpo */
         .pc-body {
           padding: 1rem;
@@ -217,7 +216,6 @@ export default function ProductCard({ product, lang = 'es' }: Props) {
           white-space: nowrap;
         }
 
-        /* Título con fuente de titulares */
         .pc-title {
           font-family: var(--font-heading);
           font-size: 1rem;
@@ -241,8 +239,10 @@ export default function ProductCard({ product, lang = 'es' }: Props) {
           flex-shrink: 0;
         }
 
-        /* Botón carrito */
+        /* Botón carrito — z-index: 2 para estar sobre el overlay */
         .pc-cart {
+          position: relative;
+          z-index: 2;
           width: 100%;
           height: 2.625rem;
           background: var(--muted);

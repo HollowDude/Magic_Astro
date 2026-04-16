@@ -489,7 +489,12 @@ export default function ShopClient({ products, categories, lang, initialCat = ''
           ) : (
             <div className="shop-grid">
               {paginated.map(product => (
-                <ProductCard key={product.id} product={product} lang={lang} />
+                <ProductCard
+                  key={product.id}
+                  product={product}
+                  lang={lang}
+                  href={lang === 'en' ? `/en/${product.id}` : `/${product.id}`}
+                />
               ))}
             </div>
           )}
