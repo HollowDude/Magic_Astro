@@ -10,66 +10,44 @@ const lang = (Astro.currentLocale ?? getLangFromUrl(Astro.url)) as Lang;
 const data = await getPersonalizationData(DRUPAL_BASE_URL, lang);
 
 const descripcionFallback = lang === 'en'
-  ? "We bring your floral dreams to life. We design unique arrangements tailored to your tastes and needs, ideal for weddings, celebrations, corporate events, or special gifts. Tell us your idea and we'll add the magic."
-  : 'Hacemos realidad tus sueños florales. Diseñamos arreglos únicos adaptados a tus gustos y necesidades, ideales para bodas, celebraciones, eventos corporativos o regalos especiales. Cuéntanos tu idea y nosotros pondremos la magia.';
+  ? "We bring your floral dreams to life. We design unique arrangements tailored to your tastes and needs, ideal for weddings, celebrations, corporate events, or special gifts."
+  : 'Hacemos realidad tus sueños florales. Diseñamos arreglos únicos adaptados a tus gustos y necesidades, ideales para bodas, celebraciones o regalos especiales.';
 
 const ctaLabel = lang === 'en' ? 'Contact Us'  : 'Contáctenos';
 const ctaHref  = lang === 'en' ? '/en/contact' : '/contact';
 
-const titulo      = data?.titulo      ?? null;
+const titulo      = data?.titulo      ?? (lang === 'en' ? 'Custom Designs' : 'Diseños a Medida');
 const descripcion = data?.descripcion ?? descripcionFallback;
-const fotoUrl     = data?.fotoUrl     ?? 'https://lh3.googleusercontent.com/aida-public/AB6AXuDxs5NlWSf1_sZqYDP3MuvYSmKhli00fhQbpnpt7Sw1ROJhZ32ColhwrVhmOojwXVfr_S9aYkX9Q4IqwrPEmHNj8ThynAA_3HjaJW06mOUgvW_1C5h8T49djElHDEFM3BPC6WZ-4-wj_JWSY1dDUPX9oPGjZexXpMyabJLeo3d8Y3Y50YOLQ8ZNJUkAWVNYT8gfFrFD1wCcdGw4lBixS7VivWxBMSkoVBZQ9iX_ABacSbIFLgee1zQ-sA5whi4Dm9J28DVr53lQgAo';
+const fotoUrl     = data?.fotoUrl     ?? 'https://via.placeholder.com/800x600';
 ---
 
-<section class="custom-section">
-  <div class="custom-container">
-
-    <div class="custom-img-outer">
-      <div class="custom-frame"></div>
-      <div class="custom-img-wrap">
-        <div class="custom-img" style={`background-image: url('${fotoUrl}')`} />
+<section class="bg-blush py-20 md:py-32 overflow-hidden">
+  <div class="max-w-[1200px] mx-auto px-6 flex flex-col lg:flex-row items-center gap-12 lg:gap-20">
+    
+    <div class="relative shrink-0 w-full lg:w-[46%] pb-7 pl-4">
+      <div class="absolute top-0 left-8 right-0 bottom-16 border-2 border-primary rounded-2xl pointer-events-none" />
+      <div class="relative aspect-4/3 overflow-hidden rounded-2xl bg-gray-200 shadow-2xl mt-8 mr-8">
+        <div 
+          class="w-full h-full bg-cover bg-center"
+          style={{ backgroundImage: `url(${fotoUrl})` }}
+        />
       </div>
     </div>
 
-    <div class="custom-text">
-      <h2 class="custom-title">
-        {titulo
-          ? titulo
-          : lang === 'en'
-            ? <>Customizations<br />&amp; Events</>
-            : <>Personalizaciones<br />&amp; Eventos</>}
+    <div class="w-full lg:w-[54%] text-center lg:text-left">
+      <h2 class="font-body text-[clamp(2rem,4vw,3rem)] font-black leading-[1.15] tracking-[-0.02em] text-headline mb-6">
+        {titulo}
       </h2>
-      <p class="custom-desc">{descripcion}</p>
-      <a href={ctaHref} class="custom-cta">{ctaLabel}</a>
+      <p class="font-body text-lg leading-relaxed text-body-color mb-10 max-w-[600px] mx-auto lg:mx-0">
+        {descripcion}
+      </p>
+      <a 
+        href={ctaHref}
+        class="inline-flex items-center justify-center h-14 px-10 rounded-full bg-primary text-white text-base font-bold no-underline transition-all duration-200 hover:scale-105 hover:bg-primary-dark shadow-[0_10px_20px_color-mix(in_srgb,var(--color-primary)_30%,transparent)]"
+      >
+        {ctaLabel}
+      </a>
     </div>
 
   </div>
 </section>
-
-<style>
-  .custom-section { background: var(--blush); padding: 5rem 1rem; }
-  @media (min-width: 640px)  { .custom-section { padding-inline: 1.5rem; } }
-  @media (min-width: 1024px) { .custom-section { padding-inline: 2rem; } }
-
-  .custom-container { max-width: 80rem; margin: 0 auto; display: flex; flex-direction: column; align-items: center; gap: 3rem; }
-  @media (min-width: 1024px) { .custom-container { flex-direction: row; align-items: center; gap: 5rem; } }
-
-  .custom-img-outer { position: relative; flex-shrink: 0; width: 100%; padding-bottom: 1.75rem; padding-left: 1rem; }
-  @media (min-width: 1024px) { .custom-img-outer { width: 46%; } }
-
-  .custom-frame { position: absolute; top: 0; left: 2rem; right: 0; bottom: 4rem; border: 2px solid var(--primary); border-radius: 1rem; pointer-events: none; }
-
-  .custom-img-wrap { position: relative; aspect-ratio: 4 / 3; overflow: hidden; border-radius: 1rem; background: #f3f4f6; box-shadow: 0 8px 32px rgba(0 0 0 / 0.13); margin-top: 2.00rem; margin-right: 2.00rem; }
-
-  .custom-img { width: 100%; height: 100%; background-size: cover; background-position: center; }
-
-  .custom-text { width: 100%; }
-  @media (min-width: 1024px) { .custom-text { width: 54%; } }
-
-  .custom-title { font-family: var(--font-heading); font-size: clamp(2rem, 4vw, 3rem); font-weight: 600; letter-spacing: -0.02em; color: var(--headline); line-height: 1.15; margin-bottom: 1.25rem; }
-
-  .custom-desc { font-family: var(--font-body); font-size: 1.0625rem; line-height: 1.7; color: var(--body-color); margin-bottom: 2rem; }
-
-  .custom-cta { display: inline-flex; align-items: center; justify-content: center; height: 3rem; min-width: 10rem; padding: 0 2rem; border-radius: 9999px; background: var(--primary); color: #fff; font-family: var(--font-body); font-size: 1rem; font-weight: 600; text-decoration: none; transition: transform 0.2s, background 0.2s; }
-  .custom-cta:hover { transform: scale(1.05); background: var(--primary-dark); }
-</style>

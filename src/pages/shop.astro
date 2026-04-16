@@ -4,6 +4,7 @@ import HomeLayout from '@/layouts/HomeLayout.astro';
 import HomeHeader from '@/components/home/HomeHeader.astro';
 import Breadcrumb from '@/components/ui/Breadcrumb.astro';
 import ShopClient from '@/components/shop/ShopClient';
+import Footer from '@/components/ui/Footer.astro'; // Importamos el nuevo Footer
 import { getFloresProducts } from '@/services/drupal/drupal.commerce';
 import { getCategoriasDeFlores } from '@/services/drupal/drupal.taxonomy';
 import { getProductThumbnail } from '@/types/commerce';
@@ -24,7 +25,6 @@ const [rawProducts, rawCategories] = await Promise.all([
 
 const products: ProductCardData[] = rawProducts.map(p => {
   const v = p.variations?.[0];
-
   return {
     id:          p.id,
     title:       p.title,
@@ -35,7 +35,7 @@ const products: ProductCardData[] = rawProducts.map(p => {
     tipo:        v?.field_tipo                    ?? null,
     colorName:   v?.field_color_de_la_flor?.name  ?? null,
     colorHex:    v?.field_color_de_la_flor?.field_color_hex ?? null,
-    category: p.field_categoria?.name ?? null,
+    category:    p.field_categoria?.name ?? null,
   };
 });
 
@@ -47,24 +47,27 @@ const categories: ShopCategory[] = rawCategories.map(c => ({
 ---
 
 <HomeLayout title={t('shop.title')}>
-  <div class="site-wrapper">
+  <div class="flex flex-col min-h-screen">
     <HomeHeader />
 
-    <main class="shop-main">
-
-      <div class="shop-hero">
+    <main class="main-container">
+      <header class="mb-10">
         <Breadcrumb crumbs={[
           { label: t('nav.home'), href: '/' },
           { label: t('shop.title') },
         ]} />
 
-        <div class="shop-hero-inner">
-          <div>
-            <h1 class="shop-title">{t('shop.title')}</h1>
-            <p class="shop-desc">{t('shop.description')}</p>
+        <div class="mt-5 flex flex-wrap items-end justify-between gap-4">
+          <div class="max-w-xl">
+            <h1 class="font-heading text-4xl md:text-5xl font-semibold tracking-tight text-headline leading-[1.1] mb-2">
+              {t('shop.title')}
+            </h1>
+            <p class="font-body text-[0.9375rem] text-text-muted leading-relaxed">
+              {t('shop.description')}
+            </p>
           </div>
         </div>
-      </div>
+      </header>
 
       <ShopClient
         products={products}
@@ -75,70 +78,6 @@ const categories: ShopCategory[] = rawCategories.map(c => ({
       />
     </main>
 
-    <footer class="site-footer">
-      <div class="footer-inner">
-        <div class="footer-brand">
-          <span class="material-symbols-outlined footer-icon">local_florist</span>
-          <span class="footer-name">Maggy Flowers</span>
-        </div>
-        <p class="footer-copy">© {new Date().getFullYear()} Maggy Flowers. Todos los derechos reservados.</p>
-        <nav class="footer-links">
-          <a href="/shop">Tienda</a>
-          <a href="/courses">Cursos</a>
-          <a href="/about">Nosotros</a>
-          <a href="/contact">Contacto</a>
-        </nav>
-      </div>
-    </footer>
+    <Footer lang="es" />
   </div>
 </HomeLayout>
-
-<style>
-  .site-wrapper { display: flex; flex-direction: column; min-height: 100vh; }
-
-  .shop-main {
-    flex: 1;
-    width: 100%;
-    max-width: 80rem;
-    margin: 0 auto;
-    padding: 2rem 1rem 5rem;
-  }
-  @media (min-width: 640px)  { .shop-main { padding-inline: 1.5rem; } }
-  @media (min-width: 1024px) { .shop-main { padding-inline: 2rem; } }
-
-  .shop-hero { margin-bottom: 2.5rem; }
-  .shop-hero-inner {
-    display: flex;
-    align-items: flex-end;
-    justify-content: space-between;
-    flex-wrap: wrap;
-    gap: 1rem;
-    margin-top: 1.25rem;
-  }
-  .shop-title {
-    font-family: var(--font-heading);
-    font-size: clamp(2rem, 4vw, 2.75rem);
-    font-weight: 600;
-    letter-spacing: -0.025em;
-    color: var(--headline);
-    margin: 0 0 0.375rem;
-    line-height: 1.1;
-  }
-  .shop-desc {
-    font-family: var(--font-body);
-    font-size: 0.9375rem;
-    color: var(--text-muted);
-    margin: 0;
-    max-width: 36rem;
-  }
-
-  .site-footer { background: #211114; color: rgba(255 255 255 / 0.7); padding: 2.5rem 1rem; margin-top: auto; }
-  .footer-inner { max-width: 80rem; margin: 0 auto; display: flex; flex-direction: column; align-items: center; gap: 1.25rem; text-align: center; }
-  @media (min-width: 768px) { .footer-inner { flex-direction: row; justify-content: space-between; text-align: left; } }
-  .footer-brand { display: flex; align-items: center; gap: 0.5rem; color: white; font-weight: 700; font-size: 1.125rem; }
-  .footer-icon  { color: #eb4763; font-size: 1.5rem; }
-  .footer-copy  { font-size: 0.8125rem; color: rgba(255 255 255 / 0.5); }
-  .footer-links { display: flex; gap: 1.5rem; }
-  .footer-links a { font-size: 0.875rem; font-weight: 500; color: rgba(255 255 255 / 0.6); text-decoration: none; transition: color 0.2s; }
-  .footer-links a:hover { color: #eb4763; }
-</style>

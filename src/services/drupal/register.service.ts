@@ -1,109 +1,118 @@
 /**
- * src/services/drupal/drupal.client.ts
+ * src/services/drupal/register.service.ts
  *
- * Cliente HTTP base para el servidor Drupal.
- * Soporta JSON, form-urlencoded y JSON:API (application/vnd.api+json).
+ * Servicio de registro de nuevos usuarios contra Drupal JSON:API.
  *
- * INTERNACIONALIZACIÓN:
- *   Pasa `lang` en RequestOptions para que Drupal devuelva el contenido
- *   en el idioma solicitado via Accept-Language.
- *   Requiere: módulos Language + Content Translation + traducciones creadas.
+ * Endpoint: POST /jsonapi/user/user
+ * Requiere que el permiso "POST" esté habilitado para el recurso user en
+ * /admin/config/services/rest o que el módulo JSON:API tenga habilitada
+ * la creación de usuarios anónimos en /admin/config/services/jsonapi/resource_types.
  */
 
-const DRUPAL_BASE_URL = import.meta.env.DRUPAL_BASE_URL as string;
+import { drupalFetch } from './drupal.client';
+import type { ServiceResult } from '@/types/auth';
 
-if (!DRUPAL_BASE_URL) {
-  throw new Error('La variable de entorno DRUPAL_BASE_URL no está definida.');
+// ─── Tipos internos del endpoint de Drupal ──────────────────────────────────
+
+interface DrupalUserAttributes {
+  drupal_internal__uid: number;
+  name: string;
+  mail: string;
 }
 
-export interface RequestOptions {
-  method?: 'GET' | 'POST' | 'PATCH' | 'DELETE';
-  /** Body como JSON (application/json) */
-  body?: unknown;
-  /** Body como form-urlencoded (para /oauth/token, etc.) */
-  formBody?: Record<string, string>;
-  /** Headers extra — pueden sobreescribir Content-Type, Accept y Accept-Language */
-  headers?: Record<string, string>;
-  /** Cookie de sesión de Drupal para reenviar en logout */
-  sessionCookie?: string;
-  /**
-   * Idioma de la respuesta deseada (ej: 'es' | 'en').
-   * Agrega automáticamente Accept-Language al request.
-   * Drupal respeta este header cuando Content Translation está habilitado
-   * y el entity type tiene traducción activa.
-   * Si no se provee, Drupal devuelve el idioma por defecto del sitio.
-   */
-  lang?: string;
-}
-
-export interface RawResponse<T> {
-  data: T;
-  status: number;
-  headers: Headers;
-}
-
-export async function drupalFetch<T = unknown>(
-  path: string,
-  options: RequestOptions = {},
-): Promise<RawResponse<T>> {
-  const {
-    method = 'GET',
-    body,
-    formBody,
-    headers: extraHeaders = {},
-    sessionCookie,
-    lang,
-  } = options;
-
-  const isForm = formBody !== undefined;
-  const defaultContentType = isForm
-    ? 'application/x-www-form-urlencoded'
-    : 'application/json';
-
-  // extraHeaders puede sobreescribir Content-Type (útil para JSON:API)
-  const headers: Record<string, string> = {
-    'Content-Type': defaultContentType,
-    Accept: 'application/json',
-    ...extraHeaders,
+interface DrupalUserResponse {
+  data: {
+    type: 'user--user';
+    id: string;
+    attributes: DrupalUserAttributes;
   };
+  errors?: Array<{ title?: string; detail?: string }>;
+}
 
-  // Accept-Language: Drupal usa este header para devolver la traducción correcta.
-  // Se puede sobreescribir via extraHeaders si se necesita un valor custom.
-  if (lang && !headers['Accept-Language']) {
-    // Ejemplo: 'es' → 'es, *;q=0.5' (fallback al idioma por defecto si no hay traducción)
-    headers['Accept-Language'] = `${lang}, *;q=0.5`;
-  }
+// ─── DTO público ─────────────────────────────────────────────────────────────
 
-  if (sessionCookie) {
-    headers['Cookie'] = sessionCookie;
-  }
+export interface RegisteredUser {
+  uid: string;
+  name: string;
+  mail: string;
+}
 
-  let serializedBody: string | undefined;
-  if (isForm && formBody) {
-    serializedBody = new URLSearchParams(formBody).toString();
-  } else if (body !== undefined) {
-    serializedBody = JSON.stringify(body);
-  }
+export interface RegisterCredentials {
+  username: string;
+  email: string;
+  password: string;
+}
 
-  const url = `${DRUPAL_BASE_URL}${path}`;
+// ─── Registro ────────────────────────────────────────────────────────────────
 
-  let response: Response;
+/**
+ * Crea un nuevo usuario en Drupal vía JSON:API.
+ * Devuelve un ServiceResult con los datos del usuario creado o un mensaje de error.
+ *
+ * Nota: drupal-jsonapi-params aplica solo a peticiones GET con filtros/campos.
+ * Para POST de creación de recursos se construye el body JSON:API manualmente,
+ * que es el patrón estándar de la especificación.
+ */
+export async function register(
+  credentials: RegisterCredentials,
+): Promise<ServiceResult<RegisteredUser>> {
+  let raw: Awaited<ReturnType<typeof drupalFetch<DrupalUserResponse>>>;
+
   try {
-    response = await fetch(url, { method, headers, body: serializedBody });
-  } catch (networkError) {
-    throw new Error(
-      `No se pudo conectar con Drupal en ${DRUPAL_BASE_URL}. ` +
-      `Verificá que el servidor esté corriendo. (${networkError})`,
-    );
+    raw = await drupalFetch<DrupalUserResponse>('/jsonapi/user/user', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/vnd.api+json',
+        Accept:         'application/vnd.api+json',
+      },
+      body: {
+        data: {
+          type: 'user--user',
+          attributes: {
+            name:  credentials.username,
+            mail:  credentials.email,
+            pass:  { existing: '', value: credentials.password },
+            status: true,
+          },
+        },
+      },
+    });
+  } catch (err) {
+    return {
+      ok:    false,
+      error: err instanceof Error ? err.message : 'Error de conexión con Drupal.',
+    };
   }
 
-  const text = await response.text();
-  let data: T;
-  try {
-    data = text ? (JSON.parse(text) as T) : ({} as T);
-  } catch {
-    data = text as unknown as T;
+  // JSON:API devuelve 201 Created en éxito
+  if (raw.status === 201) {
+    const attrs = raw.data.data.attributes;
+    return {
+      ok:   true,
+      data: {
+        uid:  String(attrs.drupal_internal__uid),
+        name: attrs.name,
+        mail: attrs.mail,
+      },
+    };
   }
 
-  return { data, status: response.status, headers: response.headers };
+  // Intentamos extraer el detalle del error de la respuesta JSON:API
+  const firstError = raw.data?.errors?.[0];
+  const errorMessage = firstError?.detail ?? firstError?.title ?? mapStatusToMessage(raw.status);
+
+  return { ok: false, error: errorMessage, statusCode: raw.status };
+}
+
+// ─── Helpers ─────────────────────────────────────────────────────────────────
+
+function mapStatusToMessage(status: number): string {
+  const messages: Record<number, string> = {
+    400: 'Datos de registro inválidos.',
+    403: 'El registro de usuarios no está habilitado.',
+    409: 'El nombre de usuario o el correo ya están en uso.',
+    422: 'El nombre de usuario o el correo ya están en uso.',
+    500: 'Error interno del servidor Drupal.',
+  };
+  return messages[status] ?? `Error inesperado al registrar (HTTP ${status}).`;
 }

@@ -49,21 +49,35 @@ export default function LoginForm() {
   }
 
   return (
-    <div className="form-panel">
-      <div className="form-header">
-        <h2 className="form-title">Bienvenido de nuevo</h2>
-        <p className="form-subtitle">Ingresa tus datos para continuar aprendiendo.</p>
+    <div className="w-full max-w-[480px]">
+      <div className="text-center mb-8">
+        <h2 className="text-[1.875rem] font-extrabold tracking-tight text-text-main mb-1.5">
+          Bienvenido de nuevo
+        </h2>
+        <p className="text-text-muted text-[0.9375rem]">
+          Ingresa tus datos para continuar aprendiendo.
+        </p>
       </div>
 
       {/* Tabs */}
-      <nav className="auth-tabs">
-        <a href="/login" className="auth-tab auth-tab--active">Iniciar Sesión</a>
-        <a href="/register" className="auth-tab">Registrarme</a>
+      <nav className="flex border-b border-border mb-6">
+        <a 
+          href="/login" 
+          className="flex-1 pb-3 text-center border-b-[3px] border-primary font-bold text-sm text-primary transition-colors"
+        >
+          Iniciar Sesión
+        </a>
+        <a 
+          href="/register" 
+          className="flex-1 pb-3 text-center border-b-[3px] border-transparent font-bold text-sm text-text-muted hover:text-text-main transition-colors"
+        >
+          Registrarme
+        </a>
       </nav>
 
       <Alert type={alert?.type ?? 'error'} message={alert?.message ?? null} />
 
-      <form className="login-form" onSubmit={handleSubmit} noValidate>
+      <form className="flex flex-col gap-5 mt-6" onSubmit={handleSubmit} noValidate>
         <InputField
           id="username"
           label="Usuario o correo electrónico"
@@ -88,104 +102,47 @@ export default function LoginForm() {
           onChange={setPassword}
         />
 
-        <div className="form-extras">
-          <label className="remember-me">
+        <div className="flex items-center justify-between mt-1">
+          <label className="flex items-center gap-2 cursor-pointer text-sm text-text-muted hover:text-text-main transition-colors">
             <input
               type="checkbox"
               checked={remember}
               onChange={(e) => setRemember(e.target.checked)}
-              className="remember-checkbox"
+              className="w-4 h-4 accent-primary cursor-pointer"
             />
             <span>Recordarme</span>
           </label>
-          <a href="/forgot-password" className="forgot-link">¿Olvidaste tu contraseña?</a>
+          <a 
+            href="/forgot-password" 
+            className="text-sm font-semibold text-primary hover:text-primary-dark hover:underline transition-colors"
+          >
+            ¿Olvidaste tu contraseña?
+          </a>
         </div>
 
-        <button type="submit" disabled={loading} className={`submit-btn${loading ? ' loading' : ''}`}>
-          {loading ? <span className="btn-spinner" /> : 'Iniciar Sesión'}
+        {/* Reutilizando tu clase global .btn-primary y ajustando ancho/alto con Tailwind */}
+        <button 
+          type="submit" 
+          disabled={loading} 
+          className="btn-primary w-full mt-3 h-12"
+        >
+          {loading ? (
+            <span className="w-[1.125rem] h-[1.125rem] border-[2.5px] border-white/35 border-t-white rounded-full animate-spin" />
+          ) : (
+            'Iniciar Sesión'
+          )}
         </button>
       </form>
 
-      <p className="register-hint">
+      <p className="mt-8 text-center text-sm text-text-muted">
         ¿Aún no tienes una cuenta?{' '}
-        <a href="/register" className="register-link">Regístrate aquí</a>
+        <a 
+          href="/register" 
+          className="font-bold text-primary hover:text-primary-dark hover:underline transition-colors"
+        >
+          Regístrate aquí
+        </a>
       </p>
-
-      <style>{`
-        .form-panel { width: 100%; max-width: 480px; }
-
-        .form-header { text-align: center; margin-bottom: 2rem; }
-        .form-title {
-          font-size: 1.875rem; font-weight: 800;
-          letter-spacing: -0.03em; color: var(--text-main); margin-bottom: 0.375rem;
-        }
-        .form-subtitle { color: var(--text-muted); font-size: 0.9375rem; }
-
-        .auth-tabs {
-          display: flex; border-bottom: 1px solid var(--border); margin-bottom: 1.5rem;
-        }
-        .auth-tab {
-          flex: 1; padding-bottom: 0.75rem; text-align: center;
-          border-bottom: 3px solid transparent; font-weight: 700;
-          font-size: 0.875rem; color: var(--text-muted);
-          text-decoration: none; transition: color 0.2s, border-color 0.2s;
-        }
-        .auth-tab:hover { color: var(--text-main); }
-        .auth-tab--active { color: var(--primary); border-bottom-color: var(--primary); }
-
-        .login-form { display: flex; flex-direction: column; gap: 1.25rem; margin-top: 1.5rem; }
-
-        .form-extras {
-          display: flex; align-items: center; justify-content: space-between; margin-top: 0.25rem;
-        }
-        .remember-me {
-          display: flex; align-items: center; gap: 0.5rem;
-          cursor: pointer; font-size: 0.875rem; color: var(--text-muted);
-          transition: color 0.2s;
-        }
-        .remember-me:hover { color: var(--text-main); }
-        .remember-checkbox { width: 1rem; height: 1rem; accent-color: var(--primary); cursor: pointer; }
-        .forgot-link {
-          font-size: 0.875rem; font-weight: 600; color: var(--primary);
-          text-decoration: none; transition: color 0.2s;
-        }
-        .forgot-link:hover { color: var(--primary-dark); text-decoration: underline; }
-
-        .submit-btn {
-          margin-top: 0.75rem; width: 100%; height: 3rem;
-          background: var(--primary); color: white; border: none;
-          border-radius: 0.5rem; font-family: inherit;
-          font-size: 0.9375rem; font-weight: 700; cursor: pointer;
-          display: flex; align-items: center; justify-content: center; gap: 0.5rem;
-          box-shadow: 0 4px 14px color-mix(in srgb, var(--primary) 35%, transparent);
-          transition: background 0.2s, transform 0.1s, box-shadow 0.2s;
-        }
-        .submit-btn:hover:not(:disabled) {
-          background: var(--primary-dark);
-          box-shadow: 0 6px 20px color-mix(in srgb, var(--primary) 45%, transparent);
-        }
-        .submit-btn:active:not(:disabled) { transform: scale(0.98); }
-        .submit-btn:disabled { opacity: 0.7; cursor: not-allowed; }
-
-        .btn-spinner {
-          width: 1.125rem; height: 1.125rem;
-          border: 2.5px solid rgba(255 255 255 / 0.35);
-          border-top-color: white; border-radius: 50%;
-          animation: spin 0.7s linear infinite;
-        }
-
-        .register-hint {
-          margin-top: 2rem; text-align: center;
-          font-size: 0.875rem; color: var(--text-muted);
-        }
-        .register-link {
-          font-weight: 700; color: var(--primary);
-          text-decoration: none; transition: color 0.2s;
-        }
-        .register-link:hover { color: var(--primary-dark); text-decoration: underline; }
-
-        @keyframes spin { to { transform: rotate(360deg); } }
-      `}</style>
     </div>
   );
 }

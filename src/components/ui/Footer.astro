@@ -1,0 +1,45 @@
+---
+// src/components/ui/Footer.astro
+const { lang = 'es' } = Astro.props;
+
+const translations = {
+  es: {
+    rights: "Todos los derechos reservados.",
+    shop: "Tienda",
+    courses: "Cursos",
+    about: "Nosotros",
+    contact: "Contacto",
+    prefix: ""
+  },
+  en: {
+    rights: "All rights reserved.",
+    shop: "Shop",
+    courses: "Courses",
+    about: "About",
+    contact: "Contact",
+    prefix: "/en"
+  }
+};
+
+const t = translations[lang as keyof typeof translations];
+---
+
+<footer class="site-footer">
+  <div class="footer-inner">
+    <div class="footer-brand">
+      <span class="material-symbols-outlined text-primary text-2xl">local_florist</span>
+      <span>Maggy Flowers</span>
+    </div>
+    
+    <p class="text-[0.8125rem] opacity-50">
+      © {new Date().getFullYear()} Maggy Flowers. {t.rights}
+    </p>
+
+    <nav class="footer-links">
+      <a href={`${t.prefix}/shop`}>{t.shop}</a>
+      <a href={`${t.prefix}/courses`}>{t.courses}</a>
+      <a href={`${t.prefix}/about`}>{t.about}</a>
+      <a href={`${t.prefix}/contact`}>{t.contact}</a>
+    </nav>
+  </div>
+</footer>

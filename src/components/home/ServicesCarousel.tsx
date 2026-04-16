@@ -58,13 +58,6 @@ const BODY_H   = CARD_H - IMG_H;
 const ARROW_D  = 44;
 const SIDE_PAD = ARROW_D / 2 + 8;
 
-// ── Tokens de diseño — referenciados como CSS variables ───────────────────────
-// Los valores literales se usan únicamente en los pocos lugares donde
-// React necesita resolver el color en JS (ej: SVG fill, accentColor).
-// Todo lo demás usa var(--token) para seguir el sistema de diseño de global.css.
-const PRIMARY_HEX = '#eb4763'; // Solo para SVG fill y accentColor de inputs
-const MUTED_HEX   = '#ad808a'; // Solo para SVG fill de flechas
-
 export default function ServicesCarousel({
   titulo,
   subTitulo,
@@ -103,22 +96,28 @@ export default function ServicesCarousel({
   const arrowTop = IMG_H / 2 - ARROW_D / 2;
 
   return (
-    <section style={s.section}>
+    <section className="bg-background py-20 pb-16 overflow-hidden">
 
       {/* Header */}
-      <div style={s.header}>
-        <span style={s.eyebrow}>{titulo ?? FALLBACK_HEADER.titulo}</span>
-        <h2 style={s.title}>{subTitulo ?? FALLBACK_HEADER.subTitulo}</h2>
+      <div className="text-center mb-12 px-4">
+        <span className="block font-body text-[0.8125rem] font-bold tracking-[0.08em] uppercase text-primary mb-2">
+          {titulo ?? FALLBACK_HEADER.titulo}
+        </span>
+        <h2 className="font-body text-[clamp(2rem,5vw,3rem)] font-black tracking-[-0.03em] text-headline m-0 mb-3">
+          {subTitulo ?? FALLBACK_HEADER.subTitulo}
+        </h2>
         {(eslogan ?? FALLBACK_HEADER.eslogan) && (
-          <p style={s.subtitle}>{eslogan ?? FALLBACK_HEADER.eslogan}</p>
+          <p className="font-body text-base text-body-color m-0">
+            {eslogan ?? FALLBACK_HEADER.eslogan}
+          </p>
         )}
       </div>
 
       {/* Stage */}
-      <div style={{ position: 'relative', paddingInline: SIDE_PAD, maxWidth: 980, margin: '0 auto', marginBottom: '2.25rem' }}>
+      <div className="relative max-w-[980px] mx-auto mb-9" style={{ paddingInline: SIDE_PAD }}>
 
         {/* Clipping window */}
-        <div ref={wrapRef} style={{ position: 'relative', overflow: 'hidden', height: CARD_H, width: '100%' }}>
+        <div ref={wrapRef} className="relative w-full overflow-hidden" style={{ height: CARD_H }}>
           {activeServices.map((svc, i) => {
             const rel      = relPos(i);
             const isCenter = rel === 0;
@@ -129,92 +128,49 @@ export default function ServicesCarousel({
                 key={i}
                 onClick={() => !isCenter && setActive(i)}
                 aria-hidden={!show}
+                className={`absolute top-0 flex flex-col rounded-2xl overflow-hidden transition-all duration-[420ms] ease-out ${
+                  isCenter ? 'z-10 cursor-default shadow-[8px_12px_32px_color-mix(in_srgb,var(--color-headline)_15%,transparent)]' : 'z-5 cursor-pointer shadow-none'
+                }`}
                 style={{
-                  position:      'absolute',
-                  top:           0,
-                  left:          '50%',
-                  marginLeft:    -cardW / 2,
-                  width:         cardW,
-                  height:        CARD_H,
-                  borderRadius:  '1rem',
-                  overflow:      'hidden',
-                  display:       'flex',
-                  flexDirection: 'column',
-                  transform:     `translateX(${rel * step}px)`,
-                  opacity:       show ? 1 : 0,
+                  left: '50%',
+                  marginLeft: -cardW / 2,
+                  width: cardW,
+                  height: CARD_H,
+                  transform: `translateX(${rel * step}px)`,
+                  opacity: show ? 1 : 0,
                   pointerEvents: show ? 'auto' : 'none',
-                  zIndex:        isCenter ? 10 : 5,
-                  boxShadow:     isCenter ? '8px 12px 32px color-mix(in srgb, var(--headline) 15%, transparent)' : 'none',
-                  cursor:        isCenter ? 'default' : 'pointer',
-                  transition:    'transform 0.42s cubic-bezier(0.4,0,0.2,1), opacity 0.3s ease, box-shadow 0.35s ease',
                 }}
               >
                 {/* Imagen o placeholder */}
-                <div style={{ position: 'relative', width: '100%', height: IMG_H, flexShrink: 0, overflow: 'hidden' }}>
+                <div className="relative w-full shrink-0 overflow-hidden" style={{ height: IMG_H }}>
                   {svc.image ? (
-                    <div style={{
-                      width: '100%',
-                      height: '100%',
-                      backgroundImage: `url('${svc.image}')`,
-                      backgroundSize: 'cover',
-                      backgroundPosition: 'center',
-                    }} />
+                    <div
+                      className="w-full h-full bg-cover bg-center"
+                      style={{ backgroundImage: `url('${svc.image}')` }}
+                    />
                   ) : (
-                    <div style={{
-                      width: '100%',
-                      height: '100%',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      background: 'color-mix(in srgb, var(--primary) 8%, var(--blush))',
-                    }}>
-                      <span
-                        className="material-symbols-outlined"
-                        style={{ fontSize: '3rem', color: 'var(--primary)', opacity: 0.35, lineHeight: 1 }}
-                      >
+                    <div className="w-full h-full flex items-center justify-center bg-[color-mix(in_srgb,var(--color-primary)_8%,var(--color-blush))]">
+                      <span className="material-symbols-outlined text-[3rem] text-primary opacity-35 leading-none">
                         local_florist
                       </span>
                     </div>
                   )}
 
                   {!isCenter && (
-                    <div style={{ position: 'absolute', inset: 0, background: 'rgba(255,255,255,0.38)', pointerEvents: 'none' }} />
+                    <div className="absolute inset-0 bg-white/40 pointer-events-none transition-colors duration-300" />
                   )}
                 </div>
 
                 {/* Cuerpo */}
-                <div style={{
-                  height:          BODY_H,
-                  padding:         '0.875rem 1rem 1rem',
-                  background:      'var(--blush)',
-                  display:         'flex',
-                  flexDirection:   'column',
-                  gap:             '0.3rem',
-                  overflow:        'hidden',
-                }}>
-                  <p style={{
-                    fontFamily: 'var(--font-body)',
-                    fontSize:   '0.9375rem',
-                    fontWeight: 700,
-                    color:      'var(--headline)',
-                    margin:     0,
-                    flexShrink: 0,
-                  }}>
+                <div 
+                  className="p-3.5 px-4 pb-4 bg-blush flex flex-col gap-1.5 overflow-hidden"
+                  style={{ height: BODY_H }}
+                >
+                  <p className="font-body text-[0.9375rem] font-bold text-headline m-0 shrink-0">
                     {svc.title}
                   </p>
 
-                  <p style={{
-                    fontFamily:  'var(--font-body)',
-                    fontSize:    '0.8125rem',
-                    color:       'var(--body-color)',
-                    lineHeight:  1.55,
-                    margin:      0,
-                    flex:        '1 1 0',
-                    overflowY:   'auto',
-                    paddingRight: '0.25rem',
-                    scrollbarWidth: 'thin',
-                    scrollbarColor: `var(--muted) transparent`,
-                  } as React.CSSProperties}>
+                  <p className="font-body text-[0.8125rem] text-body-color leading-[1.55] m-0 flex-1 overflow-y-auto pr-1 [scrollbar-width:thin] [scrollbar-color:var(--color-muted)_transparent]">
                     {svc.description}
                   </p>
                 </div>
@@ -227,7 +183,8 @@ export default function ServicesCarousel({
         <button
           onClick={prev}
           aria-label="Anterior"
-          style={{ ...s.arrowBtn, left: SIDE_PAD, top: arrowTop, transform: 'translateX(-50%)' }}
+          className="absolute flex items-center justify-center w-[44px] h-[44px] rounded-full bg-white border-none shadow-[0_2px_10px_rgba(0,0,0,0.13)] cursor-pointer z-20 transition-transform duration-150 hover:scale-105"
+          style={{ left: SIDE_PAD, top: arrowTop, transform: 'translateX(-50%)' }}
         >
           <RoundedTriangle dir="left" />
         </button>
@@ -236,7 +193,8 @@ export default function ServicesCarousel({
         <button
           onClick={next}
           aria-label="Siguiente"
-          style={{ ...s.arrowBtn, right: SIDE_PAD, top: arrowTop, transform: 'translateX(50%)' }}
+          className="absolute flex items-center justify-center w-[44px] h-[44px] rounded-full bg-white border-none shadow-[0_2px_10px_rgba(0,0,0,0.13)] cursor-pointer z-20 transition-transform duration-150 hover:scale-105"
+          style={{ right: SIDE_PAD, top: arrowTop, transform: 'translateX(50%)' }}
         >
           <RoundedTriangle dir="right" />
         </button>
@@ -244,7 +202,7 @@ export default function ServicesCarousel({
       </div>
 
       {/* Dots */}
-      <div style={s.dots} role="tablist">
+      <div className="flex justify-center items-center gap-1.5" role="tablist">
         {activeServices.map((_, i) => (
           <button
             key={i}
@@ -252,13 +210,9 @@ export default function ServicesCarousel({
             aria-selected={i === active}
             aria-label={`Slide ${i + 1}`}
             onClick={() => setActive(i)}
-            style={{
-              ...s.dot,
-              width:      i === active ? '2rem' : '0.625rem',
-              background: i === active
-                ? 'var(--primary)'
-                : 'color-mix(in srgb, var(--primary) 28%, transparent)',
-            }}
+            className={`h-[0.625rem] rounded-full border-none cursor-pointer p-0 transition-all duration-300 ease-out ${
+              i === active ? 'w-8 bg-primary' : 'w-2.5 bg-[color-mix(in_srgb,var(--color-primary)_28%,transparent)] hover:bg-[color-mix(in_srgb,var(--color-primary)_40%,transparent)]'
+            }`}
           />
         ))}
       </div>
@@ -270,18 +224,16 @@ export default function ServicesCarousel({
 // ── Rounded triangle SVG ──────────────────────────────────────────────────────
 
 function RoundedTriangle({ dir }: { dir: 'left' | 'right' }) {
-  // El SVG fill requiere un valor de color literal; usamos la variable del token
-  // via currentColor para que herede el color del botón padre.
   const pts = dir === 'left'
     ? '13,3 13,15 3,9'
     : '3,3 3,15 13,9';
 
   return (
-    <svg width="16" height="18" viewBox="0 0 16 18" fill="none" style={{ display: 'block' }}>
+    <svg width="16" height="18" viewBox="0 0 16 18" fill="none" className="block">
       <polygon
         points={pts}
-        fill="var(--muted)"
-        stroke="var(--muted)"
+        fill="var(--color-muted)"
+        stroke="var(--color-muted)"
         strokeWidth="4"
         strokeLinejoin="round"
         strokeLinecap="round"
@@ -289,71 +241,3 @@ function RoundedTriangle({ dir }: { dir: 'left' | 'right' }) {
     </svg>
   );
 }
-
-// ── Estilos estáticos ─────────────────────────────────────────────────────────
-
-const s: Record<string, React.CSSProperties> = {
-  section: {
-    background: 'var(--bg)',
-    padding: '5rem 0 4rem',
-    overflow: 'hidden',
-  },
-  header: {
-    textAlign: 'center',
-    marginBottom: '3rem',
-    paddingInline: '1rem',
-  },
-  eyebrow: {
-    display: 'block',
-    fontFamily: 'var(--font-body)',
-    fontSize: '0.8125rem',
-    fontWeight: 700,
-    letterSpacing: '0.08em',
-    textTransform: 'uppercase',
-    color: 'var(--primary)',
-    marginBottom: '0.5rem',
-  },
-  title: {
-    fontFamily: 'var(--font-body)',
-    fontSize: 'clamp(2rem, 5vw, 3rem)',
-    fontWeight: 900,
-    letterSpacing: '-0.03em',
-    color: 'var(--headline)',
-    margin: '0 0 0.75rem',
-  },
-  subtitle: {
-    fontFamily: 'var(--font-body)',
-    fontSize: '1rem',
-    color: 'var(--body-color)',
-    margin: 0,
-  },
-  arrowBtn: {
-    position: 'absolute',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    width: ARROW_D,
-    height: ARROW_D,
-    borderRadius: '9999px',
-    background: 'white',
-    border: 'none',
-    boxShadow: '0 2px 10px rgba(0,0,0,0.13)',
-    cursor: 'pointer',
-    zIndex: 20,
-    transition: 'box-shadow 0.2s, transform 0.15s',
-  },
-  dots: {
-    display: 'flex',
-    justifyContent: 'center',
-    alignItems: 'center',
-    gap: '0.4rem',
-  },
-  dot: {
-    height: '0.625rem',
-    borderRadius: '9999px',
-    border: 'none',
-    cursor: 'pointer',
-    padding: 0,
-    transition: 'width 0.3s ease, background 0.3s ease',
-  },
-};

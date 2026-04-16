@@ -51,6 +51,7 @@ const BLOCK_CONFIGS = {
 
   homepage_servicios_section: {
     bundle:      'homepage_servicios_section',
+    // Sin includes: pasar [] genera "include=" vacío en la query → Drupal lo puede rechazar
     includes:    [],
     blockFields: [
       'info', 'status',
@@ -80,10 +81,6 @@ export type BlockTypeKey = keyof typeof BLOCK_CONFIGS;
 
 /**
  * Obtiene el primer bloque publicado de un bundle dado.
- *
- * @param blockTypeKey  Clave de BLOCK_CONFIGS
- * @param lang          Idioma deseado ('es' | 'en'). Drupal devuelve la traducción
- *                      correspondiente si existe; si no, cae al idioma por defecto.
  */
 export async function getBlockContent<
   T extends BlockContentBase = BlockContentBase,
@@ -94,10 +91,6 @@ export async function getBlockContent<
 
 /**
  * Obtiene N bloques publicados de un bundle dado, ordenados por ID.
- *
- * @param blockTypeKey  Clave de BLOCK_CONFIGS
- * @param limit         Máximo de bloques a traer (default: 10)
- * @param lang          Idioma deseado
  */
 export async function getBlockContents<
   T extends BlockContentBase = BlockContentBase,
@@ -108,13 +101,22 @@ export async function getBlockContents<
 
   apiParams
     .addFilter('status', '1')
-    .addPageLimit(limit)
-    .addInclude(config.includes)
-    .addFields(`block_content--${config.bundle}`, config.blockFields);
+    .addPageLimit(limit);
+
+  // ── IMPORTANTE: addInclude([]) genera "include=" vacío en la query string.
+  // Drupal puede devolver error 400 o ignorarlo según la versión.
+  // Solo llamar si realmente hay relaciones a incluir.
+  if (config.includes.length > 0) {
+    apiParams.addInclude(config.includes);
+  }
+
+  apiParams.addFields(`block_content--${config.bundle}`, config.blockFields);
 
   if (config.relatedFields) {
     for (const [entityType, fields] of Object.entries(config.relatedFields)) {
-      apiParams.addFields(entityType, fields);
+      if (fields.length > 0) {
+        apiParams.addFields(entityType, fields);
+      }
     }
   }
 
@@ -135,15 +137,15 @@ export async function getBlockContents<
     return [];
   }
 
- if (raw.status !== 200) {
-  console.error(
-    `[Blocks] HTTP ${raw.status} en ${path} (lang: ${lang ?? 'default'})`,
-    raw.status === 404
-      ? '→ Si lang=es y 404: Drupal no tiene prefijo /es/. Usá lang=undefined para español.'
-      : ''
-  );
-  return [];
-}
+  if (raw.status !== 200) {
+    console.error(
+      `[Blocks] HTTP ${raw.status} en ${path} (lang: ${lang ?? 'default'})`,
+      raw.status === 404
+        ? '→ Si lang=es y 404: Drupal no tiene prefijo /es/. Usá lang=undefined para español.'
+        : ''
+    );
+    return [];
+  }
 
   try {
     const result = dataFormatter.deserialize(raw.data);

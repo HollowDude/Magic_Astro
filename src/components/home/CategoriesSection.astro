@@ -6,37 +6,39 @@ import { getLangFromUrl } from '@/i18n/utils';
 import type { Lang } from '@/i18n/ui';
 
 const DRUPAL_BASE_URL = import.meta.env.DRUPAL_BASE_URL as string;
-
 const lang = (Astro.currentLocale ?? getLangFromUrl(Astro.url)) as Lang;
 const categorias = await getCategoriasDeFlores(4, lang);
 ---
 
-<section class="categories-section">
-  <div class="categories-container">
-    <div class="categories-header">
+<section class="w-full max-w-[80rem] mx-auto py-16 px-4 sm:px-6 lg:px-8">
+  <div class="max-w-[80rem] mx-auto">
+    <div class="flex items-end justify-between mb-10 px-2">
       <div>
-        <h2 class="section-title">
+        <h2 class="font-heading text-[clamp(1.75rem,3vw,2.5rem)] font-semibold tracking-tight text-headline m-0">
           {lang === 'en' ? 'Featured Categories' : 'Categorías Destacadas'}
         </h2>
-        <p class="section-subtitle">
+        <p class="mt-2 text-[0.9375rem] font-body text-body-color">
           {lang === 'en'
             ? 'Find the perfect detail for every moment.'
             : 'Encuentra el detalle perfecto para cada momento.'}
         </p>
       </div>
-      <a class="see-all" href={lang === 'en' ? '/en/shop' : '/shop'}>
+      <a 
+        class="hidden sm:block text-[0.875rem] font-semibold text-primary no-underline transition-all hover:underline" 
+        href={lang === 'en' ? '/en/shop' : '/shop'}
+      >
         {lang === 'en' ? 'See all' : 'Ver todo'}
       </a>
     </div>
 
     {categorias.length === 0 ? (
-      <p class="categories-empty">
+      <p class="text-center text-text-muted py-12 text-base">
         {lang === 'en'
           ? 'No categories available at the moment.'
           : 'No hay categorías disponibles por el momento.'}
       </p>
     ) : (
-      <div class="categories-grid">
+      <div class="grid grid-cols-2 md:grid-cols-4 gap-4 lg:gap-8">
         {categorias.map((cat) => {
           const imageUrl = cat.field_foto
             ? drupalFileUrl(cat.field_foto, DRUPAL_BASE_URL)
@@ -46,21 +48,21 @@ const categorias = await getCategoriasDeFlores(4, lang);
           const shopHref = lang === 'en' ? `/en/shop?cat=${slug}` : `/shop?cat=${slug}`;
 
           return (
-            <a href={shopHref} class="category-card">
-              <div class="category-img-wrap">
+            <a href={shopHref} class="flex flex-col gap-3 cursor-pointer no-underline text-inherit group">
+              <div class="relative aspect-[4/5] w-full overflow-hidden rounded-xl bg-[#f3f4f6] shadow-[0_1px_3px_rgba(0,0,0,0.08)] transition-shadow duration-200 group-hover:shadow-[0_4px_16px_rgba(0,0,0,0.12)]">
                 {imageUrl ? (
                   <div
-                    class="category-img"
+                    class="w-full h-full bg-cover bg-center transition-transform duration-500 ease-out group-hover:scale-110"
                     style={`background-image: url('${imageUrl}')`}
                   />
                 ) : (
-                  <div class="category-img category-img--placeholder">
-                    <span class="material-symbols-outlined placeholder-icon">local_florist</span>
+                  <div class="w-full h-full flex items-center justify-center bg-[color-mix(in_srgb,var(--color-primary)_8%,var(--color-blush))]">
+                    <span class="material-symbols-outlined text-5xl text-primary opacity-35">local_florist</span>
                   </div>
                 )}
               </div>
-              <div class="category-name">
-                <h3>{cat.name}</h3>
+              <div class="text-center md:text-left">
+                <h3 class="text-[1.125rem] font-bold font-body text-headline">{cat.name}</h3>
               </div>
             </a>
           );
@@ -69,119 +71,3 @@ const categorias = await getCategoriasDeFlores(4, lang);
     )}
   </div>
 </section>
-
-<style>
-  .categories-section {
-    width: 100%;
-    max-width: 80rem;
-    margin: 0 auto;
-    padding: 4rem 1rem;
-  }
-
-  @media (min-width: 640px)  { .categories-section { padding-inline: 1.5rem; } }
-  @media (min-width: 1024px) { .categories-section { padding-inline: 2rem; } }
-
-  .categories-header {
-    display: flex;
-    align-items: flex-end;
-    justify-content: space-between;
-    margin-bottom: 2.5rem;
-    padding-inline: 0.5rem;
-  }
-
-  .section-title {
-    font-family: var(--font-heading);
-    font-size: clamp(1.75rem, 3vw, 2.5rem);
-    font-weight: 600;
-    letter-spacing: -0.02em;
-    color: var(--headline);
-    margin: 0;
-  }
-
-  .section-subtitle {
-    margin-top: 0.5rem;
-    color: var(--body-color);
-    font-size: 0.9375rem;
-    font-family: var(--font-body);
-  }
-
-  .see-all {
-    display: none;
-    font-size: 0.875rem;
-    font-weight: 600;
-    color: var(--primary);
-    text-decoration: none;
-    transition: text-decoration 0.2s;
-  }
-  .see-all:hover { text-decoration: underline; }
-
-  @media (min-width: 640px) { .see-all { display: block; } }
-
-  .categories-empty {
-    text-align: center;
-    color: var(--text-muted);
-    padding: 3rem 0;
-    font-size: 1rem;
-  }
-
-  .categories-grid {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: 1rem;
-  }
-
-  @media (min-width: 768px)  { .categories-grid { grid-template-columns: repeat(4, 1fr); } }
-  @media (min-width: 1024px) { .categories-grid { gap: 2rem; } }
-
-  .category-card {
-    display: flex;
-    flex-direction: column;
-    gap: 0.75rem;
-    cursor: pointer;
-    text-decoration: none;
-    color: inherit;
-  }
-
-  .category-img-wrap {
-    position: relative;
-    aspect-ratio: 4 / 5;
-    width: 100%;
-    overflow: hidden;
-    border-radius: 0.75rem;
-    background: #f3f4f6;
-    box-shadow: 0 1px 3px rgba(0 0 0 / 0.08);
-    transition: box-shadow 0.2s;
-  }
-  .category-card:hover .category-img-wrap { box-shadow: 0 4px 16px rgba(0 0 0 / 0.12); }
-
-  .category-img {
-    width: 100%;
-    height: 100%;
-    background-size: cover;
-    background-position: center;
-    transition: transform 0.5s ease;
-  }
-  .category-card:hover .category-img { transform: scale(1.1); }
-
-  .category-img--placeholder {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background: color-mix(in srgb, var(--primary) 8%, var(--blush));
-  }
-  .placeholder-icon {
-    font-size: 3rem;
-    color: var(--primary);
-    opacity: 0.35;
-  }
-
-  .category-name { text-align: center; }
-  @media (min-width: 768px) { .category-name { text-align: left; } }
-
-  .category-name h3 {
-    font-size: 1.125rem;
-    font-weight: 700;
-    font-family: var(--font-body);
-    color: var(--headline);
-  }
-</style>

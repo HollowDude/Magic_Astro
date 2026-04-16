@@ -26,33 +26,3 @@ const { crumbs } = Astro.props;
     </>
   ))}
 </nav>
-
-<style>
-  .breadcrumb {
-    display: flex;
-    align-items: center;
-    flex-wrap: wrap;
-    gap: 0.125rem;
-    font-family: var(--font-body);
-    font-size: 0.8125rem;
-  }
-  .bc-link {
-    color: var(--text-muted);
-    text-decoration: none;
-    transition: color 0.2s;
-    padding: 0.125rem 0.25rem;
-    border-radius: 0.25rem;
-  }
-  .bc-link:hover { color: var(--primary); }
-  .bc-sep {
-    font-size: 0.875rem !important;
-    color: var(--text-muted);
-    opacity: 0.5;
-    user-select: none;
-  }
-  .bc-current {
-    color: var(--headline);
-    font-weight: 600;
-    padding: 0.125rem 0.25rem;
-  }
-</style>

@@ -28,10 +28,6 @@ function t(lang: Lang, key: UiKey): string {
     ?? key;
 }
 
-const ICON_SIZE = '2.375rem';
-const PILL_OPEN = '13.5rem';
-
-// ── Textos inline ─────────────────────────────────────────────────────────────
 const SEARCH_STRINGS = {
   es: {
     loading:   'Buscando...',
@@ -66,19 +62,20 @@ function SearchResultPanel({
   lang, query, results, loading, hasMore, shopHref,
 }: SearchPanelProps) {
   const ss = SEARCH_STRINGS[lang];
+  const prefix = lang === 'en' ? '/en' : '';
 
   return (
-    <div style={sp.panel}>
+    <div className="absolute top-[calc(100%+0.5rem)] left-0 right-0 min-w-[18rem] bg-white rounded-[0.875rem] shadow-[0_8px_32px_rgba(0,0,0,0.1),0_0_0_1px_color-mix(in_srgb,var(--color-primary)_8%,transparent)] z-[100] overflow-hidden py-3">
 
       {/* Loading skeletons */}
       {loading && (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.625rem' }}>
+        <div className="flex flex-col gap-2.5">
           {[0, 1, 2].map((i) => (
-            <div key={i} style={sp.skeleton}>
-              <div style={sp.skeletonImg} />
-              <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '0.3rem' }}>
-                <div style={{ ...sp.skeletonLine, width: '70%' }} />
-                <div style={{ ...sp.skeletonLine, width: '35%', opacity: 0.6 }} />
+            <div key={i} className="flex items-center gap-3 py-2 px-4">
+              <div className="w-11 h-11 rounded-lg shrink-0 bg-border animate-pulse" />
+              <div className="flex-1 flex flex-col gap-1.5">
+                <div className="h-2.5 rounded-full bg-border w-[70%] animate-pulse" />
+                <div className="h-2.5 rounded-full bg-border w-[35%] opacity-60 animate-pulse" />
               </div>
             </div>
           ))}
@@ -87,15 +84,12 @@ function SearchResultPanel({
 
       {/* Sin resultados */}
       {!loading && results.length === 0 && (
-        <div style={sp.empty}>
-          <span
-            className="material-symbols-outlined"
-            style={{ fontSize: '1.5rem', color: 'var(--primary)', opacity: 0.4, lineHeight: 1 }}
-          >
+        <div className="flex flex-col items-center gap-2 py-5 px-4 text-center">
+          <span className="material-symbols-outlined text-[1.5rem] text-primary opacity-40 leading-none">
             search_off
           </span>
-          <p style={sp.emptyText}>
-            {ss.noResults} <strong style={{ color: 'var(--headline)' }}>"{query}"</strong>
+          <p className="font-body text-[0.875rem] text-body-color m-0">
+            {ss.noResults} <strong className="text-headline">"{query}"</strong>
           </p>
         </div>
       )}
@@ -103,35 +97,25 @@ function SearchResultPanel({
       {/* Resultados */}
       {!loading && results.length > 0 && (
         <>
-          <ul style={sp.list} role="listbox" aria-label={`Resultados para ${query}`}>
+          <ul className="m-0 p-0" role="listbox" aria-label={`Resultados para ${query}`}>
             {results.map((r) => (
-              <li key={r.id} style={{ listStyle: 'none' }}>
+              <li key={r.id} className="list-none">
                 <a
-                  href={`${lang === 'en' ? '/en' : ''}/shop`}
-                  style={sp.item}
-                  onMouseEnter={(e) => {
-                    (e.currentTarget as HTMLAnchorElement).style.background =
-                      'color-mix(in srgb, var(--primary) 5%, transparent)';
-                  }}
-                  onMouseLeave={(e) => {
-                    (e.currentTarget as HTMLAnchorElement).style.background = 'transparent';
-                  }}
+                  href={`${prefix}/${r.id}`}
+                  className="flex items-center gap-3 py-2 px-4 no-underline text-inherit transition-colors duration-150 cursor-pointer hover:bg-[color-mix(in_srgb,var(--color-primary)_5%,transparent)]"
                 >
                   {/* Thumbnail */}
-                  <div style={sp.thumb}>
+                  <div className="w-11 h-11 rounded-lg overflow-hidden shrink-0 bg-blush">
                     {r.thumbnail ? (
                       <img
                         src={r.thumbnail}
                         alt={r.title}
-                        style={sp.thumbImg}
+                        className="w-full h-full object-cover block"
                         loading="lazy"
                       />
                     ) : (
-                      <div style={sp.thumbPh}>
-                        <span
-                          className="material-symbols-outlined"
-                          style={{ fontSize: '1.25rem', color: 'var(--primary)', opacity: 0.4, lineHeight: 1 }}
-                        >
+                      <div className="w-full h-full flex items-center justify-center">
+                        <span className="material-symbols-outlined text-[1.25rem] text-primary opacity-40 leading-none">
                           local_florist
                         </span>
                       </div>
@@ -139,20 +123,15 @@ function SearchResultPanel({
                   </div>
 
                   {/* Info */}
-                  <div style={sp.itemInfo}>
-                    <p style={sp.itemTitle}>{r.title}</p>
-                    <p style={sp.itemPrice}>
-                      {r.price
-                        ? `${ss.from} ${r.price}`
-                        : ss.priceNA}
+                  <div className="flex-1 min-w-0">
+                    <p className="font-body text-[0.875rem] font-semibold text-headline m-0 truncate">{r.title}</p>
+                    <p className="font-body text-[0.75rem] text-muted m-0 mt-0.5">
+                      {r.price ? `${ss.from} ${r.price}` : ss.priceNA}
                     </p>
                   </div>
 
                   {/* Chevron */}
-                  <span
-                    className="material-symbols-outlined"
-                    style={{ fontSize: '1rem', color: 'var(--muted)', opacity: 0.5, lineHeight: 1, flexShrink: 0 }}
-                  >
+                  <span className="material-symbols-outlined text-[1rem] text-muted opacity-50 leading-none shrink-0">
                     chevron_right
                   </span>
                 </a>
@@ -162,152 +141,18 @@ function SearchResultPanel({
 
           {/* Mostrar más */}
           {hasMore && (
-            <div style={sp.footer}>
-              <a href={shopHref} style={sp.showMore}>
+            <div className="border-t border-border mt-1.5 pt-1.5 px-4 pb-0.5">
+              <a href={shopHref} className="block font-body text-[0.8125rem] font-bold text-primary no-underline text-center py-1.5 rounded-lg transition-colors duration-150 hover:bg-[color-mix(in_srgb,var(--color-primary)_5%,transparent)]">
                 {ss.showMore}
               </a>
             </div>
           )}
         </>
       )}
-
-      <style>{`
-        @keyframes shimmer {
-          0%   { background-position: -200% 0; }
-          100% { background-position:  200% 0; }
-        }
-      `}</style>
     </div>
   );
 }
 
-// Estilos del panel
-const sp: Record<string, React.CSSProperties> = {
-  panel: {
-    position:     'absolute',
-    top:          'calc(100% + 0.5rem)',
-    left:         0,
-    right:        0,
-    minWidth:     '18rem',
-    background:   'white',
-    borderRadius: '0.875rem',
-    boxShadow:    '0 8px 32px rgba(0,0,0,0.1), 0 0 0 1px color-mix(in srgb, var(--primary) 8%, transparent)',
-    zIndex:       100,
-    overflow:     'hidden',
-    padding:      '0.75rem 0',
-  },
-  list: {
-    margin:  0,
-    padding: 0,
-  },
-  item: {
-    display:        'flex',
-    alignItems:     'center',
-    gap:            '0.75rem',
-    padding:        '0.5rem 1rem',
-    textDecoration: 'none',
-    color:          'inherit',
-    transition:     'background 0.15s',
-    cursor:         'pointer',
-  },
-  thumb: {
-    width:        '2.75rem',
-    height:       '2.75rem',
-    borderRadius: '0.5rem',
-    overflow:     'hidden',
-    flexShrink:   0,
-    background:   'var(--blush)',
-  },
-  thumbImg: {
-    width:      '100%',
-    height:     '100%',
-    objectFit:  'cover',
-    display:    'block',
-  },
-  thumbPh: {
-    width:           '100%',
-    height:          '100%',
-    display:         'flex',
-    alignItems:      'center',
-    justifyContent:  'center',
-  },
-  itemInfo: {
-    flex:     1,
-    minWidth: 0,
-  },
-  itemTitle: {
-    fontFamily:   'var(--font-body)',
-    fontSize:     '0.875rem',
-    fontWeight:   600,
-    color:        'var(--headline)',
-    margin:       0,
-    overflow:     'hidden',
-    textOverflow: 'ellipsis',
-    whiteSpace:   'nowrap',
-  },
-  itemPrice: {
-    fontFamily: 'var(--font-body)',
-    fontSize:   '0.75rem',
-    color:      'var(--muted)',
-    margin:     0,
-    marginTop:  '0.15rem',
-  },
-  footer: {
-    borderTop:  '1px solid var(--border)',
-    marginTop:  '0.375rem',
-    paddingTop: '0.375rem',
-    padding:    '0.5rem 1rem 0.125rem',
-  },
-  showMore: {
-    display:        'block',
-    fontFamily:     'var(--font-body)',
-    fontSize:       '0.8125rem',
-    fontWeight:     700,
-    color:          'var(--primary)',
-    textDecoration: 'none',
-    textAlign:      'center' as const,
-    padding:        '0.375rem 0',
-    borderRadius:   '0.5rem',
-    transition:     'background 0.15s',
-  },
-  // Skeletons
-  skeleton: {
-    display:    'flex',
-    alignItems: 'center',
-    gap:        '0.75rem',
-    padding:    '0.5rem 1rem',
-  },
-  skeletonImg: {
-    width:          '2.75rem',
-    height:         '2.75rem',
-    borderRadius:   '0.5rem',
-    flexShrink:     0,
-    background:     'linear-gradient(90deg, var(--border) 25%, var(--blush) 50%, var(--border) 75%)',
-    backgroundSize: '200% 100%',
-    animation:      'shimmer 1.4s ease-in-out infinite',
-  },
-  skeletonLine: {
-    height:         '0.625rem',
-    borderRadius:   '9999px',
-    background:     'linear-gradient(90deg, var(--border) 25%, var(--blush) 50%, var(--border) 75%)',
-    backgroundSize: '200% 100%',
-    animation:      'shimmer 1.4s ease-in-out infinite',
-  },
-  empty: {
-    display:        'flex',
-    flexDirection:  'column' as const,
-    alignItems:     'center',
-    gap:            '0.5rem',
-    padding:        '1.25rem 1rem',
-    textAlign:      'center' as const,
-  },
-  emptyText: {
-    fontFamily: 'var(--font-body)',
-    fontSize:   '0.875rem',
-    color:      'var(--body-color)',
-    margin:     0,
-  },
-};
 
 // ── HeaderClient ──────────────────────────────────────────────────────────────
 
@@ -395,6 +240,9 @@ export default function HeaderClient({ isLoggedIn, currentPath, lang }: Props) {
 
   const switchLang = (targetLang: Lang) => {
     if (targetLang === lang) return;
+    try {
+      localStorage.setItem('mf-lang', targetLang);
+    } catch {}
     window.location.href = getLocalizedPath(currentPath, targetLang);
   };
 
@@ -402,78 +250,43 @@ export default function HeaderClient({ isLoggedIn, currentPath, lang }: Props) {
 
   return (
     <>
-      <header style={s.header}>
+      <header className="sticky top-0 z-50 flex items-center justify-between gap-4 py-2.5 px-4 sm:px-10 bg-white/85 backdrop-blur-md border-b border-[color-mix(in_srgb,var(--color-primary)_10%,transparent)]">
 
         {/* ── Left: logo + nav ── */}
-        <div style={s.left}>
-          <a href={lang === 'es' ? '/' : '/en'} style={s.logo}>
-            <span className="material-symbols-outlined" style={s.logoIcon}>local_florist</span>
-            <span style={s.logoText}>Maggy Flowers</span>
+        <div className="flex items-center gap-10 min-w-0">
+          <a href={lang === 'es' ? '/' : '/en'} className="flex items-center gap-2 no-underline text-text-main shrink-0">
+            <span className="material-symbols-outlined text-[1.875rem] text-primary leading-none">local_florist</span>
+            <span className="text-[1.0625rem] font-extrabold tracking-tight font-body text-text-main">Maggy Flowers</span>
           </a>
 
-          <nav style={s.nav} className="desktop-nav">
+          <nav className="hidden md:flex items-center gap-7">
             {navLinks.map((link) => (
               <a
                 key={link.href}
                 href={link.href}
-                style={{ ...s.navLink, ...(isActive(link.href) ? s.navLinkActive : {}) }}
+                className={`relative flex flex-col items-center gap-1 text-[0.9375rem] no-underline font-body tracking-tight whitespace-nowrap transition-colors duration-200 ${isActive(link.href) ? 'text-primary font-bold' : 'text-text-main font-medium hover:text-primary'}`}
               >
                 {t(lang, link.key)}
-                {isActive(link.href) && <span style={s.navDot} />}
+                {isActive(link.href) && <span className="absolute -bottom-2 w-1 h-1 rounded-full bg-primary" />}
               </a>
             ))}
           </nav>
         </div>
 
         {/* ── Right ── */}
-        <div style={s.right}>
+        <div className="flex items-center gap-1.5 shrink-0">
 
           {/* ── Search pill ── */}
-          <div ref={pillRef} style={{ position: 'relative' }}>
+          <div ref={pillRef} className="relative">
             <div
-              style={{
-                display:      'flex',
-                alignItems:   'center',
-                height:       ICON_SIZE,
-                width:        searchOpen ? PILL_OPEN : ICON_SIZE,
-                borderRadius: '9999px',
-                overflow:     'hidden',
-                border:       searchOpen
-                  ? '1.5px solid color-mix(in srgb, var(--primary) 28%, transparent)'
-                  : '1.5px solid transparent',
-                background:   searchOpen
-                  ? 'white'
-                  : 'color-mix(in srgb, var(--primary) 7%, transparent)',
-                boxShadow:    searchOpen
-                  ? '0 4px 20px color-mix(in srgb, var(--primary) 10%, transparent)'
-                  : 'none',
-                transition:   [
-                  'width 0.38s cubic-bezier(0.4,0,0.2,1)',
-                  'border-color 0.25s ease',
-                  'background 0.25s ease',
-                  'box-shadow 0.3s ease',
-                ].join(', '),
-              }}
+              className={`flex items-center h-[2.375rem] rounded-full overflow-hidden transition-all duration-300 ease-out border-[1.5px] ${searchOpen ? 'w-[13.5rem] border-[color-mix(in_srgb,var(--color-primary)_28%,transparent)] bg-white shadow-[0_4px_20px_color-mix(in_srgb,var(--color-primary)_10%,transparent)]' : 'w-[2.375rem] border-transparent bg-[color-mix(in_srgb,var(--color-primary)_7%,transparent)] shadow-none hover:bg-[color-mix(in_srgb,var(--color-primary)_12%,transparent)]'}`}
             >
               <button
                 onClick={searchOpen ? closeSearch : openSearch}
                 aria-label={t(lang, searchOpen ? 'header.search.close' : 'header.search.open')}
-                style={{
-                  flexShrink:     0,
-                  display:        'flex',
-                  alignItems:     'center',
-                  justifyContent: 'center',
-                  width:          ICON_SIZE,
-                  height:         ICON_SIZE,
-                  border:         'none',
-                  background:     'transparent',
-                  cursor:         'pointer',
-                  color:          searchOpen ? 'var(--primary)' : 'var(--text-main)',
-                  transition:     'color 0.2s',
-                  borderRadius:   '9999px',
-                }}
+                className={`shrink-0 flex items-center justify-center w-[2.375rem] h-[2.375rem] border-none bg-transparent cursor-pointer transition-colors duration-200 rounded-full ${searchOpen ? 'text-primary' : 'text-text-main'}`}
               >
-                <span className="material-symbols-outlined" style={{ fontSize: '1.25rem', lineHeight: 1, display: 'block' }}>
+                <span className="material-symbols-outlined text-[1.25rem] leading-none block">
                   {searchOpen && searchValue.length > 0 ? 'close' : 'search'}
                 </span>
               </button>
@@ -488,35 +301,12 @@ export default function HeaderClient({ isLoggedIn, currentPath, lang }: Props) {
                 aria-autocomplete="list"
                 aria-haspopup="listbox"
                 autoComplete="off"
-                style={{
-                  flex:          1,
-                  minWidth:      0,
-                  border:        'none',
-                  background:    'transparent',
-                  outline:       'none',
-                  padding:       '0 1rem 0 0',
-                  fontSize:      '0.875rem',
-                  fontFamily:    'var(--font-body)',
-                  color:         'var(--text-main)',
-                  opacity:       searchOpen ? 1 : 0,
-                  transform:     searchOpen ? 'translateX(0)' : 'translateX(-6px)',
-                  pointerEvents: searchOpen ? 'auto' : 'none',
-                  transition:    'opacity 0.22s ease 0.16s, transform 0.28s ease 0.12s',
-                }}
+                className={`flex-1 min-w-0 border-none bg-transparent outline-none pr-4 text-[0.875rem] font-body text-text-main transition-all duration-300 ${searchOpen ? 'opacity-100 translate-x-0 pointer-events-auto' : 'opacity-0 -translate-x-1.5 pointer-events-none'}`}
               />
 
               {/* Spinner */}
               {searchLoading && (
-                <div style={{
-                  flexShrink:     0,
-                  width:          '1rem',
-                  height:         '1rem',
-                  marginRight:    '0.75rem',
-                  borderRadius:   '9999px',
-                  border:         '2px solid color-mix(in srgb, var(--primary) 20%, transparent)',
-                  borderTopColor: 'var(--primary)',
-                  animation:      'spin 0.7s linear infinite',
-                }} />
+                <div className="shrink-0 w-4 h-4 mr-3 rounded-full border-2 border-[color-mix(in_srgb,var(--color-primary)_20%,transparent)] border-t-primary animate-spin" />
               )}
             </div>
 
@@ -534,24 +324,19 @@ export default function HeaderClient({ isLoggedIn, currentPath, lang }: Props) {
           </div>
 
           {/* ── Selector de idioma ── */}
-          <div style={s.langSelector} role="group" aria-label={t(lang, 'lang.select')}>
+          <div className="hidden sm:flex items-center gap-1 py-1 px-2.5 rounded-full bg-[color-mix(in_srgb,var(--color-primary)_7%,transparent)] mx-1" role="group" aria-label={t(lang, 'lang.select')}>
             {(Object.keys(languages) as Lang[]).map((l, i, arr) => (
               <Fragment key={l}>
                 <button
                   onClick={() => switchLang(l)}
                   disabled={l === lang}
                   aria-current={l === lang ? 'true' : undefined}
-                  style={{
-                    ...s.langBtn,
-                    color:      l === lang ? 'var(--primary)' : 'var(--muted)',
-                    fontWeight: l === lang ? 700 : 500,
-                    cursor:     l === lang ? 'default' : 'pointer',
-                  }}
+                  className={`bg-transparent border-none font-body text-[0.8125rem] tracking-wider py-0.5 px-0.5 leading-none transition-colors duration-200 ${l === lang ? 'text-primary font-bold cursor-default' : 'text-muted font-medium cursor-pointer hover:text-text-main'}`}
                 >
                   {l.toUpperCase()}
                 </button>
                 {i < arr.length - 1 && (
-                  <span key={`sep-${l}`} style={s.langDivider}>|</span>
+                  <span key={`sep-${l}`} className="text-[color-mix(in_srgb,var(--color-muted)_40%,transparent)] text-[0.6875rem] select-none leading-none">|</span>
                 )}
               </Fragment>
             ))}
@@ -560,20 +345,20 @@ export default function HeaderClient({ isLoggedIn, currentPath, lang }: Props) {
           {/* ── Auth ── */}
           {isLoggedIn ? (
             <>
-              <a href={lang === 'es' ? '/dashboard' : '/en/dashboard'} style={s.iconBtn} aria-label={t(lang, 'header.profile')}>
-                <span className="material-symbols-outlined" style={{ fontSize: '1.25rem', lineHeight: 1 }}>
-                  account_circle
-                </span>
+              <a href={lang === 'es' ? '/dashboard' : '/en/dashboard'} className="flex items-center justify-center w-[2.375rem] h-[2.375rem] rounded-full bg-[color-mix(in_srgb,var(--color-primary)_7%,transparent)] text-text-main border-none cursor-pointer no-underline transition-all duration-200 shrink-0 hover:bg-[color-mix(in_srgb,var(--color-primary)_12%,transparent)]" aria-label={t(lang, 'header.profile')}>
+                <span className="material-symbols-outlined text-[1.25rem] leading-none">account_circle</span>
               </a>
-              <button style={{ ...s.iconBtn, position: 'relative' }} aria-label={t(lang, 'header.cart')} disabled>
-                <span className="material-symbols-outlined" style={{ fontSize: '1.25rem', lineHeight: 1 }}>
-                  shopping_bag
-                </span>
-                <span style={s.badge}>0</span>
+              <button className="relative flex items-center justify-center w-[2.375rem] h-[2.375rem] rounded-full bg-[color-mix(in_srgb,var(--color-primary)_7%,transparent)] text-text-main border-none cursor-pointer transition-all duration-200 shrink-0 hover:bg-[color-mix(in_srgb,var(--color-primary)_12%,transparent)]" aria-label={t(lang, 'header.cart')} disabled>
+                <span className="material-symbols-outlined text-[1.25rem] leading-none">shopping_bag</span>
+                <span className="absolute -top-1 -right-1 flex items-center justify-center w-4 h-4 rounded-full bg-primary text-white text-[0.5625rem] font-bold font-body">0</span>
               </button>
             </>
           ) : (
-            <button disabled style={s.loginBtn} title="Próximamente">
+            <button 
+              disabled 
+              className="hidden sm:inline-flex items-center justify-center h-[2.125rem] px-4.5 rounded-full bg-primary text-white border-none font-body text-[0.875rem] font-bold cursor-not-allowed opacity-50 whitespace-nowrap" 
+              title="Próximamente"
+            >
               {t(lang, 'header.login')}
             </button>
           )}
@@ -581,11 +366,10 @@ export default function HeaderClient({ isLoggedIn, currentPath, lang }: Props) {
           {/* ── Hamburger (mobile) ── */}
           <button
             onClick={() => setMobileOpen((v) => !v)}
-            style={s.hamburgerBtn}
-            className="hamburger-btn"
+            className="flex md:hidden items-center justify-center w-[2.375rem] h-[2.375rem] rounded-full bg-[color-mix(in_srgb,var(--color-primary)_7%,transparent)] text-text-main border-none cursor-pointer shrink-0 transition-colors hover:bg-[color-mix(in_srgb,var(--color-primary)_12%,transparent)]"
             aria-label={t(lang, 'header.menu')}
           >
-            <span className="material-symbols-outlined" style={{ fontSize: '1.25rem', lineHeight: 1 }}>
+            <span className="material-symbols-outlined text-[1.25rem] leading-none">
               {mobileOpen ? 'close' : 'menu'}
             </span>
           </button>
@@ -594,34 +378,30 @@ export default function HeaderClient({ isLoggedIn, currentPath, lang }: Props) {
 
       {/* ── Mobile drawer ── */}
       {mobileOpen && (
-        <div style={s.overlay} onClick={() => setMobileOpen(false)}>
-          <nav style={s.drawer} onClick={(e) => e.stopPropagation()}>
+        <div className="fixed inset-0 z-40 bg-[#211114]/40 backdrop-blur-sm" onClick={() => setMobileOpen(false)}>
+          <nav className="absolute top-0 right-0 w-64 h-full bg-white flex flex-col pt-20 shadow-[-4px_0_24px_rgba(0,0,0,0.1)]" onClick={(e) => e.stopPropagation()}>
             {navLinks.map((link) => (
               <a
                 key={link.href}
                 href={link.href}
-                style={{ ...s.mobileLink, ...(isActive(link.href) ? s.mobileLinkActive : {}) }}
+                className={`py-4 px-6 text-base font-semibold no-underline border-b border-border font-body transition-colors duration-200 ${isActive(link.href) ? 'text-primary bg-[color-mix(in_srgb,var(--color-primary)_4%,transparent)]' : 'text-text-main hover:bg-black/5'}`}
               >
                 {t(lang, link.key)}
               </a>
             ))}
 
-            <div style={s.mobileLangRow}>
+            <div className="flex items-center gap-2 py-4 px-6 mt-auto border-t border-border">
               {(Object.keys(languages) as Lang[]).map((l, i, arr) => (
                 <Fragment key={l}>
                   <button
                     onClick={() => switchLang(l)}
                     disabled={l === lang}
-                    style={{
-                      ...s.mobileLangBtn,
-                      color:      l === lang ? 'var(--primary)' : 'var(--muted)',
-                      fontWeight: l === lang ? 700 : 500,
-                    }}
+                    className={`bg-transparent border-none font-body text-[0.9375rem] cursor-pointer p-0 transition-colors duration-200 ${l === lang ? 'text-primary font-bold' : 'text-muted font-medium hover:text-text-main'}`}
                   >
                     {languages[l]}
                   </button>
                   {i < arr.length - 1 && (
-                    <span key={`msep-${l}`} style={{ color: 'var(--border)', fontSize: '0.75rem' }}>|</span>
+                    <span key={`msep-${l}`} className="text-border text-[0.75rem]">|</span>
                   )}
                 </Fragment>
               ))}
@@ -629,224 +409,6 @@ export default function HeaderClient({ isLoggedIn, currentPath, lang }: Props) {
           </nav>
         </div>
       )}
-
-      <style>{`
-        .desktop-nav   { display: flex; }
-        .hamburger-btn { display: none !important; }
-
-        @media (max-width: 767px) {
-          .desktop-nav   { display: none !important; }
-          .hamburger-btn { display: flex !important; }
-        }
-
-        @keyframes spin { to { transform: rotate(360deg); } }
-      `}</style>
     </>
   );
 }
-
-/* ─── Styles ─────────────────────────────────────────────────── */
-const s: Record<string, React.CSSProperties> = {
-  header: {
-    position:             'sticky',
-    top:                  0,
-    zIndex:               50,
-    display:              'flex',
-    alignItems:           'center',
-    justifyContent:       'space-between',
-    gap:                  '1rem',
-    padding:              '0.625rem 2.5rem',
-    background:           'rgba(255,255,255,0.87)',
-    backdropFilter:       'blur(14px)',
-    WebkitBackdropFilter: 'blur(14px)',
-    borderBottom:         '1px solid color-mix(in srgb, var(--primary) 10%, transparent)',
-  },
-  left: {
-    display:    'flex',
-    alignItems: 'center',
-    gap:        '2.5rem',
-    minWidth:   0,
-  },
-  logo: {
-    display:        'flex',
-    alignItems:     'center',
-    gap:            '0.5rem',
-    textDecoration: 'none',
-    color:          'var(--text-main)',
-    flexShrink:     0,
-  },
-  logoIcon: { fontSize: '1.875rem', color: 'var(--primary)', lineHeight: 1 },
-  logoText: {
-    fontSize:      '1.0625rem',
-    fontWeight:    800,
-    letterSpacing: '-0.02em',
-    fontFamily:    'var(--font-body)',
-    color:         'var(--text-main)',
-  },
-  nav: {
-    alignItems: 'center',
-    gap:        '1.875rem',
-  },
-  navLink: {
-    display:        'flex',
-    flexDirection:  'column',
-    alignItems:     'center',
-    gap:            '3px',
-    fontSize:       '0.9375rem',
-    fontWeight:     500,
-    color:          'var(--text-main)',
-    textDecoration: 'none',
-    fontFamily:     'var(--font-body)',
-    letterSpacing:  '-0.01em',
-    whiteSpace:     'nowrap',
-    transition:     'color 0.2s',
-  },
-  navLinkActive: {
-    color:      'var(--primary)',
-    fontWeight: 700,
-  },
-  navDot: {
-    width:        '4px',
-    height:       '4px',
-    borderRadius: '9999px',
-    background:   'var(--primary)',
-  },
-  right: {
-    display:    'flex',
-    alignItems: 'center',
-    gap:        '0.375rem',
-    flexShrink: 0,
-  },
-  langSelector: {
-    display:      'flex',
-    alignItems:   'center',
-    gap:          '0.25rem',
-    padding:      '0.25rem 0.625rem',
-    borderRadius: '9999px',
-    background:   'color-mix(in srgb, var(--primary) 7%, transparent)',
-    marginInline: '0.25rem',
-  },
-  langBtn: {
-    background:    'none',
-    border:        'none',
-    fontFamily:    'var(--font-body)',
-    fontSize:      '0.8125rem',
-    letterSpacing: '0.04em',
-    padding:       '0.125rem 0.125rem',
-    lineHeight:    1,
-    transition:    'color 0.2s',
-  },
-  langDivider: {
-    color:      'color-mix(in srgb, var(--muted) 40%, transparent)',
-    fontSize:   '0.6875rem',
-    userSelect: 'none',
-    lineHeight: 1,
-  },
-  iconBtn: {
-    display:         'flex',
-    alignItems:      'center',
-    justifyContent:  'center',
-    width:           ICON_SIZE,
-    height:          ICON_SIZE,
-    borderRadius:    '9999px',
-    background:      'color-mix(in srgb, var(--primary) 7%, transparent)',
-    color:           'var(--text-main)',
-    border:          'none',
-    cursor:          'pointer',
-    textDecoration:  'none',
-    transition:      'background 0.2s, color 0.2s',
-    flexShrink:      0,
-  },
-  hamburgerBtn: {
-    alignItems:     'center',
-    justifyContent: 'center',
-    width:          ICON_SIZE,
-    height:         ICON_SIZE,
-    borderRadius:   '9999px',
-    background:     'color-mix(in srgb, var(--primary) 7%, transparent)',
-    color:          'var(--text-main)',
-    border:         'none',
-    cursor:         'pointer',
-    flexShrink:     0,
-  },
-  badge: {
-    position:       'absolute',
-    top:            '-0.25rem',
-    right:          '-0.25rem',
-    display:        'flex',
-    alignItems:     'center',
-    justifyContent: 'center',
-    width:          '1rem',
-    height:         '1rem',
-    borderRadius:   '9999px',
-    background:     'var(--primary)',
-    color:          'white',
-    fontSize:       '0.5625rem',
-    fontWeight:     700,
-    fontFamily:     'var(--font-body)',
-  },
-  loginBtn: {
-    height:       '2.125rem',
-    padding:      '0 1.125rem',
-    borderRadius: '9999px',
-    background:   'var(--primary)',
-    color:        'white',
-    border:       'none',
-    fontFamily:   'var(--font-body)',
-    fontSize:     '0.875rem',
-    fontWeight:   700,
-    cursor:       'not-allowed',
-    opacity:      0.5,
-    whiteSpace:   'nowrap',
-  },
-  overlay: {
-    position:       'fixed',
-    inset:          0,
-    zIndex:         40,
-    background:     'rgba(33,17,20,0.4)',
-    backdropFilter: 'blur(4px)',
-  },
-  drawer: {
-    position:      'absolute',
-    top:           0,
-    right:         0,
-    width:         '16rem',
-    height:        '100%',
-    background:    'white',
-    display:       'flex',
-    flexDirection: 'column',
-    paddingTop:    '5rem',
-    boxShadow:     '-4px 0 24px rgba(0,0,0,0.1)',
-  },
-  mobileLink: {
-    padding:        '1rem 1.5rem',
-    fontSize:       '1rem',
-    fontWeight:     600,
-    color:          'var(--text-main)',
-    textDecoration: 'none',
-    borderBottom:   '1px solid var(--border)',
-    fontFamily:     'var(--font-body)',
-    transition:     'color 0.2s, background 0.2s',
-  },
-  mobileLinkActive: {
-    color:      'var(--primary)',
-    background: 'color-mix(in srgb, var(--primary) 4%, transparent)',
-  },
-  mobileLangRow: {
-    display:    'flex',
-    alignItems: 'center',
-    gap:        '0.5rem',
-    padding:    '1rem 1.5rem',
-    marginTop:  'auto',
-    borderTop:  '1px solid var(--border)',
-  },
-  mobileLangBtn: {
-    background: 'none',
-    border:     'none',
-    fontFamily: 'var(--font-body)',
-    fontSize:   '0.9375rem',
-    cursor:     'pointer',
-    padding:    0,
-    transition: 'color 0.2s',
-  },
-};

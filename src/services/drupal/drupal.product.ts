@@ -27,6 +27,10 @@ const FETCH_OPTIONS = {
   },
 } as const;
 
+/**
+ * Agrega los sparse fieldsets e includes comunes a cualquier consulta de flores.
+ * Se usa tanto en queries de detalle (single) como en listados.
+ */
 function buildBaseParams(p: DrupalJsonApiParams): void {
   p.addInclude(FLORES_INCLUDES)
    .addFields('commerce_product--flores', ['title', 'body', 'variations', 'field_categoria'])
@@ -39,6 +43,17 @@ function buildBaseParams(p: DrupalJsonApiParams): void {
    .addFields('file--file', ['filename', 'uri', 'filemime'])
    .addFields('taxonomy_term--colores', ['name', 'field_color_hex'])
    .addFields('taxonomy_term--categorias_de_flores', ['name']);
+}
+
+/**
+ * Extiende buildBaseParams agregando los filtros y límites comunes a todos
+ * los listados de flores (status publicado + paginación).
+ * Los filtros adicionales (categoría, color…) se añaden fuera de este helper.
+ */
+function buildListParams(p: DrupalJsonApiParams, limit: number): void {
+  p.addFilter('status', '1')
+   .addPageLimit(limit);
+  buildBaseParams(p);
 }
 
 // ── getProductById ────────────────────────────────────────────────────────────
@@ -135,11 +150,9 @@ async function fetchRelatedByFilter(
   limit = 4,
 ): Promise<FloresProduct[]> {
   const params = new DrupalJsonApiParams();
-  params
-    .addFilter('status', '1')
-    .addPageLimit(limit + 1) // +1 para poder excluir el propio producto
-    .addFilter(filterPath, filterValue);
-  buildBaseParams(params);
+  // buildListParams agrega status=1 y el límite; el filtro extra va después
+  buildListParams(params, limit + 1); // +1 para poder excluir el propio producto
+  params.addFilter(filterPath, filterValue);
 
   const path = `/jsonapi/commerce_product/flores?${params.getQueryString()}`;
 
@@ -163,10 +176,7 @@ async function fetchLatestProducts(
   limit = 4,
 ): Promise<FloresProduct[]> {
   const params = new DrupalJsonApiParams();
-  params
-    .addFilter('status', '1')
-    .addPageLimit(limit + 1);
-  buildBaseParams(params);
+  buildListParams(params, limit + 1);
 
   const path = `/jsonapi/commerce_product/flores?${params.getQueryString()}`;
 

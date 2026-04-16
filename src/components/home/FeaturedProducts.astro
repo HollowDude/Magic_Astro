@@ -6,7 +6,6 @@ import { getLangFromUrl } from '@/i18n/utils';
 import type { Lang } from '@/i18n/ui';
 
 const DRUPAL_BASE_URL = import.meta.env.DRUPAL_BASE_URL as string;
-
 const lang = (Astro.currentLocale ?? getLangFromUrl(Astro.url)) as Lang;
 const products = await getFloresProducts(lang);
 
@@ -29,18 +28,18 @@ const t = labels[lang];
 const prefix = lang === 'en' ? '/en' : '';
 ---
 
-<section class="fp-section">
-  <div class="fp-container">
+<section class="w-full py-16 pb-20 px-4 sm:px-6 lg:px-8 bg-background">
+  <div class="max-w-[80rem] mx-auto">
 
-    <div class="fp-heading">
-      <h2 class="fp-title">{t.title}</h2>
-      <span class="fp-line" aria-hidden="true"></span>
+    <div class="flex items-center gap-5 mb-11">
+      <h2 class="font-heading font-semibold text-[clamp(2rem,4vw,2.75rem)] text-headline tracking-tight whitespace-nowrap m-0 leading-[1.1]">{t.title}</h2>
+      <span class="flex-1 h-[2px] bg-primary rounded-full min-w-[2rem] mt-1" aria-hidden="true"></span>
     </div>
 
     {products.length === 0 ? (
-      <p class="fp-empty">{t.empty}</p>
+      <p class="text-center text-text-muted py-12 text-base">{t.empty}</p>
     ) : (
-      <div class="fp-grid">
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 lg:gap-6">
         {products.map((product) => {
           const defaultVariation = product.variations?.[0];
           const price     = defaultVariation?.price?.formatted ?? t.priceAlt;
@@ -50,40 +49,40 @@ const prefix = lang === 'en' ? '/en' : '';
           const href      = `${prefix}/${product.id}`;
 
           return (
-            <article class="fp-card">
+            <article class="bg-blush rounded-2xl overflow-hidden flex flex-col relative transition-all duration-250 ease-out cursor-pointer group hover:-translate-y-1 hover:shadow-[0_12px_36px_color-mix(in_srgb,var(--color-headline)_15%,transparent)]">
               {/* Overlay de enlace que cubre toda la tarjeta */}
-              <a href={href} class="fp-card-overlay" aria-label={product.title} tabindex="0"></a>
+              <a href={href} class="absolute inset-0 z-[1] rounded-2xl outline-offset-4 focus-visible:outline-[2.5px] focus-visible:outline-primary" aria-label={product.title} tabindex="0"></a>
 
-              <div class="fp-img-wrap">
+              <div class="relative w-full aspect-square pt-3 px-3">
                 {thumbnail ? (
                   <div
-                    class="fp-img"
+                    class="w-full h-full rounded-[0.625rem] bg-cover bg-center transition-transform duration-400 ease-out group-hover:scale-105"
                     style={`background-image: url('${thumbnail}')`}
                     role="img"
                     aria-label={product.title}
                   />
                 ) : (
-                  <div class="fp-img fp-img--placeholder" role="img" aria-label={product.title}>
-                    <span class="material-symbols-outlined placeholder-icon">local_florist</span>
+                  <div class="w-full h-full rounded-[0.625rem] bg-[color-mix(in_srgb,var(--color-primary)_8%,var(--color-blush))] flex items-center justify-center transition-transform duration-400 ease-out group-hover:scale-105" role="img" aria-label={product.title}>
+                    <span class="material-symbols-outlined text-5xl text-primary opacity-35">local_florist</span>
                   </div>
                 )}
-                {tipo && <span class="fp-badge">{tipo}</span>}
+                {tipo && <span class="absolute top-5 left-5 bg-primary text-white text-[0.6875rem] font-bold tracking-wider uppercase py-1 px-2.5 rounded-full shadow-md">{tipo}</span>}
               </div>
 
-              <div class="fp-body">
-                <div class="fp-meta">
-                  <h3 class="fp-name">{product.title}</h3>
+              <div class="p-3.5 px-4 pb-4 flex flex-col gap-2.5 flex-1">
+                <div class="flex flex-col gap-1">
+                  <h3 class="font-body text-base font-bold text-headline m-0 leading-snug">{product.title}</h3>
                   {color && (
-                    <span class="fp-color-tag">
-                      <span class="fp-color-dot" aria-hidden="true"></span>
+                    <span class="inline-flex items-center gap-1.5 text-xs font-medium text-text-muted">
+                      <span class="w-2 h-2 rounded-full bg-primary shrink-0" aria-hidden="true"></span>
                       {color}
                     </span>
                   )}
                 </div>
-                <div class="fp-footer">
-                  <span class="fp-price">{price}</span>
+                <div class="flex items-center justify-between mt-auto pt-1">
+                  <span class="font-body text-[1.0625rem] font-bold text-primary">{price}</span>
                   {/* z-index: 2 para estar sobre el overlay pero seguir siendo clicable */}
-                  <a href={href} class="fp-btn" tabindex="-1" aria-hidden="true">
+                  <a href={href} class="relative z-[2] font-body text-sm font-semibold text-white bg-muted border-none rounded-lg py-2 px-4.5 cursor-pointer no-underline inline-flex items-center transition-colors duration-200 tracking-wide group-hover:bg-primary" tabindex="-1" aria-hidden="true">
                     {t.buyBtn}
                   </a>
                 </div>
@@ -96,128 +95,3 @@ const prefix = lang === 'en' ? '/en' : '';
 
   </div>
 </section>
-
-<style>
-  .fp-section {
-    width: 100%;
-    padding: 4rem 1rem 5rem;
-    background: var(--bg);
-  }
-  @media (min-width: 640px)  { .fp-section { padding-inline: 1.5rem; } }
-  @media (min-width: 1024px) { .fp-section { padding-inline: 2rem; } }
-
-  .fp-container { max-width: 80rem; margin: 0 auto; }
-
-  .fp-heading { display: flex; align-items: center; gap: 1.25rem; margin-bottom: 2.75rem; }
-
-  .fp-title {
-    font-family: var(--font-heading);
-    font-weight: 600;
-    font-size: clamp(2rem, 4vw, 2.75rem);
-    color: var(--headline);
-    letter-spacing: -0.02em;
-    white-space: nowrap;
-    margin: 0;
-    line-height: 1.1;
-  }
-
-  .fp-line {
-    flex: 1; height: 2px;
-    background: var(--primary); border-radius: 9999px;
-    min-width: 2rem; margin-top: 0.25rem;
-  }
-
-  .fp-empty { text-align: center; color: var(--text-muted); padding: 3rem 0; font-size: 1rem; }
-
-  .fp-grid { display: grid; grid-template-columns: 1fr; gap: 1.25rem; }
-  @media (min-width: 540px)  { .fp-grid { grid-template-columns: repeat(2, 1fr); } }
-  @media (min-width: 1024px) { .fp-grid { grid-template-columns: repeat(4, 1fr); gap: 1.5rem; } }
-
-  /* ── Tarjeta ── */
-  .fp-card {
-    background: var(--blush);
-    border-radius: 1rem;
-    overflow: hidden;
-    display: flex;
-    flex-direction: column;
-    position: relative;         /* necesario para el overlay */
-    transition: box-shadow 0.25s ease, transform 0.25s ease;
-    cursor: pointer;
-  }
-  .fp-card:hover {
-    box-shadow: 0 12px 36px color-mix(in srgb, var(--headline) 15%, transparent);
-    transform: translateY(-4px);
-  }
-  .fp-card:hover .fp-btn { background: var(--primary); color: white; }
-  .fp-card:hover .fp-img { transform: scale(1.08); }
-
-  /* Overlay de enlace — cubre toda la tarjeta */
-  .fp-card-overlay {
-    position: absolute;
-    inset: 0;
-    z-index: 1;
-    border-radius: 1rem;
-    /* focus ring visible para accesibilidad */
-    outline-offset: 3px;
-  }
-  .fp-card-overlay:focus-visible {
-    outline: 2.5px solid var(--primary);
-  }
-
-  /* Imagen */
-  .fp-img-wrap { position: relative; width: 100%; aspect-ratio: 1; padding: 0.75rem 0.75rem 0; }
-
-  .fp-img {
-    width: 100%; height: 100%; border-radius: 0.625rem;
-    background-size: cover; background-position: center;
-    transition: transform 0.4s ease;
-  }
-
-  .fp-img--placeholder {
-    background: color-mix(in srgb, var(--primary) 8%, var(--blush));
-    display: flex; align-items: center; justify-content: center;
-  }
-  .placeholder-icon { font-size: 3rem; color: var(--primary); opacity: 0.35; }
-
-  .fp-badge {
-    position: absolute; top: 1.25rem; left: 1.25rem;
-    background: var(--primary); color: white;
-    font-size: 0.6875rem; font-weight: 700;
-    letter-spacing: 0.06em; text-transform: uppercase;
-    padding: 0.2rem 0.6rem; border-radius: 9999px;
-    box-shadow: 0 2px 6px rgba(0 0 0 / 0.15);
-  }
-
-  .fp-body { padding: 0.875rem 1rem 1rem; display: flex; flex-direction: column; gap: 0.625rem; flex: 1; }
-
-  .fp-meta { display: flex; flex-direction: column; gap: 0.3rem; }
-
-  .fp-name { font-family: var(--font-body); font-size: 1rem; font-weight: 700; color: var(--headline); margin: 0; line-height: 1.3; }
-
-  .fp-color-tag { display: inline-flex; align-items: center; gap: 0.35rem; font-size: 0.75rem; font-weight: 500; color: var(--text-muted); }
-  .fp-color-dot { width: 0.5rem; height: 0.5rem; border-radius: 9999px; background: var(--primary); flex-shrink: 0; }
-
-  .fp-footer { display: flex; align-items: center; justify-content: space-between; margin-top: auto; padding-top: 0.25rem; }
-
-  .fp-price { font-family: var(--font-body); font-size: 1.0625rem; font-weight: 700; color: var(--primary); }
-
-  /* Botón: z-index: 2 para estar sobre el overlay */
-  .fp-btn {
-    position: relative;
-    z-index: 2;
-    font-family: var(--font-body);
-    font-size: 0.875rem;
-    font-weight: 600;
-    color: #fff;
-    background: var(--muted);
-    border: none;
-    border-radius: 0.5rem;
-    padding: 0.5rem 1.125rem;
-    cursor: pointer;
-    text-decoration: none;
-    display: inline-flex;
-    align-items: center;
-    transition: background 0.2s ease, color 0.2s ease;
-    letter-spacing: 0.01em;
-  }
-</style>

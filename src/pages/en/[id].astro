@@ -1,7 +1,5 @@
 ---
 // src/pages/en/shop/[id].astro
-// Página de detalle de producto — English (ruta: /en/shop/[uuid])
-
 import HomeLayout from '@/layouts/HomeLayout.astro';
 import HomeHeader from '@/components/home/HomeHeader.astro';
 import Breadcrumb from '@/components/ui/Breadcrumb.astro';
@@ -10,218 +8,103 @@ import ProductCard, { type ProductCardData } from '@/components/shop/ProductCard
 import { getProductById, getRelatedProducts } from '@/services/drupal/drupal.product';
 import { getProductThumbnail, getVariationGallery } from '@/types/commerce';
 import { useTranslations } from '@/i18n/utils';
+import Footer from '@/components/ui/Footer.astro';
 
 const lang = 'en' as const;
-const t    = useTranslations(lang);
+const t = useTranslations(lang);
 const DRUPAL_BASE_URL = import.meta.env.DRUPAL_BASE_URL as string;
 
-// ── Parámetros de ruta ─────────────────────────────────────────────────────
 const { id } = Astro.params;
 if (!id) return Astro.redirect('/en/');
 
-// ── Fetch: producto + relacionados ─────────────────────────────────────────
 const product = await getProductById(id, lang);
 if (!product) return Astro.redirect('/en/');
 
 const variation = product.variations?.[0];
-const allImages  = variation ? getVariationGallery(variation, DRUPAL_BASE_URL) : [];
+const allImages = variation ? getVariationGallery(variation, DRUPAL_BASE_URL) : [];
 
 const productData: ProductDetailData = {
-  id:          product.id,
-  title:       product.title,
-  price:       variation?.price?.formatted ?? '',
-  description: product.body?.processed    ?? '',
-  images:      allImages,
-  badge:       variation?.field_tipo
-                 ? t(`shop.filters.type.${variation.field_tipo}` as Parameters<typeof t>[0])
-                 : null,
-  tipo:        variation?.field_tipo                            ?? null,
-  colorName:   variation?.field_color_de_la_flor?.name         ?? null,
-  colorHex:    variation?.field_color_de_la_flor?.field_color_hex ?? null,
-  category:    (product as any).field_categoria?.name          ?? null,
+  id: product.id,
+  title: product.title,
+  price: variation?.price?.formatted ?? '',
+  description: product.body?.processed ?? '',
+  images: allImages,
+  badge: variation?.field_tipo
+    ? t(`shop.filters.type.${variation.field_tipo}` as Parameters<typeof t>[0])
+    : null,
+  tipo: variation?.field_tipo ?? null,
+  colorName: variation?.field_color_de_la_flor?.name ?? null,
+  colorHex: variation?.field_color_de_la_flor?.field_color_hex ?? null,
+  category: (product as any).field_categoria?.name ?? null,
 };
 
 const rawRelated = await getRelatedProducts(product, lang, 4);
 const relatedProducts: ProductCardData[] = rawRelated.map(p => {
   const v = p.variations?.[0];
   return {
-    id:          p.id,
-    title:       p.title,
-    price:       v?.price?.formatted              ?? '',
-    priceNumber: parseFloat(v?.price?.number      ?? '0'),
-    thumbnail:   getProductThumbnail(p, DRUPAL_BASE_URL),
-    badge:       null,
-    tipo:        v?.field_tipo                    ?? null,
-    colorName:   v?.field_color_de_la_flor?.name  ?? null,
-    colorHex:    v?.field_color_de_la_flor?.field_color_hex ?? null,
-    category:    (p as any).field_categoria?.name ?? null,
+    id: p.id,
+    title: p.title,
+    price: v?.price?.formatted ?? '',
+    priceNumber: parseFloat(v?.price?.number ?? '0'),
+    thumbnail: getProductThumbnail(p, DRUPAL_BASE_URL),
+    badge: null,
+    tipo: v?.field_tipo ?? null,
+    colorName: v?.field_color_de_la_flor?.name ?? null,
+    colorHex: v?.field_color_de_la_flor?.field_color_hex ?? null,
+    category: (p as any).field_categoria?.name ?? null,
   };
 });
 ---
 
 <HomeLayout title={product.title}>
-  <div class="site-wrapper">
+  <div class="flex flex-col min-h-screen">
     <HomeHeader />
 
-    <main class="pd-main">
-
-      <!-- Breadcrumb -->
+    <main class="flex-1 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12 lg:py-20">
+      
       <Breadcrumb crumbs={[
-        { label: t('nav.home'),   href: '/en' },
+        { label: t('nav.home'), href: '/en' },
         { label: t('shop.title'), href: '/en/shop' },
         { label: product.title },
       ]} />
 
-      <!-- Sección de detalle (island React) -->
-      <div class="pd-section">
+      <section class="mt-8">
         <ProductDetail product={productData} lang={lang} client:load />
-      </div>
+      </section>
 
-      <!-- Divisor -->
-      <div class="pd-divider" role="separator"></div>
+      <div class="h-px bg-border my-16 lg:my-24" role="separator"></div>
 
-      <!-- Productos relacionados -->
       {relatedProducts.length > 0 && (
-        <section class="pd-related">
-          <div class="pd-related-header">
-            <h2 class="pd-related-title">{t('product.related.title')}</h2>
-            <a href="/en/" class="pd-related-link">
+        <section>
+          <div class="flex items-center justify-between mb-8">
+            <h2 class="font-heading text-2xl sm:text-3xl lg:text-4xl font-semibold text-headline tracking-tight">
+              {t('product.related.title')}
+            </h2>
+            <a 
+              href="/en/shop" 
+              class="group flex items-center gap-1 font-body text-sm font-bold text-primary no-underline hover:underline"
+            >
               {t('product.related.see_all')}
-              <span class="material-symbols-outlined" style="font-size: 1rem; line-height: 1;">
+              <span class="material-symbols-outlined !text-base transition-transform group-hover:translate-x-1">
                 arrow_forward
               </span>
             </a>
           </div>
 
-          <div class="pd-related-grid">
+          <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5 lg:gap-6">
             {relatedProducts.map(p => (
               <ProductCard
                 product={p}
                 lang={lang}
-                href={`/en/${p.id}`}
+                href={`/en/shop/${p.id}`}
                 client:visible
               />
             ))}
           </div>
         </section>
       )}
-
     </main>
 
-    <!-- Footer -->
-    <footer class="site-footer">
-      <div class="footer-inner">
-        <div class="footer-brand">
-          <span class="material-symbols-outlined footer-icon">local_florist</span>
-          <span class="footer-name">Maggy Flowers</span>
-        </div>
-        <p class="footer-copy">
-          © {new Date().getFullYear()} Maggy Flowers. All rights reserved.
-        </p>
-        <nav class="footer-links">
-          <a href="/en/shop">Shop</a>
-          <a href="/en/courses">Courses</a>
-          <a href="/en/about">About</a>
-          <a href="/en/contact">Contact</a>
-        </nav>
-      </div>
-    </footer>
+    <Footer lang="en" />
   </div>
 </HomeLayout>
-
-<style>
-  .site-wrapper { display: flex; flex-direction: column; min-height: 100vh; }
-
-  .pd-main {
-    flex: 1;
-    width: 100%;
-    max-width: 80rem;
-    margin: 0 auto;
-    padding: 2rem 1rem 5rem;
-  }
-  @media (min-width: 640px)  { .pd-main { padding-inline: 1.5rem; } }
-  @media (min-width: 1024px) { .pd-main { padding-inline: 2rem; } }
-
-  .pd-section { margin-top: 2rem; }
-
-  .pd-divider {
-    height: 1px;
-    background: var(--border);
-    margin-block: 4rem;
-  }
-
-  .pd-related-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    margin-bottom: 2rem;
-  }
-
-  .pd-related-title {
-    font-family: var(--font-heading);
-    font-size: clamp(1.5rem, 3vw, 2rem);
-    font-weight: 600;
-    color: var(--headline);
-    letter-spacing: -0.02em;
-    margin: 0;
-  }
-
-  .pd-related-link {
-    display: flex;
-    align-items: center;
-    gap: 0.25rem;
-    font-family: var(--font-body);
-    font-size: 0.875rem;
-    font-weight: 700;
-    color: var(--primary);
-    text-decoration: none;
-    transition: gap 0.2s;
-  }
-  .pd-related-link:hover { gap: 0.5rem; text-decoration: underline; }
-
-  .pd-related-grid {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: 1.25rem;
-  }
-  @media (min-width: 768px)  { .pd-related-grid { grid-template-columns: repeat(3, 1fr); } }
-  @media (min-width: 1024px) { .pd-related-grid { grid-template-columns: repeat(4, 1fr); gap: 1.5rem; } }
-
-  .site-footer {
-    background: #211114;
-    color: rgba(255 255 255 / 0.7);
-    padding: 2.5rem 1rem;
-    margin-top: auto;
-  }
-  .footer-inner {
-    max-width: 80rem;
-    margin: 0 auto;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 1.25rem;
-    text-align: center;
-  }
-  @media (min-width: 768px) {
-    .footer-inner { flex-direction: row; justify-content: space-between; text-align: left; }
-  }
-  .footer-brand {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    color: white;
-    font-weight: 700;
-    font-size: 1.125rem;
-  }
-  .footer-icon  { color: #eb4763; font-size: 1.5rem; }
-  .footer-copy  { font-size: 0.8125rem; color: rgba(255 255 255 / 0.5); }
-  .footer-links { display: flex; gap: 1.5rem; }
-  .footer-links a {
-    font-size: 0.875rem;
-    font-weight: 500;
-    color: rgba(255 255 255 / 0.6);
-    text-decoration: none;
-    transition: color 0.2s;
-  }
-  .footer-links a:hover { color: #eb4763; }
-</style>

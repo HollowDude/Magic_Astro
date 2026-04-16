@@ -55,38 +55,6 @@ export default function InputField({
           </button>
         )}
       </div>
-
-      <style>{`
-        .field-wrapper { display: flex; flex-direction: column; gap: 0.5rem; }
-        .field-label { font-size: 0.875rem; font-weight: 600; color: var(--text-main); }
-        .field-inner { position: relative; }
-        .field-icon {
-          position: absolute; left: 1rem; top: 50%;
-          transform: translateY(-50%);
-          color: var(--text-muted); font-size: 1.25rem; pointer-events: none;
-        }
-        .field-input {
-          width: 100%; height: 3rem; border-radius: 0.5rem;
-          border: 1px solid var(--border); background: var(--bg-light);
-          padding-left: 2.75rem; padding-right: 2.75rem;
-          font-size: 0.875rem; color: var(--text-main); font-family: inherit;
-          outline: none; transition: border-color 0.2s, box-shadow 0.2s;
-        }
-        .field-input::placeholder { color: var(--text-muted); }
-        .field-input:focus {
-          border-color: var(--primary);
-          box-shadow: 0 0 0 3px color-mix(in srgb, var(--primary) 15%, transparent);
-        }
-        .toggle-pass {
-          position: absolute; right: 0.75rem; top: 50%;
-          transform: translateY(-50%);
-          background: none; border: none; cursor: pointer;
-          color: var(--text-muted); padding: 0.25rem;
-          display: flex; align-items: center; transition: color 0.2s;
-        }
-        .toggle-pass:hover { color: var(--text-main); }
-        .toggle-pass .material-symbols-outlined { font-size: 1.25rem; }
-      `}</style>
     </div>
   );
 }

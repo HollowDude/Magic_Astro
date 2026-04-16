@@ -8,8 +8,6 @@ function t(lang: Lang, key: UiKey): string {
     ?? key;
 }
 
-// ── Tipos exportados ──────────────────────────────────────────────────────────
-
 export interface ProductCardData {
   id: string;
   title: string;
@@ -26,245 +24,90 @@ export interface ProductCardData {
 interface Props {
   product: ProductCardData;
   lang?: Lang;
-  /** URL de la página de detalle. Si se provee, la tarjeta entera es clicable. */
   href?: string;
 }
 
 export default function ProductCard({ product, lang = 'es', href }: Props) {
-  const dotFill    = product.colorHex || (product.colorName ? 'var(--muted)' : 'transparent');
-  const dotBorder  = product.colorHex || (product.colorName ? 'var(--muted)' : 'var(--border)');
-  const dotTitle   = product.colorName ?? undefined;
+  const dotFill = product.colorHex || (product.colorName ? 'var(--muted)' : 'transparent');
+  const dotBorder = product.colorHex || (product.colorName ? 'var(--muted)' : 'var(--border)');
 
   return (
-    <article className="pc-card">
-
-      {/* Overlay de enlace — cubre toda la tarjeta cuando se provee href */}
+    <article className="group relative flex flex-col bg-white rounded-xl overflow-hidden border border-border transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_12_36px_color-mix(in_srgb,var(--headline)_12%,transparent)]">
+      
+      {/* Overlay de enlace */}
       {href && (
         <a
           href={href}
           aria-label={product.title}
-          className="pc-card-overlay"
+          className="absolute inset-0 z-10 rounded-xl"
         />
       )}
 
-      {/* Imagen */}
-      <div className="pc-img-wrap">
+      {/* Contenedor de Imagen */}
+      <div className="relative aspect-[4/5] overflow-hidden bg-blush shrink-0">
         {product.thumbnail ? (
           <img
             src={product.thumbnail}
             alt={product.title}
-            className="pc-img"
+            className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
             loading="lazy"
           />
         ) : (
-          <div className="pc-img pc-img--ph">
-            <span className="material-symbols-outlined pc-ph-icon">local_florist</span>
+          <div className="w-full h-full flex items-center justify-center bg-[color-mix(in_srgb,var(--primary)_8%,var(--blush))]">
+            <span className="material-symbols-outlined text-[3rem] text-primary opacity-35">
+              local_florist
+            </span>
           </div>
         )}
 
         {product.badge && (
-          <span className="pc-badge">{product.badge}</span>
+          <span className="absolute top-3 left-3 px-2.5 py-1 font-body text-[0.6875rem] font-bold uppercase tracking-widest bg-primary text-white rounded-full shadow-md">
+            {product.badge}
+          </span>
         )}
 
+        {/* Círculo de color */}
         <div
-          className="pc-color-dot"
-          title={dotTitle}
-          aria-label={product.colorName ?? undefined}
+          className="absolute bottom-4 left-4 w-4.5 h-4.5 rounded-full shadow-sm transition-transform duration-200 group-hover:scale-115"
+          title={product.colorName ?? undefined}
           style={{
-            background:  dotFill,
-            border:      `2px solid ${dotBorder}`,
-            cursor:      product.colorName ? 'help' : 'default',
+            background: dotFill,
+            border: `2px solid ${dotBorder}`,
+            cursor: product.colorName ? 'help' : 'default',
           }}
         />
       </div>
 
       {/* Cuerpo */}
-      <div className="pc-body">
-        <div className="pc-meta">
-          <div style={{ minWidth: 0 }}>
+      <div className="p-4 flex flex-col gap-3 flex-1">
+        <div className="flex justify-between items-start gap-2.5">
+          <div className="min-w-0">
             {product.category && (
-              <p className="pc-category">{product.category}</p>
+              <p className="font-body text-[0.6875rem] font-bold uppercase tracking-widest text-primary mb-1 truncate">
+                {product.category}
+              </p>
             )}
-            <h3 className="pc-title">{product.title}</h3>
+            <h3 className="font-heading text-base font-semibold text-headline leading-tight truncate transition-colors duration-200 group-hover:text-primary">
+              {product.title}
+            </h3>
           </div>
-          <span className="pc-price">
+          <span className="font-body text-base font-bold text-headline whitespace-nowrap shrink-0">
             {product.price || t(lang, 'shop.price_on_request')}
           </span>
         </div>
 
         <button
-          className="pc-cart"
+          className="relative z-20 w-full h-10.5 bg-muted text-white rounded-lg font-body text-sm font-bold flex items-center justify-center gap-2 opacity-88 transition-all duration-200 cursor-not-allowed group-hover:bg-primary group-hover:opacity-100"
           type="button"
           disabled
           title={lang === 'es' ? 'Próximamente' : 'Coming soon'}
         >
-          <span className="material-symbols-outlined" style={{ fontSize: '1.125rem', lineHeight: 1 }}>
+          <span className="material-symbols-outlined !text-[1.125rem] leading-none">
             shopping_bag
           </span>
           {t(lang, 'shop.add_to_cart')}
         </button>
       </div>
-
-      <style>{`
-        .pc-card {
-          display: flex;
-          flex-direction: column;
-          background: white;
-          border-radius: 0.75rem;
-          overflow: hidden;
-          border: 1px solid var(--border);
-          position: relative; /* necesario para el overlay */
-          transition: box-shadow 0.3s ease, transform 0.25s ease;
-        }
-        .pc-card:hover {
-          box-shadow: 0 12px 36px color-mix(in srgb, var(--headline) 12%, transparent);
-          transform: translateY(-3px);
-        }
-
-        /* Overlay clicable — cubre la tarjeta completa */
-        .pc-card-overlay {
-          position: absolute;
-          inset: 0;
-          z-index: 1;
-          border-radius: 0.75rem;
-        }
-
-        /* Imagen */
-        .pc-img-wrap {
-          position: relative;
-          aspect-ratio: 4/5;
-          overflow: hidden;
-          background: var(--blush);
-          flex-shrink: 0;
-        }
-        .pc-img {
-          width: 100%;
-          height: 100%;
-          object-fit: cover;
-          transition: transform 0.5s ease;
-        }
-        .pc-card:hover .pc-img { transform: scale(1.05); }
-
-        .pc-img--ph {
-          width: 100%;
-          height: 100%;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          background: color-mix(in srgb, var(--primary) 8%, var(--blush));
-        }
-        .pc-ph-icon { font-size: 3rem !important; color: var(--primary); opacity: 0.35; }
-
-        /* Badge tipo */
-        .pc-badge {
-          position: absolute;
-          top: 0.75rem;
-          left: 0.75rem;
-          padding: 0.2rem 0.625rem;
-          font-family: var(--font-body);
-          font-size: 0.6875rem;
-          font-weight: 700;
-          text-transform: uppercase;
-          letter-spacing: 0.06em;
-          background: var(--primary);
-          color: white;
-          border-radius: 9999px;
-          box-shadow: 0 2px 6px rgba(0,0,0,0.15);
-        }
-
-        /* Círculo de color */
-        .pc-color-dot {
-          position: absolute;
-          bottom: 1rem;
-          left: 1rem;
-          width: 1.125rem;
-          height: 1.125rem;
-          border-radius: 9999px;
-          box-shadow: 0 1px 4px rgba(0,0,0,0.18);
-          transition: transform 0.2s ease;
-        }
-        .pc-card:hover .pc-color-dot {
-          transform: scale(1.15);
-        }
-
-        /* Cuerpo */
-        .pc-body {
-          padding: 1rem;
-          display: flex;
-          flex-direction: column;
-          gap: 0.75rem;
-          flex: 1;
-        }
-        .pc-meta {
-          display: flex;
-          justify-content: space-between;
-          align-items: flex-start;
-          gap: 0.625rem;
-        }
-
-        /* Categoría */
-        .pc-category {
-          font-family: var(--font-body);
-          font-size: 0.6875rem;
-          font-weight: 700;
-          text-transform: uppercase;
-          letter-spacing: 0.06em;
-          color: var(--primary);
-          margin: 0 0 0.2rem;
-          overflow: hidden;
-          text-overflow: ellipsis;
-          white-space: nowrap;
-        }
-
-        .pc-title {
-          font-family: var(--font-heading);
-          font-size: 1rem;
-          font-weight: 600;
-          color: var(--headline);
-          margin: 0;
-          line-height: 1.3;
-          transition: color 0.2s;
-          overflow: hidden;
-          text-overflow: ellipsis;
-          white-space: nowrap;
-        }
-        .pc-card:hover .pc-title { color: var(--primary); }
-
-        .pc-price {
-          font-family: var(--font-body);
-          font-size: 1rem;
-          font-weight: 700;
-          color: var(--headline);
-          white-space: nowrap;
-          flex-shrink: 0;
-        }
-
-        /* Botón carrito — z-index: 2 para estar sobre el overlay */
-        .pc-cart {
-          position: relative;
-          z-index: 2;
-          width: 100%;
-          height: 2.625rem;
-          background: var(--muted);
-          color: white;
-          border: none;
-          border-radius: 0.5rem;
-          font-family: var(--font-body);
-          font-size: 0.875rem;
-          font-weight: 700;
-          cursor: not-allowed;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          gap: 0.5rem;
-          transition: background 0.2s;
-          opacity: 0.88;
-        }
-        .pc-card:hover .pc-cart {
-          background: var(--primary);
-          opacity: 1;
-        }
-      `}</style>
     </article>
   );
 }

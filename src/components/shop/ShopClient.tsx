@@ -1,6 +1,5 @@
 // src/components/shop/ShopClient.tsx
 import { useState, useMemo } from 'react';
-import type { CSSProperties } from 'react';
 import ProductCard, { type ProductCardData } from './ProductCard';
 import { ui, defaultLang } from '@/i18n/ui';
 import type { Lang, UiKey } from '@/i18n/ui';
@@ -10,8 +9,6 @@ function t(lang: Lang, key: UiKey): string {
     ?? (ui[defaultLang] as Record<string, string>)[key]
     ?? key;
 }
-
-// ── Tipos exportados ──────────────────────────────────────────────────────────
 
 export interface ShopCategory {
   id: string;
@@ -26,19 +23,14 @@ interface Props {
   initialCat?: string;
 }
 
-// ── Constantes ────────────────────────────────────────────────────────────────
-
 type SortKey = 'featured' | 'price_asc' | 'price_desc' | 'newest';
-
 const ITEMS_PER_PAGE = 9;
-
-// ── Helper ────────────────────────────────────────────────────────────────────
 
 function toSlug(name: string): string {
   return name.toLowerCase().replace(/\s+/g, '-');
 }
 
-// ── Sidebar ───────────────────────────────────────────────────────────────────
+// ── Componente Sidebar (Reutilizable) ─────────────────────────────────────────
 
 interface SidebarProps {
   lang: Lang;
@@ -59,68 +51,63 @@ interface SidebarProps {
 }
 
 function SidebarContent({
-  lang, categories,
-  selectedCat, selectedPrice, selectedColors, selectedTipos,
-  availableColors, availableTipos, priceRanges,
-  hasFilters,
+  lang, categories, selectedCat, selectedPrice, selectedColors, selectedTipos,
+  availableColors, availableTipos, priceRanges, hasFilters,
   onCatChange, onPriceChange, onColorToggle, onTipoToggle, onClear,
 }: SidebarProps) {
-  const inputStyle: CSSProperties = {
-    accentColor: 'var(--primary)' as string,
-    width: '1rem',
-    height: '1rem',
-    cursor: 'pointer',
-    flexShrink: 0,
-  };
+  
+  const checkboxClass = "w-4 h-4 accent-primary cursor-pointer shrink-0 rounded-[0.25rem]";
+  const radioClass = "w-4 h-4 accent-primary cursor-pointer shrink-0";
+  const labelClass = "flex items-center gap-2.5 cursor-pointer group";
+  const textClass = "font-body text-sm text-body-color group-hover:text-primary transition-colors";
+  const titleClass = "font-body text-[13px] font-bold text-headline pb-2.5 border-b border-border uppercase tracking-widest mb-3";
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '1.75rem' }}>
-
+    <div className="flex flex-col gap-7">
       {/* Categorías */}
       {categories.length > 0 && (
-        <div>
-          <h3 style={s.filterTitle}>{t(lang, 'shop.filters.categories')}</h3>
-          <div style={s.filterList}>
+        <section>
+          <h3 className={titleClass}>{t(lang, 'shop.filters.categories')}</h3>
+          <div className="flex flex-col gap-2">
             {categories.map(cat => (
-              <label key={cat.id} style={s.filterLabel}>
+              <label key={cat.id} className={labelClass}>
                 <input
                   type="radio"
                   name="shop-cat"
                   checked={selectedCat === cat.slug}
                   onChange={() => onCatChange(cat.slug)}
-                  style={inputStyle}
+                  className={radioClass}
                 />
-                <span style={s.filterText}>{cat.name}</span>
+                <span className={textClass}>{cat.name}</span>
               </label>
             ))}
           </div>
-        </div>
-      )}
+        </section> )}
 
       {/* Precio */}
-      <div>
-        <h3 style={s.filterTitle}>{t(lang, 'shop.filters.price')}</h3>
-        <div style={s.filterList}>
+      <section>
+        <h3 className={titleClass}>{t(lang, 'shop.filters.price')}</h3>
+        <div className="flex flex-col gap-2">
           {priceRanges.map(range => (
-            <label key={range.key} style={s.filterLabel}>
+            <label key={range.key} className={labelClass}>
               <input
                 type="radio"
                 name="shop-price"
                 checked={selectedPrice === range.key}
                 onChange={() => onPriceChange(range.key)}
-                style={inputStyle}
+                className={radioClass}
               />
-              <span style={s.filterText}>{range.label}</span>
+              <span className={textClass}>{range.label}</span>
             </label>
           ))}
         </div>
-      </div>
+      </section>
 
       {/* Colores */}
       {availableColors.length > 0 && (
-        <div>
-          <h3 style={s.filterTitle}>{t(lang, 'shop.filters.colors')}</h3>
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem', marginTop: '0.75rem' }}>
+        <section>
+          <h3 className={titleClass}>{t(lang, 'shop.filters.colors')}</h3>
+          <div className="flex flex-wrap gap-2 mt-3">
             {availableColors.map(({ name, hex }) => {
               const active = selectedColors.has(name);
               return (
@@ -128,59 +115,52 @@ function SidebarContent({
                   key={name}
                   type="button"
                   title={name}
-                  aria-label={name}
-                  aria-pressed={active}
                   onClick={() => onColorToggle(name)}
-                  style={{
-                    width: '1.5rem',
-                    height: '1.5rem',
-                    borderRadius: '9999px',
-                    background: hex || 'var(--muted)',
-                    border: `2px solid ${active ? 'var(--primary)' : 'rgba(0,0,0,0.1)'}`,
-                    cursor: 'pointer',
-                    boxShadow: active
-                      ? '0 0 0 2px white, 0 0 0 4px var(--primary)'
-                      : '0 1px 3px rgba(0,0,0,0.1)',
-                    transform: active ? 'scale(1.15)' : 'scale(1)',
-                    transition: 'transform 0.15s, box-shadow 0.15s, border-color 0.15s',
-                  }}
+                  className={`w-6 h-6 rounded-full border-2 transition-all duration-150 cursor-pointer ${
+                    active 
+                      ? 'border-primary scale-115 shadow-[0_0_0_2px_white,0_0_0_4px_var(--primary)]' 
+                      : 'border-black/10 shadow-sm'
+                  }`}
+                  style={{ background: hex || 'var(--muted)' }}
                 />
               );
             })}
           </div>
-        </div>
+        </section>
       )}
 
       {/* Tipo */}
       {availableTipos.length > 0 && (
-        <div>
-          <h3 style={s.filterTitle}>{t(lang, 'shop.filters.type')}</h3>
-          <div style={s.filterList}>
+        <section>
+          <h3 className={titleClass}>{t(lang, 'shop.filters.type')}</h3>
+          <div className="flex flex-col gap-2">
             {availableTipos.map(tipo => {
               const tipoKey = `shop.filters.type.${tipo}` as UiKey;
               const label = (ui[lang] as Record<string, string>)[tipoKey] ?? tipo;
               return (
-                <label key={tipo} style={s.filterLabel}>
+                <label key={tipo} className={labelClass}>
                   <input
                     type="checkbox"
                     checked={selectedTipos.has(tipo)}
                     onChange={() => onTipoToggle(tipo)}
-                    style={{ ...inputStyle, borderRadius: '0.25rem' }}
+                    className={checkboxClass}
                   />
-                  <span style={s.filterText}>{label}</span>
+                  <span className={textClass}>{label}</span>
                 </label>
               );
             })}
           </div>
-        </div>
+        </section>
       )}
 
-      {/* Limpiar filtros */}
+      {/* Limpiar */}
       {hasFilters && (
-        <button onClick={onClear} type="button" style={s.clearBtn}>
-          <span className="material-symbols-outlined" style={{ fontSize: '1rem', lineHeight: 1 }}>
-            filter_list_off
-          </span>
+        <button 
+          onClick={onClear} 
+          type="button" 
+          className="flex items-center justify-center gap-1.5 w-full p-2 bg-transparent border border-border rounded-lg font-body text-[13px] font-semibold text-muted hover:border-primary hover:text-primary transition-colors cursor-pointer"
+        >
+          <span className="material-symbols-outlined !text-base">filter_list_off</span>
           {t(lang, 'shop.filters.clear')}
         </button>
       )}
@@ -188,87 +168,10 @@ function SidebarContent({
   );
 }
 
-// ── Paginación ────────────────────────────────────────────────────────────────
-
-interface PaginationProps {
-  page: number;
-  totalPages: number;
-  lang: Lang;
-  onChange: (page: number) => void;
-}
-
-function Pagination({ page, totalPages, lang, onChange }: PaginationProps) {
-  if (totalPages <= 1) return null;
-
-  const pages: (number | '...')[] = [];
-  if (totalPages <= 7) {
-    for (let i = 1; i <= totalPages; i++) pages.push(i);
-  } else {
-    pages.push(1);
-    if (page > 3) pages.push('...');
-    const from = Math.max(2, page - 1);
-    const to   = Math.min(totalPages - 1, page + 1);
-    for (let i = from; i <= to; i++) pages.push(i);
-    if (page < totalPages - 2) pages.push('...');
-    pages.push(totalPages);
-  }
-
-  return (
-    <div style={{ display: 'flex', justifyContent: 'center', gap: '0.375rem', marginTop: '3rem' }}>
-      <button
-        onClick={() => onChange(Math.max(1, page - 1))}
-        disabled={page === 1}
-        style={{ ...s.pageBtn, opacity: page === 1 ? 0.4 : 1 }}
-        aria-label={t(lang, 'shop.pagination.prev')}
-      >
-        <span className="material-symbols-outlined" style={{ fontSize: '1.25rem', lineHeight: 1 }}>
-          chevron_left
-        </span>
-      </button>
-
-      {pages.map((p, i) =>
-        p === '...' ? (
-          <span
-            key={`ellipsis-${i}`}
-            style={{ ...s.pageBtn, border: 'none', background: 'none', color: 'var(--muted)', cursor: 'default' }}
-          >
-            …
-          </span>
-        ) : (
-          <button
-            key={p}
-            onClick={() => onChange(p)}
-            style={{
-              ...s.pageBtn,
-              background: page === p ? 'var(--primary)' : 'white',
-              color:      page === p ? 'white' : 'var(--headline)',
-              fontWeight: page === p ? 700 : 500,
-              borderColor: page === p ? 'var(--primary)' : 'var(--border)',
-            }}
-          >
-            {p}
-          </button>
-        )
-      )}
-
-      <button
-        onClick={() => onChange(Math.min(totalPages, page + 1))}
-        disabled={page === totalPages}
-        style={{ ...s.pageBtn, opacity: page === totalPages ? 0.4 : 1 }}
-        aria-label={t(lang, 'shop.pagination.next')}
-      >
-        <span className="material-symbols-outlined" style={{ fontSize: '1.25rem', lineHeight: 1 }}>
-          chevron_right
-        </span>
-      </button>
-    </div>
-  );
-}
-
 // ── ShopClient ────────────────────────────────────────────────────────────────
 
 export default function ShopClient({ products, categories, lang, initialCat = '' }: Props) {
-
+  // ... (useMemo logic and handlers remain identical to your original code)
   const priceRanges = useMemo(() => [
     { key: 'under50',  label: t(lang, 'shop.filters.price.under50'),  min: 0,   max: 50        },
     { key: '50_100',   label: t(lang, 'shop.filters.price.50_100'),   min: 50,  max: 100       },
@@ -337,34 +240,18 @@ export default function ShopClient({ products, categories, lang, initialCat = ''
 
   const filtered = useMemo(() => {
     let result = [...products];
-
-    if (selectedCat) {
-      result = result.filter(p => {
-        if (!p.category) return false;
-        return toSlug(p.category) === selectedCat;
-      });
-    }
-
+    if (selectedCat) result = result.filter(p => p.category && toSlug(p.category) === selectedCat);
     if (selectedPrice) {
       const range = priceRanges.find(r => r.key === selectedPrice);
-      if (range) {
-        result = result.filter(p => p.priceNumber >= range.min && p.priceNumber < range.max);
-      }
+      if (range) result = result.filter(p => p.priceNumber >= range.min && p.priceNumber < range.max);
     }
-
-    if (selectedColors.size > 0) {
-      result = result.filter(p => p.colorName && selectedColors.has(p.colorName));
-    }
-
-    if (selectedTipos.size > 0) {
-      result = result.filter(p => p.tipo && selectedTipos.has(p.tipo));
-    }
+    if (selectedColors.size > 0) result = result.filter(p => p.colorName && selectedColors.has(p.colorName));
+    if (selectedTipos.size > 0) result = result.filter(p => p.tipo && selectedTipos.has(p.tipo));
 
     switch (sortBy) {
       case 'price_asc':  result.sort((a, b) => a.priceNumber - b.priceNumber); break;
       case 'price_desc': result.sort((a, b) => b.priceNumber - a.priceNumber); break;
     }
-
     return result;
   }, [products, selectedCat, selectedPrice, selectedColors, selectedTipos, sortBy, priceRanges]);
 
@@ -372,375 +259,200 @@ export default function ShopClient({ products, categories, lang, initialCat = ''
   const paginated  = filtered.slice((page - 1) * ITEMS_PER_PAGE, page * ITEMS_PER_PAGE);
 
   const sortLabels: Record<SortKey, string> = {
-    featured:   t(lang, 'shop.sort.featured'),
-    price_asc:  t(lang, 'shop.sort.price_asc'),
+    featured: t(lang, 'shop.sort.featured'),
+    price_asc: t(lang, 'shop.sort.price_asc'),
     price_desc: t(lang, 'shop.sort.price_desc'),
-    newest:     t(lang, 'shop.sort.newest'),
-  };
-
-  const sidebarProps: SidebarProps = {
-    lang, categories,
-    selectedCat, selectedPrice, selectedColors, selectedTipos,
-    availableColors, availableTipos, priceRanges,
-    hasFilters,
-    onCatChange:   handleCatChange,
-    onPriceChange: handlePriceChange,
-    onColorToggle: toggleColor,
-    onTipoToggle:  toggleTipo,
-    onClear:       clearFilters,
+    newest: t(lang, 'shop.sort.newest'),
   };
 
   return (
-    <>
-      <div style={s.layout}>
+    <div className="flex flex-col lg:flex-row items-start gap-10">
+      
+      {/* Sidebar Desktop */}
+      <aside className="hidden lg:block w-60 shrink-0 sticky top-20">
+        <SidebarContent 
+          lang={lang} categories={categories} selectedCat={selectedCat} 
+          selectedPrice={selectedPrice} selectedColors={selectedColors} 
+          selectedTipos={selectedTipos} availableColors={availableColors} 
+          availableTipos={availableTipos} priceRanges={priceRanges} 
+          hasFilters={hasFilters} onCatChange={handleCatChange} 
+          onPriceChange={handlePriceChange} onColorToggle={toggleColor} 
+          onTipoToggle={toggleTipo} onClear={clearFilters}
+        />
+      </aside>
 
-        {/* Sidebar desktop */}
-        <aside style={s.desktopSidebar} className="shop-desktop-sidebar">
-          <SidebarContent {...sidebarProps} />
-        </aside>
+      {/* Main Content */}
+      <div className="flex-1 min-w-0 w-full">
+        
+        {/* Top Bar */}
+        <div className="flex flex-wrap items-center justify-between gap-3 mb-6">
+          <p className="font-body text-sm text-body-color">
+            {t(lang, 'shop.showing')} <strong className="text-headline">{paginated.length}</strong> {t(lang, 'shop.of')} <strong className="text-headline">{filtered.length}</strong> {t(lang, 'shop.results')}
+          </p>
 
-        {/* Contenido principal */}
-        <div style={{ flex: 1, minWidth: 0 }}>
+          <div className="flex items-center gap-2.5">
+            {/* Toggle Filtros (Mobile) */}
+            <button
+              onClick={() => setFiltersOpen(true)}
+              className="lg:hidden relative flex items-center gap-1.5 px-3.5 py-2 bg-blush border border-border rounded-lg font-body text-sm font-semibold text-headline cursor-pointer"
+            >
+              <span className="material-symbols-outlined !text-[18px]">tune</span>
+              {t(lang, 'shop.filters.toggle')}
+              {hasFilters && <span className="absolute -top-1 -right-1 w-2 h-2 rounded-full bg-primary border-2 border-white" />}
+            </button>
 
-          {/* Barra superior */}
-          <div style={s.topBar}>
-            <p style={s.resultsText}>
-              {t(lang, 'shop.showing')}{' '}
-              <strong style={{ color: 'var(--headline)' }}>{paginated.length}</strong>{' '}
-              {t(lang, 'shop.of')}{' '}
-              <strong style={{ color: 'var(--headline)' }}>{filtered.length}</strong>{' '}
-              {t(lang, 'shop.results')}
-            </p>
-
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.625rem' }}>
-              {/* Botón filtros (solo mobile) */}
+            {/* Sort Dropdown */}
+            <div className="relative">
               <button
-                type="button"
-                onClick={() => setFiltersOpen(true)}
-                className="shop-filter-toggle"
-                style={{ ...s.filterToggleBtn, position: 'relative' }}
+                onClick={() => setSortOpen(!sortOpen)}
+                className="flex items-center gap-2 px-3.5 py-2 bg-white border border-border rounded-lg cursor-pointer hover:border-primary transition-colors whitespace-nowrap"
               >
-                <span className="material-symbols-outlined" style={{ fontSize: '1.125rem', lineHeight: 1 }}>
-                  tune
+                <span className="font-body text-sm text-headline">
+                  {t(lang, 'shop.sort.label')} <strong className="font-bold">{sortLabels[sortBy]}</strong>
                 </span>
-                {t(lang, 'shop.filters.toggle')}
-                {hasFilters && <span style={s.filterDot} />}
+                <span className="material-symbols-outlined text-[20px] text-muted">keyboard_arrow_down</span>
               </button>
 
-              {/* Sort dropdown */}
-              <div style={{ position: 'relative' }}>
-                <button
-                  type="button"
-                  onClick={() => setSortOpen(v => !v)}
-                  style={s.sortBtn}
-                >
-                  <span style={{ fontFamily: 'var(--font-body)', fontSize: '0.875rem', color: 'var(--headline)' }}>
-                    {t(lang, 'shop.sort.label')}{' '}
-                    <strong style={{ fontWeight: 700 }}>{sortLabels[sortBy]}</strong>
-                  </span>
-                  <span className="material-symbols-outlined" style={{ fontSize: '1.25rem', lineHeight: 1, color: 'var(--muted)' }}>
-                    keyboard_arrow_down
-                  </span>
-                </button>
-
-                {sortOpen && (
-                  <>
-                    <div onClick={() => setSortOpen(false)} style={{ position: 'fixed', inset: 0, zIndex: 9 }} />
-                    <div style={s.sortDropdown}>
-                      {(Object.keys(sortLabels) as SortKey[]).map(key => (
-                        <button
-                          key={key}
-                          type="button"
-                          onClick={() => { setSortBy(key); setSortOpen(false); setPage(1); }}
-                          style={{
-                            ...s.sortOption,
-                            color:      sortBy === key ? 'var(--primary)' : 'var(--headline)',
-                            fontWeight: sortBy === key ? 700 : 500,
-                            background: sortBy === key
-                              ? 'color-mix(in srgb, var(--primary) 6%, white)'
-                              : 'transparent',
-                          }}
-                        >
-                          {sortLabels[key]}
-                        </button>
-                      ))}
-                    </div>
-                  </>
-                )}
-              </div>
-            </div>
-          </div>
-
-          {/* Grid de productos */}
-          {paginated.length === 0 ? (
-            <div style={s.emptyState}>
-              <span className="material-symbols-outlined" style={{ fontSize: '3.5rem', color: 'var(--muted)', opacity: 0.4 }}>
-                search_off
-              </span>
-              <p style={{ fontFamily: 'var(--font-body)', color: 'var(--body-color)', fontSize: '1rem', marginTop: '1rem', marginBottom: 0 }}>
-                {t(lang, 'shop.no_products')}
-              </p>
-              {hasFilters && (
-                <button onClick={clearFilters} type="button" style={{ ...s.clearBtn, marginTop: '1rem', width: 'auto', paddingInline: '1.5rem' }}>
-                  {t(lang, 'shop.filters.clear')}
-                </button>
+              {sortOpen && (
+                <>
+                  <div className="fixed inset-0 z-10" onClick={() => setSortOpen(false)} />
+                  <div className="absolute right-0 top-[calc(100%+6px)] w-48 bg-white border border-border rounded-xl shadow-xl z-20 overflow-hidden">
+                    {(Object.keys(sortLabels) as SortKey[]).map(key => (
+                      <button
+                        key={key}
+                        onClick={() => { setSortBy(key); setSortOpen(false); setPage(1); }}
+                        className={`block w-full px-4 py-2.5 text-left font-body text-sm transition-colors ${
+                          sortBy === key 
+                            ? 'text-primary font-bold bg-primary/5' 
+                            : 'text-headline font-medium hover:bg-gray-50'
+                        }`}
+                      >
+                        {sortLabels[key]}
+                      </button>
+                    ))}
+                  </div>
+                </>
               )}
             </div>
-          ) : (
-            <div className="shop-grid">
-              {paginated.map(product => (
-                <ProductCard
-                  key={product.id}
-                  product={product}
-                  lang={lang}
-                  href={lang === 'en' ? `/en/${product.id}` : `/${product.id}`}
-                />
-              ))}
-            </div>
-          )}
-
-          <Pagination page={page} totalPages={totalPages} lang={lang} onChange={setPage} />
+          </div>
         </div>
+
+        {/* Grid / Empty State */}
+        {paginated.length === 0 ? (
+          <div className="flex flex-col items-center justify-center py-20 px-4 text-center">
+            <span className="material-symbols-outlined text-[3.5rem] text-muted opacity-40">search_off</span>
+            <p className="font-body text-body-color text-base mt-4">{t(lang, 'shop.no_products')}</p>
+            {hasFilters && (
+              <button onClick={clearFilters} className="mt-4 px-6 py-2 border border-border rounded-lg font-body text-[13px] font-semibold text-muted hover:text-primary hover:border-primary cursor-pointer">
+                {t(lang, 'shop.filters.clear')}
+              </button>
+            )}
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 lg:gap-6">
+            {paginated.map(product => (
+              <ProductCard
+                key={product.id}
+                product={product}
+                lang={lang}
+                href={lang === 'en' ? `/en/${product.id}` : `/${product.id}`}
+              />
+            ))}
+          </div>
+        )}
+
+        {/* Paginación */}
+        <Pagination page={page} totalPages={totalPages} lang={lang} onChange={setPage} />
       </div>
 
-      {/* Drawer mobile */}
+      {/* Drawer Móvil */}
       {filtersOpen && (
         <>
-          <div onClick={() => setFiltersOpen(false)} style={s.drawerOverlay} />
-          <aside style={s.mobileDrawer}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1.5rem', flexShrink: 0 }}>
-              <h2 style={{ fontFamily: 'var(--font-body)', fontSize: '1.125rem', fontWeight: 700, color: 'var(--headline)', margin: 0 }}>
-                {t(lang, 'shop.filters.toggle')}
-              </h2>
-              <button
-                type="button"
-                onClick={() => setFiltersOpen(false)}
-                style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--headline)', padding: '0.25rem', display: 'flex' }}
-              >
-                <span className="material-symbols-outlined" style={{ fontSize: '1.5rem', lineHeight: 1 }}>close</span>
+          <div className="fixed inset-0 bg-headline/45 backdrop-blur-sm z-40" onClick={() => setFiltersOpen(false)} />
+          <aside className="fixed top-0 right-0 bottom-0 w-72 bg-white z-50 p-6 shadow-2xl flex flex-col">
+            <div className="flex items-center justify-between mb-6 shrink-0">
+              <h2 className="font-body text-lg font-bold text-headline">{t(lang, 'shop.filters.toggle')}</h2>
+              <button onClick={() => setFiltersOpen(false)} className="text-headline p-1 flex cursor-pointer">
+                <span className="material-symbols-outlined text-2xl">close</span>
               </button>
             </div>
-            <div style={{ flex: 1, overflowY: 'auto', paddingRight: '0.25rem' }}>
-              <SidebarContent {...sidebarProps} />
+            <div className="flex-1 overflow-y-auto pr-1">
+              <SidebarContent 
+                lang={lang} categories={categories} selectedCat={selectedCat} 
+                selectedPrice={selectedPrice} selectedColors={selectedColors} 
+                selectedTipos={selectedTipos} availableColors={availableColors} 
+                availableTipos={availableTipos} priceRanges={priceRanges} 
+                hasFilters={hasFilters} onCatChange={handleCatChange} 
+                onPriceChange={handlePriceChange} onColorToggle={toggleColor} 
+                onTipoToggle={toggleTipo} onClear={clearFilters}
+              />
             </div>
-            <button type="button" onClick={() => setFiltersOpen(false)} style={s.applyBtn}>
+            <button 
+              onClick={() => setFiltersOpen(false)} 
+              className="mt-5 w-full h-12 bg-primary text-white rounded-lg font-body text-[15px] font-bold cursor-pointer"
+            >
               {t(lang, 'shop.filters.apply')} ({filtered.length})
             </button>
           </aside>
         </>
       )}
-
-      <style>{`
-        .shop-desktop-sidebar { display: none !important; }
-        .shop-filter-toggle   { display: flex !important; }
-        .shop-grid {
-          display: grid;
-          grid-template-columns: 1fr;
-          gap: 1.25rem;
-        }
-        @media (min-width: 540px) {
-          .shop-grid { grid-template-columns: repeat(2, 1fr); }
-        }
-        @media (min-width: 1024px) {
-          .shop-desktop-sidebar { display: block !important; }
-          .shop-filter-toggle   { display: none !important; }
-          .shop-grid { grid-template-columns: repeat(3, 1fr); gap: 1.5rem; }
-        }
-      `}</style>
-    </>
+    </div>
   );
 }
 
-// ── Estilos estáticos ─────────────────────────────────────────────────────────
+// ── Paginación (Refactorizada) ────────────────────────────────────────────────
 
-const s: Record<string, CSSProperties> = {
-  layout: {
-    display: 'flex',
-    alignItems: 'flex-start',
-    gap: '2.5rem',
-  },
-  desktopSidebar: {
-    width: '15rem',
-    flexShrink: 0,
-    position: 'sticky',
-    top: '5rem',
-  },
-  filterTitle: {
-    fontFamily: 'var(--font-body)',
-    fontSize: '0.875rem',
-    fontWeight: 700,
-    color: 'var(--headline)',
-    margin: 0,
-    paddingBottom: '0.625rem',
-    borderBottom: '1px solid var(--border)',
-    textTransform: 'uppercase',
-    letterSpacing: '0.05em',
-  },
-  filterList: {
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '0.5rem',
-    marginTop: '0.75rem',
-  } as CSSProperties,
-  filterLabel: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: '0.625rem',
-    cursor: 'pointer',
-  } as CSSProperties,
-  filterText: {
-    fontFamily: 'var(--font-body)',
-    fontSize: '0.875rem',
-    color: 'var(--body-color)',
-  } as CSSProperties,
-  clearBtn: {
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: '0.375rem',
-    width: '100%',
-    padding: '0.5rem',
-    background: 'none',
-    border: '1px solid var(--border)',
-    borderRadius: '0.5rem',
-    fontFamily: 'var(--font-body)',
-    fontSize: '0.8125rem',
-    fontWeight: 600,
-    color: 'var(--muted)',
-    cursor: 'pointer',
-    transition: 'border-color 0.2s, color 0.2s',
-  },
-  topBar: {
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    flexWrap: 'wrap',
-    gap: '0.75rem',
-    marginBottom: '1.5rem',
-  },
-  resultsText: {
-    fontFamily: 'var(--font-body)',
-    fontSize: '0.875rem',
-    color: 'var(--body-color)',
-    margin: 0,
-  },
-  filterToggleBtn: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: '0.375rem',
-    padding: '0.5rem 0.875rem',
-    background: 'var(--blush)',
-    border: '1px solid var(--border)',
-    borderRadius: '0.5rem',
-    fontFamily: 'var(--font-body)',
-    fontSize: '0.875rem',
-    fontWeight: 600,
-    color: 'var(--headline)',
-    cursor: 'pointer',
-  },
-  filterDot: {
-    position: 'absolute',
-    top: '-0.3rem',
-    right: '-0.3rem',
-    width: '0.5rem',
-    height: '0.5rem',
-    borderRadius: '9999px',
-    background: 'var(--primary)',
-    border: '2px solid white',
-  },
-  sortBtn: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: '0.5rem',
-    padding: '0.5rem 0.875rem',
-    background: 'white',
-    border: '1px solid var(--border)',
-    borderRadius: '0.5rem',
-    cursor: 'pointer',
-    transition: 'border-color 0.2s',
-    whiteSpace: 'nowrap',
-  },
-  sortDropdown: {
-    position: 'absolute',
-    right: 0,
-    top: 'calc(100% + 0.375rem)',
-    background: 'white',
-    border: '1px solid var(--border)',
-    borderRadius: '0.625rem',
-    boxShadow: '0 8px 32px color-mix(in srgb, var(--headline) 12%, transparent)',
-    zIndex: 10,
-    overflow: 'hidden',
-    minWidth: '12rem',
-  },
-  sortOption: {
-    display: 'block',
-    width: '100%',
-    padding: '0.625rem 1rem',
-    background: 'transparent',
-    border: 'none',
-    fontFamily: 'var(--font-body)',
-    fontSize: '0.875rem',
-    cursor: 'pointer',
-    textAlign: 'left',
-    transition: 'background 0.15s, color 0.15s',
-  } as CSSProperties,
-  emptyState: {
-    display: 'flex',
-    flexDirection: 'column',
-    alignItems: 'center',
-    justifyContent: 'center',
-    padding: '5rem 1rem',
-    textAlign: 'center',
-  },
-  pageBtn: {
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    width: '2.5rem',
-    height: '2.5rem',
-    borderRadius: '0.5rem',
-    border: '1px solid var(--border)',
-    background: 'white',
-    fontFamily: 'var(--font-body)',
-    fontSize: '0.875rem',
-    cursor: 'pointer',
-    color: 'var(--headline)',
-    transition: 'background 0.15s, color 0.15s, border-color 0.15s',
-  },
-  drawerOverlay: {
-    position: 'fixed',
-    inset: 0,
-    background: 'rgba(33,17,20,0.45)',
-    backdropFilter: 'blur(4px)',
-    zIndex: 40,
-  },
-  mobileDrawer: {
-    position: 'fixed',
-    top: 0,
-    right: 0,
-    bottom: 0,
-    width: '18rem',
-    background: 'white',
-    zIndex: 50,
-    padding: '1.5rem',
-    boxShadow: '-4px 0 32px rgba(33,17,20,0.15)',
-    display: 'flex',
-    flexDirection: 'column',
-    gap: 0,
-    overflowY: 'hidden',
-  },
-  applyBtn: {
-    marginTop: '1.25rem',
-    width: '100%',
-    height: '2.875rem',
-    background: 'var(--primary)',
-    color: 'white',
-    border: 'none',
-    borderRadius: '0.5rem',
-    fontFamily: 'var(--font-body)',
-    fontSize: '0.9375rem',
-    fontWeight: 700,
-    cursor: 'pointer',
-    flexShrink: 0,
-  },
-};
+function Pagination({ page, totalPages, lang, onChange }: { page: number; totalPages: number; lang: Lang; onChange: (p: number) => void }) {
+  if (totalPages <= 1) return null;
+  const pages: (number | '...')[] = [];
+  if (totalPages <= 7) { for (let i = 1; i <= totalPages; i++) pages.push(i); } 
+  else {
+    pages.push(1);
+    if (page > 3) pages.push('...');
+    const from = Math.max(2, page - 1);
+    const to = Math.min(totalPages - 1, page + 1);
+    for (let i = from; i <= to; i++) pages.push(i);
+    if (page < totalPages - 2) pages.push('...');
+    pages.push(totalPages);
+  }
+
+  const btnClass = "flex items-center justify-center w-10 h-10 rounded-lg border font-body text-sm transition-all duration-150 cursor-pointer";
+
+  return (
+    <nav className="flex justify-center gap-1.5 mt-12">
+      <button
+        onClick={() => onChange(Math.max(1, page - 1))}
+        disabled={page === 1}
+        className={`${btnClass} border-border text-headline disabled:opacity-40`}
+      >
+        <span className="material-symbols-outlined !text-xl">chevron_left</span>
+      </button>
+
+      {pages.map((p, i) => (
+        p === '...' ? (
+          <span key={i} className="flex items-center justify-center w-10 h-10 font-body text-muted">…</span>
+        ) : (
+          <button
+            key={p}
+            onClick={() => onChange(p)}
+            className={`${btnClass} ${
+              page === p 
+                ? 'bg-primary border-primary text-white font-bold' 
+                : 'bg-white border-border text-headline font-medium hover:border-primary'
+            }`}
+          >
+            {p}
+          </button>
+        )
+      ))}
+
+      <button
+        onClick={() => onChange(Math.min(totalPages, page + 1))}
+        disabled={page === totalPages}
+        className={`${btnClass} border-border text-headline disabled:opacity-40`}
+      >
+        <span className="material-symbols-outlined !text-xl">chevron_right</span>
+      </button>
+    </nav>
+  );
+}

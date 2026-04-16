@@ -333,4 +333,203 @@
     font-size: 0.875rem;
     font-weight: 500;
   }
+  /* Contenedor de Tabs de Autenticación */
+  .auth-tabs {
+    display: flex;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 2rem;
+  }
+
+  /* Tab individual */
+  .auth-tab {
+    flex: 1;
+    padding-bottom: 0.75rem;
+    text-align: center;
+    border-bottom: 3px solid transparent;
+    font-weight: 700;
+    font-size: 0.875rem;
+    color: var(--text-muted);
+    text-decoration: none;
+    transition: color 0.2s ease, border-color 0.2s ease;
+  }
+
+  .auth-tab:hover {
+    color: var(--text-main);
+  }
+
+  /* Estado Activo del Tab */
+  .auth-tab-active {
+    color: var(--primary);
+    border-bottom-color: var(--primary);
+  }
+  /* Contenedor principal */
+  .breadcrumb {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 0.125rem;
+    font-family: var(--font-body);
+    font-size: 0.8125rem;
+  }
+
+  /* Enlaces (Crumbs clickeables) */
+  .bc-link {
+    color: var(--text-muted);
+    text-decoration: none;
+    transition: color 0.2s ease, background-color 0.2s ease;
+    padding: 0.125rem 0.25rem;
+    border-radius: var(--radius-sm); /* Usando tu token de 0.25rem */
+  }
+
+  .bc-link:hover {
+    color: var(--primary);
+    background: color-mix(in srgb, var(--primary) 5%, transparent);
+  }
+
+  /* Separador (Ícono) */
+  .bc-sep {
+    font-size: 0.875rem; /* Tamaño reducido para el chevron */
+    color: var(--text-muted);
+    opacity: 0.5;
+    user-select: none;
+    pointer-events: none;
+  }
+
+  /* Página actual (Último elemento) */
+  .bc-current {
+    color: var(--headline);
+    font-weight: 600;
+    padding: 0.125rem 0.25rem;
+  }
+  .field-wrapper {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  .field-label {
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: var(--text-main);
+  }
+
+  .field-inner {
+    position: relative;
+    display: flex;
+    align-items: center;
+  }
+
+  .field-icon {
+    position: absolute;
+    left: 1rem;
+    color: var(--text-muted);
+    font-size: 1.25rem !important; /* Forzamos el tamaño del icono de material */
+    pointer-events: none;
+    user-select: none;
+  }
+
+  .field-input {
+    width: 100%;
+    height: 3rem;
+    border-radius: var(--radius);
+    border: 1px solid var(--border);
+    background: var(--bg-light);
+    padding-left: 2.75rem;
+    padding-right: 2.75rem;
+    font-size: 0.875rem;
+    color: var(--text-main);
+    font-family: var(--font-body);
+    outline: none;
+    transition: border-color 0.2s, box-shadow 0.2s;
+  }
+
+  .field-input::placeholder {
+    color: var(--text-muted);
+    opacity: 0.7;
+  }
+
+  .field-input:focus {
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--primary) 15%, transparent);
+  }
+
+  /* Botón para mostrar/ocultar contraseña */
+  .toggle-pass {
+    position: absolute;
+    right: 0.75rem;
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: var(--text-muted);
+    padding: 0.25rem;
+    display: flex;
+    align-items: center;
+    transition: color 0.2s;
+    border-radius: var(--radius-sm);
+  }
+
+  .toggle-pass:hover {
+    color: var(--text-main);
+    background: color-mix(in srgb, var(--text-muted) 10%, transparent);
+  }
+
+  .toggle-pass .material-symbols-outlined {
+    font-size: 1.25rem !important;
+  }
+  /* Contenedor principal de página (Max-width y padding responsivo) */
+  .main-container {
+    flex: 1;
+    width: 100%;
+    max-width: 80rem; /* 1280px */
+    margin-inline: auto;
+    padding: 2rem 1rem 5rem;
+  }
+  @media (min-width: 640px) { .main-container { padding-inline: 1.5rem; } }
+  @media (min-width: 1024px) { .main-container { padding-inline: 2rem; } }
+
+  /* Divisor de secciones */
+  .section-divider {
+    height: 1px;
+    background: var(--border);
+    margin-block: 4rem;
+    border: none;
+  }
+
+  /* Footer Global */
+  .site-footer {
+    background: var(--color-background-dark); /* El color #211114 que ya tenías en @theme */
+    color: color-mix(in srgb, var(--color-white) 70%, transparent);
+    padding-block: 2.5rem;
+    margin-top: auto;
+  }
+  .footer-inner {
+    max-width: 80rem;
+    margin-inline: auto;
+    padding-inline: 1rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1.25rem;
+    text-align: center;
+  }
+  @media (min-width: 768px) {
+    .footer-inner { flex-direction: row; justify-content: space-between; text-align: left; }
+  }
+  .footer-brand {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: var(--color-white);
+    font-weight: 700;
+    font-size: 1.125rem;
+  }
+  .footer-links { display: flex; gap: 1.5rem; }
+  .footer-links a {
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: color-mix(in srgb, var(--color-white) 60%, transparent);
+    text-decoration: none;
+    transition: color 0.2s;
+  }
+  .footer-links a:hover { color: var(--primary); }
 }
