@@ -51,9 +51,12 @@ const categorias = await getCategoriasDeFlores(4, lang);
             <a href={shopHref} class="flex flex-col gap-3 cursor-pointer no-underline text-inherit group">
               <div class="relative aspect-[4/5] w-full overflow-hidden rounded-xl bg-[#f3f4f6] shadow-[0_1px_3px_rgba(0,0,0,0.08)] transition-shadow duration-200 group-hover:shadow-[0_4px_16px_rgba(0,0,0,0.12)]">
                 {imageUrl ? (
-                  <div
-                    class="w-full h-full bg-cover bg-center transition-transform duration-500 ease-out group-hover:scale-110"
-                    style={`background-image: url('${imageUrl}')`}
+                  <img
+                    src={imageUrl}
+                    alt={cat.name}
+                    loading="lazy"
+                    decoding="async"
+                    class="w-full h-full object-cover transition-transform duration-500 ease-out group-hover:scale-110"
                   />
                 ) : (
                   <div class="w-full h-full flex items-center justify-center bg-[color-mix(in_srgb,var(--color-primary)_8%,var(--color-blush))]">

@@ -1,10 +1,8 @@
 ---
 import { getSession } from '@/services/session.service';
 
-const session = getSession(Astro.cookies);
-if (!session) {
-  return Astro.redirect('/login');
-}
+const session = await getSession(Astro.cookies); // ← await
+if (!session) return Astro.redirect('/login');
 ---
 
 <!doctype html>

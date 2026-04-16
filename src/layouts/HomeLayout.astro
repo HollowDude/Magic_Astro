@@ -1,16 +1,19 @@
 ---
 // src/layouts/BaseLayout.astro
+import HomeHeader from '@/components/home/HomeHeader.astro';
+import Footer from '@/components/ui/Footer.astro';
 import '@/styles/global.css';
 
 interface Props {
   title?: string;
 }
 
-const { title = 'Inicio' } = Astro.props;
+interface Props { title?: string; lang?: string }
+const { title = 'Inicio', lang = 'es' } = Astro.props;
 ---
 
 <!doctype html>
-<html lang="es">
+<html lang={lang}>
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -35,6 +38,8 @@ const { title = 'Inicio' } = Astro.props;
     </script>
   </head>
   <body class="bg-background-light text-text-main font-body antialiased">
+    <HomeHeader />
     <slot />
+    <Footer lang={lang} />
   </body>
 </html>

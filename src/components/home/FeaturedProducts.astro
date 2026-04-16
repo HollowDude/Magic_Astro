@@ -55,11 +55,12 @@ const prefix = lang === 'en' ? '/en' : '';
 
               <div class="relative w-full aspect-square pt-3 px-3">
                 {thumbnail ? (
-                  <div
-                    class="w-full h-full rounded-[0.625rem] bg-cover bg-center transition-transform duration-400 ease-out group-hover:scale-105"
-                    style={`background-image: url('${thumbnail}')`}
-                    role="img"
-                    aria-label={product.title}
+                  <img
+                    src={thumbnail}
+                    alt={product.title}
+                    loading="lazy"
+                    decoding="async"
+                    class="w-full h-full rounded-[0.625rem] object-cover transition-transform duration-400 ease-out group-hover:scale-105"
                   />
                 ) : (
                   <div class="w-full h-full rounded-[0.625rem] bg-[color-mix(in_srgb,var(--color-primary)_8%,var(--color-blush))] flex items-center justify-center transition-transform duration-400 ease-out group-hover:scale-105" role="img" aria-label={product.title}>

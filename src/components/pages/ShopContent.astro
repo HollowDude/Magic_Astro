@@ -1,0 +1,96 @@
+---
+// Componente de página reutilizado por shop.astro y en/shop.astro.
+// Lee TODOS los params de URL y los pasa como props SSR a ShopClient
+// para que el servidor pre-renderice el estado correcto de filtros.
+import HomeLayout from '@/layouts/HomeLayout.astro';
+import HomeHeader from '@/components/home/HomeHeader.astro';
+import Breadcrumb from '@/components/ui/Breadcrumb.astro';
+import ShopClient from '@/components/shop/ShopClient';
+import Footer from '@/components/ui/Footer.astro';
+import { getFloresProducts } from '@/services/drupal/drupal.commerce';
+import { getCategoriasDeFlores } from '@/services/drupal/drupal.taxonomy';
+import { getProductThumbnail } from '@/types/commerce';
+import { useTranslations, getLangFromUrl } from '@/i18n/utils';
+import type { Lang } from '@/i18n/ui';
+import type { ProductCardData } from '@/components/shop/ProductCard';
+import type { ShopCategory, SortKey } from '@/components/shop/ShopClient';
+
+const lang   = (Astro.currentLocale ?? getLangFromUrl(Astro.url)) as Lang;
+const t      = useTranslations(lang);
+const prefix = lang === 'en' ? '/en' : '';
+const DRUPAL_BASE_URL = import.meta.env.DRUPAL_BASE_URL as string;
+
+// Leer todos los parámetros de filtro desde la URL para pre-renderizado SSR correcto
+const sp          = Astro.url.searchParams;
+const initialCat  = sp.get('cat')    ?? '';
+const initialPrice = sp.get('price') ?? '';
+const initialColors = sp.get('colors') ?? '';
+const initialTipos  = sp.get('tipos')  ?? '';
+const VALID_SORTS: SortKey[] = ['featured', 'price_asc', 'price_desc', 'newest'];
+const rawSort = sp.get('sort') as SortKey | null;
+const initialSort: SortKey = rawSort && VALID_SORTS.includes(rawSort) ? rawSort : 'featured';
+const initialPage = Math.max(1, parseInt(sp.get('page') ?? '1', 10));
+
+const [rawProducts, rawCategories] = await Promise.all([
+  getFloresProducts(lang),
+  getCategoriasDeFlores(10, lang),
+]);
+
+const products: ProductCardData[] = rawProducts.map(p => {
+  const v = p.variations?.[0];
+  return {
+    id:          p.id,
+    title:       p.title,
+    price:       v?.price?.formatted               ?? '',
+    priceNumber: parseFloat(v?.price?.number       ?? '0'),
+    thumbnail:   getProductThumbnail(p, DRUPAL_BASE_URL),
+    badge:       null,
+    tipo:        v?.field_tipo                     ?? null,
+    colorName:   v?.field_color_de_la_flor?.name   ?? null,
+    colorHex:    v?.field_color_de_la_flor?.field_color_hex ?? null,
+    category:    p.field_categoria?.name           ?? null,
+  };
+});
+
+const categories: ShopCategory[] = rawCategories.map(c => ({
+  id:   String(c.drupal_internal__tid),
+  name: c.name,
+  slug: c.name.toLowerCase().replace(/\s+/g, '-'),
+}));
+---
+
+<HomeLayout title={t('shop.title')}>
+  <div class="flex flex-col min-h-screen">
+    <main class="main-container">
+      <header class="mb-10">
+        <Breadcrumb crumbs={[
+          { label: t('nav.home'), href: prefix || '/' },
+          { label: t('shop.title') },
+        ]} />
+        <div class="mt-5 flex flex-wrap items-end justify-between gap-4">
+          <div class="max-w-xl">
+            <h1 class="font-heading text-4xl md:text-5xl font-semibold tracking-tight text-headline leading-[1.1] mb-2">
+              {t('shop.title')}
+            </h1>
+            <p class="font-body text-[0.9375rem] text-text-muted leading-relaxed">
+              {t('shop.description')}
+            </p>
+          </div>
+        </div>
+      </header>
+
+      <ShopClient
+        products={products}
+        categories={categories}
+        lang={lang}
+        initialCat={initialCat}
+        initialPrice={initialPrice}
+        initialColors={initialColors}
+        initialTipos={initialTipos}
+        initialSort={initialSort}
+        initialPage={initialPage}
+        client:load
+      />
+    </main>
+  </div>
+</HomeLayout>

@@ -144,9 +144,12 @@ export default function ServicesCarousel({
                 {/* Imagen o placeholder */}
                 <div className="relative w-full shrink-0 overflow-hidden" style={{ height: IMG_H }}>
                   {svc.image ? (
-                    <div
-                      className="w-full h-full bg-cover bg-center"
-                      style={{ backgroundImage: `url('${svc.image}')` }}
+                    <img
+                      src={svc.image}
+                      alt={svc.title}
+                      loading="lazy"
+                      decoding="async"
+                      className="w-full h-full object-cover"
                     />
                   ) : (
                     <div className="w-full h-full flex items-center justify-center bg-[color-mix(in_srgb,var(--color-primary)_8%,var(--color-blush))]">
@@ -155,7 +158,6 @@ export default function ServicesCarousel({
                       </span>
                     </div>
                   )}
-
                   {!isCenter && (
                     <div className="absolute inset-0 bg-white/40 pointer-events-none transition-colors duration-300" />
                   )}

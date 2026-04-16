@@ -1,0 +1,29 @@
+---
+// Componente de página reutilizado por index.astro y en/index.astro.
+// Astro.currentLocale se resuelve correctamente según la ruta que lo sirve.
+import HomeLayout from '@/layouts/HomeLayout.astro';
+import HeroSection from '@/components/home/HeroSection.astro';
+import CategoriesSection from '@/components/home/CategoriesSection.astro';
+import FeaturedProducts from '@/components/home/FeaturedProducts.astro';
+import CustomizationsSection from '@/components/home/CustomizationsSection.astro';
+import ServicesSection from '@/components/home/ServicesSection.astro';
+import TestimonialsSection from '@/components/home/TestimonialsSection.astro';
+import { getLangFromUrl } from '@/i18n/utils';
+import type { Lang } from '@/i18n/ui';
+
+const lang  = (Astro.currentLocale ?? getLangFromUrl(Astro.url)) as Lang;
+const title = lang === 'en' ? 'Home' : 'Inicio';
+---
+
+<HomeLayout title={title}>
+  <div class="flex flex-col min-h-screen">
+    <main class="flex-1">
+      <HeroSection />
+      <CategoriesSection />
+      <FeaturedProducts />
+      <CustomizationsSection />
+      <ServicesSection />
+      <TestimonialsSection />
+    </main>
+  </div>
+</HomeLayout>

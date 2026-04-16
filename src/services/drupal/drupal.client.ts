@@ -1,92 +1,122 @@
 /**
- * src/services/drupal/drupal.client.ts
+ * Cliente HTTP para Drupal JSON:API con caché en memoria.
  *
- * INTERNACIONALIZACIÓN — cómo funciona:
+ * CACHÉ:
+ *   - Solo aplica a peticiones GET.
+ *   - TTL por defecto: 60 s en producción, 0 (sin caché) en desarrollo.
+ *   - Configurable por petición con la opción `cacheTtl` (en milisegundos).
+ *   - Máximo 500 entradas (FIFO simple).
  *
- * Drupal JSON:API expone traducciones en rutas prefijadas por idioma:
- *   Español (default): /jsonapi/...        (sin prefijo)
- *   Inglés:            /en/jsonapi/...
- *
- * Pasar `lang` en RequestOptions agrega automáticamente el prefijo correcto.
- *
- * REQUISITOS EN DRUPAL:
- *   1. /admin/config/regional/language/detection
- *      → Activar "URL" como método de detección (probablemente ya activo)
- *      → Configurar prefijo: es="" (vacío o "es"), en="en"
- *   2. Content Translation activo + traducción habilitada por entity type
- *   3. Traducciones creadas en el contenido
- *
- * ALTERNATIVA — Accept-Language (más frágil, requiere config extra):
- *   Si preferís este método: activar "Browser" en language/detection
- *   y cambiar a usar el header en vez del prefijo de URL.
+ * INTERNACIONALIZACIÓN:
+ *   Drupal expone traducciones bajo /en/jsonapi/... para inglés.
+ *   Pasar `lang` en RequestOptions agrega el prefijo correcto.
  */
 
-const DRUPAL_BASE_URL = import.meta.env.DRUPAL_BASE_URL as string;
-
-/** Idioma por defecto del sitio Drupal (sin prefijo en la URL) */
-const DRUPAL_DEFAULT_LANG = (import.meta.env.DRUPAL_DEFAULT_LANG as string) ?? 'es';
+const DRUPAL_BASE_URL      = import.meta.env.DRUPAL_BASE_URL      as string;
+const DRUPAL_DEFAULT_LANG  = (import.meta.env.DRUPAL_DEFAULT_LANG as string) ?? 'es';
 
 if (!DRUPAL_BASE_URL) {
   throw new Error('La variable de entorno DRUPAL_BASE_URL no está definida.');
 }
 
+// ── Cache ─────────────────────────────────────────────────────────────────────
+
+interface CacheEntry {
+  data:      unknown;
+  status:    number;
+  headers:   Headers;
+  expiresAt: number;
+}
+
+const _cache = new Map<string, CacheEntry>();
+const MAX_CACHE_ENTRIES = 500;
+
+/** TTL por defecto en ms. 0 en dev para ver cambios de Drupal inmediatamente. */
+const DEFAULT_TTL_MS: number = import.meta.env.PROD ? 60_000 : 0;
+
+function cacheGet<T>(key: string): RawResponse<T> | null {
+  const entry = _cache.get(key);
+  if (!entry) return null;
+  if (Date.now() > entry.expiresAt) {
+    _cache.delete(key);
+    return null;
+  }
+  return { data: entry.data as T, status: entry.status, headers: entry.headers };
+}
+
+function cacheSet(key: string, data: unknown, status: number, headers: Headers, ttlMs: number): void {
+  if (ttlMs <= 0) return;
+  if (_cache.size >= MAX_CACHE_ENTRIES) {
+    const oldest = _cache.keys().next().value;
+    if (oldest !== undefined) _cache.delete(oldest);
+  }
+  _cache.set(key, { data, status, headers, expiresAt: Date.now() + ttlMs });
+}
+
+// ── Tipos públicos ────────────────────────────────────────────────────────────
+
 export interface RequestOptions {
-  method?: 'GET' | 'POST' | 'PATCH' | 'DELETE';
-  body?: unknown;
-  formBody?: Record<string, string>;
-  headers?: Record<string, string>;
+  method?:       'GET' | 'POST' | 'PATCH' | 'DELETE';
+  body?:         unknown;
+  formBody?:     Record<string, string>;
+  headers?:      Record<string, string>;
   sessionCookie?: string;
+  lang?:         string;
   /**
-   * Idioma de la respuesta ('es' | 'en').
-   * - Si es el idioma por defecto de Drupal → sin prefijo (/jsonapi/...)
-   * - Si es otro idioma → agrega prefijo (/en/jsonapi/...)
-   * - undefined → sin prefijo (idioma por defecto del sitio)
+   * TTL en ms para cachear la respuesta (solo GET).
+   * undefined → usa DEFAULT_TTL_MS (60 s en prod, 0 en dev).
+   * 0         → sin caché.
+   * > 0       → TTL explícito.
    */
-  lang?: string;
+  cacheTtl?: number;
 }
 
 export interface RawResponse<T> {
-  data: T;
-  status: number;
+  data:    T;
+  status:  number;
   headers: Headers;
 }
 
-/**
- * Construye el prefijo de idioma para la URL.
- * Si el idioma es el default de Drupal, no agrega prefijo.
- */
+// ── Helpers ───────────────────────────────────────────────────────────────────
+
 function langPrefix(lang: string | undefined): string {
   if (!lang || lang === DRUPAL_DEFAULT_LANG) return '';
   return `/${lang}`;
 }
+
+// ── drupalFetch ───────────────────────────────────────────────────────────────
 
 export async function drupalFetch<T = unknown>(
   path: string,
   options: RequestOptions = {},
 ): Promise<RawResponse<T>> {
   const {
-    method = 'GET',
+    method         = 'GET',
     body,
     formBody,
-    headers: extraHeaders = {},
+    headers:       extraHeaders = {},
     sessionCookie,
     lang,
+    cacheTtl,
   } = options;
 
-  const isForm = formBody !== undefined;
-  const defaultContentType = isForm
-    ? 'application/x-www-form-urlencoded'
-    : 'application/json';
+  const effectiveTtl = cacheTtl ?? DEFAULT_TTL_MS;
+  const url          = `${DRUPAL_BASE_URL}${langPrefix(lang)}${path}`;
 
+  // ── Hit de caché ────────────────────────────────────────────────────────────
+  if (method === 'GET' && effectiveTtl > 0) {
+    const hit = cacheGet<T>(url);
+    if (hit) return hit;
+  }
+
+  // ── Construir request ───────────────────────────────────────────────────────
+  const isForm = formBody !== undefined;
   const headers: Record<string, string> = {
-    'Content-Type': defaultContentType,
-    Accept: 'application/json',
+    'Content-Type': isForm ? 'application/x-www-form-urlencoded' : 'application/json',
+    Accept:         'application/json',
     ...extraHeaders,
   };
-
-  if (sessionCookie) {
-    headers['Cookie'] = sessionCookie;
-  }
+  if (sessionCookie) headers['Cookie'] = sessionCookie;
 
   let serializedBody: string | undefined;
   if (isForm && formBody) {
@@ -95,10 +125,7 @@ export async function drupalFetch<T = unknown>(
     serializedBody = JSON.stringify(body);
   }
 
-  // URL con prefijo de idioma: /en/jsonapi/... o /jsonapi/...
-  const url = `${DRUPAL_BASE_URL}${langPrefix(lang)}${path}`;
-  // debug temporal — borrar después
-  console.log(`[drupalFetch] url=${url}  lang=${lang ?? 'none'}`);
+  // ── Fetch ───────────────────────────────────────────────────────────────────
   let response: Response;
   try {
     response = await fetch(url, { method, headers, body: serializedBody });
@@ -109,8 +136,6 @@ export async function drupalFetch<T = unknown>(
     );
   }
 
-  // Si Drupal devuelve 404 en la ruta con prefijo, puede ser que la
-  // detección de idioma por URL no esté activa. Loguear para diagnóstico.
   if (response.status === 404 && lang && lang !== DRUPAL_DEFAULT_LANG) {
     console.warn(
       `[Drupal i18n] 404 en ${url}. ` +
@@ -127,5 +152,12 @@ export async function drupalFetch<T = unknown>(
     data = text as unknown as T;
   }
 
-  return { data, status: response.status, headers: response.headers };
+  const result: RawResponse<T> = { data, status: response.status, headers: response.headers };
+
+  // ── Guardar en caché (solo GET exitosos) ────────────────────────────────────
+  if (method === 'GET' && response.ok && effectiveTtl > 0) {
+    cacheSet(url, data, response.status, response.headers, effectiveTtl);
+  }
+
+  return result;
 }

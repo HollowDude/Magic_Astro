@@ -27,10 +27,15 @@ const fotoUrl     = data?.fotoUrl     ?? 'https://via.placeholder.com/800x600';
     <div class="relative shrink-0 w-full lg:w-[46%] pb-7 pl-4">
       <div class="absolute top-0 left-8 right-0 bottom-16 border-2 border-primary rounded-2xl pointer-events-none" />
       <div class="relative aspect-4/3 overflow-hidden rounded-2xl bg-gray-200 shadow-2xl mt-8 mr-8">
-        <div 
-          class="w-full h-full bg-cover bg-center"
-          style={{ backgroundImage: `url(${fotoUrl})` }}
-        />
+        <div class="relative aspect-4/3 overflow-hidden rounded-2xl bg-gray-200 shadow-2xl mt-8 mr-8">
+          <img
+            src={fotoUrl}
+            alt={titulo ?? ''}
+            loading="lazy"
+            decoding="async"
+            class="w-full h-full object-cover"
+          />
+        </div>
       </div>
     </div>
 

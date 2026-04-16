@@ -32,7 +32,7 @@ export default function ProductCard({ product, lang = 'es', href }: Props) {
   const dotBorder = product.colorHex || (product.colorName ? 'var(--muted)' : 'var(--border)');
 
   return (
-    <article className="group relative flex flex-col bg-white rounded-xl overflow-hidden border border-border transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_12_36px_color-mix(in_srgb,var(--headline)_12%,transparent)]">
+    <article className="group relative flex flex-col bg-white rounded-xl overflow-hidden border border-border transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_12px_36px_color-mix(in_srgb,var(--headline)_12%,transparent)]">
       
       {/* Overlay de enlace */}
       {href && (
