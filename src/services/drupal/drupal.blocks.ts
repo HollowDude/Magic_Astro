@@ -50,14 +50,19 @@ const BLOCK_CONFIGS = {
   },
 
   homepage_servicios_section: {
-    bundle:      'homepage_servicios_section',
-    // Sin includes: pasar [] genera "include=" vacío en la query → Drupal lo puede rechazar
-    includes:    [],
+    bundle:   'homepage_servicios_section',
+    // Include the entity-reference field and the image nested inside each node
+    includes: ['field_servicios', 'field_servicios.field_image'],
     blockFields: [
       'info', 'status',
-      'field_titulo_ss', 'field_sub_titulo_ss', 'field_eslogan_ss', 'drupal_internal__id',
+      'field_titulo_ss', 'field_sub_titulo_ss', 'field_eslogan_ss',
+      'field_servicios', 'drupal_internal__id',
     ],
-    relatedFields: {} as Record<string, string[]>,
+    relatedFields: {
+      // Expose the fields we need from the referenced service nodes
+      'node--services': ['title', 'field_description', 'field_image'],
+      'file--file':     ['filename', 'uri', 'filemime'],
+    },
   },
 
   homepage_comentarios_section: {
@@ -79,9 +84,6 @@ export type BlockTypeKey = keyof typeof BLOCK_CONFIGS;
 
 // ── Fetch genérico ────────────────────────────────────────────────────────────
 
-/**
- * Obtiene el primer bloque publicado de un bundle dado.
- */
 export async function getBlockContent<
   T extends BlockContentBase = BlockContentBase,
 >(blockTypeKey: BlockTypeKey, lang?: Lang): Promise<T | null> {
@@ -89,9 +91,6 @@ export async function getBlockContent<
   return blocks[0] ?? null;
 }
 
-/**
- * Obtiene N bloques publicados de un bundle dado, ordenados por ID.
- */
 export async function getBlockContents<
   T extends BlockContentBase = BlockContentBase,
 >(blockTypeKey: BlockTypeKey, limit = 10, lang?: Lang): Promise<T[]> {
@@ -103,9 +102,6 @@ export async function getBlockContents<
     .addFilter('status', '1')
     .addPageLimit(limit);
 
-  // ── IMPORTANTE: addInclude([]) genera "include=" vacío en la query string.
-  // Drupal puede devolver error 400 o ignorarlo según la versión.
-  // Solo llamar si realmente hay relaciones a incluir.
   if (config.includes.length > 0) {
     apiParams.addInclude(config.includes);
   }
@@ -182,21 +178,34 @@ export async function getPersonalizationData(baseUrl: string, lang?: Lang): Prom
   if (!block) return null;
 
   return {
-    titulo:       block.field_titulo ?? null,
-    descripcion:  block.field_descripcion_ps,
-    fotoUrl:      block.field_foto ? drupalFileUrl(block.field_foto, baseUrl) : null,
+    titulo:      block.field_titulo ?? null,
+    descripcion: block.field_descripcion_ps,
+    fotoUrl:     block.field_foto ? drupalFileUrl(block.field_foto, baseUrl) : null,
   };
 }
 
-/** Bloque 3 — Homepage Servicios Section */
-export async function getServiciosData(lang?: Lang): Promise<ServiciosData | null> {
+/**
+ * Bloque 3 — Homepage Servicios Section
+ *
+ * Ahora incluye field_servicios (referencia de entidad → node--services)
+ * con sus imágenes anidadas. Los servicios se retornan como array normalizado
+ * para que ServicesCarousel pueda renderizarlos directamente.
+ */
+export async function getServiciosData(baseUrl: string, lang?: Lang): Promise<ServiciosData | null> {
   const block = await getBlockContent<HomepageServiciosBlock>('homepage_servicios_section', lang);
   if (!block) return null;
 
+  const services = (block.field_servicios ?? []).map((s) => ({
+    title:       s.title,
+    description: s.field_description ?? '',
+    image:       s.field_image ? drupalFileUrl(s.field_image, baseUrl) : null,
+  }));
+
   return {
     titulo:    block.field_titulo_ss ?? null,
-    subTitulo: block.field_sub_titulo_ss,
+    subTitulo: block.field_sub_titulo_ss ?? '',
     eslogan:   block.field_eslogan_ss ?? null,
+    services,
   };
 }
 

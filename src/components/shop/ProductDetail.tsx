@@ -31,8 +31,7 @@ export default function ProductDetail({ product, lang }: Props) {
   const [message, setMessage] = useState('');
   const [imgLoaded, setImgLoaded] = useState(false);
   const [isZooming, setIsZooming] = useState(false);
-  const [zoomPos, setZoomPos] = useState({ x: 50, y: 50 });
-  
+
   const mainImgRef = useRef<HTMLImageElement>(null);
   const MAX_CHARS = 150;
   const images = product.images;
@@ -40,18 +39,38 @@ export default function ProductDetail({ product, lang }: Props) {
 
   useEffect(() => {
     setImgLoaded(false);
+    setIsZooming(false);
+    // Reset origin so entering a new image always starts centered
+    if (mainImgRef.current) {
+      mainImgRef.current.style.transformOrigin = '50% 50%';
+    }
     const img = mainImgRef.current;
     if (img && img.complete && img.naturalWidth > 0) {
       setImgLoaded(true);
     }
   }, [activeImg]);
 
+  // ─── Direct DOM mutation — bypasses React render cycle for zero-lag zoom ──
   const handleMouseMove = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
     const rect = e.currentTarget.getBoundingClientRect();
     const x = Math.max(0, Math.min(100, ((e.clientX - rect.left) / rect.width) * 100));
     const y = Math.max(0, Math.min(100, ((e.clientY - rect.top) / rect.height) * 100));
-    setZoomPos({ x, y });
+    if (mainImgRef.current) {
+      mainImgRef.current.style.transformOrigin = `${x}% ${y}%`;
+    }
   }, []);
+
+  // Set origin at the entry point so zoom "opens" exactly where cursor is
+  const handleMouseEnter = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
+    if (!hasImages || !imgLoaded) return;
+    const rect = e.currentTarget.getBoundingClientRect();
+    const x = Math.max(0, Math.min(100, ((e.clientX - rect.left) / rect.width) * 100));
+    const y = Math.max(0, Math.min(100, ((e.clientY - rect.top) / rect.height) * 100));
+    if (mainImgRef.current) {
+      mainImgRef.current.style.transformOrigin = `${x}% ${y}%`;
+    }
+    setIsZooming(true);
+  }, [hasImages, imgLoaded]);
 
   const contactHref = lang === 'en' ? '/en/contact' : '/contact';
   const tipoLabel = product.tipo
@@ -63,13 +82,13 @@ export default function ProductDetail({ product, lang }: Props) {
 
       {/* ═══════════════ GALERÍA ═══════════════ */}
       <div className="flex flex-col gap-4 lg:sticky lg:top-24">
-        
+
         {/* Contenedor Imagen Principal */}
         <div
           className={`group relative aspect-[4/5] rounded-2xl overflow-hidden bg-blush isolation-auto ${
             isZooming && imgLoaded ? 'cursor-crosshair' : 'cursor-default'
           }`}
-          onMouseEnter={() => hasImages && setIsZooming(true)}
+          onMouseEnter={handleMouseEnter}
           onMouseLeave={() => setIsZooming(false)}
           onMouseMove={handleMouseMove}
         >
@@ -79,17 +98,18 @@ export default function ProductDetail({ product, lang }: Props) {
               ref={mainImgRef}
               src={images[activeImg]}
               alt={product.title}
-              className={`w-full h-full object-cover select-none pointer-events-none transition-all duration-400 ${
-                imgLoaded ? 'opacity-100 scale-100' : 'opacity-0 scale-105'
-              } ${isZooming && imgLoaded ? 'duration-0' : ''}`}
-              style={
-                isZooming && imgLoaded
-                  ? {
-                      transformOrigin: `${zoomPos.x}% ${zoomPos.y}%`,
-                      transform: 'scale(2.2)',
-                    }
-                  : undefined
-              }
+              className="w-full h-full object-cover select-none pointer-events-none"
+              style={{
+                // Only transition scale (transform), NOT transform-origin.
+                // transform-origin is mutated directly on the DOM node so it
+                // follows the cursor with zero render-cycle delay.
+                transform: isZooming && imgLoaded ? 'scale(2.2)' : 'scale(1)',
+                transition: isZooming
+                  ? 'transform 0.25s cubic-bezier(0.2, 0, 0, 1)'
+                  : 'transform 0.35s ease-out, opacity 0.35s ease-out',
+                opacity: imgLoaded ? 1 : 0,
+                willChange: 'transform',
+              }}
               onLoad={() => setImgLoaded(true)}
               draggable={false}
             />
@@ -124,8 +144,8 @@ export default function ProductDetail({ product, lang }: Props) {
                 key={i}
                 onClick={() => i !== activeImg && setActiveImg(i)}
                 className={`aspect-square rounded-xl overflow-hidden border-[2.5px] p-0 cursor-pointer bg-blush transition-all duration-200 hover:-translate-y-0.5 ${
-                  i === activeImg 
-                    ? 'border-primary opacity-100 shadow-[0_0_0_3px_color-mix(in_srgb,var(--primary)_20%,transparent)]' 
+                  i === activeImg
+                    ? 'border-primary opacity-100 shadow-[0_0_0_3px_color-mix(in_srgb,var(--primary)_20%,transparent)]'
                     : 'border-transparent opacity-55 hover:opacity-85'
                 }`}
                 aria-label={`${product.title} — imagen ${i + 1}`}
@@ -140,7 +160,7 @@ export default function ProductDetail({ product, lang }: Props) {
 
       {/* ═══════════════ INFO ═══════════════ */}
       <div className="flex flex-col gap-5">
-        
+
         {product.category && (
           <p className="font-body text-xs font-bold uppercase tracking-widest text-primary">
             {product.category}
@@ -213,17 +233,17 @@ export default function ProductDetail({ product, lang }: Props) {
 
         {/* Botones de acción */}
         <div className="flex flex-col sm:flex-row gap-3">
-          <button 
-            className="flex-1 btn-primary h-13 shadow-[0_4px_16px_color-mix(in_srgb,var(--primary)_35%,transparent)] opacity-85 cursor-not-allowed" 
-            type="button" 
+          <button
+            className="flex-1 btn-primary h-13 shadow-[0_4px_16px_color-mix(in_srgb,var(--primary)_35%,transparent)] opacity-85 cursor-not-allowed"
+            type="button"
             disabled
           >
             <span className="material-symbols-outlined !text-xl leading-none">shopping_cart</span>
             {t(lang, 'shop.add_to_cart')}
           </button>
 
-          <a 
-            href={contactHref} 
+          <a
+            href={contactHref}
             className="flex-1 flex items-center justify-center gap-2 h-13 bg-white text-headline border-1.5 border-border rounded-xl font-body text-base font-bold no-underline transition-all duration-200 hover:border-primary hover:text-primary hover:bg-primary/[0.04]"
           >
             <span className="material-symbols-outlined !text-xl leading-none">chat</span>

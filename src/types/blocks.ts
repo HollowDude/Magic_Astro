@@ -17,19 +17,8 @@ export interface BlockContentBase {
 
 // ─────────────────────────────────────────────────────────────────────────────
 // BLOQUES CONCRETOS
-// Convención: un interface por block type, con el machine name del bundle.
 // ─────────────────────────────────────────────────────────────────────────────
 
-/**
- * Block type: Homepage Hero Section
- * Bundle machine name: homepage_hero_section
- *
- * Campos:
- *   field_bienvenida        → Text (plain)      — título principal (requerido)
- *   field_eslogan           → Text (plain)      — subtítulo (opcional)
- *   field_descripcion       → Text (plain,long) — párrafo descriptivo (requerido)
- *   field_carrusel_de_fotos → Image (hasta 6)   — slides del carrusel
- */
 export interface HomepageHeroBlock extends BlockContentBase {
   type: 'block_content--homepage_hero_section';
   field_bienvenida: string;
@@ -38,15 +27,6 @@ export interface HomepageHeroBlock extends BlockContentBase {
   field_carrusel_de_fotos: DrupalFile[];
 }
 
-/**
- * Block type: Homepage Personalization Section
- * Bundle machine name: homepage_personalization_section
- *
- * Campos:
- *   field_titulo        → Text (plain)      — título (opcional)
- *   field_descripcion_ps→ Text (plain,long) — descripción (requerido)
- *   field_foto          → Image (único)     — foto decorativa (opcional)
- */
 export interface HomepagePersonalizationBlock extends BlockContentBase {
   type: 'block_content--homepage_personalization_section';
   field_titulo: string | null;
@@ -54,34 +34,25 @@ export interface HomepagePersonalizationBlock extends BlockContentBase {
   field_foto: DrupalFile | null;
 }
 
-/**
- * Block type: Homepage Servicios Section
- * Bundle machine name: homepage_servicios_section
- *
- * Campos:
- *   field_titulo_ss    → Text (plain) — eyebrow/título (opcional)
- *   field_sub_titulo_ss→ Text (plain) — título principal (requerido)
- *   field_eslogan_ss   → Text (plain) — subtítulo descriptivo (opcional)
- */
+// ── Nodo Servicio referenciado por el bloque ──────────────────────────────────
+
+export interface ServicioNode {
+  type: 'node--services';
+  id: string;
+  title: string;
+  field_description: string;
+  field_image: DrupalFile | null;
+}
+
 export interface HomepageServiciosBlock extends BlockContentBase {
   type: 'block_content--homepage_servicios_section';
   field_titulo_ss: string | null;
   field_sub_titulo_ss: string;
   field_eslogan_ss: string | null;
+  /** Servicios referenciados directamente desde el bloque (field_servicios) */
+  field_servicios: ServicioNode[];
 }
 
-/**
- * Content type: Comentario
- * Machine name: comentario
- *
- * Entidad independiente referenciada por HomepageComentariosBlock.
- * Debe crearse como nodo antes de poder asociarse al bloque.
- *
- * Campos:
- *   field_nombre_persona      → Text (plain)      — nombre (requerido)
- *   field_role_de_la_persona  → Text (plain)      — rol (opcional)
- *   field_comentario          → Text (plain,long) — testimonio (requerido)
- */
 export interface ComentarioNode {
   type: 'node--comentario';
   id: string;
@@ -90,15 +61,6 @@ export interface ComentarioNode {
   field_comentario: string;
 }
 
-/**
- * Block type: Homepage Comentarios Section
- * Bundle machine name: homepage_comentarios_section
- *
- * Campos:
- *   field_titulo_cs     → Text (plain)      — título (requerido)
- *   field_descripcion_cs→ Text (plain)      — descripción (requerido)
- *   field_comentarios   → Entity Reference  — refs a nodos Comentario (máx. 3)
- */
 export interface HomepageComentariosBlock extends BlockContentBase {
   type: 'block_content--homepage_comentarios_section';
   field_titulo_cs: string;
@@ -108,13 +70,11 @@ export interface HomepageComentariosBlock extends BlockContentBase {
 
 // ─────────────────────────────────────────────────────────────────────────────
 // FORMAS NORMALIZADAS PARA LOS COMPONENTES
-// Desacopladas de Drupal para que los componentes no dependan de la API.
 // ─────────────────────────────────────────────────────────────────────────────
 
-// ── Hero ──────────────────────────────────────────────────────────────────────
 export interface HeroSlide {
-  image: string;   // URL absoluta
-  label: string;   // alt text / aria-label
+  image: string;
+  label: string;
 }
 
 export interface HeroData {
@@ -124,21 +84,26 @@ export interface HeroData {
   slides: HeroSlide[];
 }
 
-// ── Personalization ───────────────────────────────────────────────────────────
 export interface PersonalizationData {
   titulo: string | null;
   descripcion: string;
   fotoUrl: string | null;
 }
 
-// ── Servicios ─────────────────────────────────────────────────────────────────
-export interface ServiciosData {
-  titulo: string | null;       // eyebrow label
-  subTitulo: string;           // h2 principal
-  eslogan: string | null;      // párrafo descriptivo
+export interface ServicioItem {
+  title: string;
+  description: string;
+  image: string | null;
 }
 
-// ── Comentarios ───────────────────────────────────────────────────────────────
+export interface ServiciosData {
+  titulo: string | null;
+  subTitulo: string;
+  eslogan: string | null;
+  /** Servicios extraídos de field_servicios del bloque */
+  services: ServicioItem[];
+}
+
 export interface TestimonialItem {
   nombre: string;
   rol: string | null;
