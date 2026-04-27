@@ -1,6 +1,6 @@
 ---
 // src/layouts/BaseLayout.astro
-import HomeHeader from '@/components/home/HomeHeader.astro';
+import Header from '@/components/ui/Header.astro';
 import Footer from '@/components/ui/Footer.astro';
 import '@/styles/global.css';
 
@@ -38,7 +38,7 @@ const { title = 'Inicio', lang = 'es' } = Astro.props;
     </script>
   </head>
   <body class="bg-background-light text-text-main font-body antialiased">
-    <HomeHeader />
+    <Header />
     <slot />
     <Footer lang={lang} />
   </body>

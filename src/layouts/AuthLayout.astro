@@ -1,6 +1,8 @@
 ---
 // src/layouts/AuthLayout.astro
 import '@/styles/global.css';
+import Header from '@/components/ui/Header.astro';
+import Footer from '@/components/ui/Footer.astro';
 
 interface Props { title?: string; lang?: string }
 const { title = 'Inicio', lang = 'es' } = Astro.props;
@@ -9,6 +11,7 @@ const { title = 'Inicio', lang = 'es' } = Astro.props;
 <!doctype html>
 <html lang={lang}>
   <head>
+
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="robots" content="noindex" />
@@ -18,6 +21,8 @@ const { title = 'Inicio', lang = 'es' } = Astro.props;
     <title>{title} — Maggy Flowers</title>
   </head>
   <body>
+    <Header />
     <slot />
+    <Footer></Footer>
   </body>
 </html>
