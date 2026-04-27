@@ -1,19 +1,22 @@
-// src/services/drupal/drupal.product.ts
+// src/services/nodehive/nodehive.product.ts
 
 import { DrupalJsonApiParams } from 'drupal-jsonapi-params';
 import Jsona from 'jsona';
-import { drupalFetch } from './drupal.client';
-import { getProductThumbnail, getVariationGallery } from '@/types/commerce';
-import type { FloresProduct } from '@/types/commerce';
+import { nodehiveFetch } from './nodehive.client';
+import { getProductThumbnail, getVariationGallery } from '@/types/nodehive.commerce';
+import type { FlowerProduct } from '@/types/nodehive.commerce';
 import type { Lang } from '@/i18n/ui';
 
 const dataFormatter = new Jsona();
 
-const FLORES_INCLUDES = [
+const FLOWER_INCLUDES = [
   'variations',
-  'variations.field_galeria_de_fotos',
-  'variations.field_color_de_la_flor',
-  'field_categoria',
+  'variations.field_gallery_of_photos',
+  'variations.field_gallery_of_photos.field_media_image',
+  'variations.field_color',
+  'field_category',
+  'field_ocasion',
+  'field_tag',
 ];
 
 const FETCH_OPTIONS = {
@@ -24,17 +27,23 @@ const FETCH_OPTIONS = {
 } as const;
 
 function buildBaseParams(p: DrupalJsonApiParams): void {
-  p.addInclude(FLORES_INCLUDES)
-   .addFields('commerce_product--flores', ['title', 'body', 'variations', 'field_categoria'])
-   .addFields('commerce_product_variation--flores_personalizadas', [
-     'sku', 'price', 'title',
-     'field_color_de_la_flor',
-     'field_galeria_de_fotos',
-     'field_tipo',
+  p.addInclude(FLOWER_INCLUDES)
+   .addFields('commerce_product--flower', [
+     'title', 'body', 'field_description', 'field_category',
+     'field_ocasion', 'field_tag', 'variations',
    ])
-   .addFields('file--file',                          ['filename', 'uri', 'filemime'])
-   .addFields('taxonomy_term--colores',               ['name', 'field_color_hex'])
-   .addFields('taxonomy_term--categorias_de_flores',  ['name']);
+   .addFields('commerce_product_variation--flower', [
+     'sku', 'price', 'title',
+     'field_color',
+     'field_gallery_of_photos',
+     'field_type',
+   ])
+   .addFields('file--file',                      ['filename', 'uri', 'filemime'])
+   .addFields('media--image',                    ['name', 'field_media_image'])
+   .addFields('taxonomy_term--colors',           ['name', 'field_color_hex'])
+   .addFields('taxonomy_term--flower_category',  ['name', 'drupal_internal__tid'])
+   .addFields('taxonomy_term--occasions',        ['name'])
+   .addFields('taxonomy_term--products_tag',     ['name']);
 }
 
 function buildListParams(p: DrupalJsonApiParams, limit: number): void {
@@ -44,18 +53,18 @@ function buildListParams(p: DrupalJsonApiParams, limit: number): void {
 
 // ── getProductById ────────────────────────────────────────────────────────────
 
-export async function getProductById(id: string, lang?: Lang): Promise<FloresProduct | null> {
+export async function getProductById(id: string, lang?: Lang): Promise<FlowerProduct | null> {
   const params = new DrupalJsonApiParams();
   buildBaseParams(params);
 
-  const path = `/jsonapi/commerce_product/flores/${id}?${params.getQueryString()}`;
+  const path = `/jsonapi/commerce_product/flower/${id}?${params.getQueryString()}`;
 
   try {
-    const raw = await drupalFetch<Record<string, unknown>>(path, { ...FETCH_OPTIONS, lang });
+    const raw = await nodehiveFetch<Record<string, unknown>>(path, { ...FETCH_OPTIONS, lang });
     if (raw.status !== 200) return null;
 
     const result = dataFormatter.deserialize(raw.data);
-    return (Array.isArray(result) ? result[0] : result) as FloresProduct;
+    return (Array.isArray(result) ? result[0] : result) as FlowerProduct;
   } catch {
     return null;
   }
@@ -70,21 +79,21 @@ export async function getProductById(id: string, lang?: Lang): Promise<FloresPro
  * 3. Fallback a recientes si no hay suficientes.
  */
 export async function getRelatedProducts(
-  product: FloresProduct,
+  product: FlowerProduct,
   lang?: Lang,
   limit = 4,
-): Promise<FloresProduct[]> {
-  const categoryId = (product as any).field_categoria?.id as string | undefined;
-  const colorName  = product.variations?.[0]?.field_color_de_la_flor?.name;
+): Promise<FlowerProduct[]> {
+  const categoryId = product.field_category?.id;
+  const colorName  = product.variations?.[0]?.field_color?.name;
 
   // ── Fetch paralelo de las dos fuentes principales ─────────────────────────
   const [byCategory, byColor] = await Promise.all([
     categoryId
-      ? fetchRelatedByFilter('field_categoria.id', categoryId, product.id, lang, limit)
+      ? fetchRelatedByFilter('field_category.id', categoryId, product.id, lang, limit)
       : Promise.resolve([]),
     colorName
       ? fetchRelatedByFilter(
-          'variations.field_color_de_la_flor.name', colorName, product.id, lang, limit,
+          'variations.field_color.name', colorName, product.id, lang, limit,
         )
       : Promise.resolve([]),
   ]);
@@ -120,28 +129,27 @@ export async function getProductDetailPageData(
     colorName: string | null; colorHex: string | null; category: string | null;
   }>;
 } | null> {
-  const DRUPAL_BASE_URL = import.meta.env.DRUPAL_BASE_URL as string;
+  const NODEHIVE_BASE_URL = import.meta.env.NODEHIVE_BASE_URL as string;
 
   const product = await getProductById(id, lang);
   if (!product) return null;
 
   const variation = product.variations?.[0];
-  const allImages = variation ? getVariationGallery(variation, DRUPAL_BASE_URL) : [];
+  const allImages = variation ? getVariationGallery(variation, NODEHIVE_BASE_URL) : [];
 
   const productData = {
     id:          product.id,
     title:       product.title,
-    price:       variation?.price?.formatted                        ?? '',
-    description: product.body?.processed                           ?? '',
+    price:       variation?.price?.formatted                   ?? '',
+    description: product.body?.processed ?? product.field_description ?? '',
     images:      allImages,
-    badge:       null as null,  // se computa en ProductDetailContent.astro con t()
-    tipo:        variation?.field_tipo                              ?? null,
-    colorName:   variation?.field_color_de_la_flor?.name           ?? null,
-    colorHex:    variation?.field_color_de_la_flor?.field_color_hex ?? null,
-    category:    (product as any).field_categoria?.name            ?? null,
+    badge:       null as null,
+    tipo:        variation?.field_type                         ?? null,
+    colorName:   variation?.field_color?.name                  ?? null,
+    colorHex:    variation?.field_color?.field_color_hex       ?? null,
+    category:    product.field_category?.name                  ?? null,
   };
 
-  // getRelatedProducts ya es paralelo internamente
   const rawRelated = await getRelatedProducts(product, lang, 4);
 
   const relatedProducts = rawRelated.map(p => {
@@ -149,14 +157,14 @@ export async function getProductDetailPageData(
     return {
       id:          p.id,
       title:       p.title,
-      price:       v?.price?.formatted                        ?? '',
-      priceNumber: parseFloat(v?.price?.number               ?? '0'),
-      thumbnail:   getProductThumbnail(p, DRUPAL_BASE_URL),
+      price:       v?.price?.formatted                   ?? '',
+      priceNumber: parseFloat(v?.price?.number          ?? '0'),
+      thumbnail:   getProductThumbnail(p, NODEHIVE_BASE_URL),
       badge:       null as null,
-      tipo:        v?.field_tipo                              ?? null,
-      colorName:   v?.field_color_de_la_flor?.name           ?? null,
-      colorHex:    v?.field_color_de_la_flor?.field_color_hex ?? null,
-      category:    (p as any).field_categoria?.name          ?? null,
+      tipo:        v?.field_type                         ?? null,
+      colorName:   v?.field_color?.name                  ?? null,
+      colorHex:    v?.field_color?.field_color_hex       ?? null,
+      category:    p.field_category?.name                ?? null,
     };
   });
 
@@ -171,21 +179,21 @@ async function fetchRelatedByFilter(
   excludeId: string,
   lang?: Lang,
   limit = 4,
-): Promise<FloresProduct[]> {
+): Promise<FlowerProduct[]> {
   const params = new DrupalJsonApiParams();
   buildListParams(params, limit + 1);
   params.addFilter(filterPath, filterValue);
 
   try {
-    const raw = await drupalFetch<Record<string, unknown>>(
-      `/jsonapi/commerce_product/flores?${params.getQueryString()}`,
+    const raw = await nodehiveFetch<Record<string, unknown>>(
+      `/jsonapi/commerce_product/flower?${params.getQueryString()}`,
       { ...FETCH_OPTIONS, lang },
     );
     if (raw.status !== 200) return [];
 
     const all = dataFormatter.deserialize(raw.data);
     return dedupe(
-      Array.isArray(all) ? (all as FloresProduct[]) : [all as FloresProduct],
+      Array.isArray(all) ? (all as FlowerProduct[]) : [all as FlowerProduct],
       excludeId,
     );
   } catch {
@@ -197,20 +205,20 @@ async function fetchLatestProducts(
   excludeId: string,
   lang?: Lang,
   limit = 4,
-): Promise<FloresProduct[]> {
+): Promise<FlowerProduct[]> {
   const params = new DrupalJsonApiParams();
   buildListParams(params, limit + 1);
 
   try {
-    const raw = await drupalFetch<Record<string, unknown>>(
-      `/jsonapi/commerce_product/flores?${params.getQueryString()}`,
+    const raw = await nodehiveFetch<Record<string, unknown>>(
+      `/jsonapi/commerce_product/flower?${params.getQueryString()}`,
       { ...FETCH_OPTIONS, lang },
     );
     if (raw.status !== 200) return [];
 
     const all = dataFormatter.deserialize(raw.data);
     return dedupe(
-      Array.isArray(all) ? (all as FloresProduct[]) : [all as FloresProduct],
+      Array.isArray(all) ? (all as FlowerProduct[]) : [all as FlowerProduct],
       excludeId,
     );
   } catch {
@@ -218,7 +226,7 @@ async function fetchLatestProducts(
   }
 }
 
-function dedupe(products: FloresProduct[], excludeId: string): FloresProduct[] {
+function dedupe(products: FlowerProduct[], excludeId: string): FlowerProduct[] {
   const seen = new Set<string>([excludeId]);
   return products.filter(p => {
     if (seen.has(p.id)) return false;

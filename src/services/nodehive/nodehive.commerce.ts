@@ -1,14 +1,14 @@
-// src/services/drupal/drupal.commerce.ts
+// src/services/nodehive/nodehive.commerce.ts
 
 import { DrupalJsonApiParams } from 'drupal-jsonapi-params';
 import Jsona from 'jsona';
-import { drupalFetch } from './drupal.client';
+import { nodehiveFetch } from './nodehive.client';
 import type {
   CommerceProduct,
   CommerceVariationBase,
-  FloresPersonalizadasVariation,
-  FloresProduct,
-} from '@/types/commerce';
+  FlowerVariation,
+  FlowerProduct,
+} from '@/types/nodehive.commerce';
 import type { Lang } from '@/i18n/ui';
 
 const dataFormatter = new Jsona();
@@ -23,28 +23,42 @@ interface ProductTypeConfig {
 }
 
 const PRODUCT_CONFIGS = {
-  flores: {
-    productType: 'flores',
-    variationType: 'flores_personalizadas',
+  flower: {
+    productType: 'flower',
+    variationType: 'flower',
     includes: [
       'variations',
-      'variations.field_galeria_de_fotos',
-      'variations.field_color_de_la_flor',
-      'field_categoria', 
+      'variations.field_gallery_of_photos',
+      'variations.field_gallery_of_photos.field_media_image',
+      'variations.field_color',
+      'field_category',
+      'field_ocasion',
+      'field_tag',
     ],
-    productFields: ['title', 'body', 'variations','field_categoria'],
+    productFields: [
+      'title',
+      'body',
+      'field_description',
+      'field_category',
+      'field_ocasion',
+      'field_tag',
+      'variations',
+    ],
     variationFields: [
       'sku',
       'price',
       'title',
-      'field_color_de_la_flor',
-      'field_galeria_de_fotos',
-      'field_tipo',
+      'field_color',
+      'field_gallery_of_photos',
+      'field_type',
     ],
     relatedFields: {
-      'file--file':               ['filename', 'uri', 'filemime'],
-      'taxonomy_term--colores':   ['name', 'field_color_hex'],
-      'taxonomy_term--categorias_de_flores': ['name'],
+      'file--file':                   ['filename', 'uri', 'filemime'],
+      'media--image':                 ['name', 'field_media_image'],
+      'taxonomy_term--colors':        ['name', 'field_color_hex'],
+      'taxonomy_term--flower_category': ['name', 'drupal_internal__tid', 'weight'],
+      'taxonomy_term--occasions':     ['name'],
+      'taxonomy_term--products_tag':  ['name'],
     },
   },
 } satisfies Record<string, ProductTypeConfig>;
@@ -52,10 +66,10 @@ const PRODUCT_CONFIGS = {
 export type ProductTypeKey = keyof typeof PRODUCT_CONFIGS;
 
 /**
- * Obtiene productos de Drupal Commerce usando JSON:API.
+ * Obtiene productos de NodeHive Commerce usando JSON:API.
  *
  * @param productTypeKey  Clave de PRODUCT_CONFIGS
- * @param lang            Idioma deseado ('es' | 'en'). Si no se pasa, usa el default de Drupal.
+ * @param lang            Idioma deseado ('es' | 'en'). Si no se pasa, usa el default.
  */
 export async function getProducts<
   V extends CommerceVariationBase = CommerceVariationBase,
@@ -84,10 +98,10 @@ export async function getProducts<
 
   const path = `/jsonapi/commerce_product/${config.productType}?${apiParams.getQueryString()}`;
 
-  let raw: Awaited<ReturnType<typeof drupalFetch<Record<string, unknown>>>>;
+  let raw: Awaited<ReturnType<typeof nodehiveFetch<Record<string, unknown>>>>;
 
   try {
-    raw = await drupalFetch<Record<string, unknown>>(path, {
+    raw = await nodehiveFetch<Record<string, unknown>>(path, {
       headers: {
         'Content-Type': 'application/vnd.api+json',
         Accept:         'application/vnd.api+json',
@@ -112,7 +126,7 @@ export async function getProducts<
   }
 }
 
-/** Obtiene productos del tipo flores con variaciones flores_personalizadas */
-export function getFloresProducts(lang?: Lang): Promise<FloresProduct[]> {
-  return getProducts<FloresPersonalizadasVariation>('flores', lang);
+/** Obtiene productos del tipo flower con variaciones flower */
+export function getFlowerProducts(lang?: Lang): Promise<FlowerProduct[]> {
+  return getProducts<FlowerVariation>('flower', lang);
 }
