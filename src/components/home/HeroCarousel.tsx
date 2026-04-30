@@ -1,6 +1,6 @@
 // src/components/home/HeroCarousel.tsx
 import { useState, useEffect, useCallback } from 'react';
-import type { HeroSlide } from '@/types/blocks';
+import type { HeroSlide } from '@/types/nodehive.paragraphs';
 import { ui, defaultLang } from '@/i18n/ui';
 import type { Lang, UiKey } from '@/i18n/ui';
 
@@ -15,24 +15,26 @@ function t(lang: Lang, key: UiKey): string {
 // ── Props ─────────────────────────────────────────────────────────────────────
 
 interface Props {
-  title?:       string;
-  slogan?:      string | null;
-  description?: string;
-  slides?:      HeroSlide[];
-  lang?:        Lang;
+  title?:        string | null;
+  subtitle?:     string | null;
+  description?:  string | null;
+  slides?:       HeroSlide[];
+  ctaButtons?:   Array<{ text: string; url: string; style: 'primary' | 'secondary' }>;
+  lang?:         Lang;
 }
 
 const INTERVAL = 5000;
 
 export default function HeroCarousel({
   title,
-  slogan,
+  subtitle,
   description,
   slides,
+  ctaButtons,
   lang = 'es',
 }: Props) {
   const fallbackTitle       = t(lang, 'hero.title');
-  const fallbackSlogan      = t(lang, 'hero.slogan');
+  const fallbackSubtitle    = t(lang, 'hero.slogan');
   const fallbackDescription = t(lang, 'hero.description');
   const fallbackSlides: HeroSlide[] = [
     {
@@ -50,13 +52,10 @@ export default function HeroCarousel({
   ];
 
   const activeTitle       = title       ?? fallbackTitle;
-  const activeSlogan      = slogan      ?? fallbackSlogan;
+  const activeSubtitle    = subtitle    ?? fallbackSubtitle;
   const activeDescription = description ?? fallbackDescription;
   const activeSlides      = (slides && slides.length > 0) ? slides : fallbackSlides;
-
-  const prefix      = lang === 'es' ? '' : '/en';
-  const shopHref    = `${prefix}/shop`;
-  const coursesHref = `${prefix}/courses`;
+  const activeCtaButtons  = ctaButtons && ctaButtons.length > 0 ? ctaButtons : null;
 
   const [active,      setActive]      = useState(0);
   const [prev,        setPrev]        = useState<number | null>(null);
@@ -108,28 +107,46 @@ export default function HeroCarousel({
         <h1 className="text-[clamp(2.25rem,6vw,4rem)] font-black leading-[1.1] tracking-[-0.03em] text-white [text-shadow:0_2px_16px_rgba(0,0,0,0.3)] font-body m-0">
           {activeTitle}
         </h1>
-        {activeSlogan && (
+        {activeSubtitle && (
           <h2 className="text-[clamp(1.25rem,3vw,2rem)] font-bold leading-tight text-[#fbdadd] tracking-[-0.02em] font-body m-0">
-            {activeSlogan}
+            {activeSubtitle}
           </h2>
         )}
         <p className="max-w-[38rem] text-[clamp(1rem,2vw,1.125rem)] leading-relaxed text-white/90 font-body m-0">
           {activeDescription}
         </p>
-        <div className="mt-3 flex flex-wrap justify-center gap-4">
-          <a
-            href={shopHref}
-            className="inline-flex items-center justify-center h-12 min-w-[10rem] px-8 rounded-full bg-primary text-white text-base font-bold no-underline font-body shadow-[0_4px_18px_color-mix(in_srgb,var(--color-primary)_45%,transparent)] transition-all duration-200 hover:scale-105 hover:bg-primary-dark"
-          >
-            {t(lang, 'hero.cta.shop')}
-          </a>
-          <a
-            href={coursesHref}
-            className="inline-flex items-center justify-center h-12 min-w-[10rem] px-8 rounded-full bg-white/90 text-[#181112] text-base font-bold no-underline font-body backdrop-blur-[4px] transition-all duration-200 hover:scale-105 hover:bg-white"
-          >
-            {t(lang, 'hero.cta.courses')}
-          </a>
-        </div>
+        {activeCtaButtons ? (
+          <div className="mt-3 flex flex-wrap justify-center gap-4">
+            {activeCtaButtons.map((btn, i) => (
+              <a
+                key={i}
+                href={btn.url}
+                className={`inline-flex items-center justify-center h-12 min-w-[10rem] px-8 rounded-full text-base font-bold no-underline font-body transition-all duration-200 hover:scale-105 ${
+                  btn.style === 'primary'
+                    ? 'bg-primary text-white shadow-[0_4px_18px_color-mix(in_srgb,var(--color-primary)_45%,transparent)] hover:bg-primary-dark'
+                    : 'bg-white/90 text-[#181112] backdrop-blur-[4px] hover:bg-white'
+                }`}
+              >
+                {btn.text}
+              </a>
+            ))}
+          </div>
+        ) : (
+          <div className="mt-3 flex flex-wrap justify-center gap-4">
+            <a
+              href={lang === 'es' ? '/shop' : '/en/shop'}
+              className="inline-flex items-center justify-center h-12 min-w-[10rem] px-8 rounded-full bg-primary text-white text-base font-bold no-underline font-body shadow-[0_4px_18px_color-mix(in_srgb,var(--color-primary)_45%,transparent)] transition-all duration-200 hover:scale-105 hover:bg-primary-dark"
+            >
+              {t(lang, 'hero.cta.shop')}
+            </a>
+            <a
+              href={lang === 'es' ? '/courses' : '/en/courses'}
+              className="inline-flex items-center justify-center h-12 min-w-[10rem] px-8 rounded-full bg-white/90 text-[#181112] text-base font-bold no-underline font-body backdrop-blur-[4px] transition-all duration-200 hover:scale-105 hover:bg-white"
+            >
+              {t(lang, 'hero.cta.courses')}
+            </a>
+          </div>
+        )}
       </div>
 
       {activeSlides.length > 1 && (

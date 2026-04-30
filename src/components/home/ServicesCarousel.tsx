@@ -1,6 +1,6 @@
 // src/components/home/ServicesCarousel.tsx
 import { useState, useCallback, useEffect, useRef } from 'react';
-import type { ServiceItem } from '@/services/drupal/drupal.service';
+import type { ServiceItem } from '@/services/nodehive/nodehive.service';
 
 // ── Props ──────────────────────────────────────────────────────────────────────
 

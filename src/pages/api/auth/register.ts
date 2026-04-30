@@ -14,7 +14,7 @@
  */
 
 import type { APIRoute } from 'astro';
-import { register } from '@/services/drupal/register.service';
+import { register } from '@/services/nodehive/register.service';
 
 // Regex de validación básica de email
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;

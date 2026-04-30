@@ -3,9 +3,9 @@
 import { DrupalJsonApiParams } from 'drupal-jsonapi-params';
 import Jsona from 'jsona';
 import { nodehiveFetch } from './nodehive.client';
-import { getProductThumbnail, getVariationGallery } from '@/types/nodehive.commerce';
-import type { FlowerProduct } from '@/types/nodehive.commerce';
-import type { Lang } from '@/i18n/ui';
+import { getProductThumbnail, getVariationGallery } from '../../types/nodehive.commerce';
+import type { FlowerProduct } from '../../types/nodehive.commerce';
+import type { Lang } from '../../i18n/ui';
 
 const dataFormatter = new Jsona();
 

@@ -12,9 +12,9 @@
 import type { APIRoute } from 'astro';
 import { DrupalJsonApiParams } from 'drupal-jsonapi-params';
 import Jsona from 'jsona';
-import { drupalFetch } from '@/services/drupal/drupal.client';
-import { getProductThumbnail } from '@/types/commerce';
-import type { FloresProduct } from '@/types/commerce';
+import { drupalFetch } from '@/services/nodehive/nodehive.client';
+import { getProductThumbnail } from '@/types/nodehive.commerce';
+import type { FloresProduct } from '@/types/nodehive.commerce';
 
 const dataFormatter = new Jsona();
 const DRUPAL_BASE_URL = import.meta.env.DRUPAL_BASE_URL as string;
