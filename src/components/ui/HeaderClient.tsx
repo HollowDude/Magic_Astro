@@ -47,6 +47,10 @@ const SEARCH_STRINGS = {
 
 const DEBOUNCE_MS = 350;
 
+function getPrefix(lang: Lang): string {
+  return `/${lang}`;
+}
+
 // ── SearchResultPanel ─────────────────────────────────────────────────────────
 
 interface SearchPanelProps {
@@ -62,7 +66,7 @@ function SearchResultPanel({
   lang, query, results, loading, hasMore, shopHref,
 }: SearchPanelProps) {
   const ss = SEARCH_STRINGS[lang];
-  const prefix = lang === 'en' ? '/en' : '';
+  const prefix = getPrefix(lang);
 
   return (
     <div className="absolute top-[calc(100%+0.5rem)] left-0 right-0 min-w-[18rem] bg-white rounded-[0.875rem] shadow-[0_8px_32px_rgba(0,0,0,0.1),0_0_0_1px_color-mix(in_srgb,var(--color-primary)_8%,transparent)] z-[100] overflow-hidden py-3">
@@ -169,7 +173,7 @@ export default function HeaderClient({ isLoggedIn, currentPath, lang }: Props) {
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const navLinks = getNavLinks(lang);
-  const shopHref = lang === 'en' ? '/en/shop' : '/shop';
+  const shopHref = `${getPrefix(lang)}/shop`;
 
   const openSearch = () => {
     setSearchOpen(true);
@@ -254,7 +258,7 @@ export default function HeaderClient({ isLoggedIn, currentPath, lang }: Props) {
 
         {/* ── Left: logo + nav ── */}
         <div className="flex items-center gap-10 min-w-0">
-          <a href={lang === 'es' ? '/' : '/en'} className="flex items-center gap-2 no-underline text-text-main shrink-0">
+          <a href={getPrefix(lang)} className="flex items-center gap-2 no-underline text-text-main shrink-0">
             <span className="material-symbols-outlined text-[1.875rem] text-primary leading-none">local_florist</span>
             <span className="text-[1.0625rem] font-extrabold tracking-tight font-body text-text-main">Maggy Flowers</span>
           </a>
@@ -345,7 +349,7 @@ export default function HeaderClient({ isLoggedIn, currentPath, lang }: Props) {
           {/* ── Auth ── */}
           {isLoggedIn ? (
             <>
-              <a href={lang === 'es' ? '/dashboard' : '/en/dashboard'} className="flex items-center justify-center w-[2.375rem] h-[2.375rem] rounded-full bg-[color-mix(in_srgb,var(--color-primary)_7%,transparent)] text-text-main border-none cursor-pointer no-underline transition-all duration-200 shrink-0 hover:bg-[color-mix(in_srgb,var(--color-primary)_12%,transparent)]" aria-label={t(lang, 'header.profile')}>
+              <a href={`${getPrefix(lang)}/dashboard`} className="flex items-center justify-center w-[2.375rem] h-[2.375rem] rounded-full bg-[color-mix(in_srgb,var(--color-primary)_7%,transparent)] text-text-main border-none cursor-pointer no-underline transition-all duration-200 shrink-0 hover:bg-[color-mix(in_srgb,var(--color-primary)_12%,transparent)]" aria-label={t(lang, 'header.profile')}>
                 <span className="material-symbols-outlined text-[1.25rem] leading-none">account_circle</span>
               </a>
               <button className="relative flex items-center justify-center w-[2.375rem] h-[2.375rem] rounded-full bg-[color-mix(in_srgb,var(--color-primary)_7%,transparent)] text-text-main border-none cursor-pointer transition-all duration-200 shrink-0 hover:bg-[color-mix(in_srgb,var(--color-primary)_12%,transparent)]" aria-label={t(lang, 'header.cart')} disabled>

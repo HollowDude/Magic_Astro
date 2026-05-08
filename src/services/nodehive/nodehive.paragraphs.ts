@@ -3,8 +3,8 @@
 import { DrupalJsonApiParams } from 'drupal-jsonapi-params';
 import Jsona from 'jsona';
 import { nodehiveFetch } from './nodehive.client';
-import { nodehiveMediaUrl } from '../../types/nodehive.commerce';
-import type { HeroCarouselBlock, HeroData } from '../../types/nodehive.paragraphs';
+import { nodehiveMediaUrl } from '@/types/nodehive';
+import type { NodeHiveFile } from '../../types/nodehive/base';
 import type { Lang } from '../../i18n/ui';
 
 const dataFormatter = new Jsona();

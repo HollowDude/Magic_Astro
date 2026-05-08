@@ -8,7 +8,7 @@ import type {
   CommerceVariationBase,
   FlowerVariation,
   FlowerProduct,
-} from '../../types/nodehive.commerce';
+} from '@/types/nodehive/commerce';
 import type { Lang } from '../../i18n/ui';
 
 const dataFormatter = new Jsona();

@@ -3,15 +3,15 @@
 import { DrupalJsonApiParams } from 'drupal-jsonapi-params';
 import Jsona from 'jsona';
 import { nodehiveFetch } from './nodehive.client';
-import { nodehiveFileUrl, nodehiveMediaUrl, type NodeHiveFile, type CategoryNode } from '../../types/nodehive.commerce';
-import type { Lang } from '../../i18n/ui';
+import { nodehiveFileUrl, nodehiveMediaUrl, type NodeHiveFile, type CategoryNode } from '@/types/nodehive';
+import type { Lang } from '@/i18n/ui';
 import type {
   HeroData,
   HeroSlide,
   PersonalizationData,
   ServiciosData,
   ComentariosData,
-} from '../../types/blocks';
+} from '../../types/nodehive/content';
 
 const dataFormatter = new Jsona();
 const NODEHIVE_BASE_URL = import.meta.env.NODEHIVE_BASE_URL as string;

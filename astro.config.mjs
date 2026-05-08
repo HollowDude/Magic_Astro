@@ -1,23 +1,22 @@
+// @ts-check
 import { defineConfig } from 'astro/config';
-import react from '@astrojs/react';
+
 import tailwindcss from '@tailwindcss/vite';
 
+import react from '@astrojs/react';
+
+// https://astro.build/config
 export default defineConfig({
-  integrations: [react()],
-  output: 'server',
-  server: {
-    port: 4321,
-  },
   vite: {
-    plugins: [tailwindcss()],
+    plugins: [tailwindcss()]
   },
   i18n: {
     defaultLocale: 'es',
     locales: ['es', 'en'],
     routing: {
-      // Español en la raíz (/), Inglés bajo /en/
-      // Ejemplo: / → es, /en/ → en, /en/shop → en
-      prefixDefaultLocale: false,
+      prefixDefaultLocale: true,
     },
   },
+
+  integrations: [react()],
 });

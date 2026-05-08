@@ -1,4 +1,39 @@
 ---
-import HomeContent from '@/components/pages/HomeContent.astro';
+const defaultLang = 'es';
+const langParam = Astro.url.searchParams.get('lang');
+
+if (langParam && ['es', 'en'].includes(langParam)) {
+  Astro.response.headers.set('Set-Cookie', `mf-lang=${langParam}; Path=/; Max-Age=31536000; SameSite=Lax`);
+}
 ---
-<HomeContent />
+<!DOCTYPE html>
+<html lang={defaultLang}>
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width" />
+  <title>Maggy Flowers</title>
+  <script is:inline>
+    (function() {
+      var lang = null;
+      var urlLang = null;
+      var isExplicit = false;
+      try { urlLang = new URLSearchParams(location.search).get('lang'); } catch {}
+      if (urlLang === 'es' || urlLang === 'en') {
+        lang = urlLang;
+        isExplicit = true;
+        try { document.cookie = 'mf-lang=' + lang + ';Path=/;Max-Age=31536000;SameSite=Lax'; } catch {}
+      } else {
+        try {
+          var ms = document.cookie.match(/mf-lang=([^;]+)/);
+          if (ms) lang = ms[1];
+        } catch {}
+      }
+      if (!lang) lang = 'es';
+      location.replace('/' + lang + '/');
+    })();
+  </script>
+</head>
+<body>
+  <noscript><a href="/es/">Ir a la tienda</a></noscript>
+</body>
+</html>

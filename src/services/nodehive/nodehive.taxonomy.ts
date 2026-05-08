@@ -3,7 +3,7 @@
 import { DrupalJsonApiParams } from 'drupal-jsonapi-params';
 import Jsona from 'jsona';
 import { nodehiveFetch } from './nodehive.client';
-import type { FlowerCategoryTerm, NodeHiveFile } from '../../types/nodehive.commerce';
+import type { FlowerCategoryTerm, NodeHiveFile } from '../../types/nodehive';
 import type { Lang } from '../../i18n/ui';
 
 const dataFormatter = new Jsona();

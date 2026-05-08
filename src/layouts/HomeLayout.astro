@@ -19,23 +19,6 @@ const { title = 'Inicio', lang = 'es' } = Astro.props;
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <title>{title} — Maggy Flowers</title>
-
-    <script is:inline>
-      (function () {
-        try {
-          var pref = localStorage.getItem('mf-lang');
-          if (pref !== 'en') return;
-
-          var path = window.location.pathname;
-          var isEnglishPath = path === '/en' || path.startsWith('/en/');
-
-          if (!isEnglishPath) {
-            var enPath = path === '/' ? '/en' : '/en' + path;
-            window.location.replace(enPath);
-          }
-        } catch (e) {}
-      })();
-    </script>
   </head>
   <body class="bg-background-light text-text-main font-body antialiased">
     <Header />

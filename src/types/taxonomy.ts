@@ -1,10 +1,4 @@
-// ─────────────────────────────────────────────────────────────────────────────
-// src/types/taxonomy.ts
-//
-// MANTENIDO SOLO PARA COMPATIBILIDAD
-// ─────────────────────────────────────────────────────────────────────────────
-
-export type {
-  TaxonomyTermBase,
-  CategoriaDeFlores,
-} from './drupal';
+/**
+ * DEPRECATED: Usar @/types/nodehive/taxonomy en su lugar.
+ */
+export * from './nodehive/taxonomy';

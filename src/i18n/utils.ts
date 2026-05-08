@@ -35,34 +35,39 @@ export function useTranslations(lang: Lang) {
 }
 
 /**
+ * Devuelve el prefijo de idioma para una URL.
+ * Con prefixDefaultLocale: true:
+ *   'es' → '/es'
+ *   'en' → '/en'
+ */
+export function getPrefix(lang: Lang): string {
+  return `/${lang}`;
+}
+
+/**
  * Construye la URL equivalente para el idioma destino.
- * Con prefixDefaultLocale: false:
- *   ('/shop', 'en')  → '/en/shop'
- *   ('/en/shop', 'es') → '/shop'
- *   ('/', 'en')      → '/en'
+ * Con prefixDefaultLocale: true:
+ *   ('/es/shop', 'en')  → '/en/shop'
+ *   ('/en/shop', 'es')  → '/es/shop'
+ *   ('/en', 'es')       → '/es'
  *
  * @param currentPath  window.location.pathname o Astro.url.pathname
  * @param targetLang   Idioma destino
  */
 export function getLocalizedPath(currentPath: string, targetLang: Lang): string {
-  // Quitar prefijo /en si existe para obtener la ruta base
-  const basePath = currentPath.replace(/^\/en(\/|$)/, '/') || '/';
+  // Quitar prefijos /en o /es para obtener la ruta base
+  const basePath = currentPath.replace(/^\/(en|es)(\/|$)/, '/') || '/';
 
-  if (targetLang === defaultLang) {
-    // Español → sin prefijo
-    return basePath;
-  }
-
-  // Inglés → agregar /en
-  return `/en${basePath === '/' ? '' : basePath}`;
+  // Agregar el prefijo del idioma destino
+  return `/${targetLang}${basePath === '/' ? '' : basePath}`;
 }
 
 /**
  * Construye los hrefs de navegación según el idioma activo.
- * Con prefixDefaultLocale: false, las rutas en español no tienen prefijo.
+ * Con prefixDefaultLocale: true, todas las rutas tienen prefijo de idioma.
  */
 export function getNavLinks(lang: Lang) {
-  const prefix = lang === defaultLang ? '' : `/${lang}`;
+  const prefix = `/${lang}`;
   return [
     { key: 'nav.shop',      href: `${prefix}/shop`      },
     { key: 'nav.courses',   href: `${prefix}/courses`   },

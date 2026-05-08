@@ -1,8 +1,9 @@
 // src/components/home/HeroCarousel.tsx
 import { useState, useEffect, useCallback } from 'react';
-import type { HeroSlide } from '@/types/nodehive.paragraphs';
+import type { HeroSlide } from '@/types/nodehive';
 import { ui, defaultLang } from '@/i18n/ui';
 import type { Lang, UiKey } from '@/i18n/ui';
+import { getPrefix } from '@/i18n/utils';
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -156,13 +157,13 @@ export default function HeroCarousel({
         ) : (
           <div className="mt-3 flex flex-wrap justify-center gap-4">
             <a
-              href={lang === 'es' ? '/shop' : '/en/shop'}
+              href={`${getPrefix(lang)}/shop`}
               className="inline-flex items-center justify-center h-12 min-w-[10rem] px-8 rounded-full bg-primary text-white text-base font-bold no-underline font-body shadow-[0_4px_18px_color-mix(in_srgb,var(--color-primary)_45%,transparent)] transition-all duration-200 hover:scale-105 hover:bg-primary-dark"
             >
               {t(lang, 'hero.cta.shop')}
             </a>
             <a
-              href={lang === 'es' ? '/courses' : '/en/courses'}
+              href={`${getPrefix(lang)}/courses`}
               className="inline-flex items-center justify-center h-12 min-w-[10rem] px-8 rounded-full bg-white/90 text-[#181112] text-base font-bold no-underline font-body backdrop-blur-[4px] transition-all duration-200 hover:scale-105 hover:bg-white"
             >
               {t(lang, 'hero.cta.courses')}
