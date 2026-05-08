@@ -1,10 +1,11 @@
-// src/services/nodehive/nodehive.taxonomy.ts
+// src/services/drupal/drupal.taxonomy.ts
 
 import { DrupalJsonApiParams } from 'drupal-jsonapi-params';
 import Jsona from 'jsona';
-import { nodehiveFetch } from './nodehive.client';
-import type { FlowerCategoryTerm, NodeHiveFile } from '../../types/nodehive.commerce';
-import type { Lang } from '../../i18n/ui';
+import { drupalFetch } from './drupal.client';
+import type { TaxonomyTermBase } from '@/types/taxonomy';
+import type { CategoriaDeFlores } from '@/types/taxonomy';
+import type { Lang } from '@/i18n/ui';
 
 const dataFormatter = new Jsona();
 
@@ -16,50 +17,24 @@ interface VocabularyConfig {
 }
 
 const VOCABULARY_CONFIGS = {
-  flower_category: {
-    vocabulary:  'flower_category',
-    includes:    [],
-    termFields:  ['name', 'weight', 'status', 'drupal_internal__tid'],
-    relatedFields: {},
-  },
-  colors: {
-    vocabulary:  'colors',
-    includes:    [],
-    termFields:  ['name', 'field_color_hex'],
-    relatedFields: {},
-  },
-  occasions: {
-    vocabulary:  'occasions',
-    includes:    [],
-    termFields:  ['name'],
-    relatedFields: {},
-  },
-  products_tag: {
-    vocabulary:  'products_tag',
-    includes:    [],
-    termFields:  ['name'],
-    relatedFields: {},
+  categorias_de_flores: {
+    vocabulary:  'categorias_de_flores',
+    includes:    ['field_foto'],
+    termFields:  ['name', 'weight', 'status', 'field_foto', 'drupal_internal__tid'],
+    relatedFields: {
+      'file--file': ['filename', 'uri', 'filemime'],
+    },
   },
 } satisfies Record<string, VocabularyConfig>;
 
 export type VocabularyKey = keyof typeof VOCABULARY_CONFIGS;
 
 /**
- * Tipo genérico base para términos de taxonomía
- */
-export interface TaxonomyTermBase {
-  type: string;
-  id: string;
-  name: string;
-  status?: boolean;
-}
-
-/**
- * Obtiene términos de un vocabulario de NodeHive via JSON:API.
+ * Obtiene términos de un vocabulario de Drupal via JSON:API.
  *
  * @param vocabularyKey  Clave de VOCABULARY_CONFIGS
  * @param limit          Máximo de términos a traer (default: 10)
- * @param lang           Idioma deseado ('es' | 'en'). Si no se pasa, usa el default.
+ * @param lang           Idioma deseado ('es' | 'en'). Si no se pasa, usa el default de Drupal.
  */
 export async function getTaxonomyTerms<
   T extends TaxonomyTermBase = TaxonomyTermBase,
@@ -70,6 +45,7 @@ export async function getTaxonomyTerms<
 
   apiParams
     .addFilter('status', '1')
+    .addSort('weight')
     .addPageLimit(limit)
     .addInclude(config.includes)
     .addFields(
@@ -77,12 +53,7 @@ export async function getTaxonomyTerms<
       config.termFields,
     );
 
-  // Agregar weight sort solo si existe en termFields
-  if (config.termFields.includes('weight')) {
-    apiParams.addSort('weight');
-  }
-
-  if (config.relatedFields && Object.keys(config.relatedFields).length > 0) {
+  if (config.relatedFields) {
     for (const [entityType, fields] of Object.entries(config.relatedFields)) {
       apiParams.addFields(entityType, fields);
     }
@@ -90,10 +61,10 @@ export async function getTaxonomyTerms<
 
   const path = `/jsonapi/taxonomy_term/${config.vocabulary}?${apiParams.getQueryString()}`;
 
-  let raw: Awaited<ReturnType<typeof nodehiveFetch<Record<string, unknown>>>>;
+  let raw: Awaited<ReturnType<typeof drupalFetch<Record<string, unknown>>>>;
 
   try {
-    raw = await nodehiveFetch<Record<string, unknown>>(path, {
+    raw = await drupalFetch<Record<string, unknown>>(path, {
       headers: {
         'Content-Type': 'application/vnd.api+json',
         Accept:         'application/vnd.api+json',
@@ -119,6 +90,6 @@ export async function getTaxonomyTerms<
 }
 
 /** Obtiene las primeras N categorías de flores (ordenadas por weight) */
-export function getFlowerCategories(limit = 4, lang?: Lang): Promise<FlowerCategoryTerm[]> {
-  return getTaxonomyTerms<FlowerCategoryTerm>('flower_category', limit, lang);
+export function getCategoriasDeFlores(limit = 4, lang?: Lang): Promise<CategoriaDeFlores[]> {
+  return getTaxonomyTerms<CategoriaDeFlores>('categorias_de_flores', limit, lang);
 }

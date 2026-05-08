@@ -1,5 +1,5 @@
 /**
- * Cliente HTTP para NodeHive JSON:API con caché en memoria.
+ * Cliente HTTP para Drupal JSON:API con caché en memoria.
  *
  * CACHÉ:
  *   - Solo aplica a peticiones GET.
@@ -8,20 +8,15 @@
  *   - Máximo 500 entradas (FIFO simple).
  *
  * INTERNACIONALIZACIÓN:
- *   NodeHive expone traducciones bajo /en/jsonapi/... para inglés.
+ *   Drupal expone traducciones bajo /en/jsonapi/... para inglés.
  *   Pasar `lang` en RequestOptions agrega el prefijo correcto.
  */
 
-const NODEHIVE_BASE_URL     = import.meta.env.NODEHIVE_BASE_URL     as string;
-const NODEHIVE_API_KEY      = import.meta.env.NODEHIVE_API_KEY      as string;
-const NODEHIVE_DEFAULT_LANG = (import.meta.env.NODEHIVE_DEFAULT_LANG as string) ?? 'es';
+const DRUPAL_BASE_URL      = import.meta.env.DRUPAL_BASE_URL      as string;
+const DRUPAL_DEFAULT_LANG  = (import.meta.env.DRUPAL_DEFAULT_LANG as string) ?? 'es';
 
-if (!NODEHIVE_BASE_URL) {
-  throw new Error('La variable de entorno NODEHIVE_BASE_URL no está definida.');
-}
-
-if (!NODEHIVE_API_KEY) {
-  throw new Error('La variable de entorno NODEHIVE_API_KEY no está definida.');
+if (!DRUPAL_BASE_URL) {
+  throw new Error('La variable de entorno DRUPAL_BASE_URL no está definida.');
 }
 
 // ── Cache ─────────────────────────────────────────────────────────────────────
@@ -36,7 +31,7 @@ interface CacheEntry {
 const _cache = new Map<string, CacheEntry>();
 const MAX_CACHE_ENTRIES = 500;
 
-/** TTL por defecto en ms. 0 en dev para ver cambios inmediatamente. */
+/** TTL por defecto en ms. 0 en dev para ver cambios de Drupal inmediatamente. */
 const DEFAULT_TTL_MS: number = import.meta.env.PROD ? 60_000 : 0;
 
 function cacheGet<T>(key: string): RawResponse<T> | null {
@@ -85,13 +80,13 @@ export interface RawResponse<T> {
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
 function langPrefix(lang: string | undefined): string {
-  if (!lang || lang === NODEHIVE_DEFAULT_LANG) return '';
+  if (!lang || lang === DRUPAL_DEFAULT_LANG) return '';
   return `/${lang}`;
 }
 
-// ── nodehiveFetch ─────────────────────────────────────────────────────────────
+// ── drupalFetch ───────────────────────────────────────────────────────────────
 
-export async function nodehiveFetch<T = unknown>(
+export async function drupalFetch<T = unknown>(
   path: string,
   options: RequestOptions = {},
 ): Promise<RawResponse<T>> {
@@ -106,7 +101,7 @@ export async function nodehiveFetch<T = unknown>(
   } = options;
 
   const effectiveTtl = cacheTtl ?? DEFAULT_TTL_MS;
-  const url          = `${NODEHIVE_BASE_URL}${langPrefix(lang)}${path}`;
+  const url          = `${DRUPAL_BASE_URL}${langPrefix(lang)}${path}`;
 
   // ── Hit de caché ────────────────────────────────────────────────────────────
   if (method === 'GET' && effectiveTtl > 0) {
@@ -119,7 +114,6 @@ export async function nodehiveFetch<T = unknown>(
   const headers: Record<string, string> = {
     'Content-Type': isForm ? 'application/x-www-form-urlencoded' : 'application/json',
     Accept:         'application/json',
-    'api-key':      NODEHIVE_API_KEY,
     ...extraHeaders,
   };
   if (sessionCookie) headers['Cookie'] = sessionCookie;
@@ -137,15 +131,15 @@ export async function nodehiveFetch<T = unknown>(
     response = await fetch(url, { method, headers, body: serializedBody });
   } catch (networkError) {
     throw new Error(
-      `No se pudo conectar con NodeHive en ${url}. ` +
+      `No se pudo conectar con Drupal en ${url}. ` +
       `Verificá que el servidor esté corriendo. (${networkError})`,
     );
   }
 
-  if (response.status === 404 && lang && lang !== NODEHIVE_DEFAULT_LANG) {
+  if (response.status === 404 && lang && lang !== DRUPAL_DEFAULT_LANG) {
     console.warn(
-      `[NodeHive i18n] 404 en ${url}. ` +
-      `Verificá que el método "URL" esté activo en la configuración de idiomas ` +
+      `[Drupal i18n] 404 en ${url}. ` +
+      `Verificá que el método "URL" esté activo en /admin/config/regional/language/detection ` +
       `y que el prefijo "${lang}" esté configurado.`,
     );
   }
