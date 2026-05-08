@@ -12,9 +12,9 @@
 import type { APIRoute } from 'astro';
 import { DrupalJsonApiParams } from 'drupal-jsonapi-params';
 import Jsona from 'jsona';
-import { drupalFetch } from '@/services/drupal/drupal.client';
-import { getProductThumbnail } from '@/types/commerce';
-import type { FloresProduct } from '@/types/commerce';
+import { nodehiveFetch } from '@/services/nodehive/nodehive.client';
+import { getProductThumbnail } from '@/types/nodehive.commerce';
+import type { FloresProduct } from '@/types/nodehive.commerce';
 
 const dataFormatter = new Jsona();
 const DRUPAL_BASE_URL = import.meta.env.DRUPAL_BASE_URL as string;
@@ -60,7 +60,7 @@ export const GET: APIRoute = async ({ url }) => {
   const path = `/jsonapi/commerce_product/flores?${apiParams.getQueryString()}`;
 
   try {
-    const raw = await drupalFetch<Record<string, unknown>>(path, {
+    const raw = await nodehiveFetch<Record<string, unknown>>(path, {
       headers: {
         'Content-Type': 'application/vnd.api+json',
         Accept:         'application/vnd.api+json',

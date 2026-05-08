@@ -1,6 +1,6 @@
 ---
 // src/components/home/TestimonialsSection.astro
-import { getComentariosData } from '@/services/drupal/drupal.blocks';
+import { getComentariosData } from '@/services/nodehive/nodehive.blocks';
 import { getLangFromUrl } from '@/i18n/utils';
 import type { Lang } from '@/i18n/ui';
 
@@ -12,18 +12,18 @@ const fallbacks = {
     titulo:      'Lo que dicen nuestros clientes',
     descripcion: 'Sus palabras son nuestra mejor inspiración.',
     comentarios: [
-      { nombre: 'Sofía Ramírez',   rol: 'Novia feliz',            comentario: 'Los arreglos para mi boda superaron todas mis expectativas. Maggy capturó exactamente la esencia que queríamos transmitir. ¡Simplemente mágico!' },
-      { nombre: 'Camila Torres',   rol: 'Alumna de la Academia',  comentario: 'El curso online de diseño floral es increíble. Aprendí técnicas que nunca imaginé y ahora puedo hacer mis propios arreglos en casa. ¡Muy recomendado!' },
-      { nombre: 'Alejandro M.',    rol: 'Cliente frecuente',      comentario: 'Compré un ramo para el aniversario de mis padres y quedaron fascinados. La frescura y la combinación de colores fueron perfectas. Gracias Maggy.' },
+      { nombre: 'Sofía Ramírez',   rol: 'Novia feliz',            comentario: 'Los arreglos para mi boda superaron todas mis expectativas. Maggy capturó exactamente la esencia que queríamos transmitir. ¡Simplemente mágico!', calificacion: 5 },
+      { nombre: 'Camila Torres',   rol: 'Alumna de la Academia',  comentario: 'El corso online de diseño floral es increíble. Aprendí técnicas que nunca imaginé y ahora puedo hacer mis propios arreglos en casa. ¡Muy recomendado!', calificacion: 5 },
+      { nombre: 'Alejandro M.',    rol: 'Cliente frecuente',      comentario: 'Compré un ramo para el aniversario de mis padres y quedaron fascinados. La frescura y la combinación de colores fueron perfectas. Gracias Maggy.', calificacion: 5 },
     ],
   },
   en: {
     titulo:      'What our customers say',
     descripcion: 'Their words are our greatest inspiration.',
     comentarios: [
-      { nombre: 'Sophia R.',   rol: 'Happy bride',         comentario: 'The arrangements for my wedding exceeded all my expectations. Maggy captured exactly the essence we wanted to convey. Simply magical!' },
-      { nombre: 'Camila T.',   rol: 'Academy student',     comentario: 'The online floral design course is incredible. I learned techniques I never imagined and can now make my own arrangements at home. Highly recommended!' },
-      { nombre: 'Alex M.',     rol: 'Frequent customer',   comentario: 'I bought a bouquet for my parents\' anniversary and they were thrilled. The freshness and color combination were perfect. Thank you Maggy.' },
+      { nombre: 'Sophia R.',   rol: 'Happy bride',         comentario: 'The arrangements for my wedding exceeded all my expectations. Maggy captured exactly the essence we wanted to convey. Simply magical!', calificacion: 5 },
+      { nombre: 'Camila T.',   rol: 'Academy student',     comentario: 'The online floral design course is incredible. I learned techniques I never imagined and can now make my own arrangements at home. Highly recommended!', calificacion: 5 },
+      { nombre: 'Alex M.',     rol: 'Frequent customer',   comentario: 'I bought a bouquet for my parents\' anniversary and they were thrilled. The freshness and color combination were perfect. Thank you Maggy.', calificacion: 5 },
     ],
   },
 } as const;
@@ -68,10 +68,12 @@ const comentarios = data?.comentarios?.length ? data.comentarios : f.comentarios
     </div>
 
     <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-      {comentarios.map((t) => (
+      {comentarios.map((t: any) => {
+        const stars = t.calificacion != null ? t.calificacion : 5;
+        return (
         <div class="bg-white rounded-2xl p-8 shadow-sm flex flex-col gap-5">
-          <div class="flex gap-0.5" aria-label={lang === 'en' ? '5 stars' : '5 estrellas'}>
-            {Array.from({ length: 5 }).map(() => (
+          <div class="flex gap-0.5" aria-label={stars + ' ' + (lang === 'en' ? 'stars' : 'estrellas')}>
+            {Array.from({ length: stars }).map(() => (
               <span 
                 class="material-symbols-outlined text-[1.25rem] leading-none" 
                 style="color: #f59e0b; font-variation-settings: 'FILL' 1, 'wght' 400, 'GRAD' 0, 'opsz' 24"
@@ -96,7 +98,8 @@ const comentarios = data?.comentarios?.length ? data.comentarios : f.comentarios
             )}
           </div>
         </div>
-      ))}
+        );
+      })}
     </div>
 
   </div>

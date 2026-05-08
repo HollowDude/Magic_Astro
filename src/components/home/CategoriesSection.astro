@@ -1,13 +1,20 @@
 ---
 // src/components/home/CategoriesSection.astro
-import { getCategoriasDeFlores } from '@/services/drupal/drupal.taxonomy';
-import { drupalFileUrl } from '@/types/commerce';
+import { getCategoryBlockData } from '@/services/nodehive/nodehive.blocks';
 import { getLangFromUrl } from '@/i18n/utils';
 import type { Lang } from '@/i18n/ui';
 
-const DRUPAL_BASE_URL = import.meta.env.DRUPAL_BASE_URL as string;
 const lang = (Astro.currentLocale ?? getLangFromUrl(Astro.url)) as Lang;
-const categorias = await getCategoriasDeFlores(4, lang);
+const data = await getCategoryBlockData(lang);
+
+const fallbackTitulo = lang === 'en' ? 'Featured Categories' : 'Categorías Destacadas';
+const fallbackSubtitulo = lang === 'en' 
+  ? 'Find the perfect detail for every moment.' 
+  : 'Encuentra el detalle perfecto para cada momento.';
+
+const titulo = data?.titulo ?? fallbackTitulo;
+const subtitulo = data?.subTitulo ?? fallbackSubtitulo;
+const categorias = data?.categorias ?? [];
 ---
 
 <section class="w-full max-w-[80rem] mx-auto py-16 px-4 sm:px-6 lg:px-8">
@@ -15,12 +22,10 @@ const categorias = await getCategoriasDeFlores(4, lang);
     <div class="flex items-end justify-between mb-10 px-2">
       <div>
         <h2 class="font-heading text-[clamp(1.75rem,3vw,2.5rem)] font-semibold tracking-tight text-headline m-0">
-          {lang === 'en' ? 'Featured Categories' : 'Categorías Destacadas'}
+          {titulo}
         </h2>
         <p class="mt-2 text-[0.9375rem] font-body text-body-color">
-          {lang === 'en'
-            ? 'Find the perfect detail for every moment.'
-            : 'Encuentra el detalle perfecto para cada momento.'}
+          {subtitulo}
         </p>
       </div>
       <a 
@@ -40,20 +45,17 @@ const categorias = await getCategoriasDeFlores(4, lang);
     ) : (
       <div class="grid grid-cols-2 md:grid-cols-4 gap-4 lg:gap-8">
         {categorias.map((cat) => {
-          const imageUrl = cat.field_foto
-            ? drupalFileUrl(cat.field_foto, DRUPAL_BASE_URL)
-            : null;
-
-          const slug = encodeURIComponent(cat.name.toLowerCase().replace(/\s+/g, '-'));
-          const shopHref = lang === 'en' ? `/en/shop?cat=${slug}` : `/shop?cat=${slug}`;
+          const shopHref = lang === 'en' 
+            ? `/en/shop?cat=${cat.slug}` 
+            : `/shop?cat=${cat.slug}`;
 
           return (
             <a href={shopHref} class="flex flex-col gap-3 cursor-pointer no-underline text-inherit group">
               <div class="relative aspect-[4/5] w-full overflow-hidden rounded-xl bg-[#f3f4f6] shadow-[0_1px_3px_rgba(0,0,0,0.08)] transition-shadow duration-200 group-hover:shadow-[0_4px_16px_rgba(0,0,0,0.12)]">
-                {imageUrl ? (
+                {cat.imagen ? (
                   <img
-                    src={imageUrl}
-                    alt={cat.name}
+                    src={cat.imagen}
+                    alt={cat.nombre}
                     loading="lazy"
                     decoding="async"
                     class="w-full h-full object-cover transition-transform duration-500 ease-out group-hover:scale-110"
@@ -65,7 +67,7 @@ const categorias = await getCategoriasDeFlores(4, lang);
                 )}
               </div>
               <div class="text-center md:text-left">
-                <h3 class="text-[1.125rem] font-bold font-body text-headline">{cat.name}</h3>
+                <h3 class="text-[1.125rem] font-bold font-body text-headline">{cat.nombre}</h3>
               </div>
             </a>
           );

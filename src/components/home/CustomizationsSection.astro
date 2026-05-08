@@ -1,24 +1,21 @@
 ---
 // src/components/home/CustomizationsSection.astro
-import { getPersonalizationData } from '@/services/drupal/drupal.blocks';
+import { getContactBlockData } from '@/services/nodehive/nodehive.blocks';
 import { getLangFromUrl } from '@/i18n/utils';
 import type { Lang } from '@/i18n/ui';
 
-const DRUPAL_BASE_URL = import.meta.env.DRUPAL_BASE_URL as string;
-
 const lang = (Astro.currentLocale ?? getLangFromUrl(Astro.url)) as Lang;
-const data = await getPersonalizationData(DRUPAL_BASE_URL, lang);
+const data = await getContactBlockData(lang);
 
 const descripcionFallback = lang === 'en'
   ? "We bring your floral dreams to life. We design unique arrangements tailored to your tastes and needs, ideal for weddings, celebrations, corporate events, or special gifts."
   : 'Hacemos realidad tus sueños florales. Diseñamos arreglos únicos adaptados a tus gustos y necesidades, ideales para bodas, celebraciones o regalos especiales.';
 
-const ctaLabel = lang === 'en' ? 'Contact Us'  : 'Contáctenos';
-const ctaHref  = lang === 'en' ? '/en/contact' : '/contact';
-
 const titulo      = data?.titulo      ?? (lang === 'en' ? 'Custom Designs' : 'Diseños a Medida');
 const descripcion = data?.descripcion ?? descripcionFallback;
-const fotoUrl     = data?.fotoUrl     ?? 'https://via.placeholder.com/800x600';
+const fotoUrl     = data?.fotoUrl     ?? null;
+const ctaLabel   = data?.ctaText    ?? (lang === 'en' ? 'Contact Us'  : 'Contáctenos');
+const ctaHref   = data?.ctaUrl    ?? (lang === 'en' ? '/en/contact' : '/contact');
 ---
 
 <section class="bg-blush py-20 md:py-32 overflow-hidden">
@@ -27,7 +24,7 @@ const fotoUrl     = data?.fotoUrl     ?? 'https://via.placeholder.com/800x600';
     <div class="relative shrink-0 w-full lg:w-[46%] pb-7 pl-4">
       <div class="absolute top-0 left-8 right-0 bottom-16 border-2 border-primary rounded-2xl pointer-events-none" />
       <div class="relative aspect-4/3 overflow-hidden rounded-2xl bg-gray-200 shadow-2xl mt-8 mr-8">
-        <div class="relative aspect-4/3 overflow-hidden rounded-2xl bg-gray-200 shadow-2xl mt-8 mr-8">
+        {fotoUrl ? (
           <img
             src={fotoUrl}
             alt={titulo ?? ''}
@@ -35,7 +32,11 @@ const fotoUrl     = data?.fotoUrl     ?? 'https://via.placeholder.com/800x600';
             decoding="async"
             class="w-full h-full object-cover"
           />
-        </div>
+        ) : (
+          <div class="w-full h-full flex items-center justify-center bg-gray-100">
+            <span class="material-symbols-outlined text-6xl text-gray-300">image</span>
+          </div>
+        )}
       </div>
     </div>
 

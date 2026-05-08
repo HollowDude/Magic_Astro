@@ -1,13 +1,11 @@
 ---
 // src/components/home/FeaturedProducts.astro
-import { getFloresProducts } from '@/services/drupal/drupal.commerce';
-import { getProductThumbnail } from '@/types/commerce';
+import { getFeaturedProductsData } from '@/services/nodehive/nodehive.blocks';
 import { getLangFromUrl } from '@/i18n/utils';
 import type { Lang } from '@/i18n/ui';
 
-const DRUPAL_BASE_URL = import.meta.env.DRUPAL_BASE_URL as string;
 const lang = (Astro.currentLocale ?? getLangFromUrl(Astro.url)) as Lang;
-const products = await getFloresProducts(lang);
+const data = await getFeaturedProductsData(lang);
 
 const labels = {
   es: {
@@ -24,39 +22,36 @@ const labels = {
   },
 } as const;
 
+const productos = data?.productos ?? [];
 const t = labels[lang];
 const prefix = lang === 'en' ? '/en' : '';
+const titulo = data?.titulo ?? t.title;
 ---
 
 <section class="w-full py-16 pb-20 px-4 sm:px-6 lg:px-8 bg-background">
   <div class="max-w-[80rem] mx-auto">
 
     <div class="flex items-center gap-5 mb-11">
-      <h2 class="font-heading font-semibold text-[clamp(2rem,4vw,2.75rem)] text-headline tracking-tight whitespace-nowrap m-0 leading-[1.1]">{t.title}</h2>
+      <h2 class="font-heading font-semibold text-[clamp(2rem,4vw,2.75rem)] text-headline tracking-tight whitespace-nowrap m-0 leading-[1.1]">{titulo}</h2>
       <span class="flex-1 h-[2px] bg-primary rounded-full min-w-[2rem] mt-1" aria-hidden="true"></span>
     </div>
 
-    {products.length === 0 ? (
+    {productos.length === 0 ? (
       <p class="text-center text-text-muted py-12 text-base">{t.empty}</p>
     ) : (
       <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 lg:gap-6">
-        {products.map((product) => {
-          const defaultVariation = product.variations?.[0];
-          const price     = defaultVariation?.price?.formatted ?? t.priceAlt;
-          const color     = defaultVariation?.field_color_de_la_flor?.name ?? null;
-          const tipo      = defaultVariation?.field_tipo ?? null;
-          const thumbnail = getProductThumbnail(product, DRUPAL_BASE_URL);
-          const href      = `${prefix}/${product.id}`;
+        {productos.map((product) => {
+          const price = product.price || t.priceAlt;
+          const href = `${prefix}${product.url}`;
 
           return (
             <article class="bg-blush rounded-2xl overflow-hidden flex flex-col relative transition-all duration-250 ease-out cursor-pointer group hover:-translate-y-1 hover:shadow-[0_12px_36px_color-mix(in_srgb,var(--color-headline)_15%,transparent)]">
-              {/* Overlay de enlace que cubre toda la tarjeta */}
               <a href={href} class="absolute inset-0 z-[1] rounded-2xl outline-offset-4 focus-visible:outline-[2.5px] focus-visible:outline-primary" aria-label={product.title} tabindex="0"></a>
 
               <div class="relative w-full aspect-square pt-3 px-3">
-                {thumbnail ? (
+                {product.thumbnail ? (
                   <img
-                    src={thumbnail}
+                    src={product.thumbnail}
                     alt={product.title}
                     loading="lazy"
                     decoding="async"
@@ -67,22 +62,21 @@ const prefix = lang === 'en' ? '/en' : '';
                     <span class="material-symbols-outlined text-5xl text-primary opacity-35">local_florist</span>
                   </div>
                 )}
-                {tipo && <span class="absolute top-5 left-5 bg-primary text-white text-[0.6875rem] font-bold tracking-wider uppercase py-1 px-2.5 rounded-full shadow-md">{tipo}</span>}
+                {product.tipo && <span class="absolute top-5 left-5 bg-primary text-white text-[0.6875rem] font-bold tracking-wider uppercase py-1 px-2.5 rounded-full shadow-md">{product.tipo}</span>}
               </div>
 
               <div class="p-3.5 px-4 pb-4 flex flex-col gap-2.5 flex-1">
                 <div class="flex flex-col gap-1">
                   <h3 class="font-body text-base font-bold text-headline m-0 leading-snug">{product.title}</h3>
-                  {color && (
+                  {product.color && (
                     <span class="inline-flex items-center gap-1.5 text-xs font-medium text-text-muted">
                       <span class="w-2 h-2 rounded-full bg-primary shrink-0" aria-hidden="true"></span>
-                      {color}
+                      {product.color}
                     </span>
                   )}
                 </div>
                 <div class="flex items-center justify-between mt-auto pt-1">
                   <span class="font-body text-[1.0625rem] font-bold text-primary">{price}</span>
-                  {/* z-index: 2 para estar sobre el overlay pero seguir siendo clicable */}
                   <a href={href} class="relative z-[2] font-body text-sm font-semibold text-white bg-muted border-none rounded-lg py-2 px-4.5 cursor-pointer no-underline inline-flex items-center transition-colors duration-200 tracking-wide group-hover:bg-primary" tabindex="-1" aria-hidden="true">
                     {t.buyBtn}
                   </a>

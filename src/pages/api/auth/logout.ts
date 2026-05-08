@@ -1,5 +1,5 @@
 import type { APIRoute } from 'astro';
-import { logout } from '@/services/drupal/auth.service';
+import { logout } from '@/services/nodehive/auth.service';
 import { getSession, destroySession } from '@/services/session.service';
 
 export const POST: APIRoute = async ({ cookies, request }) => {

@@ -1,0 +1,90 @@
+---
+// src/components/home/ContactSection.astro
+import { getContactBlockData } from '@/services/nodehive/nodehive.blocks';
+import { getLangFromUrl } from '@/i18n/utils';
+import type { Lang } from '@/i18n/ui';
+
+const lang = (Astro.currentLocale ?? getLangFromUrl(Astro.url)) as Lang;
+const data = await getContactBlockData(lang);
+
+const fallbackTitulo = lang === 'en' ? 'Contact Us' : 'Contáctenos';
+const fallbackSubtitulo = lang === 'en'
+  ? 'We\'d love to hear from you.'
+  : 'Nos encantaría saber de ti.';
+const fallbackDescripcion = lang === 'en'
+  ? 'Send us a message and we\'ll get back to you as soon as possible.'
+  : 'Envíanos un mensaje y te responderemos lo antes posible.';
+
+const titulo = data?.titulo ?? fallbackTitulo;
+const subtitulo = data?.subTitulo ?? fallbackSubtitulo;
+const descripcion = data?.descripcion ?? fallbackDescripcion;
+---
+
+<section class="w-full max-w-[80rem] mx-auto py-16 px-4 sm:px-6 lg:px-8">
+  <div class="max-w-[80rem] mx-auto">
+    <div class="flex flex-col items-center text-center mb-12">
+      <h2 class="font-heading text-[clamp(1.75rem,3vw,2.5rem)] font-semibold tracking-tight text-headline m-0">
+        {titulo}
+      </h2>
+      {subtitulo && (
+        <p class="mt-2 text-[0.9375rem] font-body text-body-color">
+          {subtitulo}
+        </p>
+      )}
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+      <div class="bg-blush rounded-2xl p-8">
+        <h3 class="font-body text-lg font-bold text-headline mb-4">
+          {lang === 'en' ? 'Send us a message' : 'Envíanos un mensaje'}
+        </h3>
+        <form class="flex flex-col gap-4">
+          <input
+            type="text"
+            placeholder={lang === 'en' ? 'Your name' : 'Tu nombre'}
+            class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition"
+          />
+          <input
+            type="email"
+            placeholder={lang === 'en' ? 'Your email' : 'Tu correo'}
+            class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition"
+          />
+          <textarea
+            rows="4"
+            placeholder={lang === 'en' ? 'Your message' : 'Tu mensaje'}
+            class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition resize-none"
+          ></textarea>
+          <button
+            type="submit"
+            class="w-full py-3 bg-primary text-white font-bold rounded-lg hover:bg-primary-dark transition"
+          >
+            {lang === 'en' ? 'Send' : 'Enviar'}
+          </button>
+        </form>
+      </div>
+
+      <div class="bg-blush rounded-2xl p-8">
+        <h3 class="font-body text-lg font-bold text-headline mb-4">
+          {lang === 'en' ? 'Contact Information' : 'Información de contacto'}
+        </h3>
+        {descripcion && (
+          <p class="text-body-color mb-6">{descripcion}</p>
+        )}
+        <div class="flex flex-col gap-3">
+          <div class="flex items-center gap-3">
+            <span class="material-symbols-outlined text-primary">location_on</span>
+            <span class="text-body-color">Maggy Flowers, Store Address</span>
+          </div>
+          <div class="flex items-center gap-3">
+            <span class="material-symbols-outlined text-primary">phone</span>
+            <span class="text-body-color">+1 (555) 123-4567</span>
+          </div>
+          <div class="flex items-center gap-3">
+            <span class="material-symbols-outlined text-primary">email</span>
+            <span class="text-body-color">hello@maggyflowers.com</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
