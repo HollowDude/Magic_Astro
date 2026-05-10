@@ -17,14 +17,19 @@ const subtitulo = data?.subTitulo ?? fallbackSubtitulo;
 const categorias = data?.categorias ?? [];
 ---
 
-<section class="w-full max-w-[80rem] mx-auto py-16 px-4 sm:px-6 lg:px-8">
+<section 
+  class="w-full max-w-[80rem] mx-auto py-16 px-4 sm:px-6 lg:px-8"
+  data-nodehive-entity-type="block_content"
+  data-nodehive-entity-bundle="categorys_home"
+  data-nodehive-entity-id={data?.blockId}
+>
   <div class="max-w-[80rem] mx-auto">
     <div class="flex items-end justify-between mb-10 px-2">
       <div>
-        <h2 class="font-heading text-[clamp(1.75rem,3vw,2.5rem)] font-semibold tracking-tight text-headline m-0">
+        <h2 class="font-heading text-[clamp(1.75rem,3vw,2.5rem)] font-semibold tracking-tight text-headline m-0" data-nodehive-field="field_title">
           {titulo}
         </h2>
-        <p class="mt-2 text-[0.9375rem] font-body text-body-color">
+        <p class="mt-2 text-[0.9375rem] font-body text-body-color" data-nodehive-field="field_subtitle">
           {subtitulo}
         </p>
       </div>

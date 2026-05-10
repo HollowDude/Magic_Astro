@@ -4,6 +4,26 @@
 import { ui, defaultLang, type Lang, type UiKey } from './ui';
 
 /**
+ * Resuelve una ruta de nodo antiguo a la ruta correcta del front.
+ * 
+ * Bundle → Ruta del front:
+ *   node--content_page → / (homepage)
+ *   commerce_product--flower → /{uuid}
+ *   node--services → /services/{uuid}
+ *   node--category → /shop?cat={uuid}
+ */
+export function resolveNodeRoute(bundle: string, uuid: string, lang: Lang): string {
+  const prefix = `/${lang}`;
+  const map: Record<string, string> = {
+    'node--content_page':     prefix,
+    'commerce_product--flower': `${prefix}/${uuid}`,
+    'node--services':       `${prefix}/services/${uuid}`,
+    'node--category':      `${prefix}/shop?cat=${uuid}`,
+  };
+  return map[bundle] ?? prefix;
+}
+
+/**
  * Extrae el idioma de una URL de Astro.
  * Con prefixDefaultLocale: false:
  *   /          → 'es'

@@ -19,10 +19,17 @@ const { title = 'Inicio', lang = 'es' } = Astro.props;
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <title>{title} — Maggy Flowers</title>
+    <script define:vars={{ nodehiveBaseUrl: import.meta.env.NODEHIVE_BASE_URL, nodehiveLang: lang }}>
+      window.__NODEHIVE_BASE_URL__ = nodehiveBaseUrl;
+      window.__NODEHIVE_LANG__ = nodehiveLang;
+    </script>
   </head>
   <body class="bg-background-light text-text-main font-body antialiased">
     <Header />
     <slot />
     <Footer lang={lang} />
+    {import.meta.env.NODEHIVE_VISUAL_EDITOR && (
+      <script src={`${import.meta.env.NODEHIVE_BASE_URL}/nodehive-editor.js`} defer></script>
+    )}
   </body>
 </html>

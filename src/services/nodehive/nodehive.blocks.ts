@@ -222,6 +222,7 @@ export async function getComentariosData(lang?: Lang): Promise<ComentariosData |
 // ── Homepage Categories Section ─────────────────────────────────────────────
 
 export interface CategoryBlockData {
+  blockId: string | null;
   titulo: string | null;
   subTitulo: string | null;
   categorias: Array<{
@@ -287,6 +288,7 @@ export async function getCategoryBlockData(lang?: Lang): Promise<CategoryBlockDa
     }));
 
     return {
+      blockId: block.id,
       titulo: block.field_title,
       subTitulo: block.field_subtitle,
       categorias,
@@ -299,12 +301,6 @@ export async function getCategoryBlockData(lang?: Lang): Promise<CategoryBlockDa
 
 // ── Homepage Contact Section ──────────────────────────────────────────────────
 
-export interface ContactBlockData {
-  titulo: string | null;
-  subTitulo: string | null;
-  descripcion: string | null;
-}
-
 interface ContactHomeBlock extends BlockContentBase {
   type: 'block_content--contact_home';
   field_title: string | null;
@@ -315,6 +311,7 @@ interface ContactHomeBlock extends BlockContentBase {
 }
 
 export interface ContactBlockData {
+  blockId: string | null;
   titulo: string | null;
   subTitulo: string | null;
   descripcion: string | null;
@@ -374,6 +371,7 @@ const block = (Array.isArray(result) ? result[0] : result) as ContactHomeBlock |
     console.log('[Blocks] fotoUrl:', fotoUrl, 'ctaText:', ctaText, 'ctaUrl:', ctaUrl);
 
     return {
+      blockId: block.id,
       titulo: block.field_title,
       subTitulo: block.field_subtitle,
       descripcion: block.field_description,
@@ -400,6 +398,7 @@ export interface FeaturedProduct {
 }
 
 export interface FeaturedProductsData {
+  blockId: string | null;
   titulo: string | null;
   productos: FeaturedProduct[];
 }
@@ -522,6 +521,7 @@ const productos: FeaturedProduct[] = block.field_products.map((product) => {
     });
 
     return {
+      blockId: block.id,
       titulo: block.field_title,
       productos,
     };
@@ -541,6 +541,7 @@ export interface ServiceItem {
 }
 
 export interface ServicesBlockData {
+  blockId: string | null;
   titulo: string | null;
   subTitulo: string | null;
   servicios: ServiceItem[];
@@ -615,6 +616,7 @@ export async function getServicesBlockData(lang?: Lang): Promise<ServicesBlockDa
     });
 
     return {
+      blockId: block.id,
       titulo: block.field_title,
       subTitulo: block.field_subtitle,
       servicios,
@@ -636,6 +638,7 @@ export interface TestimonialItem {
 }
 
 export interface CommentsBlockData {
+  blockId: string | null;
   titulo: string | null;
   subTitulo: string | null;
   comentarios: TestimonialItem[];
@@ -703,6 +706,7 @@ const comentarios: TestimonialItem[] = (block.field_comment ?? []).map((comment)
     }));
 
     return {
+      blockId: block.id,
       titulo: block.field_title,
       subTitulo: block.field_subtitle,
       comentarios,

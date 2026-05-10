@@ -15,10 +15,16 @@ const serviciosNormalizados = data?.servicios.map((s) => ({
 })) ?? [];
 ---
 
-<ServicesCarousel
-  titulo={data?.titulo}
-  subTitulo={data?.subTitulo}
-  eslogan={null}
-  services={serviciosNormalizados}
-  client:load
-/>
+<div 
+  data-nodehive-entity-type="block_content"
+  data-nodehive-entity-bundle="services"
+  data-nodehive-entity-id={data?.blockId}
+>
+  <ServicesCarousel
+    titulo={data?.titulo}
+    subTitulo={data?.subTitulo}
+    eslogan={null}
+    services={serviciosNormalizados}
+    client:load
+  />
+</div>

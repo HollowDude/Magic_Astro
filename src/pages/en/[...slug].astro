@@ -1,0 +1,40 @@
+---
+export const prerender = false;
+
+import { nodehiveFetch } from '@/services/nodehive/nodehive.client';
+import { getLangFromUrl, resolveNodeRoute } from '@/i18n/utils';
+import type { Lang } from '@/i18n/ui';
+
+const lang = (Astro.currentLocale ?? getLangFromUrl(Astro.url)) as Lang;
+const { slug } = Astro.params;
+
+const nodeMatch = slug?.match(/^node\/(\d+)$/);
+
+if (!nodeMatch) {
+  return Astro.redirect(`/${lang}/`, 302);
+}
+
+const nodeId = nodeMatch[1];
+let redirectTo = `/${lang}/`;
+
+try {
+  const raw = await nodehiveFetch<Record<string, unknown>>(
+    `/jsonapi/node?filter[drupal_internal__nid]=${nodeId}&fields[node--]=id,title,type,uuid`,
+    { lang }
+  );
+
+  if (raw.status === 200) {
+    const data = raw.data as any;
+    const node = data?.data?.[0];
+    if (node) {
+      const bundle = node.type || node.attributes?.drupal_internal__type;
+      const uuid = node.id || node.attributes?.drupal_internal__uuid;
+      redirectTo = resolveNodeRoute(bundle, uuid ?? nodeId, lang);
+    }
+  }
+} catch {
+  redirectTo = `/${lang}/`;
+}
+
+return Astro.redirect(redirectTo, 302);
+---

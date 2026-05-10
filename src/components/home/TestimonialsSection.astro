@@ -34,15 +34,20 @@ const descripcion = data?.descripcion ?? f.descripcion;
 const comentarios = data?.comentarios?.length ? data.comentarios : f.comentarios;
 ---
 
-<section class="bg-sage py-20 px-4 sm:px-6 lg:px-8">
+<section 
+  class="bg-sage py-20 px-4 sm:px-6 lg:px-8"
+  data-nodehive-entity-type="block_content"
+  data-nodehive-entity-bundle="comments_home"
+  data-nodehive-entity-id={data?.blockId}
+>
   <div class="max-w-7xl mx-auto">
 
     <div class="flex flex-col md:flex-row md:items-end justify-between gap-5 mb-12">
       <div>
-        <h2 class="font-heading text-[clamp(1.75rem,3vw,2.5rem)] font-semibold tracking-tight text-white m-0">
+        <h2 class="font-heading text-[clamp(1.75rem,3vw,2.5rem)] font-semibold tracking-tight text-white m-0" data-nodehive-field="field_title">
           {titulo}
         </h2>
-        <p class="mt-1.5 text-white/80 text-[0.9375rem] font-body">
+        <p class="mt-1.5 text-white/80 text-[0.9375rem] font-body" data-nodehive-field="field_subtitle">
           {descripcion}
         </p>
       </div>

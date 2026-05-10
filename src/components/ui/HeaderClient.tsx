@@ -1,7 +1,7 @@
 // src/components/home/HeaderClient.tsx
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { ui, defaultLang, languages } from '@/i18n/ui';
-import { getLocalizedPath, getNavLinks } from '@/i18n/utils';
+import { getLocalizedPath, getNavLinks, getPrefix } from '@/i18n/utils';
 import type { Lang, UiKey } from '@/i18n/ui';
 import { Fragment } from 'react';
 
@@ -46,10 +46,6 @@ const SEARCH_STRINGS = {
 } as const;
 
 const DEBOUNCE_MS = 350;
-
-function getPrefix(lang: Lang): string {
-  return `/${lang}`;
-}
 
 // ── SearchResultPanel ─────────────────────────────────────────────────────────
 
@@ -246,6 +242,9 @@ export default function HeaderClient({ isLoggedIn, currentPath, lang }: Props) {
     if (targetLang === lang) return;
     try {
       localStorage.setItem('mf-lang', targetLang);
+      if (window.__NODEHIVE_EDITOR__) {
+        window.__NODEHIVE_EDITOR__.setLang(targetLang);
+      }
     } catch {}
     window.location.href = getLocalizedPath(currentPath, targetLang);
   };
