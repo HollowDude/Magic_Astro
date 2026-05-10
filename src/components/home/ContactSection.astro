@@ -1,29 +1,25 @@
 ---
 // src/components/home/ContactSection.astro
-import { getContactBlockData } from '@/services/nodehive/nodehive.blocks';
+import { getContactUsParagraphData } from '@/services/nodehive/nodehive.paragraphs';
 import { getLangFromUrl } from '@/i18n/utils';
 import type { Lang } from '@/i18n/ui';
 
 const lang = (Astro.currentLocale ?? getLangFromUrl(Astro.url)) as Lang;
-const data = await getContactBlockData(lang);
+const data = await getContactUsParagraphData(lang);
 
 const fallbackTitulo = lang === 'en' ? 'Contact Us' : 'Contáctenos';
-const fallbackSubtitulo = lang === 'en'
-  ? 'We\'d love to hear from you.'
-  : 'Nos encantaría saber de ti.';
 const fallbackDescripcion = lang === 'en'
   ? 'Send us a message and we\'ll get back to you as soon as possible.'
   : 'Envíanos un mensaje y te responderemos lo antes posible.';
 
 const titulo = data?.titulo ?? fallbackTitulo;
-const subtitulo = data?.subTitulo ?? fallbackSubtitulo;
 const descripcion = data?.descripcion ?? fallbackDescripcion;
 ---
 
 <section 
   class="w-full max-w-[80rem] mx-auto py-16 px-4 sm:px-6 lg:px-8"
-  data-nodehive-entity-type="block_content"
-  data-nodehive-entity-bundle="contact_home"
+  data-nodehive-entity-type="paragraph"
+  data-nodehive-entity-bundle="_component_home_contact_us"
   data-nodehive-entity-id={data?.blockId}
 >
   <div class="max-w-[80rem] mx-auto">
@@ -31,11 +27,6 @@ const descripcion = data?.descripcion ?? fallbackDescripcion;
       <h2 class="font-heading text-[clamp(1.75rem,3vw,2.5rem)] font-semibold tracking-tight text-headline m-0" data-nodehive-field="field_title">
         {titulo}
       </h2>
-      {subtitulo && (
-        <p class="mt-2 text-[0.9375rem] font-body text-body-color" data-nodehive-field="field_subtitle">
-          {subtitulo}
-        </p>
-      )}
     </div>
 
     <div class="grid grid-cols-1 md:grid-cols-2 gap-8">

@@ -1,11 +1,12 @@
 ---
 // src/components/home/CustomizationsSection.astro
-import { getContactBlockData } from '@/services/nodehive/nodehive.blocks';
-import { getLangFromUrl } from '@/i18n/utils';
+import { getContactUsParagraphData } from '@/services/nodehive/nodehive.paragraphs';
+import { getLangFromUrl, getPrefix } from '@/i18n/utils';
 import type { Lang } from '@/i18n/ui';
 
 const lang = (Astro.currentLocale ?? getLangFromUrl(Astro.url)) as Lang;
-const data = await getContactBlockData(lang);
+const data = await getContactUsParagraphData(lang);
+const prefix = getPrefix(lang);
 
 const descripcionFallback = lang === 'en'
   ? "We bring your floral dreams to life. We design unique arrangements tailored to your tastes and needs, ideal for weddings, celebrations, corporate events, or special gifts."
@@ -15,10 +16,15 @@ const titulo      = data?.titulo      ?? (lang === 'en' ? 'Custom Designs' : 'Di
 const descripcion = data?.descripcion ?? descripcionFallback;
 const fotoUrl     = data?.fotoUrl     ?? null;
 const ctaLabel   = data?.ctaText    ?? (lang === 'en' ? 'Contact Us'  : 'Contáctenos');
-const ctaHref   = data?.ctaUrl    ?? (lang === 'en' ? '/en/contact' : '/contact');
+const ctaHref   = data?.ctaUrl    ?? `${prefix}/`;
 ---
 
-<section class="bg-blush py-20 md:py-32 overflow-hidden">
+<section 
+  class="bg-blush py-20 md:py-32 overflow-hidden"
+  data-nodehive-entity-type="paragraph"
+  data-nodehive-entity-bundle="_component_home_contact_us"
+  data-nodehive-entity-id={data?.blockId}
+>
   <div class="max-w-[1200px] mx-auto px-6 flex flex-col lg:flex-row items-center gap-12 lg:gap-20">
     
     <div class="relative shrink-0 w-full lg:w-[46%] pb-7 pl-4">

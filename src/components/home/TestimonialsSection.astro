@@ -1,11 +1,11 @@
 ---
 // src/components/home/TestimonialsSection.astro
-import { getComentariosData } from '@/services/nodehive/nodehive.blocks';
+import { getCommentsParagraphData } from '@/services/nodehive/nodehive.paragraphs';
 import { getLangFromUrl } from '@/i18n/utils';
 import type { Lang } from '@/i18n/ui';
 
 const lang = (Astro.currentLocale ?? getLangFromUrl(Astro.url)) as Lang;
-const data = await getComentariosData(lang);
+const data = await getCommentsParagraphData(lang);
 
 const fallbacks = {
   es: {
@@ -30,14 +30,14 @@ const fallbacks = {
 
 const f = fallbacks[lang];
 const titulo      = data?.titulo      ?? f.titulo;
-const descripcion = data?.descripcion ?? f.descripcion;
+const descripcion = data?.subTitulo ?? f.descripcion;
 const comentarios = data?.comentarios?.length ? data.comentarios : f.comentarios;
 ---
 
 <section 
   class="bg-sage py-20 px-4 sm:px-6 lg:px-8"
-  data-nodehive-entity-type="block_content"
-  data-nodehive-entity-bundle="comments_home"
+  data-nodehive-entity-type="paragraph"
+  data-nodehive-entity-bundle="_component_home_comments"
   data-nodehive-entity-id={data?.blockId}
 >
   <div class="max-w-7xl mx-auto">

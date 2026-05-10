@@ -1,11 +1,11 @@
 ---
 // src/components/home/FeaturedProducts.astro
-import { getFeaturedProductsData } from '@/services/nodehive/nodehive.blocks';
-import { getLangFromUrl } from '@/i18n/utils';
+import { getFeaturedProductsParagraphData } from '@/services/nodehive/nodehive.paragraphs';
+import { getLangFromUrl, getPrefix } from '@/i18n/utils';
 import type { Lang } from '@/i18n/ui';
 
 const lang = (Astro.currentLocale ?? getLangFromUrl(Astro.url)) as Lang;
-const data = await getFeaturedProductsData(lang);
+const data = await getFeaturedProductsParagraphData(lang);
 
 const labels = {
   es: {
@@ -24,11 +24,16 @@ const labels = {
 
 const productos = data?.productos ?? [];
 const t = labels[lang];
-const prefix = lang === 'en' ? '/en' : '';
+const prefix = getPrefix(lang);
 const titulo = data?.titulo ?? t.title;
 ---
 
-<section class="w-full py-16 pb-20 px-4 sm:px-6 lg:px-8 bg-background">
+<section 
+  class="w-full py-16 pb-20 px-4 sm:px-6 lg:px-8 bg-background"
+  data-nodehive-entity-type="paragraph"
+  data-nodehive-entity-bundle="_component_home_products"
+  data-nodehive-entity-id={data?.blockId}
+>
   <div class="max-w-[80rem] mx-auto">
 
     <div class="flex items-center gap-5 mb-11">

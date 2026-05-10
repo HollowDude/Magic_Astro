@@ -1,12 +1,12 @@
 ---
 // src/components/home/ServicesSection.astro
 import ServicesCarousel from '@/components/home/ServicesCarousel';
-import { getServicesBlockData } from '@/services/nodehive/nodehive.blocks';
+import { getServicesParagraphData } from '@/services/nodehive/nodehive.paragraphs';
 import { getLangFromUrl } from '@/i18n/utils';
 import type { Lang } from '@/i18n/ui';
 
 const lang = (Astro.currentLocale ?? getLangFromUrl(Astro.url)) as Lang;
-const data = await getServicesBlockData(lang);
+const data = await getServicesParagraphData(lang);
 
 const serviciosNormalizados = data?.servicios.map((s) => ({
   title: s.titulo,
@@ -16,8 +16,8 @@ const serviciosNormalizados = data?.servicios.map((s) => ({
 ---
 
 <div 
-  data-nodehive-entity-type="block_content"
-  data-nodehive-entity-bundle="services"
+  data-nodehive-entity-type="paragraph"
+  data-nodehive-entity-bundle="_component_home_services"
   data-nodehive-entity-id={data?.blockId}
 >
   <ServicesCarousel
