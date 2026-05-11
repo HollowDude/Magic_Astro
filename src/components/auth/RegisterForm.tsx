@@ -2,6 +2,7 @@
 import { useState } from 'react';
 import InputField from '@/components/ui/InputField';
 import Alert from '@/components/ui/Alert';
+import type { Lang } from '@/i18n/ui';
 
 type AlertType = 'error' | 'success';
 
@@ -10,7 +11,11 @@ interface AlertState {
   message: string;
 }
 
-export default function RegisterForm() {
+interface Props {
+  lang?: Lang;
+}
+
+export default function RegisterForm({ lang = 'es' }: Props) {
   const [username, setUsername] = useState('');
   const [email,    setEmail]    = useState('');
   const [password, setPassword] = useState('');
@@ -55,8 +60,7 @@ export default function RegisterForm() {
           type:    'success',
           message: `¡Cuenta creada! Bienvenido, ${data.user.name}. Redirigiendo al login…`,
         });
-        // Redirige al login para que el usuario inicie sesión con sus credenciales
-        setTimeout(() => { window.location.href = '/login'; }, 1800);
+        setTimeout(() => { window.location.href = `/${lang}/login`; }, 1800);
       } else {
         setAlert({ type: 'error', message: data.error ?? 'No se pudo crear la cuenta.' });
       }
@@ -76,8 +80,8 @@ export default function RegisterForm() {
 
       {/* Tabs */}
       <nav className="auth-tabs">
-        <a href="/login"    className="auth-tab">Iniciar Sesión</a>
-        <a href="/register" className="auth-tab auth-tab--active">Registrarme</a>
+        <a href={`/${lang}/login`}    className="auth-tab">Iniciar Sesión</a>
+        <a href={`/${lang}/register`} className="auth-tab auth-tab--active">Registrarme</a>
       </nav>
 
       <Alert type={alert?.type ?? 'error'} message={alert?.message ?? null} />
@@ -142,7 +146,7 @@ export default function RegisterForm() {
 
       <p className="login-hint">
         ¿Ya tenés una cuenta?{' '}
-        <a href="/login" className="login-link">Iniciá sesión aquí</a>
+        <a href={`/${lang}/login`} className="login-link">Iniciá sesión aquí</a>
       </p>
 
       <style>{`

@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import InputField from '@/components/ui/InputField';
 import Alert from '@/components/ui/Alert';
+import type { Lang } from '@/i18n/ui';
 
 type AlertType = 'error' | 'success';
 
@@ -9,7 +10,11 @@ interface AlertState {
   message: string;
 }
 
-export default function LoginForm() {
+interface Props {
+  lang?: Lang;
+}
+
+export default function LoginForm({ lang = 'es' }: Props) {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [remember, setRemember] = useState(false);
@@ -37,7 +42,7 @@ export default function LoginForm() {
 
       if (data.ok) {
         setAlert({ type: 'success', message: `¡Bienvenido, ${data.user.name}!` });
-        setTimeout(() => { window.location.href = '/dashboard'; }, 600);
+        setTimeout(() => { window.location.href = `/${lang}/dashboard`; }, 600);
       } else {
         setAlert({ type: 'error', message: data.error ?? 'Credenciales incorrectas.' });
       }
@@ -61,14 +66,14 @@ export default function LoginForm() {
 
       {/* Tabs */}
       <nav className="flex border-b border-border mb-6">
-        <a 
-          href="/login" 
+        <a
+          href={`/${lang}/login`}
           className="flex-1 pb-3 text-center border-b-[3px] border-primary font-bold text-sm text-primary transition-colors"
         >
           Iniciar Sesión
         </a>
-        <a 
-          href="/register" 
+        <a
+          href={`/${lang}/register`}
           className="flex-1 pb-3 text-center border-b-[3px] border-transparent font-bold text-sm text-text-muted hover:text-text-main transition-colors"
         >
           Registrarme
@@ -112,8 +117,8 @@ export default function LoginForm() {
             />
             <span>Recordarme</span>
           </label>
-          <a 
-            href="/forgot-password" 
+          <a
+            href={`/${lang}/forgot-password`}
             className="text-sm font-semibold text-primary hover:text-primary-dark hover:underline transition-colors"
           >
             ¿Olvidaste tu contraseña?
@@ -121,9 +126,9 @@ export default function LoginForm() {
         </div>
 
         {/* Reutilizando tu clase global .btn-primary y ajustando ancho/alto con Tailwind */}
-        <button 
-          type="submit" 
-          disabled={loading} 
+        <button
+          type="submit"
+          disabled={loading}
           className="btn-primary w-full mt-3 h-12"
         >
           {loading ? (
@@ -136,8 +141,8 @@ export default function LoginForm() {
 
       <p className="mt-8 text-center text-sm text-text-muted">
         ¿Aún no tienes una cuenta?{' '}
-        <a 
-          href="/register" 
+        <a
+          href={`/${lang}/register`}
           className="font-bold text-primary hover:text-primary-dark hover:underline transition-colors"
         >
           Regístrate aquí
