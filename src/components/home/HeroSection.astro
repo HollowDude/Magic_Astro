@@ -9,13 +9,8 @@ const lang = (Astro.currentLocale ?? getLangFromUrl(Astro.url)) as Lang;
 const hero = await getHomepageHeroData(lang);
 ---
 
-<!-- Contenedor con atributos de NodeHive para Visual Editor -->
-<section 
-  data-nodehive-entity-type="node"
-  data-nodehive-entity-bundle="content_page"
-  data-nodehive-entity-id={hero?.pageId}
-  data-nodehive-field="field_components"
->
+<!-- Contenedor sin atributos de entidad (el párrafo está dentro de HeroCarousel) -->
+<section>
   <HeroCarousel
     title={hero?.title}
     subtitle={hero?.subtitle}

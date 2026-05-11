@@ -89,8 +89,8 @@ export default function HeroCarousel({
     <section 
       className="relative w-full min-h-[600px] overflow-hidden flex items-center justify-center"
       data-nodehive-entity-type="paragraph"
-      data-nodehive-entity-bundle="hero_carousel"
-      data-nodehive-entity-id={componentId}
+      data-nodehive-entity-bundle="_component_home_hero"
+      data-nodehive-entity-id={componentId ?? null}
     >
       {activeSlides.map((slide, i) => {
         const isCurrent = i === active;

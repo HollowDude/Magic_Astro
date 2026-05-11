@@ -46,25 +46,23 @@
 
   /* ── 3. Variables del editor ─────────────────────────────────────────── */
   var parentOrigin = '*';
-  var highlightClass = '__nh-field-highlight__';
-  var activeClass    = '__nh-field-active__';
 
-  /* ── 4. Inyectar estilos de resaltado ────────────────────────────────── */
+  /* ── 4. Inyectar estilos de resaltado (selectores de atributo → sin hidratación) ── */
   var style = document.createElement('style');
   style.textContent = [
-    '.' + highlightClass + ' {',
-    '  outline: 2px dashed rgba(235,71,99,0.55) !important;',
+    '[data-nodehive-field] {',
+    '  outline: 2px dashed rgba(235,71,99,0.55);',
     '  outline-offset: 2px;',
-    '  cursor: pointer !important;',
+    '  cursor: pointer;',
     '  transition: outline-color 0.15s;',
     '}',
-    '.' + highlightClass + ':hover {',
-    '  outline-color: rgba(235,71,99,1) !important;',
-    '  background: rgba(235,71,99,0.04) !important;',
+    '[data-nodehive-field]:hover {',
+    '  outline-color: rgba(235,71,99,1);',
+    '  background: rgba(235,71,99,0.04);',
     '}',
-    '.' + activeClass + ' {',
-    '  outline: 2px solid rgba(235,71,99,1) !important;',
-    '  background: rgba(235,71,99,0.07) !important;',
+    '[data-nodehive-field].--nh-active {',
+    '  outline: 2px solid rgba(235,71,99,1);',
+    '  background: rgba(235,71,99,0.07);',
     '}',
   ].join('\n');
   document.head.appendChild(style);
@@ -86,36 +84,31 @@
     });
   }
 
-  /* ── 7. Registrar campos editables ──────────────────────────────────── */
+  /* ── 7. Registrar campos editables (delegación en document → sobrevive a React re-renders) ── */
   function setupEditableFields() {
-    var fields = document.querySelectorAll('[data-nodehive-field]');
+    document.addEventListener('click', function (e) {
+      var el = e.target.closest('[data-nodehive-field]');
+      if (!el) return;
 
-    fields.forEach(function (el) {
-      el.classList.add(highlightClass);
+      e.preventDefault();
+      e.stopPropagation();
 
-      el.addEventListener('click', function (e) {
-        e.preventDefault();
-        e.stopPropagation();
+      document.querySelectorAll('.--nh-active').forEach(function (a) {
+        a.classList.remove('--nh-active');
+      });
+      el.classList.add('--nh-active');
 
-        // Quitar clase activa anterior
-        document.querySelectorAll('.' + activeClass).forEach(function (a) {
-          a.classList.remove(activeClass);
-        });
-        el.classList.add(activeClass);
+      var entityEl = el.closest('[data-nodehive-entity-id]');
+      if (!entityEl) return;
 
-        // Buscar el contenedor de entidad más cercano
-        var entityEl = el.closest('[data-nodehive-entity-id]');
-        if (!entityEl) return;
-
-        sendToEditor({
-          type: 'field:click',
-          entityType:   entityEl.dataset.nodehiveEntityType   || '',
-          entityBundle: entityEl.dataset.nodehiveEntityBundle || '',
-          entityId:     entityEl.dataset.nodehiveEntityId     || '',
-          field:        el.dataset.nodehiveField              || '',
-        });
-      }, true);
-    });
+      sendToEditor({
+        type: 'field:click',
+        entityType:   entityEl.dataset.nodehiveEntityType   || '',
+        entityBundle: entityEl.dataset.nodehiveEntityBundle || '',
+        entityId:     entityEl.dataset.nodehiveEntityId     || '',
+        field:        el.dataset.nodehiveField              || '',
+      });
+    }, true);
   }
 
   /* ── 8. Escuchar mensajes del editor ─────────────────────────────────── */
