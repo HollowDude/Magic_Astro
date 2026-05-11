@@ -100,14 +100,14 @@ export default function ServicesCarousel({
 
       {/* Header */}
       <div className="text-center mb-12 px-4">
-        <span className="block font-body text-[0.8125rem] font-bold tracking-[0.08em] uppercase text-primary mb-2">
+        <span className="block font-body text-[0.8125rem] font-bold tracking-[0.08em] uppercase text-primary mb-2" data-nodehive-field="field_title">
           {titulo ?? FALLBACK_HEADER.titulo}
         </span>
-        <h2 className="font-body text-[clamp(2rem,5vw,3rem)] font-black tracking-[-0.03em] text-headline m-0 mb-3">
+        <h2 className="font-body text-[clamp(2rem,5vw,3rem)] font-black tracking-[-0.03em] text-headline m-0 mb-3" data-nodehive-field="field_subtitle">
           {subTitulo ?? FALLBACK_HEADER.subTitulo}
         </h2>
         {(eslogan ?? FALLBACK_HEADER.eslogan) && (
-          <p className="font-body text-base text-body-color m-0">
+          <p className="font-body text-base text-body-color m-0" data-nodehive-field="field_subtitle_primary">
             {eslogan ?? FALLBACK_HEADER.eslogan}
           </p>
         )}

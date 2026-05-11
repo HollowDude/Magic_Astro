@@ -23,7 +23,7 @@ const ctaHref   = data?.ctaUrl    ?? `${prefix}/`;
   class="bg-blush py-20 md:py-32 overflow-hidden"
   data-nodehive-entity-type="paragraph"
   data-nodehive-entity-bundle="_component_home_contact_us"
-  data-nodehive-entity-id={data?.blockId}
+  data-nodehive-entity-id={data?.paragraphId}
 >
   <div class="max-w-[1200px] mx-auto px-6 flex flex-col lg:flex-row items-center gap-12 lg:gap-20">
     
@@ -47,10 +47,10 @@ const ctaHref   = data?.ctaUrl    ?? `${prefix}/`;
     </div>
 
     <div class="w-full lg:w-[54%] text-center lg:text-left">
-      <h2 class="font-body text-[clamp(2rem,4vw,3rem)] font-black leading-[1.15] tracking-[-0.02em] text-headline mb-6">
+      <h2 class="font-body text-[clamp(2rem,4vw,3rem)] font-black leading-[1.15] tracking-[-0.02em] text-headline mb-6" data-nodehive-field="field_title">
         {titulo}
       </h2>
-      <p class="font-body text-lg leading-relaxed text-body-color mb-10 max-w-[600px] mx-auto lg:mx-0">
+      <p class="font-body text-lg leading-relaxed text-body-color mb-10 max-w-[600px] mx-auto lg:mx-0" data-nodehive-field="field_description">
         {descripcion}
       </p>
       <a 

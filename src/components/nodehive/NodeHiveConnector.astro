@@ -1,0 +1,171 @@
+---
+/**
+ * NodeHiveConnector.astro
+ *
+ * Puente de comunicación entre el frontend Astro y el Visual Editor de NodeHive.
+ * Solo emite un <script> — no produce HTML visible.
+ *
+ * Responsabilidades:
+ *  1. Exponer window.__NODEHIVE_EDITOR__ con la API que necesitan los componentes
+ *  2. Cuando corre dentro del iframe del editor:
+ *     a) Notificar al editor que la página está lista
+ *     b) Resaltar campos editables (data-nodehive-field)
+ *     c) Enviar info del campo al hacer clic → el editor abre el panel de edición
+ *     d) Escuchar reload/navigate del editor
+ */
+---
+
+<script is:inline>
+(function initNodeHiveConnector() {
+  'use strict';
+
+  /* ── 1. API global siempre disponible ─────────────────────────────────── */
+  window.__NODEHIVE_EDITOR__ = window.__NODEHIVE_EDITOR__ || {};
+
+  /**
+   * Cambia el idioma navegando a la ruta equivalente.
+   * Usado por HeaderClient.tsx al hacer clic en ES | EN.
+   */
+  window.__NODEHIVE_EDITOR__.setLang = function (lang) {
+    var current = window.location.pathname;
+    // Reemplazar prefijo de idioma /es/... o /en/... → /lang/...
+    var next = current.replace(/^\/(es|en)(\/|$)/, '/' + lang + '$2');
+    if (next === current) next = '/' + lang;
+    window.location.href = next;
+  };
+
+  /* ── 2. Detectar si estamos dentro del editor (iframe) ───────────────── */
+  var isInIframe = window.self !== window.top;
+  var editorToken = null;
+
+  try {
+    editorToken = sessionStorage.getItem('nodehive-editor-token');
+  } catch (_) {}
+
+  if (!isInIframe) return; // Nada más que hacer en navegación normal
+
+  /* ── 3. Variables del editor ─────────────────────────────────────────── */
+  var parentOrigin = '*';
+  var highlightClass = '__nh-field-highlight__';
+  var activeClass    = '__nh-field-active__';
+
+  /* ── 4. Inyectar estilos de resaltado ────────────────────────────────── */
+  var style = document.createElement('style');
+  style.textContent = [
+    '.' + highlightClass + ' {',
+    '  outline: 2px dashed rgba(235,71,99,0.55) !important;',
+    '  outline-offset: 2px;',
+    '  cursor: pointer !important;',
+    '  transition: outline-color 0.15s;',
+    '}',
+    '.' + highlightClass + ':hover {',
+    '  outline-color: rgba(235,71,99,1) !important;',
+    '  background: rgba(235,71,99,0.04) !important;',
+    '}',
+    '.' + activeClass + ' {',
+    '  outline: 2px solid rgba(235,71,99,1) !important;',
+    '  background: rgba(235,71,99,0.07) !important;',
+    '}',
+  ].join('\n');
+  document.head.appendChild(style);
+
+  /* ── 5. Enviar mensaje al editor padre ───────────────────────────────── */
+  function sendToEditor(data) {
+    try {
+      window.parent.postMessage(data, parentOrigin);
+    } catch (_) {}
+  }
+
+  /* ── 6. Notificar que la página está lista ───────────────────────────── */
+  function notifyReady() {
+    sendToEditor({
+      type: 'frontend:ready',
+      url: window.location.href,
+      lang: window.__NODEHIVE_LANG__ || document.documentElement.lang || 'es',
+      token: editorToken,
+    });
+  }
+
+  /* ── 7. Registrar campos editables ──────────────────────────────────── */
+  function setupEditableFields() {
+    var fields = document.querySelectorAll('[data-nodehive-field]');
+
+    fields.forEach(function (el) {
+      el.classList.add(highlightClass);
+
+      el.addEventListener('click', function (e) {
+        e.preventDefault();
+        e.stopPropagation();
+
+        // Quitar clase activa anterior
+        document.querySelectorAll('.' + activeClass).forEach(function (a) {
+          a.classList.remove(activeClass);
+        });
+        el.classList.add(activeClass);
+
+        // Buscar el contenedor de entidad más cercano
+        var entityEl = el.closest('[data-nodehive-entity-id]');
+        if (!entityEl) return;
+
+        sendToEditor({
+          type: 'field:click',
+          entityType:   entityEl.dataset.nodehiveEntityType   || '',
+          entityBundle: entityEl.dataset.nodehiveEntityBundle || '',
+          entityId:     entityEl.dataset.nodehiveEntityId     || '',
+          field:        el.dataset.nodehiveField              || '',
+        });
+      }, true);
+    });
+  }
+
+  /* ── 8. Escuchar mensajes del editor ─────────────────────────────────── */
+  window.addEventListener('message', function (event) {
+    var data = event.data;
+    if (!data) return;
+
+    // Mensaje legacy simple (string)
+    if (data === 'reloadFrame') {
+      window.location.reload();
+      return;
+    }
+
+    if (typeof data !== 'object') return;
+
+    // Capturar el origen real del editor la primera vez
+    if (event.origin && event.origin !== 'null') {
+      parentOrigin = event.origin;
+    }
+
+    switch (data.type) {
+      case 'editor:init':
+      case 'editor:ready':
+        notifyReady();
+        break;
+
+      case 'reload':
+      case 'reloadFrame':
+        window.location.reload();
+        break;
+
+      case 'navigate':
+        if (data.url) window.location.href = data.url;
+        break;
+
+      case 'setLang':
+        if (data.lang) window.__NODEHIVE_EDITOR__.setLang(data.lang);
+        break;
+    }
+  });
+
+  /* ── 9. Inicializar cuando el DOM esté listo ────────────────────────── */
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', function () {
+      setupEditableFields();
+      notifyReady();
+    });
+  } else {
+    setupEditableFields();
+    notifyReady();
+  }
+})();
+</script>

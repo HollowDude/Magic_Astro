@@ -140,7 +140,7 @@ export async function getCategoryParagraphData(lang?: Lang): Promise<CategoryBlo
       }));
 
       return {
-        blockId: paragraph.id,
+        paragraphId: paragraph.id,
         titulo: paragraph.field_title ?? null,
         subTitulo: paragraph.field_subtitle ?? null,
         categorias,
@@ -220,7 +220,7 @@ export async function getFeaturedProductsParagraphData(lang?: Lang): Promise<Fea
       });
 
       return {
-        blockId: paragraph.id,
+        paragraphId: paragraph.id,
         titulo: paragraph.field_title ?? null,
         productos,
       };
@@ -268,7 +268,7 @@ export async function getServicesParagraphData(lang?: Lang): Promise<ServicesBlo
       }));
 
       return {
-        blockId: paragraph.id,
+        paragraphId: paragraph.id,
         titulo: paragraph.field_title ?? null,
         subTitulo: paragraph.field_subtitle ?? null,
         servicios,
@@ -318,7 +318,7 @@ export async function getCommentsParagraphData(lang?: Lang): Promise<CommentsBlo
       }));
 
       return {
-        blockId: paragraph.id,
+        paragraphId: paragraph.id,
         titulo: paragraph.field_title ?? null,
         subTitulo: paragraph.field_subtitle ?? null,
         comentarios,
@@ -372,7 +372,7 @@ export async function getContactUsParagraphData(lang?: Lang): Promise<ContactBlo
       const ctaUrl = (paragraph.field_button?.field_button_link?.uri ?? null)?.replace(/^internal:/, '') ?? null;
 
       return {
-        blockId: paragraph.id,
+        paragraphId: paragraph.id,
         titulo: paragraph.field_title ?? null,
         subTitulo: null,
         descripcion: paragraph.field_description ?? null,

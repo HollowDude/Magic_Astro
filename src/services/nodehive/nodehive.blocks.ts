@@ -288,7 +288,7 @@ export async function getCategoryBlockData(lang?: Lang): Promise<CategoryBlockDa
     }));
 
     return {
-      blockId: block.id,
+      paragraphId: block.id,
       titulo: block.field_title,
       subTitulo: block.field_subtitle,
       categorias,
@@ -311,7 +311,7 @@ interface ContactHomeBlock extends BlockContentBase {
 }
 
 export interface ContactBlockData {
-  blockId: string | null;
+  paragraphId: string | null;
   titulo: string | null;
   subTitulo: string | null;
   descripcion: string | null;
@@ -371,7 +371,7 @@ const block = (Array.isArray(result) ? result[0] : result) as ContactHomeBlock |
     console.log('[Blocks] fotoUrl:', fotoUrl, 'ctaText:', ctaText, 'ctaUrl:', ctaUrl);
 
     return {
-      blockId: block.id,
+      paragraphId: block.id,
       titulo: block.field_title,
       subTitulo: block.field_subtitle,
       descripcion: block.field_description,
@@ -521,7 +521,7 @@ const productos: FeaturedProduct[] = block.field_products.map((product) => {
     });
 
     return {
-      blockId: block.id,
+      paragraphId: block.id,
       titulo: block.field_title,
       productos,
     };
@@ -616,7 +616,7 @@ export async function getServicesBlockData(lang?: Lang): Promise<ServicesBlockDa
     });
 
     return {
-      blockId: block.id,
+      paragraphId: block.id,
       titulo: block.field_title,
       subTitulo: block.field_subtitle,
       servicios,
@@ -706,7 +706,7 @@ const comentarios: TestimonialItem[] = (block.field_comment ?? []).map((comment)
     }));
 
     return {
-      blockId: block.id,
+      paragraphId: block.id,
       titulo: block.field_title,
       subTitulo: block.field_subtitle,
       comentarios,

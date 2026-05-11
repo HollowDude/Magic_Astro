@@ -1,14 +1,15 @@
 ---
-// src/layouts/BaseLayout.astro
+// src/layouts/HomeLayout.astro
 import Header from '@/components/ui/Header.astro';
 import Footer from '@/components/ui/Footer.astro';
+import NodeHiveConnector from '@/components/nodehive/NodeHiveConnector.astro';
 import '@/styles/global.css';
 
 interface Props {
   title?: string;
+  lang?: string;
 }
 
-interface Props { title?: string; lang?: string }
 const { title = 'Inicio', lang = 'es' } = Astro.props;
 ---
 
@@ -19,6 +20,13 @@ const { title = 'Inicio', lang = 'es' } = Astro.props;
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <title>{title} — Maggy Flowers</title>
+
+    <!--
+      Permite que NodeHive Visual Editor embeba el frontend en un iframe.
+      SOLO para desarrollo — en producción el editor usa dominios específicos.
+    -->
+    <meta http-equiv="X-Frame-Options" content="ALLOWALL" />
+
     <script define:vars={{ nodehiveBaseUrl: import.meta.env.NODEHIVE_BASE_URL, nodehiveLang: lang }}>
       window.__NODEHIVE_BASE_URL__ = nodehiveBaseUrl;
       window.__NODEHIVE_LANG__ = nodehiveLang;
@@ -28,15 +36,28 @@ const { title = 'Inicio', lang = 'es' } = Astro.props;
     <Header />
     <slot />
     <Footer lang={lang} />
+
+    <!--
+      NodeHive Visual Editor Connector.
+      Habilita la comunicación postMessage con el editor,
+      resalta campos editables (data-nodehive-field) y
+      expone window.__NODEHIVE_EDITOR__ para el resto de componentes.
+    -->
+    <NodeHiveConnector />
+
     <script is:inline>
-      (function() {
+      (function () {
         var isInIframe = window.self !== window.top;
 
-        window.addEventListener('message', async function(event) {
+        window.addEventListener('message', async function (event) {
+          // Recarga solicitada por el editor tras guardar cambios
           if (event.data === 'reloadFrame') {
             try {
-              await fetch('/api/nodehive/revalidate?path=' + encodeURIComponent(window.location.pathname));
-            } catch(e) {}
+              await fetch(
+                '/api/nodehive/revalidate?path=' +
+                  encodeURIComponent(window.location.pathname)
+              );
+            } catch (_) {}
             window.location.reload();
           }
         });
