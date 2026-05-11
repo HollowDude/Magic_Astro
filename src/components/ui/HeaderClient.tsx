@@ -359,13 +359,12 @@ export default function HeaderClient({ isLoggedIn, currentPath, lang, navLinks: 
               </button>
             </>
           ) : (
-            <button 
-              disabled 
-              className="hidden sm:inline-flex items-center justify-center h-[2.125rem] px-4.5 rounded-full bg-primary text-white border-none font-body text-[0.875rem] font-bold cursor-not-allowed opacity-50 whitespace-nowrap" 
-              title="Próximamente"
+            <a
+              href={`${getPrefix(lang)}/login`}
+              className="hidden sm:inline-flex items-center justify-center h-[2.125rem] px-4.5 rounded-full bg-primary text-white font-body text-[0.875rem] font-bold no-underline whitespace-nowrap transition-all hover:bg-primary-dark"
             >
               {t(lang, 'header.login')}
-            </button>
+            </a>
           )}
 
           {/* ── Hamburger (mobile) ── */}

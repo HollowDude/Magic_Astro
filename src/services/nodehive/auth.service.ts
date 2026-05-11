@@ -4,39 +4,81 @@
  * Servicio de autenticación de usuarios en NodeHive (Drupal).
  */
 
+const NODEHIVE_BASE_URL = import.meta.env.NODEHIVE_BASE_URL as string;
+const NODEHIVE_API_KEY  = import.meta.env.NODEHIVE_API_KEY  as string;
+
 export interface LoginData {
   username: string;
   password: string;
+}
+
+export interface SessionUser {
+  uid: string;
+  name: string;
+  mail: string;
+  roles: string[];
+  csrfToken: string;
+  logoutToken: string;
 }
 
 export interface LoginResult {
   ok: boolean;
   statusCode?: number;
   error?: string;
-  data?: {
-    uid: number;
-    name: string;
-    mail: string;
-    sessid?: string;
-    session_name?: string;
-  };
+  data?: SessionUser;
 }
 
-/**
- * Autentica un usuario en NodeHive.
- */
 export async function login(data: LoginData): Promise<LoginResult> {
-  // TODO: Implementar cuando se configure el servicio de autenticación en NodeHive
-  return {
-    ok: false,
-    error: 'Login no implementado aún.',
-  };
+  try {
+    const res = await fetch(`${NODEHIVE_BASE_URL}/user/login?_format=json`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+        'api-key': NODEHIVE_API_KEY,
+      },
+      body: JSON.stringify({
+        name: data.username,
+        pass: data.password,
+      }),
+    });
+
+    const json = await res.json().catch(() => ({}));
+
+    if (!res.ok) {
+      const msg = json?.message ?? 'Credenciales incorrectas.';
+      return { ok: false, statusCode: res.status, error: msg };
+    }
+
+    return {
+      ok: true,
+      data: {
+        uid:         String(json.current_user?.uid ?? ''),
+        name:        json.current_user?.name ?? data.username,
+        mail:        json.current_user?.mail ?? '',
+        roles:       json.current_user?.roles ?? [],
+        csrfToken:   json.csrf_token   ?? '',
+        logoutToken: json.logout_token ?? '',
+      },
+    };
+  } catch (err) {
+    return { ok: false, error: 'No se pudo conectar con el servidor.' };
+  }
 }
 
-/**
- * Cierra la sesión del usuario en NodeHive.
- */
-export async function logout(): Promise<{ ok: boolean }> {
-  // TODO: Implementar cuando se configure el servicio de logout en NodeHive
+export async function logout(
+  logoutToken: string,
+  sessionCookie?: string,
+): Promise<{ ok: boolean }> {
+  try {
+    await fetch(`${NODEHIVE_BASE_URL}/user/logout?_format=json&token=${logoutToken}`, {
+      method: 'GET',
+      headers: {
+        'Accept': 'application/json',
+        'api-key': NODEHIVE_API_KEY,
+        ...(sessionCookie ? { Cookie: sessionCookie } : {}),
+      },
+    });
+  } catch {}
   return { ok: true };
 }
