@@ -42,7 +42,7 @@ export default function LoginForm({ lang = 'es' }: Props) {
 
       if (data.ok) {
         setAlert({ type: 'success', message: `¡Bienvenido, ${data.user.name}!` });
-        setTimeout(() => { window.location.href = `/${lang}/dashboard`; }, 600);
+        setTimeout(() => { window.location.assign(`/${lang}/dashboard`); }, 600);
       } else {
         setAlert({ type: 'error', message: data.error ?? 'Credenciales incorrectas.' });
       }

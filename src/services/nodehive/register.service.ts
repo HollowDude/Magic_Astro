@@ -22,43 +22,44 @@ export interface RegisterResult {
 
 export async function register(data: RegisterData): Promise<RegisterResult> {
   try {
-    const res = await fetch(`${NODEHIVE_BASE_URL}/jsonapi/user/user`, {
+    // En register.service.ts, cambiar el endpoint y formato:
+    const res = await fetch(`${NODEHIVE_BASE_URL}/user/register?_format=json`, {
       method: 'POST',
       headers: {
-        'Content-Type': 'application/vnd.api+json',
-        'Accept': 'application/vnd.api+json',
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
         'api-key': NODEHIVE_API_KEY,
       },
       body: JSON.stringify({
-        data: {
-          type: 'user--user',
-          attributes: {
-            name:  data.username,
-            mail:  data.email,
-            pass: { value: data.password },
-            status: true,
-          },
-        },
+        name: { value: data.username },
+        mail: { value: data.email },
+        pass: [{ value: data.password }],
       }),
-    });
+    });;
 
     const json = await res.json().catch(() => ({}));
 
+    console.log('[Register] Status:', res.status);
+    console.log('[Register] Response:', JSON.stringify(json));
+
     if (!res.ok) {
-      const detail = json?.errors?.[0]?.detail ?? json?.message ?? 'No se pudo crear la cuenta.';
+      const detail =
+        json?.errors?.[0]?.detail ??
+        json?.message ??
+        'No se pudo crear la cuenta.';
       return { ok: false, statusCode: res.status, error: detail };
     }
 
-    const attr = json?.data?.attributes;
     return {
       ok: true,
       data: {
-        uid:  json?.data?.attributes?.drupal_internal__uid ?? 0,
-        name: attr?.name ?? data.username,
-        mail: attr?.mail ?? data.email,
+        uid:  json?.uid?.[0]?.value ?? 0,
+        name: json?.name?.[0]?.value ?? data.username,
+        mail: json?.mail?.[0]?.value ?? data.email,
       },
     };
   } catch (err) {
+    console.error('[Register] Exception:', err);
     return { ok: false, error: 'No se pudo conectar con el servidor.' };
   }
 }

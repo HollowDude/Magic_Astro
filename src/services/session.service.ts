@@ -65,5 +65,11 @@ export async function getSession(cookies: AstroCookies): Promise<SessionUser | n
 // ── Destruir sesión ─────────────────────────────────────────────────────────
 
 export function destroySession(cookies: AstroCookies): void {
-  cookies.delete(COOKIE_NAME, { path: '/' });
+  cookies.set(COOKIE_NAME, '', {
+    httpOnly: true,
+    secure:   import.meta.env.PROD,
+    sameSite: 'lax',
+    maxAge:   0,
+    path:     '/',
+  });
 }
