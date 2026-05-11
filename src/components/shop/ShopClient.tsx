@@ -259,6 +259,7 @@ export default function ShopClient({
     if (selectedTipos.size > 0)  result = result.filter(p => p.tipo      && selectedTipos.has(p.tipo));
     if (sortBy === 'price_asc')  result.sort((a, b) => a.priceNumber - b.priceNumber);
     if (sortBy === 'price_desc') result.sort((a, b) => b.priceNumber - a.priceNumber);
+    if (sortBy === 'newest')    result.reverse();
     return result;
   }, [products, selectedCat, selectedPrice, selectedColors, selectedTipos, sortBy, priceRanges]);
 

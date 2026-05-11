@@ -18,7 +18,7 @@ import type { ShopCategory, SortKey } from '@/components/shop/ShopClient';
 const lang   = (Astro.currentLocale ?? getLangFromUrl(Astro.url)) as Lang;
 const t      = useTranslations(lang);
 const prefix = lang === 'en' ? '/en' : '';
-const DRUPAL_BASE_URL = import.meta.env.DRUPAL_BASE_URL as string;
+const DRUPAL_BASE_URL = import.meta.env.NODEHIVE_BASE_URL as string;
 
 // Leer todos los parámetros de filtro desde la URL para pre-renderizado SSR correcto
 const sp          = Astro.url.searchParams;
@@ -46,8 +46,8 @@ const products: ProductCardData[] = rawProducts.map(p => {
     thumbnail:   getProductThumbnail(p, DRUPAL_BASE_URL),
     badge:       null,
     tipo:        v?.field_tipo                     ?? null,
-    colorName:   v?.field_color_de_la_flor?.name   ?? null,
-    colorHex:    v?.field_color_de_la_flor?.field_color_hex ?? null,
+    colorName:   v?.field_color?.name   ?? null,
+    colorHex:    v?.field_color?.field_color_hex ?? null,
     category:    p.field_categoria?.name           ?? null,
   };
 });

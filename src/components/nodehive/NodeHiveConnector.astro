@@ -69,6 +69,7 @@
 
   /* ── 5. Enviar mensaje al editor padre ───────────────────────────────── */
   function sendToEditor(data) {
+    console.log('[NH] sending:', JSON.stringify(data));
     try {
       window.parent.postMessage(data, parentOrigin);
     } catch (_) {}
@@ -76,12 +77,14 @@
 
   /* ── 6. Notificar que la página está lista ───────────────────────────── */
   function notifyReady() {
-    sendToEditor({
+    var msg = {
       type: 'frontend:ready',
       url: window.location.href,
       lang: window.__NODEHIVE_LANG__ || document.documentElement.lang || 'es',
       token: editorToken,
-    });
+    };
+    console.log('[NH] frontend:ready token:', editorToken, '→', JSON.stringify(msg));
+    sendToEditor(msg);
   }
 
   /* ── 7. Registrar campos editables (delegación en document → sobrevive a React re-renders) ── */

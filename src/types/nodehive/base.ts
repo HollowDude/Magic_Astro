@@ -49,19 +49,17 @@ export interface NodeHiveMedia {
 }
 
 /**
- * Convierte la URL relativa de un archivo de NodeHive en absoluta.
- *
- * @param file    Objeto NodeHiveFile deserializado por Jsona
- * @param baseUrl Base URL de NodeHive SIN trailing slash
+ * Devuelve null si file es undefined para no romper en includes parciales.
  */
-export function nodehiveFileUrl(file: NodeHiveFile, baseUrl: string): string {
+export function nodehiveFileUrl(file: NodeHiveFile | undefined, baseUrl: string): string | null {
+  if (!file?.uri?.url) return null;
   return `${baseUrl}${file.uri.url}`;
 }
 
 /**
- * Convierte la URL relativa de un media de NodeHive en absoluta.
+ * Devuelve null si media es undefined o no tiene field_media_image.
  */
-export function nodehiveMediaUrl(media: NodeHiveMedia, baseUrl: string): string | null {
-  if (!media.field_media_image) return null;
+export function nodehiveMediaUrl(media: NodeHiveMedia | undefined, baseUrl: string): string | null {
+  if (!media?.field_media_image) return null;
   return nodehiveFileUrl(media.field_media_image, baseUrl);
 }

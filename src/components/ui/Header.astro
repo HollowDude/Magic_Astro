@@ -1,17 +1,50 @@
 ---
 import HeaderClient from '@/components/ui/HeaderClient';
+import { nodehiveFetch } from '@/services/nodehive/nodehive.client';
 import { getSession } from '@/services/session.service';
-import { getLangFromUrl } from '@/i18n/utils';
+import { getLangFromUrl, getPrefix } from '@/i18n/utils';
+import type { Lang } from '@/i18n/ui';
 
-const session     = await getSession(Astro.cookies); // ← await
+const session     = await getSession(Astro.cookies);
 const isLoggedIn  = !!session;
 const currentPath = Astro.url.pathname;
 const lang = (Astro.currentLocale ?? getLangFromUrl(Astro.url)) as 'es' | 'en';
+
+interface MenuLink {
+  title: string;
+  url:   string;
+}
+
+interface MenuResponse {
+  links?: MenuLink[];
+}
+
+let navLinks: { label: string; href: string }[] = [];
+try {
+  const res = await nodehiveFetch<MenuResponse>('/api/menu_items/main', {
+    lang,
+    cacheTtl: 30_000,
+  });
+  if (res.status === 200 && Array.isArray(res.data?.links)) {
+    const prefix = getPrefix(lang);
+    navLinks = res.data.links
+      .map(link => {
+        let href = link.url || '';
+        if (href.startsWith('/')) href = `${prefix}${href}`;
+        return { label: link.title || '', href };
+      })
+      .filter(link => {
+        const p = link.href;
+        return !(p === prefix || p === `${prefix}/`);
+      });
+  }
+} catch (_) {}
 ---
 
 <HeaderClient
   isLoggedIn={isLoggedIn}
   currentPath={currentPath}
   lang={lang}
+  navLinks={navLinks}
   client:load
 />

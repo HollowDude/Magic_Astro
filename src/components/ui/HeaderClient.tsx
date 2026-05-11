@@ -18,6 +18,7 @@ interface Props {
   isLoggedIn:  boolean;
   currentPath: string;
   lang:        Lang;
+  navLinks?:   { label: string; href: string }[];
 }
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -156,7 +157,7 @@ function SearchResultPanel({
 
 // ── HeaderClient ──────────────────────────────────────────────────────────────
 
-export default function HeaderClient({ isLoggedIn, currentPath, lang }: Props) {
+export default function HeaderClient({ isLoggedIn, currentPath, lang, navLinks: navLinksProp }: Props) {
   const [mobileOpen,    setMobileOpen]    = useState(false);
   const [searchOpen,    setSearchOpen]    = useState(false);
   const [searchValue,   setSearchValue]   = useState('');
@@ -168,7 +169,8 @@ export default function HeaderClient({ isLoggedIn, currentPath, lang }: Props) {
   const pillRef     = useRef<HTMLDivElement>(null);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  const navLinks = getNavLinks(lang);
+  const fallbackLinks = getNavLinks(lang);
+  const navLinks = navLinksProp && navLinksProp.length > 0 ? navLinksProp : fallbackLinks;
   const shopHref = `${getPrefix(lang)}/shop`;
 
   const openSearch = () => {
@@ -202,7 +204,7 @@ export default function HeaderClient({ isLoggedIn, currentPath, lang }: Props) {
   }, [closeSearch]);
 
   useEffect(() => {
-    if (searchValue.length < 3) {
+    if (searchValue.length === 0) {
       if (debounceRef.current) clearTimeout(debounceRef.current);
       setSearchResults([]);
       setSearchLoading(false);
@@ -228,7 +230,7 @@ export default function HeaderClient({ isLoggedIn, currentPath, lang }: Props) {
       } finally {
         setSearchLoading(false);
       }
-    }, DEBOUNCE_MS);
+    }, searchValue.length >= 3 ? DEBOUNCE_MS : 1000);
 
     return () => {
       if (debounceRef.current) clearTimeout(debounceRef.current);
@@ -249,7 +251,7 @@ export default function HeaderClient({ isLoggedIn, currentPath, lang }: Props) {
     window.location.href = getLocalizedPath(currentPath, targetLang);
   };
 
-  const showPanel = searchOpen && searchValue.length >= 3;
+  const showPanel = searchOpen && searchValue.length >= 1;
 
   return (
     <>
@@ -269,7 +271,7 @@ export default function HeaderClient({ isLoggedIn, currentPath, lang }: Props) {
                 href={link.href}
                 className={`relative flex flex-col items-center gap-1 text-[0.9375rem] no-underline font-body tracking-tight whitespace-nowrap transition-colors duration-200 ${isActive(link.href) ? 'text-primary font-bold' : 'text-text-main font-medium hover:text-primary'}`}
               >
-                {t(lang, link.key)}
+                {'key' in link ? t(lang, link.key) : link.label}
                 {isActive(link.href) && <span className="absolute -bottom-2 w-1 h-1 rounded-full bg-primary" />}
               </a>
             ))}
@@ -389,7 +391,7 @@ export default function HeaderClient({ isLoggedIn, currentPath, lang }: Props) {
                 href={link.href}
                 className={`py-4 px-6 text-base font-semibold no-underline border-b border-border font-body transition-colors duration-200 ${isActive(link.href) ? 'text-primary bg-[color-mix(in_srgb,var(--color-primary)_4%,transparent)]' : 'text-text-main hover:bg-black/5'}`}
               >
-                {t(lang, link.key)}
+                {'key' in link ? t(lang, link.key) : link.label}
               </a>
             ))}
 

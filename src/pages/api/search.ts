@@ -35,29 +35,29 @@ export const GET: APIRoute = async ({ url }) => {
   const q    = url.searchParams.get('q')?.trim() ?? '';
   const lang = (url.searchParams.get('lang') ?? 'es') as 'es' | 'en';
 
-  if (q.length < 3) {
+  if (q.length < 1) {
     return jsonOk({ results: [], hasMore: false });
   }
 
   const apiParams = new DrupalJsonApiParams();
 
-  apiParams
-    .addFilter('status', '1')
-    .addFilter('title', q, 'CONTAINS')
-    .addPageLimit(FETCH_LIMIT)
-    .addInclude([
-      'variations',
-      'variations.field_galeria_de_fotos',
-    ])
-    .addFields('commerce_product--flores', ['title', 'variations'])
-    .addFields('commerce_product_variation--flores_personalizadas', [
-      'price',
-      'title',
-      'field_galeria_de_fotos',
-    ])
-    .addFields('file--file', ['filename', 'uri', 'filemime']);
+    apiParams
+      .addFilter('status', '1')
+      .addFilter('title', q, 'CONTAINS')
+      .addPageLimit(FETCH_LIMIT)
+      .addInclude([
+        'variations',
+        'variations.field_gallery_of_photos',
+      ])
+      .addFields('commerce_product--flower', ['title', 'variations'])
+      .addFields('commerce_product_variation--flower', [
+        'price',
+        'title',
+        'field_gallery_of_photos',
+      ])
+      .addFields('file--file', ['filename', 'uri', 'filemime']);
 
-  const path = `/jsonapi/commerce_product/flores?${apiParams.getQueryString()}`;
+  const path = `/jsonapi/commerce_product/flower?${apiParams.getQueryString()}`;
 
   try {
     const raw = await nodehiveFetch<Record<string, unknown>>(path, {

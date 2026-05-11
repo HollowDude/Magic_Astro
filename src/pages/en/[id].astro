@@ -1,12 +1,8 @@
 ---
-export const prerender = true;
+export const prerender = false;
 
 import ProductDetailContent from '@/components/pages/ProductDetailContent.astro';
 import { getProductDetailPageData } from '@/services/nodehive/nodehive.product';
-
-export function getStaticPaths() {
-  return [{ params: { id: 'placeholder' } }];
-}
 
 const lang = 'en' as const;
 const { id } = Astro.params;
