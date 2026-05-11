@@ -28,8 +28,19 @@ const { title = 'Inicio', lang = 'es' } = Astro.props;
     <Header />
     <slot />
     <Footer lang={lang} />
-    {import.meta.env.NODEHIVE_VISUAL_EDITOR && (
-      <script src={`${import.meta.env.NODEHIVE_BASE_URL}/nodehive-editor.js`} defer></script>
-    )}
+    <script is:inline>
+      (function() {
+        var isInIframe = window.self !== window.top;
+
+        window.addEventListener('message', async function(event) {
+          if (event.data === 'reloadFrame') {
+            try {
+              await fetch('/api/nodehive/revalidate?path=' + encodeURIComponent(window.location.pathname));
+            } catch(e) {}
+            window.location.reload();
+          }
+        });
+      })();
+    </script>
   </body>
 </html>

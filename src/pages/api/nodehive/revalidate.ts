@@ -13,10 +13,10 @@ export const POST: APIRoute = async ({ request }) => {
     }
 
     return new Response(
-      JSON.stringify({ 
-        revalidated: true, 
+      JSON.stringify({
+        revalidated: true,
         timestamp: new Date().toISOString(),
-        received: body 
+        received: body
       }),
       {
         status: 200,
@@ -32,9 +32,11 @@ export const POST: APIRoute = async ({ request }) => {
   }
 };
 
-export const GET: APIRoute = async () => {
+export const GET: APIRoute = async ({ url }) => {
+  const path = url.searchParams.get('path') ?? '/';
+  console.log('[NodeHive Revalidate] GET path:', path);
   return new Response(
-    JSON.stringify({ status: 'ok', message: 'NodeHive revalidate endpoint active' }),
+    JSON.stringify({ revalidated: true, path, timestamp: new Date().toISOString() }),
     { status: 200, headers: { 'Content-Type': 'application/json' } }
   );
 };
