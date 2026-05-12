@@ -8,9 +8,9 @@ import type { Lang } from '@/i18n/ui';
 
 const lang = (Astro.currentLocale ?? getLangFromUrl(Astro.url)) as Lang;
 const { id } = Astro.params;
-if (!id) return Astro.redirect(lang === 'en' ? '/en/' : '/shop');
+if (!id) return Astro.redirect('/es/');
 
 const data = await getProductDetailPageData(id, lang);
-if (!data) return Astro.redirect(lang === 'en' ? '/en/' : '/shop');
+if (!data) return Astro.redirect('/es/');
 ---
 <ProductDetailContent lang={lang} {...data} />

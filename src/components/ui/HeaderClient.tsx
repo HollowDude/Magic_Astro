@@ -260,7 +260,7 @@ export default function HeaderClient({ isLoggedIn, currentPath, lang, navLinks: 
         {/* ── Left: logo + nav ── */}
         <div className="flex items-center gap-10 min-w-0">
           <a href={getPrefix(lang)} className="flex items-center gap-2 no-underline text-text-main shrink-0">
-            <img src="/logo_siglas.png" alt="Maggy Flowers" className="h-8 w-auto mb-2 object-contain" />
+            <img src="/logo_siglas.png" alt="Maggy Flowers" className="h-8 w-auto object-contain" />
           </a>
 
           <nav className="hidden md:flex items-center gap-7">
