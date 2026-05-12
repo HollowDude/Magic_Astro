@@ -162,3 +162,93 @@ export interface FeaturedProductsData {
   titulo: string | null;
   productos: FeaturedProduct[];
 }
+
+// ─────────────────────────────────────────────────────────────────────────────
+// About Page Paragraphs
+// ─────────────────────────────────────────────────────────────────────────────
+
+export interface AboutHeroData {
+  paragraphId: string | null;
+  paragraphInternalId: number | null;
+  title: string | null;
+  subtitle: string | null;
+  fotoUrl: string | null;
+}
+
+export interface AboutStoryData {
+  paragraphId: string | null;
+  paragraphInternalId: number | null;
+  title: string | null;
+  subtitle: string | null;
+  description: string | null;
+  fotoUrl: string | null;
+}
+
+export interface AboutArchievementItem {
+  id: string;
+  internalId: number;
+  title: string;
+  description: string;
+  icon: string;
+}
+
+export interface AboutArchievementsData {
+  paragraphId: string | null;
+  paragraphInternalId: number | null;
+  title: string | null;
+  items: AboutArchievementItem[];
+}
+
+export interface AboutCertificactionData {
+  paragraphId: string | null;
+  paragraphInternalId: number | null;
+  title: string | null;
+  subtitle: string | null;
+  fotoUrl: string | null;
+}
+
+export interface AboutIdentityTag {
+  id: string;
+  internalId: number;
+  label: string;
+  color: 'pink' | 'green';
+}
+
+export interface AboutIdentityData {
+  paragraphId: string | null;
+  paragraphInternalId: number | null;
+  title: string | null;
+  subtitle: string | null;
+  tags: AboutIdentityTag[];
+}
+
+export interface AboutMisionData {
+  paragraphId: string | null;
+  paragraphInternalId: number | null;
+  title: string | null;
+  description: string | null;
+  fotoUrl: string | null;
+}
+
+export interface AboutVisionData {
+  paragraphId: string | null;
+  paragraphInternalId: number | null;
+  title: string | null;
+  description: string | null;
+  fotoUrl: string | null;
+}
+
+export interface AboutObjectiveItem {
+  id: string;
+  internalId: number | null;
+  title: string | null;
+  description: string | null;
+  fotoUrl: string | null;
+}
+
+export interface AboutObjectifsData {
+  paragraphId: string | null;
+  paragraphInternalId: number | null;
+  title: string | null;
+  items: AboutObjectiveItem[];
+}

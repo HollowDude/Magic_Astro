@@ -7,6 +7,7 @@ import { nodehiveMediaUrl } from '@/types/nodehive';
 import type { NodeHiveFile } from '../../types/nodehive/base';
 import type { Lang } from '../../i18n/ui';
 import type { CategoryBlockData, FeaturedProductsData, ServicesBlockData, CommentsBlockData, ContactBlockData } from './nodehive.blocks';
+import type { AboutHeroData, AboutStoryData, AboutArchievementsData, AboutCertificactionData, AboutIdentityData, AboutMisionData, AboutVisionData, AboutObjectifsData, AboutObjectiveItem } from '../../types/nodehive/content';
 
 const dataFormatter = new Jsona();
 const NODEHIVE_BASE_URL = import.meta.env.NODEHIVE_BASE_URL as string;
@@ -384,6 +385,348 @@ export async function getContactUsParagraphData(lang?: Lang): Promise<ContactBlo
     }
   } catch (err) {
     console.error('[Paragraphs] Error getContactUsParagraphData:', err);
+  }
+  return null;
+}
+
+// ── About Page Paragraphs ─────────────────────────────────────────────────────
+
+export async function getAboutHeroData(lang?: Lang): Promise<AboutHeroData | null> {
+  try {
+    const effectiveLang = lang ?? (import.meta.env.NODEHIVE_DEFAULT_LANG as string) ?? 'es';
+
+    const paramsBase = new DrupalJsonApiParams();
+    paramsBase
+      .addFields('paragraph--_component_about_hero', [
+        'id', 'drupal_internal__id', 'field_title', 'field_subtitle', 'field_head_photo',
+      ])
+      .addPageLimit(1);
+
+    const baseRaw = await nodehiveFetch<Record<string, unknown>>(
+      `/jsonapi/paragraph/_component_about_hero?${paramsBase.getQueryString()}`,
+      { headers: { 'Content-Type': 'application/vnd.api+json', Accept: 'application/vnd.api+json' }, lang: effectiveLang }
+    );
+    if (baseRaw.status !== 200) return null;
+
+    const baseResult = dataFormatter.deserialize(baseRaw.data) as any[];
+    const p = baseResult?.[0];
+    if (!p) return null;
+
+    let fotoUrl: string | null = null;
+    const mediaRef = p.field_head_photo as any;
+    if (mediaRef?.id) {
+      const mediaRaw = await nodehiveFetch<Record<string, unknown>>(
+        `/jsonapi/media/image/${mediaRef.id}?include=field_media_image&fields[media--image]=field_media_image&fields[file--file]=uri`,
+        { headers: { 'Content-Type': 'application/vnd.api+json', Accept: 'application/vnd.api+json' }, lang: effectiveLang }
+      );
+      if (mediaRaw.status === 200) {
+        const mediaResult = dataFormatter.deserialize(mediaRaw.data) as any;
+        const file = mediaResult?.field_media_image;
+        if (file?.uri?.url) fotoUrl = `${NODEHIVE_BASE_URL}${file.uri.url}`;
+      }
+    }
+
+    return {
+      paragraphId: p.id ?? null,
+      paragraphInternalId: p.drupal_internal__id ?? null,
+      title: p.field_title ?? null,
+      subtitle: p.field_subtitle ?? null,
+      fotoUrl,
+    };
+  } catch (err) {
+    console.error('[Paragraphs] Error getAboutHeroData:', err);
+  }
+  return null;
+}
+
+export async function getAboutStoryData(lang?: Lang): Promise<AboutStoryData | null> {
+  try {
+    const effectiveLang = lang ?? (import.meta.env.NODEHIVE_DEFAULT_LANG as string) ?? 'es';
+
+    const paramsBase = new DrupalJsonApiParams();
+    paramsBase
+      .addFields('paragraph--_component_about_story', [
+        'id', 'drupal_internal__id', 'field_title', 'field_subtitle_primary', 'field_description_long', 'field_head_photo',
+      ])
+      .addPageLimit(1);
+
+    const baseRaw = await nodehiveFetch<Record<string, unknown>>(
+      `/jsonapi/paragraph/_component_about_story?${paramsBase.getQueryString()}`,
+      { headers: { 'Content-Type': 'application/vnd.api+json', Accept: 'application/vnd.api+json' }, lang: effectiveLang }
+    );
+    if (baseRaw.status !== 200) return null;
+
+    const baseResult = dataFormatter.deserialize(baseRaw.data) as any[];
+    const p = baseResult?.[0];
+    if (!p) return null;
+
+    let fotoUrl: string | null = null;
+    const mediaRef = p.field_head_photo as any;
+    if (mediaRef?.id) {
+      const mediaRaw = await nodehiveFetch<Record<string, unknown>>(
+        `/jsonapi/media/image/${mediaRef.id}?include=field_media_image&fields[media--image]=field_media_image&fields[file--file]=uri`,
+        { headers: { 'Content-Type': 'application/vnd.api+json', Accept: 'application/vnd.api+json' }, lang: effectiveLang }
+      );
+      if (mediaRaw.status === 200) {
+        const mediaResult = dataFormatter.deserialize(mediaRaw.data) as any;
+        const file = mediaResult?.field_media_image;
+        if (file?.uri?.url) fotoUrl = `${NODEHIVE_BASE_URL}${file.uri.url}`;
+      }
+    }
+
+    return {
+      paragraphId: p.id ?? null,
+      paragraphInternalId: p.drupal_internal__id ?? null,
+      title: p.field_title ?? null,
+      subtitle: p.field_subtitle_primary ?? null,
+      description: p.field_description_long ?? null,
+      fotoUrl,
+    };
+  } catch (err) {
+    console.error('[Paragraphs] Error getAboutStoryData:', err);
+  }
+  return null;
+}
+
+export async function getAboutArchievementsData(lang?: Lang): Promise<AboutArchievementsData | null> {
+  try {
+    const params = new DrupalJsonApiParams();
+    params
+      .addFields('paragraph--_component_about_archievements', [
+        'id', 'drupal_internal__id', 'field_title',
+      ])
+      .addPageLimit(1);
+
+    const path = `/jsonapi/paragraph/_component_about_archievements?${params.getQueryString()}`;
+    const effectiveLang = lang ?? (import.meta.env.NODEHIVE_DEFAULT_LANG as string) ?? 'es';
+
+    const raw = await nodehiveFetch<Record<string, unknown>>(path, {
+      headers: { 'Content-Type': 'application/vnd.api+json', Accept: 'application/vnd.api+json' },
+      lang: effectiveLang,
+    });
+
+    if (raw.status !== 200) return null;
+
+    const result = dataFormatter.deserialize(raw.data) as any[];
+    const p = result?.[0];
+    if (!p) return null;
+
+    const isEn = effectiveLang === 'en';
+    return {
+      paragraphId: p.id ?? null,
+      paragraphInternalId: p.drupal_internal__id ?? null,
+      title: p.field_title ?? null,
+      items: [
+        { id: 'amazon', internalId: 1, title: 'Amazon Influencer', description: isEn ? 'approved' : 'aprobada', icon: '📦' },
+        { id: 'hotmart', internalId: 2, title: isEn ? 'Floral design courses' : 'Cursos de diseño floral', description: 'Hotmart', icon: '🔥' },
+        { id: 'vip', internalId: 3, title: isEn ? 'Active VIP community of entrepreneurial women' : 'Comunidad VIP activa de\r\nalumnas emprendedoras', description: '', icon: '👑' },
+      ],
+    };
+  } catch (err) {
+    console.error('[Paragraphs] Error getAboutArchievementsData:', err);
+  }
+  return null;
+}
+
+export async function getAboutCertificactionData(lang?: Lang): Promise<AboutCertificactionData | null> {
+  try {
+    const effectiveLang = lang ?? (import.meta.env.NODEHIVE_DEFAULT_LANG as string) ?? 'es';
+
+    const paramsBase = new DrupalJsonApiParams();
+    paramsBase
+      .addFields('paragraph--_component_about_certificaction', [
+        'id', 'drupal_internal__id', 'field_title', 'field_subtitle', 'field_head_photo',
+      ])
+      .addPageLimit(1);
+
+    const baseRaw = await nodehiveFetch<Record<string, unknown>>(
+      `/jsonapi/paragraph/_component_about_certificaction?${paramsBase.getQueryString()}`,
+      { headers: { 'Content-Type': 'application/vnd.api+json', Accept: 'application/vnd.api+json' }, lang: effectiveLang }
+    );
+    if (baseRaw.status !== 200) return null;
+
+    const baseResult = dataFormatter.deserialize(baseRaw.data) as any[];
+    const p = baseResult?.[0];
+    if (!p) return null;
+
+    let fotoUrl: string | null = null;
+    const mediaRef = p.field_head_photo as any;
+    if (mediaRef?.id) {
+      const mediaRaw = await nodehiveFetch<Record<string, unknown>>(
+        `/jsonapi/media/image/${mediaRef.id}?include=field_media_image&fields[media--image]=field_media_image&fields[file--file]=uri`,
+        { headers: { 'Content-Type': 'application/vnd.api+json', Accept: 'application/vnd.api+json' }, lang: effectiveLang }
+      );
+      if (mediaRaw.status === 200) {
+        const mediaResult = dataFormatter.deserialize(mediaRaw.data) as any;
+        const file = mediaResult?.field_media_image;
+        if (file?.uri?.url) fotoUrl = `${NODEHIVE_BASE_URL}${file.uri.url}`;
+      }
+    }
+
+    return {
+      paragraphId: p.id ?? null,
+      paragraphInternalId: p.drupal_internal__id ?? null,
+      title: p.field_title ?? null,
+      subtitle: p.field_subtitle ?? null,
+      fotoUrl,
+    };
+  } catch (err) {
+    console.error('[Paragraphs] Error getAboutCertificactionData:', err);
+  }
+  return null;
+}
+
+export async function getAboutIdentityData(lang?: Lang): Promise<AboutIdentityData | null> {
+  try {
+    const effectiveLang = lang ?? (import.meta.env.NODEHIVE_DEFAULT_LANG as string) ?? 'es';
+
+    const paramsBase = new DrupalJsonApiParams();
+    paramsBase
+      .addFields('paragraph--_component_about_identity', [
+        'id', 'drupal_internal__id', 'field_title', 'field_subtitle_primary', 'field_identities',
+      ])
+      .addPageLimit(1);
+
+    const baseRaw = await nodehiveFetch<Record<string, unknown>>(
+      `/jsonapi/paragraph/_component_about_identity?${paramsBase.getQueryString()}`,
+      { headers: { 'Content-Type': 'application/vnd.api+json', Accept: 'application/vnd.api+json' }, lang: effectiveLang }
+    );
+    if (baseRaw.status !== 200) return null;
+
+    const rawData = baseRaw.data as any;
+    const parentItem = rawData?.data?.[0];
+    if (!parentItem) return null;
+
+    const parentAttrs = parentItem.attributes ?? {};
+    const childRefs: Array<{id: string}> = parentItem.relationships?.field_identities?.data ?? [];
+
+    const colors = ['pink', 'green'] as const;
+    let tags: AboutIdentityData['tags'] = [];
+
+    if (childRefs.length > 0) {
+      const childParams = new DrupalJsonApiParams();
+      childParams.addFields('paragraph--identity', ['id', 'drupal_internal__id', 'field_title']);
+      const childRaw = await nodehiveFetch<Record<string, unknown>>(
+        `/jsonapi/paragraph/identity?${childParams.getQueryString()}&page[limit]=50`,
+        { headers: { 'Content-Type': 'application/vnd.api+json', Accept: 'application/vnd.api+json' }, lang: effectiveLang }
+      );
+      if (childRaw.status === 200) {
+        const allChildren = dataFormatter.deserialize(childRaw.data) as any[];
+        const childMap = new Map(allChildren.map((c: any) => [c.id, c]));
+        tags = childRefs
+          .map((ref: any, i: number) => {
+            const child = childMap.get(ref.id);
+            if (!child) return null;
+            return {
+              id: child.id ?? String(i),
+              internalId: child.drupal_internal__id ?? i,
+              label: child.field_title ?? '',
+              color: colors[i % 2],
+            };
+          })
+          .filter(Boolean) as AboutIdentityData['tags'];
+      }
+    }
+
+    return {
+      paragraphId: parentAttrs.id ?? parentItem.id ?? null,
+      paragraphInternalId: parentAttrs.drupal_internal__id ?? null,
+      title: parentAttrs.field_title ?? null,
+      subtitle: parentAttrs.field_subtitle_primary ?? null,
+      tags,
+    };
+  } catch (err) {
+    console.error('[Paragraphs] Error getAboutIdentityData:', err);
+  }
+  return null;
+}
+
+export async function getAboutMisionData(lang?: Lang): Promise<AboutMisionData | null> {
+  const isEn = lang === 'en';
+  return {
+    paragraphId: null,
+    paragraphInternalId: null,
+    title: 'Misión',
+    description: isEn
+      ? 'Inspire and accompany entrepreneurial women to discover their floral talent, transform it into art and convert it into a sustainable business through practical, creative education based on real experience.'
+      : 'Inspirar y acompañar a mujeres emprendedoras a descubrir su talento floral, transformarlo en arte y convertirlo en un negocio sostenible mediante educación práctica, creativa y basada en la experiencia real.',
+    fotoUrl: null,
+  };
+}
+
+export async function getAboutVisionData(lang?: Lang): Promise<AboutVisionData | null> {
+  const isEn = lang === 'en';
+  return {
+    paragraphId: null,
+    paragraphInternalId: null,
+    title: 'Visión',
+    description: isEn
+      ? 'To be a global reference brand in artificial and natural floral design, recognized for its creativity, high-value teaching, digital products and floral designs that emotionally connect with every person.'
+      : 'Ser una marca global referente en diseño floral artificial y natural, reconocida por su creatividad, enseñanza de alto valor, productos digitales y diseños florales que conectan emocionalmente con cada persona.',
+    fotoUrl: null,
+  };
+}
+
+export async function getAboutObjectifsData(lang?: Lang): Promise<AboutObjectifsData | null> {
+  try {
+    const params = new DrupalJsonApiParams();
+    params
+      .addInclude([
+        'field_objetives',
+        'field_objetives.field_head_photo',
+        'field_objetives.field_head_photo.field_media_image',
+      ])
+      .addFields('paragraph--_component_about_objetives', [
+        'id', 'drupal_internal__id', 'field_title', 'field_objetives',
+      ])
+      .addFields('paragraph--about_objetive', [
+        'id', 'drupal_internal__id', 'field_title', 'field_description', 'field_description_long', 'field_head_photo',
+      ])
+      .addFields('media--image', ['name', 'field_media_image'])
+      .addFields('file--file', ['filename', 'uri'])
+      .addPageLimit(1);
+
+    const path = `/jsonapi/paragraph/_component_about_objetives?${params.getQueryString()}`;
+    const effectiveLang = lang ?? (import.meta.env.NODEHIVE_DEFAULT_LANG as string) ?? 'es';
+
+    const raw = await nodehiveFetch<Record<string, unknown>>(path, {
+      headers: { 'Content-Type': 'application/vnd.api+json', Accept: 'application/vnd.api+json' },
+      lang: effectiveLang,
+    });
+
+    if (raw.status !== 200) return null;
+    const result = dataFormatter.deserialize(raw.data) as any[];
+    const p = result?.[0];
+    if (!p) return null;
+
+    const items: AboutObjectiveItem[] = (Array.isArray(p.field_objetives) ? p.field_objetives : []).map((obj: any) => {
+      let fotoUrl: string | null = null;
+      const media = obj.field_head_photo as any;
+      if (media) {
+        fotoUrl = nodehiveMediaUrl(media, NODEHIVE_BASE_URL);
+        if (!fotoUrl && media.field_media_image?.uri?.url) {
+          fotoUrl = `${NODEHIVE_BASE_URL}${media.field_media_image.uri.url}`;
+        } else if (!fotoUrl && media.uri?.url) {
+          fotoUrl = `${NODEHIVE_BASE_URL}${media.uri.url}`;
+        }
+      }
+      return {
+        id: obj.id ?? '',
+        internalId: obj.drupal_internal__id ?? null,
+        title: obj.field_title ?? null,
+        description: obj.field_description_long ?? obj.field_description ?? null,
+        fotoUrl,
+      };
+    });
+
+    return {
+      paragraphId: p.id ?? null,
+      paragraphInternalId: p.drupal_internal__id ?? null,
+      title: p.field_title ?? null,
+      items,
+    };
+  } catch (err) {
+    console.error('[Paragraphs] Error getAboutObjectifsData:', err);
   }
   return null;
 }
