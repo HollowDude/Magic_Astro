@@ -55,7 +55,7 @@ export async function getHomepageHeroData(lang?: Lang): Promise<HeroData | null>
     heroParams
       .addInclude(['field_photos_slider', 'field_photos_slider.field_media_image', 'field_buttons'])
       .addFields('paragraph--_component_home_hero', [
-        'id', 'field_title', 'field_subtitle', 'field_description', 'field_photos_slider', 'field_buttons',
+        'id', 'drupal_internal__id', 'field_title', 'field_subtitle', 'field_description', 'field_photos_slider', 'field_buttons',
       ])
       .addFields('paragraph--button', ['field_button_text', 'field_button_link', 'field_button_style'])
       .addFields('media--image', ['name', 'field_media_image'])
@@ -95,6 +95,7 @@ export async function getHomepageHeroData(lang?: Lang): Promise<HeroData | null>
       ctaButtons,
       pageId: page.id,
       componentId: heroData.id,
+      componentInternalId: heroData.drupal_internal__id,
     };
   } catch (err) {
     console.error('[Paragraphs] Error getHomepageHeroData:', err);

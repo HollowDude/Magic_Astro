@@ -88,7 +88,10 @@
   }
 
   /* ── 7. Registrar campos editables (delegación en document → sobrevive a React re-renders) ── */
+  var _fieldsSetup = false;
   function setupEditableFields() {
+    if (_fieldsSetup) return;
+    _fieldsSetup = true;
     document.addEventListener('click', function (e) {
       var el = e.target.closest('[data-nodehive-field]');
       if (!el) return;
@@ -111,11 +114,24 @@
         entityId:     entityEl.dataset.nodehiveEntityId     || '',
         field:        el.dataset.nodehiveField              || '',
       });
+
+      if (entityEl.dataset.nodehiveEntityType === 'paragraph') {
+        sendToEditor({
+          type:      'paragraph:click',
+          uuid:      entityEl.dataset.nodehiveEntityId   || '',
+          id:        entityEl.dataset.nodehiveEntityInternalId || entityEl.dataset.nodehiveEntityId || '',
+          parent_id: entityEl.dataset.nodehiveParentId   || '',
+          pathname:  window.location.pathname,
+          langcode: entityEl.dataset.nodehiveLangcode   || (window.__NODEHIVE_LANG__ || document.documentElement.lang || 'es'),
+        });
+      }
     }, true);
   }
 
   /* ── 8. Escuchar mensajes del editor ─────────────────────────────────── */
   window.addEventListener('message', function (event) {
+    console.log('[NH] message received:', event.origin, JSON.stringify(event.data));
+
     var data = event.data;
     if (!data) return;
 
@@ -133,6 +149,16 @@
     }
 
     switch (data.type) {
+      case 'nodehive-login':
+        if (data.token) {
+          editorToken = data.token;
+          try {
+            sessionStorage.setItem('nodehive-editor-token', data.token);
+          } catch (_) {}
+          notifyReady();
+        }
+        break;
+
       case 'editor:init':
       case 'editor:ready':
         notifyReady();
@@ -158,10 +184,16 @@
     document.addEventListener('DOMContentLoaded', function () {
       setupEditableFields();
       notifyReady();
+      setTimeout(notifyReady, 500);
+      setTimeout(notifyReady, 1500);
+      setTimeout(notifyReady, 3000);
     });
   } else {
     setupEditableFields();
     notifyReady();
+    setTimeout(notifyReady, 500);
+    setTimeout(notifyReady, 1500);
+    setTimeout(notifyReady, 3000);
   }
 })();
 </script>

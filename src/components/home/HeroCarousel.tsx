@@ -23,6 +23,7 @@ interface Props {
   ctaButtons?:   Array<{ text: string; url: string; style: 'primary' | 'secondary' }>;
   lang?:         Lang;
   componentId?:  string;
+  componentInternalId?: number;
 }
 
 const INTERVAL = 5000;
@@ -35,6 +36,7 @@ export default function HeroCarousel({
   ctaButtons,
   lang = 'es',
   componentId,
+  componentInternalId,
 }: Props) {
   const fallbackTitle       = t(lang, 'hero.title');
   const fallbackSubtitle    = t(lang, 'hero.slogan');
@@ -91,6 +93,8 @@ export default function HeroCarousel({
       data-nodehive-entity-type="paragraph"
       data-nodehive-entity-bundle="_component_home_hero"
       data-nodehive-entity-id={componentId ?? null}
+      data-nodehive-entity-internal-id={componentInternalId ?? null}
+      data-nodehive-langcode={lang}
     >
       {activeSlides.map((slide, i) => {
         const isCurrent = i === active;
