@@ -7,7 +7,7 @@ import { nodehiveMediaUrl } from '@/types/nodehive';
 import type { NodeHiveFile } from '../../types/nodehive/base';
 import type { Lang } from '../../i18n/ui';
 import type { CategoryBlockData, FeaturedProductsData, ServicesBlockData, CommentsBlockData, ContactBlockData } from './nodehive.blocks';
-import type { AboutHeroData, AboutStoryData, AboutArchievementsData, AboutCertificactionData, AboutIdentityData, AboutMisionData, AboutVisionData, AboutObjectifsData, AboutObjectiveItem } from '../../types/nodehive/content';
+import type { AboutHeroData, AboutStoryData, AboutArchievementsData, AboutCertificactionData, AboutIdentityData, AboutObjectifsData, AboutObjectiveItem } from '../../types/nodehive/content';
 
 const dataFormatter = new Jsona();
 const NODEHIVE_BASE_URL = import.meta.env.NODEHIVE_BASE_URL as string;
@@ -641,31 +641,7 @@ export async function getAboutIdentityData(lang?: Lang): Promise<AboutIdentityDa
   return null;
 }
 
-export async function getAboutMisionData(lang?: Lang): Promise<AboutMisionData | null> {
-  const isEn = lang === 'en';
-  return {
-    paragraphId: null,
-    paragraphInternalId: null,
-    title: 'Misión',
-    description: isEn
-      ? 'Inspire and accompany entrepreneurial women to discover their floral talent, transform it into art and convert it into a sustainable business through practical, creative education based on real experience.'
-      : 'Inspirar y acompañar a mujeres emprendedoras a descubrir su talento floral, transformarlo en arte y convertirlo en un negocio sostenible mediante educación práctica, creativa y basada en la experiencia real.',
-    fotoUrl: null,
-  };
-}
 
-export async function getAboutVisionData(lang?: Lang): Promise<AboutVisionData | null> {
-  const isEn = lang === 'en';
-  return {
-    paragraphId: null,
-    paragraphInternalId: null,
-    title: 'Visión',
-    description: isEn
-      ? 'To be a global reference brand in artificial and natural floral design, recognized for its creativity, high-value teaching, digital products and floral designs that emotionally connect with every person.'
-      : 'Ser una marca global referente en diseño floral artificial y natural, reconocida por su creatividad, enseñanza de alto valor, productos digitales y diseños florales que conectan emocionalmente con cada persona.',
-    fotoUrl: null,
-  };
-}
 
 export async function getAboutObjectifsData(lang?: Lang): Promise<AboutObjectifsData | null> {
   try {

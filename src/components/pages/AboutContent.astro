@@ -9,21 +9,17 @@ import {
   getAboutCertificactionData,
   getAboutIdentityData,
   getAboutObjectifsData,
-  getAboutMisionData,
-  getAboutVisionData,
 } from '@/services/nodehive/nodehive.paragraphs';
 
 const lang = (Astro.currentLocale ?? getLangFromUrl(Astro.url)) as Lang;
 
-const [hero, story, archievements, cert, identity, objectifs, mision, vision] = await Promise.all([
+const [hero, story, archievements, cert, identity, objectifs] = await Promise.all([
   getAboutHeroData(lang),
   getAboutStoryData(lang),
   getAboutArchievementsData(lang),
   getAboutCertificactionData(lang),
   getAboutIdentityData(lang),
   getAboutObjectifsData(lang),
-  getAboutMisionData(lang),
-  getAboutVisionData(lang),
 ]);
 
 const isEn = lang === 'en';
@@ -53,10 +49,22 @@ const identitySubtitle = identity?.subtitle ?? (isEn ? 'Our DNA' : 'Nuestro ADN'
         data-nodehive-entity-id={hero?.paragraphId ?? null}
         data-nodehive-entity-internal-id={hero?.paragraphInternalId ?? null}
       >
-        <div class="absolute inset-0 bg-gradient-to-br from-[#f2a4a4] via-[#e8889a] to-[#d4778a]">
-          <div class="absolute inset-0" style="background-image: radial-gradient(ellipse 120px 100px at 20% 80%, rgba(235,71,99,0.35) 0%, transparent 70%), radial-gradient(ellipse 180px 160px at 50% 70%, rgba(220,60,90,0.25) 0%, transparent 70%), radial-gradient(ellipse 100px 90px at 80% 85%, rgba(235,71,99,0.30) 0%, transparent 70%), radial-gradient(ellipse 200px 200px at 50% 50%, rgba(255,150,150,0.2) 0%, transparent 60%);"></div>
-        </div>
-        <div class="absolute inset-0" style="background: rgba(180,80,95,0.38);"></div>
+        {hero?.fotoUrl ? (
+          <>
+            <img
+              src={hero.fotoUrl}
+              alt=""
+              class="absolute inset-0 w-full h-full object-cover"
+              aria-hidden="true"
+            />
+            <div class="absolute inset-0" style="background: rgba(140,50,65,0.52);"></div>
+          </>
+        ) : (
+          <div class="absolute inset-0 bg-gradient-to-br from-[#f2a4a4] via-[#e8889a] to-[#d4778a]">
+            <div class="absolute inset-0" style="background-image: radial-gradient(ellipse 120px 100px at 20% 80%, rgba(235,71,99,0.35) 0%, transparent 70%), radial-gradient(ellipse 180px 160px at 50% 70%, rgba(220,60,90,0.25) 0%, transparent 70%), radial-gradient(ellipse 100px 90px at 80% 85%, rgba(235,71,99,0.30) 0%, transparent 70%);"></div>
+            <div class="absolute inset-0" style="background: rgba(180,80,95,0.38);"></div>
+          </div>
+        )}
         <div class="relative z-10 text-center">
           <h1 class="font-heading font-semibold text-[72px] text-white leading-[1.1] tracking-[-1px]" data-nodehive-field="field_title">{heroTitle}</h1>
           <p class="font-body font-medium text-[22px] text-white mt-3 tracking-wide" data-nodehive-field="field_subtitle">{heroSubtitle}</p>
@@ -158,42 +166,37 @@ const identitySubtitle = identity?.subtitle ?? (isEn ? 'Our DNA' : 'Nuestro ADN'
       </section>
 
       <!-- SECTION 5: OBJETIVOS -->
-      {(objectifs?.items ?? []).length > 0 && (
+      {objectifs && objectifs.items.length > 0 && (
         <section
           class="bg-white"
           data-nodehive-entity-type="paragraph"
           data-nodehive-entity-bundle="_component_about_objetives"
-          data-nodehive-entity-id={objectifs?.paragraphId ?? null}
-          data-nodehive-entity-internal-id={objectifs?.paragraphInternalId ?? null}
+          data-nodehive-entity-id={objectifs.paragraphId ?? null}
+          data-nodehive-entity-internal-id={objectifs.paragraphInternalId ?? null}
         >
           <div class="max-w-[1300px] mx-auto px-[8%] py-[90px] flex flex-col gap-[70px]">
-            {objectifs?.title && (
+            {objectifs.title && (
               <h2 class="font-heading font-semibold text-[52px] text-headline text-center mb-0" data-nodehive-field="field_title">
                 {objectifs.title}
               </h2>
             )}
-            {objectifs!.items.map((item, index) => {
+            {objectifs.items.map((item, index) => {
               const isEven = index % 2 === 0;
               return (
                 <div class={`flex items-center gap-[70px] ${isEven ? '' : 'flex-row-reverse'}`}>
                   <div class="flex-1">
-                    {item.title && (
-                      <h3 class="font-heading font-semibold text-[40px] text-headline mb-5">{item.title}</h3>
-                    )}
-                    {item.description && (
-                      <p class="font-body text-[18px] leading-[38px] text-body-color">{item.description}</p>
-                    )}
+                    {item.title && <h3 class="font-heading font-semibold text-[40px] text-headline mb-5">{item.title}</h3>}
+                    {item.description && <p class="font-body text-[18px] leading-[38px] text-body-color">{item.description}</p>}
                   </div>
                   <div class="relative flex-shrink-0" style="width:460px; height:360px;">
                     <div class={`absolute border-[2.5px] border-primary rounded-[18px] w-[420px] h-[330px] top-5 ${isEven ? 'right-0' : 'left-0'} z-[1]`}></div>
                     <div class={`absolute bottom-0 ${isEven ? 'left-0' : 'right-0'} z-[2] w-[420px] h-[330px] rounded-[18px] overflow-hidden flex items-center justify-center`}
                       style="background: linear-gradient(135deg, #fce4ec 0%, #f8bbd0 50%, #f48fb1 100%);"
                     >
-                      {item.fotoUrl ? (
-                        <img src={item.fotoUrl} alt={item.title ?? ''} class="w-full h-full object-cover" />
-                      ) : (
-                        <span class="text-[64px]">🌸</span>
-                      )}
+                      {item.fotoUrl
+                        ? <img src={item.fotoUrl} alt={item.title ?? ''} class="w-full h-full object-cover" />
+                        : <span class="text-[64px]">🌸</span>
+                      }
                     </div>
                   </div>
                 </div>
@@ -203,67 +206,47 @@ const identitySubtitle = identity?.subtitle ?? (isEn ? 'Our DNA' : 'Nuestro ADN'
         </section>
       )}
 
-      <!-- SECTION 6: MISIÓN / VISIÓN -->
-      <section class="bg-white py-0">
-        <div class="max-w-[1300px] mx-auto px-[8%] py-[90px] flex flex-col gap-[70px]">
+      <!-- SECTION 5: IDENTIDAD Y VALORES -->
+      {identity && (
+        <section
+          class="py-20 px-[8%] text-center bg-white"
+          data-nodehive-entity-type="paragraph"
+          data-nodehive-entity-bundle="_component_about_identity"
+          data-nodehive-entity-id={identity.paragraphId ?? null}
+          data-nodehive-entity-internal-id={identity.paragraphInternalId ?? null}
+        >
+          <p class="font-body font-semibold text-[18px] text-primary tracking-[2px] uppercase mb-2.5" data-nodehive-field="field_subtitle_primary">
+            {identitySubtitle}
+          </p>
+          <h2 class="font-heading font-semibold text-[52px] text-headline mb-12" data-nodehive-field="field_title">
+            {identityTitle}
+          </h2>
 
-          <div class="flex items-center gap-[70px]"
-            data-nodehive-entity-type="paragraph"
-            data-nodehive-entity-bundle="_component_about_mision"
-            data-nodehive-entity-id={mision?.paragraphId ?? null}
-            data-nodehive-entity-internal-id={mision?.paragraphInternalId ?? null}
-          >
-            <div class="flex-1">
-              <h2 class="font-heading font-semibold text-[52px] text-headline mb-6" data-nodehive-field="field_title">{mision?.title ?? 'Misión'}</h2>
-              <p class="font-body text-[20px] leading-[38px] text-body-color">{mision?.description}</p>
-            </div>
-            <div class="relative flex-shrink-0" style="width:460px; height:360px;">
-              <div class="absolute border-[2.5px] border-primary rounded-[18px] w-[420px] h-[330px] top-5 right-0 z-[1]"></div>
-              <div class="absolute bottom-0 left-0 z-[2] w-[420px] h-[330px] rounded-[18px] overflow-hidden flex items-center justify-center" style="background: linear-gradient(135deg, #fce4ec 0%, #f8bbd0 50%, #f48fb1 100%);">
-                <span class="text-[64px]">🌷</span>
+          {(() => {
+            const tags = identity.tags;
+            const rows: typeof tags[] = [];
+            let i = 0;
+            let rowSize = 3;
+            while (i < tags.length) {
+              rows.push(tags.slice(i, i + rowSize));
+              i += rowSize;
+              rowSize = rowSize === 3 ? 4 : 3;
+            }
+            return rows.map((row, rowIdx) => (
+              <div class="flex justify-center gap-4 mb-4" data-nodehive-field={rowIdx === 0 ? 'field_identities' : undefined}>
+                {row.map((tag, tagIdx) => {
+                  const globalIdx = rows.slice(0, rowIdx).reduce((acc, r) => acc + r.length, 0) + tagIdx;
+                  return (
+                    <span class={`font-body text-[18px] font-medium px-7 py-3.5 rounded-full whitespace-nowrap ${globalIdx % 2 === 0 ? 'bg-blush text-headline' : 'bg-sage-light text-headline'}`}>
+                      {tag.label}
+                    </span>
+                  );
+                })}
               </div>
-            </div>
-          </div>
-
-          <div class="flex items-center gap-[70px] flex-row-reverse"
-            data-nodehive-entity-type="paragraph"
-            data-nodehive-entity-bundle="_component_about_vision"
-            data-nodehive-entity-id={vision?.paragraphId ?? null}
-            data-nodehive-entity-internal-id={vision?.paragraphInternalId ?? null}
-          >
-            <div class="flex-1 text-right">
-              <h2 class="font-heading font-semibold text-[52px] text-headline mb-6" data-nodehive-field="field_title">{vision?.title ?? 'Visión'}</h2>
-              <p class="font-body text-[20px] leading-[38px] text-body-color">{vision?.description}</p>
-            </div>
-            <div class="relative flex-shrink-0" style="width:460px; height:360px;">
-              <div class="absolute border-[2.5px] border-primary rounded-[18px] w-[420px] h-[330px] top-5 left-0 z-[1]"></div>
-              <div class="absolute bottom-0 right-0 z-[2] w-[420px] h-[330px] rounded-[18px] overflow-hidden flex items-center justify-center" style="background: linear-gradient(135deg, #e8f5e9 0%, #c8e6c9 50%, #a5d6a7 100%);">
-                <span class="text-[64px]">🌹</span>
-              </div>
-            </div>
-          </div>
-
-        </div>
-      </section>
-
-      <!-- SECTION 6: IDENTIDAD Y VALORES -->
-      <section
-        class="py-20 px-[8%] text-center bg-white"
-        data-nodehive-entity-type="paragraph"
-        data-nodehive-entity-bundle="_component_about_identity"
-        data-nodehive-entity-id={identity?.paragraphId ?? null}
-        data-nodehive-entity-internal-id={identity?.paragraphInternalId ?? null}
-      >
-        <p class="font-body font-semibold text-[18px] text-primary tracking-[2px] uppercase mb-2.5" data-nodehive-field="field_subtitle_primary">{identitySubtitle}</p>
-        <h2 class="font-heading font-semibold text-[52px] text-headline mb-12" data-nodehive-field="field_title">{identityTitle}</h2>
-        <div class="flex flex-col items-center gap-[18px]">
-          {(identity?.tags ?? []).map((tag, i) => (
-            <span class={`font-body text-[18px] font-medium px-7 py-3.5 rounded-full whitespace-nowrap ${i % 2 === 0 ? 'bg-blush text-headline' : 'bg-sage-light text-headline'}`}>
-              {tag.label}
-            </span>
-          ))}
-        </div>
-      </section>
+            ));
+          })()}
+        </section>
+      )}
 
     </main>
   </div>

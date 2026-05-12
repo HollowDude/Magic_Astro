@@ -222,22 +222,6 @@ export interface AboutIdentityData {
   tags: AboutIdentityTag[];
 }
 
-export interface AboutMisionData {
-  paragraphId: string | null;
-  paragraphInternalId: number | null;
-  title: string | null;
-  description: string | null;
-  fotoUrl: string | null;
-}
-
-export interface AboutVisionData {
-  paragraphId: string | null;
-  paragraphInternalId: number | null;
-  title: string | null;
-  description: string | null;
-  fotoUrl: string | null;
-}
-
 export interface AboutObjectiveItem {
   id: string;
   internalId: number | null;

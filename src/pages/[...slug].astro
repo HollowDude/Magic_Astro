@@ -1,0 +1,15 @@
+---
+export const prerender = false;
+
+const slug = Astro.params.slug ?? '';
+
+const cookieHeader = Astro.request.headers.get('cookie') ?? '';
+const match = cookieHeader.match(/mf-lang=([^;]+)/);
+const lang = match?.[1] === 'en' ? 'en' : 'es';
+
+if (slug.startsWith('es/') || slug.startsWith('en/')) {
+  return Astro.redirect(`/${slug}`, 302);
+}
+
+return Astro.redirect(`/${lang}/${slug}`, 302);
+---

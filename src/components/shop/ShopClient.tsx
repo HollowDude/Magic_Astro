@@ -358,7 +358,7 @@ export default function ShopClient({
                 key={product.id}
                 product={product}
                 lang={lang}
-                href={lang === 'en' ? `/en/${product.id}` : `/${product.id}`}
+                href={`/${lang}/${product.id}`}
               />
             ))}
           </div>
