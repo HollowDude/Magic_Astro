@@ -58,7 +58,10 @@ export interface HeroData {
     style: 'primary' | 'secondary';
   }>;
   pageId?: string;
+  pageInternalId?: number | null;
+  parentId?: string | null;
   componentId?: string;
+  componentInternalId?: number | null;
 }
 
 /**
@@ -164,12 +167,48 @@ export interface FeaturedProductsData {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
+// Shop Page Paragraphs
+// ─────────────────────────────────────────────────────────────────────────────
+
+export interface ShopHeaderData {
+  paragraphId: string | null;
+  paragraphInternalId: number | null;
+  parentId?: string | number | null;
+  bundle?: string | null;
+  title: string | null;
+  description: string | null;
+  titleField?: string | null;
+  descriptionField?: string | null;
+}
+
+export interface ShopBodyData {
+  paragraphId: string | null;
+  paragraphInternalId: number | null;
+  parentId?: string | number | null;
+  bundle?: string | null;
+  filters?: string[] | null;
+  sorts?: string[] | null;
+  itemsPerPage?: number | null;
+  filtersField?: string | null;
+  sortsField?: string | null;
+  itemsPerPageField?: string | null;
+}
+
+export interface ShopPageData {
+  pageId?: string;
+  pageInternalId?: number | null;
+  header?: ShopHeaderData | null;
+  body?: ShopBodyData | null;
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
 // About Page Paragraphs
 // ─────────────────────────────────────────────────────────────────────────────
 
 export interface AboutHeroData {
   paragraphId: string | null;
   paragraphInternalId: number | null;
+  parentId?: string | number | null;
   title: string | null;
   subtitle: string | null;
   fotoUrl: string | null;
@@ -178,6 +217,7 @@ export interface AboutHeroData {
 export interface AboutStoryData {
   paragraphId: string | null;
   paragraphInternalId: number | null;
+  parentId?: string | number | null;
   title: string | null;
   subtitle: string | null;
   description: string | null;
@@ -195,6 +235,7 @@ export interface AboutArchievementItem {
 export interface AboutArchievementsData {
   paragraphId: string | null;
   paragraphInternalId: number | null;
+  parentId?: string | number | null;
   title: string | null;
   items: AboutArchievementItem[];
 }
@@ -202,6 +243,7 @@ export interface AboutArchievementsData {
 export interface AboutCertificactionData {
   paragraphId: string | null;
   paragraphInternalId: number | null;
+  parentId?: string | number | null;
   title: string | null;
   subtitle: string | null;
   fotoUrl: string | null;
@@ -217,6 +259,7 @@ export interface AboutIdentityTag {
 export interface AboutIdentityData {
   paragraphId: string | null;
   paragraphInternalId: number | null;
+  parentId?: string | number | null;
   title: string | null;
   subtitle: string | null;
   tags: AboutIdentityTag[];
@@ -233,6 +276,7 @@ export interface AboutObjectiveItem {
 export interface AboutObjectifsData {
   paragraphId: string | null;
   paragraphInternalId: number | null;
+  parentId?: string | number | null;
   title: string | null;
   items: AboutObjectiveItem[];
 }

@@ -7,7 +7,18 @@ import { nodehiveMediaUrl } from '@/types/nodehive';
 import type { NodeHiveFile } from '../../types/nodehive/base';
 import type { Lang } from '../../i18n/ui';
 import type { CategoryBlockData, FeaturedProductsData, ServicesBlockData, CommentsBlockData, ContactBlockData } from './nodehive.blocks';
-import type { AboutHeroData, AboutStoryData, AboutArchievementsData, AboutCertificactionData, AboutIdentityData, AboutObjectifsData, AboutObjectiveItem } from '../../types/nodehive/content';
+import type {
+  AboutHeroData,
+  AboutStoryData,
+  AboutArchievementsData,
+  AboutCertificactionData,
+  AboutIdentityData,
+  AboutObjectifsData,
+  AboutObjectiveItem,
+  ShopPageData,
+  ShopHeaderData,
+  ShopBodyData,
+} from '../../types/nodehive/content';
 
 const dataFormatter = new Jsona();
 const NODEHIVE_BASE_URL = import.meta.env.NODEHIVE_BASE_URL as string;
@@ -27,8 +38,8 @@ export async function getHomepageHeroData(lang?: Lang): Promise<HeroData | null>
     const params = new DrupalJsonApiParams();
     params
       .addInclude(['field_component'])
-      .addFields('node--content_page', ['id', 'title', 'field_component'])
-      .addPageLimit(1);
+      .addFields('node--content_page', ['id', 'title', 'field_component', 'drupal_internal__nid'])
+      .addPageLimit(20);
 
     const nodePath = `/jsonapi/node/content_page?${params.getQueryString()}`;
 
@@ -43,8 +54,19 @@ export async function getHomepageHeroData(lang?: Lang): Promise<HeroData | null>
     }
 
     const nodeResult = dataFormatter.deserialize(nodeRaw.data) as any[];
-    const page = nodeResult?.[0];
+    const pages = Array.isArray(nodeResult) ? nodeResult : [];
+    const page = pages.find((p: any) =>
+      Array.isArray(p.field_component) &&
+      p.field_component.some((c: any) => c.type === 'paragraph--_component_home_hero')
+    );
     if (!page?.field_component?.length) return null;
+
+    let pageInternalId = page.drupal_internal__nid ?? null;
+    if (pageInternalId == null) {
+      const rawData = nodeRaw.data as any;
+      const rawPage = rawData?.data?.find((p: any) => p.id === page.id);
+      pageInternalId = rawPage?.attributes?.drupal_internal__nid ?? null;
+    }
 
     const heroParagraph = page.field_component.find(
       (p: any) => p.type === 'paragraph--_component_home_hero'
@@ -77,10 +99,19 @@ export async function getHomepageHeroData(lang?: Lang): Promise<HeroData | null>
     const heroData = dataFormatter.deserialize(heroRaw.data) as any;
     if (!heroData) return null;
 
-    const slides = (heroData.field_photos_slider ?? []).map((media: any) => ({
-      image: nodehiveMediaUrl(media, NODEHIVE_BASE_URL) ?? '',
-      label: media.name ?? 'Imagen',
-    }));
+    const rawHero = heroRaw.data as any;
+    const heroParentId = rawHero?.data?.attributes?.parent_id ?? null;
+
+    const slides = (heroData.field_photos_slider ?? [])
+      .map((media: any) => {
+        const image = nodehiveMediaUrl(media, NODEHIVE_BASE_URL);
+        if (!image) return null;
+        return {
+          image,
+          label: media.name ?? 'Imagen',
+        };
+      })
+      .filter((slide): slide is { image: string; label: string } => slide !== null);
 
     const ctaButtons = (heroData.field_buttons ?? []).map((btn: any) => ({
       text: btn.field_button_text ?? '',
@@ -95,6 +126,8 @@ export async function getHomepageHeroData(lang?: Lang): Promise<HeroData | null>
       slides,
       ctaButtons,
       pageId: page.id,
+      pageInternalId,
+      parentId: heroParentId,
       componentId: heroData.id,
       componentInternalId: heroData.drupal_internal__id,
     };
@@ -112,7 +145,7 @@ export async function getCategoryParagraphData(lang?: Lang): Promise<CategoryBlo
     params
       .addInclude(['field_categories.field_photo.field_media_image'])
       .addFields('paragraph--_component_home_categories', [
-        'id', 'field_title', 'field_subtitle', 'field_categories',
+        'id', 'drupal_internal__id', 'field_title', 'field_subtitle', 'field_categories',
       ])
       .addFields('node--category', ['id', 'name', 'drupal_internal__tid', 'field_slug', 'field_photo'])
       .addFields('media--image', ['name', 'field_media_image'])
@@ -143,6 +176,7 @@ export async function getCategoryParagraphData(lang?: Lang): Promise<CategoryBlo
 
       return {
         paragraphId: paragraph.id,
+        paragraphInternalId: paragraph.drupal_internal__id ?? null,
         titulo: paragraph.field_title ?? null,
         subTitulo: paragraph.field_subtitle ?? null,
         categorias,
@@ -167,7 +201,7 @@ export async function getFeaturedProductsParagraphData(lang?: Lang): Promise<Fea
         'field_products.variations.field_gallery_of_photos.field_media_image',
         'field_products.variations.field_color',
       ])
-      .addFields('paragraph--_component_home_products', ['id', 'field_title', 'field_products'])
+      .addFields('paragraph--_component_home_products', ['id', 'drupal_internal__id', 'field_title', 'field_products'])
       .addFields('commerce_product--flower', ['id', 'title', 'variations'])
       .addFields('commerce_product_variation--flower', ['id', 'sku', 'price', 'field_color', 'field_type', 'field_gallery_of_photos'])
       .addFields('media--image', ['name', 'field_media_image'])
@@ -223,6 +257,7 @@ export async function getFeaturedProductsParagraphData(lang?: Lang): Promise<Fea
 
       return {
         paragraphId: paragraph.id,
+        paragraphInternalId: paragraph.drupal_internal__id ?? null,
         titulo: paragraph.field_title ?? null,
         productos,
       };
@@ -241,7 +276,7 @@ export async function getServicesParagraphData(lang?: Lang): Promise<ServicesBlo
     params
       .addInclude(['field_services.field_photo.field_media_image'])
       .addFields('paragraph--_component_home_services', [
-        'id', 'field_title', 'field_subtitle', 'field_subtitle_primary', 'field_services',
+        'id', 'drupal_internal__id', 'field_title', 'field_subtitle', 'field_subtitle_primary', 'field_services',
       ])
       .addFields('node--services', ['id', 'title', 'field_name', 'field_description', 'field_photo'])
       .addFields('media--image', ['name', 'field_media_image'])
@@ -271,6 +306,7 @@ export async function getServicesParagraphData(lang?: Lang): Promise<ServicesBlo
 
       return {
         paragraphId: paragraph.id,
+        paragraphInternalId: paragraph.drupal_internal__id ?? null,
         titulo: paragraph.field_title ?? null,
         subTitulo: paragraph.field_subtitle ?? null,
         servicios,
@@ -290,7 +326,7 @@ export async function getCommentsParagraphData(lang?: Lang): Promise<CommentsBlo
     params
       .addInclude(['field_comments'])
       .addFields('paragraph--_component_home_comments', [
-        'id', 'field_title', 'field_subtitle', 'field_comments',
+        'id', 'drupal_internal__id', 'field_title', 'field_subtitle', 'field_comments',
       ])
       .addFields('node--comment', [
         'id', 'title', 'field_person_name', 'field_person_rol', 'field_comment', 'field_calification',
@@ -321,6 +357,7 @@ export async function getCommentsParagraphData(lang?: Lang): Promise<CommentsBlo
 
       return {
         paragraphId: paragraph.id,
+        paragraphInternalId: paragraph.drupal_internal__id ?? null,
         titulo: paragraph.field_title ?? null,
         subTitulo: paragraph.field_subtitle ?? null,
         comentarios,
@@ -340,7 +377,7 @@ export async function getContactUsParagraphData(lang?: Lang): Promise<ContactBlo
     params
       .addInclude(['field_button', 'field_head_photo.field_media_image'])
       .addFields('paragraph--_component_home_contact_us', [
-        'id', 'field_title', 'field_description', 'field_button', 'field_head_photo',
+        'id', 'drupal_internal__id', 'field_title', 'field_description', 'field_button', 'field_head_photo',
       ])
       .addFields('paragraph--button', ['field_button_text', 'field_button_link'])
       .addFields('media--image', ['name', 'field_media_image'])
@@ -375,6 +412,7 @@ export async function getContactUsParagraphData(lang?: Lang): Promise<ContactBlo
 
       return {
         paragraphId: paragraph.id,
+        paragraphInternalId: paragraph.drupal_internal__id ?? null,
         titulo: paragraph.field_title ?? null,
         subTitulo: null,
         descripcion: paragraph.field_description ?? null,
@@ -389,6 +427,258 @@ export async function getContactUsParagraphData(lang?: Lang): Promise<ContactBlo
   return null;
 }
 
+// ── Shop Page Paragraphs ─────────────────────────────────────────────────────
+
+const SHOP_HEADER_HINTS = ['shop_header', 'shop-hero', 'shop_head', 'shop_title'];
+const SHOP_BODY_HINTS = ['shop_body', 'shop_filters', 'shop_catalog', 'shop_products', 'shop_list'];
+
+const SHOP_HEADER_TITLE_FIELDS = ['field_title', 'title', 'field_heading', 'field_headline'];
+const SHOP_HEADER_DESC_FIELDS = ['field_description', 'field_subtitle', 'field_summary', 'field_text', 'field_body', 'body'];
+
+const SHOP_BODY_FILTER_FIELDS = ['field_filters', 'field_filter', 'field_filters_list', 'field_available_filters'];
+const SHOP_BODY_SORT_FIELDS = ['field_sorts', 'field_sort', 'field_sorts_list', 'field_available_sorts', 'field_sorting'];
+const SHOP_BODY_ITEMS_FIELDS = [
+  'field_products_per_page',
+  'field_items_per_page',
+  'field_page_size',
+  'field_products_limit',
+  'field_items_limit',
+  'field_products_quantity',
+];
+
+function normalizeToken(value: string): string {
+  return value
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '_')
+    .replace(/^_+|_+$/g, '');
+}
+
+function matchesHints(type: string, hints: string[]): boolean {
+  const token = normalizeToken(type);
+  return hints.some((hint) => token.includes(normalizeToken(hint)));
+}
+
+function isShopComponent(type: string): boolean {
+  return normalizeToken(type).includes('shop');
+}
+
+function getParagraphBundle(type: string): string {
+  return type.startsWith('paragraph--') ? type.slice('paragraph--'.length) : type;
+}
+
+function extractText(value: unknown): string | null {
+  if (typeof value === 'string') return value.trim() || null;
+  if (typeof value === 'number') return String(value);
+  if (value && typeof value === 'object') {
+    const maybeObj = value as { value?: unknown; processed?: unknown };
+    if (typeof maybeObj.processed === 'string') return maybeObj.processed.trim() || null;
+    if (typeof maybeObj.value === 'string') return maybeObj.value.trim() || null;
+  }
+  return null;
+}
+
+function normalizeStringList(value: unknown): string[] {
+  if (Array.isArray(value)) {
+    return value
+      .map((item) => extractText(item))
+      .filter((item): item is string => Boolean(item));
+  }
+  const single = extractText(value);
+  return single ? [single] : [];
+}
+
+function extractNumber(value: unknown): number | null {
+  if (typeof value === 'number' && Number.isFinite(value)) return value;
+  if (typeof value === 'string') {
+    const parsed = Number.parseInt(value, 10);
+    return Number.isFinite(parsed) ? parsed : null;
+  }
+  if (Array.isArray(value)) return extractNumber(value[0]);
+  if (value && typeof value === 'object') {
+    const maybeObj = value as { value?: unknown };
+    if (maybeObj.value !== undefined) return extractNumber(maybeObj.value);
+  }
+  return null;
+}
+
+function pickStringField(attrs: Record<string, unknown>, keys: string[]) {
+  for (const key of keys) {
+    if (key in attrs) {
+      return { value: extractText(attrs[key]), field: key, found: true };
+    }
+  }
+  return { value: null, field: null, found: false };
+}
+
+function pickListField(attrs: Record<string, unknown>, keys: string[]) {
+  for (const key of keys) {
+    if (key in attrs) {
+      return { list: normalizeStringList(attrs[key]), field: key, found: true };
+    }
+  }
+  return { list: null as string[] | null, field: null, found: false };
+}
+
+function pickNumberField(attrs: Record<string, unknown>, keys: string[]) {
+  for (const key of keys) {
+    if (key in attrs) {
+      return { value: extractNumber(attrs[key]), field: key, found: true };
+    }
+  }
+  return { value: null as number | null, field: null, found: false };
+}
+
+async function fetchWithLangFallback<T>(path: string, lang: string, fallbackLang: string) {
+  const primary = await nodehiveFetch<T>(path, { ...FETCH_OPTIONS, lang });
+  if (primary.status === 404 && lang !== fallbackLang) {
+    const fallback = await nodehiveFetch<T>(path, { ...FETCH_OPTIONS, lang: fallbackLang });
+    return fallback.status === 200 ? fallback : primary;
+  }
+  return primary;
+}
+
+export async function getShopPageData(lang?: Lang): Promise<ShopPageData | null> {
+  const defaultLang = (import.meta.env.NODEHIVE_DEFAULT_LANG as string) ?? 'es';
+  const effectiveLang = lang ?? defaultLang;
+
+  try {
+    const params = new DrupalJsonApiParams();
+    params
+      .addInclude(['field_component'])
+      .addFields('node--content_page', ['id', 'title', 'field_component', 'drupal_internal__nid'])
+      .addPageLimit(30);
+
+    const nodePath = `/jsonapi/node/content_page?${params.getQueryString()}`;
+    const nodeRaw = await fetchWithLangFallback<Record<string, unknown>>(
+      nodePath,
+      effectiveLang,
+      defaultLang,
+    );
+
+    if (nodeRaw.status !== 200) {
+      console.error(`[Shop] HTTP ${nodeRaw.status} fetching content_page`);
+      return null;
+    }
+
+    const nodeResult = dataFormatter.deserialize(nodeRaw.data) as any[];
+    const pages = Array.isArray(nodeResult) ? nodeResult : [];
+
+    const getComponents = (page: any) =>
+      Array.isArray(page?.field_component) ? page.field_component : [];
+
+    const shopPages = pages.filter((page) =>
+      getComponents(page).some((c: any) => typeof c?.type === 'string' && isShopComponent(c.type)),
+    );
+
+    const pageWithBoth = shopPages.find((page) => {
+      const components = getComponents(page);
+      return (
+        components.some((c: any) => typeof c?.type === 'string' && matchesHints(c.type, SHOP_HEADER_HINTS)) &&
+        components.some((c: any) => typeof c?.type === 'string' && matchesHints(c.type, SHOP_BODY_HINTS))
+      );
+    });
+
+    const pageByTitle = pages.find((page) => {
+      const title = typeof page?.title === 'string' ? page.title.toLowerCase() : '';
+      return title === 'shop' || title === 'tienda';
+    });
+
+    const page = pageWithBoth ?? shopPages[0] ?? pageByTitle ?? null;
+    if (!page) return null;
+
+    let pageInternalId = page.drupal_internal__nid ?? null;
+    if (pageInternalId == null) {
+      const rawData = nodeRaw.data as any;
+      const rawPage = rawData?.data?.find((p: any) => p.id === page.id);
+      pageInternalId = rawPage?.attributes?.drupal_internal__nid ?? null;
+    }
+
+    const components = getComponents(page);
+    const shopComponents = components.filter((c: any) => typeof c?.type === 'string' && isShopComponent(c.type));
+
+    const headerComponent =
+      components.find((c: any) => typeof c?.type === 'string' && matchesHints(c.type, SHOP_HEADER_HINTS))
+      ?? shopComponents[0]
+      ?? null;
+
+    const bodyComponent =
+      components.find((c: any) => typeof c?.type === 'string' && matchesHints(c.type, SHOP_BODY_HINTS))
+      ?? shopComponents[1]
+      ?? null;
+
+    let header: ShopHeaderData | null = null;
+    if (headerComponent?.id && headerComponent?.type) {
+      const bundle = getParagraphBundle(headerComponent.type);
+      const headerPath = `/jsonapi/paragraph/${bundle}/${headerComponent.id}`;
+      const headerRaw = await fetchWithLangFallback<Record<string, unknown>>(
+        headerPath,
+        effectiveLang,
+        defaultLang,
+      );
+
+      if (headerRaw.status === 200) {
+        const rawItem = (headerRaw.data as any)?.data ?? null;
+        const attrs = rawItem?.attributes ?? {};
+        const titleInfo = pickStringField(attrs, SHOP_HEADER_TITLE_FIELDS);
+        const descInfo = pickStringField(attrs, SHOP_HEADER_DESC_FIELDS);
+
+        header = {
+          paragraphId: rawItem?.id ?? null,
+          paragraphInternalId: attrs.drupal_internal__id ?? null,
+          parentId: attrs.parent_id ?? null,
+          bundle,
+          title: titleInfo.value,
+          description: descInfo.value,
+          titleField: titleInfo.field,
+          descriptionField: descInfo.field,
+        };
+      }
+    }
+
+    let body: ShopBodyData | null = null;
+    if (bodyComponent?.id && bodyComponent?.type) {
+      const bundle = getParagraphBundle(bodyComponent.type);
+      const bodyPath = `/jsonapi/paragraph/${bundle}/${bodyComponent.id}`;
+      const bodyRaw = await fetchWithLangFallback<Record<string, unknown>>(
+        bodyPath,
+        effectiveLang,
+        defaultLang,
+      );
+
+      if (bodyRaw.status === 200) {
+        const rawItem = (bodyRaw.data as any)?.data ?? null;
+        const attrs = rawItem?.attributes ?? {};
+        const filtersInfo = pickListField(attrs, SHOP_BODY_FILTER_FIELDS);
+        const sortsInfo = pickListField(attrs, SHOP_BODY_SORT_FIELDS);
+        const itemsInfo = pickNumberField(attrs, SHOP_BODY_ITEMS_FIELDS);
+
+        body = {
+          paragraphId: rawItem?.id ?? null,
+          paragraphInternalId: attrs.drupal_internal__id ?? null,
+          parentId: attrs.parent_id ?? null,
+          bundle,
+          filters: filtersInfo.found ? filtersInfo.list : null,
+          sorts: sortsInfo.found ? sortsInfo.list : null,
+          itemsPerPage: itemsInfo.found ? itemsInfo.value : null,
+          filtersField: filtersInfo.field,
+          sortsField: sortsInfo.field,
+          itemsPerPageField: itemsInfo.field,
+        };
+      }
+    }
+
+    return {
+      pageId: page.id ?? undefined,
+      pageInternalId,
+      header,
+      body,
+    };
+  } catch (err) {
+    console.error('[Shop] Error getShopPageData:', err);
+  }
+  return null;
+}
+
 // ── About Page Paragraphs ─────────────────────────────────────────────────────
 
 export async function getAboutHeroData(lang?: Lang): Promise<AboutHeroData | null> {
@@ -398,7 +688,7 @@ export async function getAboutHeroData(lang?: Lang): Promise<AboutHeroData | nul
     const paramsBase = new DrupalJsonApiParams();
     paramsBase
       .addFields('paragraph--_component_about_hero', [
-        'id', 'drupal_internal__id', 'field_title', 'field_subtitle', 'field_head_photo',
+        'id', 'drupal_internal__id', 'parent_id', 'field_title', 'field_subtitle', 'field_head_photo',
       ])
       .addPageLimit(1);
 
@@ -407,6 +697,10 @@ export async function getAboutHeroData(lang?: Lang): Promise<AboutHeroData | nul
       { headers: { 'Content-Type': 'application/vnd.api+json', Accept: 'application/vnd.api+json' }, lang: effectiveLang }
     );
     if (baseRaw.status !== 200) return null;
+
+    const baseRawData = baseRaw.data as any;
+    const rawItem = baseRawData?.data?.[0];
+    const parentId = rawItem?.attributes?.parent_id ?? null;
 
     const baseResult = dataFormatter.deserialize(baseRaw.data) as any[];
     const p = baseResult?.[0];
@@ -429,6 +723,7 @@ export async function getAboutHeroData(lang?: Lang): Promise<AboutHeroData | nul
     return {
       paragraphId: p.id ?? null,
       paragraphInternalId: p.drupal_internal__id ?? null,
+      parentId,
       title: p.field_title ?? null,
       subtitle: p.field_subtitle ?? null,
       fotoUrl,
@@ -446,7 +741,7 @@ export async function getAboutStoryData(lang?: Lang): Promise<AboutStoryData | n
     const paramsBase = new DrupalJsonApiParams();
     paramsBase
       .addFields('paragraph--_component_about_story', [
-        'id', 'drupal_internal__id', 'field_title', 'field_subtitle_primary', 'field_description_long', 'field_head_photo',
+        'id', 'drupal_internal__id', 'parent_id', 'field_title', 'field_subtitle_primary', 'field_description_long', 'field_head_photo',
       ])
       .addPageLimit(1);
 
@@ -455,6 +750,10 @@ export async function getAboutStoryData(lang?: Lang): Promise<AboutStoryData | n
       { headers: { 'Content-Type': 'application/vnd.api+json', Accept: 'application/vnd.api+json' }, lang: effectiveLang }
     );
     if (baseRaw.status !== 200) return null;
+
+    const baseRawData = baseRaw.data as any;
+    const rawItem = baseRawData?.data?.[0];
+    const parentId = rawItem?.attributes?.parent_id ?? null;
 
     const baseResult = dataFormatter.deserialize(baseRaw.data) as any[];
     const p = baseResult?.[0];
@@ -477,6 +776,7 @@ export async function getAboutStoryData(lang?: Lang): Promise<AboutStoryData | n
     return {
       paragraphId: p.id ?? null,
       paragraphInternalId: p.drupal_internal__id ?? null,
+      parentId,
       title: p.field_title ?? null,
       subtitle: p.field_subtitle_primary ?? null,
       description: p.field_description_long ?? null,
@@ -493,7 +793,7 @@ export async function getAboutArchievementsData(lang?: Lang): Promise<AboutArchi
     const params = new DrupalJsonApiParams();
     params
       .addFields('paragraph--_component_about_archievements', [
-        'id', 'drupal_internal__id', 'field_title',
+        'id', 'drupal_internal__id', 'parent_id', 'field_title',
       ])
       .addPageLimit(1);
 
@@ -507,6 +807,9 @@ export async function getAboutArchievementsData(lang?: Lang): Promise<AboutArchi
 
     if (raw.status !== 200) return null;
 
+    const rawItem = (raw.data as any)?.data?.[0];
+    const parentId = rawItem?.attributes?.parent_id ?? null;
+
     const result = dataFormatter.deserialize(raw.data) as any[];
     const p = result?.[0];
     if (!p) return null;
@@ -515,6 +818,7 @@ export async function getAboutArchievementsData(lang?: Lang): Promise<AboutArchi
     return {
       paragraphId: p.id ?? null,
       paragraphInternalId: p.drupal_internal__id ?? null,
+      parentId,
       title: p.field_title ?? null,
       items: [
         { id: 'amazon', internalId: 1, title: 'Amazon Influencer', description: isEn ? 'approved' : 'aprobada', icon: '📦' },
@@ -535,7 +839,7 @@ export async function getAboutCertificactionData(lang?: Lang): Promise<AboutCert
     const paramsBase = new DrupalJsonApiParams();
     paramsBase
       .addFields('paragraph--_component_about_certificaction', [
-        'id', 'drupal_internal__id', 'field_title', 'field_subtitle', 'field_head_photo',
+        'id', 'drupal_internal__id', 'parent_id', 'field_title', 'field_subtitle', 'field_head_photo',
       ])
       .addPageLimit(1);
 
@@ -544,6 +848,10 @@ export async function getAboutCertificactionData(lang?: Lang): Promise<AboutCert
       { headers: { 'Content-Type': 'application/vnd.api+json', Accept: 'application/vnd.api+json' }, lang: effectiveLang }
     );
     if (baseRaw.status !== 200) return null;
+
+    const baseRawData = baseRaw.data as any;
+    const rawItem = baseRawData?.data?.[0];
+    const parentId = rawItem?.attributes?.parent_id ?? null;
 
     const baseResult = dataFormatter.deserialize(baseRaw.data) as any[];
     const p = baseResult?.[0];
@@ -566,6 +874,7 @@ export async function getAboutCertificactionData(lang?: Lang): Promise<AboutCert
     return {
       paragraphId: p.id ?? null,
       paragraphInternalId: p.drupal_internal__id ?? null,
+      parentId,
       title: p.field_title ?? null,
       subtitle: p.field_subtitle ?? null,
       fotoUrl,
@@ -583,7 +892,7 @@ export async function getAboutIdentityData(lang?: Lang): Promise<AboutIdentityDa
     const paramsBase = new DrupalJsonApiParams();
     paramsBase
       .addFields('paragraph--_component_about_identity', [
-        'id', 'drupal_internal__id', 'field_title', 'field_subtitle_primary', 'field_identities',
+        'id', 'drupal_internal__id', 'parent_id', 'field_title', 'field_subtitle_primary', 'field_identities',
       ])
       .addPageLimit(1);
 
@@ -599,6 +908,7 @@ export async function getAboutIdentityData(lang?: Lang): Promise<AboutIdentityDa
 
     const parentAttrs = parentItem.attributes ?? {};
     const childRefs: Array<{id: string}> = parentItem.relationships?.field_identities?.data ?? [];
+    const parentId = parentAttrs.parent_id ?? null;
 
     const colors = ['pink', 'green'] as const;
     let tags: AboutIdentityData['tags'] = [];
@@ -631,6 +941,7 @@ export async function getAboutIdentityData(lang?: Lang): Promise<AboutIdentityDa
     return {
       paragraphId: parentAttrs.id ?? parentItem.id ?? null,
       paragraphInternalId: parentAttrs.drupal_internal__id ?? null,
+      parentId,
       title: parentAttrs.field_title ?? null,
       subtitle: parentAttrs.field_subtitle_primary ?? null,
       tags,
@@ -653,7 +964,7 @@ export async function getAboutObjectifsData(lang?: Lang): Promise<AboutObjectifs
         'field_objetives.field_head_photo.field_media_image',
       ])
       .addFields('paragraph--_component_about_objetives', [
-        'id', 'drupal_internal__id', 'field_title', 'field_objetives',
+        'id', 'drupal_internal__id', 'parent_id', 'field_title', 'field_objetives',
       ])
       .addFields('paragraph--about_objetive', [
         'id', 'drupal_internal__id', 'field_title', 'field_description', 'field_description_long', 'field_head_photo',
@@ -671,6 +982,9 @@ export async function getAboutObjectifsData(lang?: Lang): Promise<AboutObjectifs
     });
 
     if (raw.status !== 200) return null;
+
+    const rawItem = (raw.data as any)?.data?.[0];
+    const parentId = rawItem?.attributes?.parent_id ?? null;
     const result = dataFormatter.deserialize(raw.data) as any[];
     const p = result?.[0];
     if (!p) return null;
@@ -698,6 +1012,7 @@ export async function getAboutObjectifsData(lang?: Lang): Promise<AboutObjectifs
     return {
       paragraphId: p.id ?? null,
       paragraphInternalId: p.drupal_internal__id ?? null,
+      parentId,
       title: p.field_title ?? null,
       items,
     };

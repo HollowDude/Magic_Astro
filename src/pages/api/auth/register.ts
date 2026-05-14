@@ -52,9 +52,9 @@ export const POST: APIRoute = async ({ request }) => {
   });
 
   if (!result.ok) {
-    const httpStatus =
-      result.statusCode === 409 || result.statusCode === 422 ? 409 : 500;
-    return json({ ok: false, error: result.error }, httpStatus);
+    const httpStatus = result.statusCode ?? 500;
+    const normalizedStatus = httpStatus === 409 || httpStatus === 422 ? 409 : httpStatus;
+    return json({ ok: false, error: result.error }, normalizedStatus);
   }
 
   return json({ ok: true, user: result.data }, 201);

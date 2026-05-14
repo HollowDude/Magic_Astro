@@ -4,8 +4,7 @@
  * Servicio de registro de usuarios en NodeHive (Drupal).
  */
 
-const NODEHIVE_BASE_URL = import.meta.env.NODEHIVE_BASE_URL as string;
-const NODEHIVE_API_KEY  = import.meta.env.NODEHIVE_API_KEY  as string;
+import { nodehiveFetch } from './nodehive.client';
 
 export interface RegisterData {
   username: string;
@@ -22,27 +21,22 @@ export interface RegisterResult {
 
 export async function register(data: RegisterData): Promise<RegisterResult> {
   try {
-    // En register.service.ts, cambiar el endpoint y formato:
-    const res = await fetch(`${NODEHIVE_BASE_URL}/user/register?_format=json`, {
+    const res = await nodehiveFetch<Record<string, unknown>>('/user/register?_format=json', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Accept': 'application/json',
-        'api-key': NODEHIVE_API_KEY,
+        Accept: 'application/json',
       },
-      body: JSON.stringify({
+      body: {
         name: { value: data.username },
         mail: { value: data.email },
         pass: [{ value: data.password }],
-      }),
-    });;
+      },
+    });
 
-    const json = await res.json().catch(() => ({}));
+    const json = (res.data && typeof res.data === 'object') ? res.data as any : {};
 
-    console.log('[Register] Status:', res.status);
-    console.log('[Register] Response:', JSON.stringify(json));
-
-    if (!res.ok) {
+    if (res.status < 200 || res.status >= 300) {
       const detail =
         json?.errors?.[0]?.detail ??
         json?.message ??
@@ -60,6 +54,6 @@ export async function register(data: RegisterData): Promise<RegisterResult> {
     };
   } catch (err) {
     console.error('[Register] Exception:', err);
-    return { ok: false, error: 'No se pudo conectar con el servidor.' };
+    return { ok: false, statusCode: 503, error: 'No se pudo conectar con el servidor.' };
   }
 }

@@ -22,6 +22,14 @@ const [hero, story, archievements, cert, identity, objectifs] = await Promise.al
   getAboutObjectifsData(lang),
 ]);
 
+const parentId = hero?.parentId
+  ?? story?.parentId
+  ?? archievements?.parentId
+  ?? cert?.parentId
+  ?? identity?.parentId
+  ?? objectifs?.parentId
+  ?? null;
+
 const isEn = lang === 'en';
 const pageTitle = isEn ? 'About Us' : 'Sobre Nosotros';
 const heroTitle = hero?.title ?? (isEn ? 'About Us' : 'Sobre Nosotros');
@@ -48,6 +56,7 @@ const identitySubtitle = identity?.subtitle ?? (isEn ? 'Our DNA' : 'Nuestro ADN'
         data-nodehive-entity-bundle="_component_about_hero"
         data-nodehive-entity-id={hero?.paragraphId ?? null}
         data-nodehive-entity-internal-id={hero?.paragraphInternalId ?? null}
+        data-nodehive-parent_id={parentId ?? null}
       >
         {hero?.fotoUrl ? (
           <>
@@ -78,6 +87,7 @@ const identitySubtitle = identity?.subtitle ?? (isEn ? 'Our DNA' : 'Nuestro ADN'
         data-nodehive-entity-bundle="_component_about_story"
         data-nodehive-entity-id={story?.paragraphId ?? null}
         data-nodehive-entity-internal-id={story?.paragraphInternalId ?? null}
+        data-nodehive-parent_id={parentId ?? null}
       >
         <div class="max-w-[1300px] mx-auto px-[8%] py-[90px] flex items-start gap-20">
           <div class="relative flex-shrink-0" style="width:450px; height:700px;">
@@ -107,6 +117,7 @@ const identitySubtitle = identity?.subtitle ?? (isEn ? 'Our DNA' : 'Nuestro ADN'
         data-nodehive-entity-bundle="_component_about_archievements"
         data-nodehive-entity-id={archievements?.paragraphId ?? null}
         data-nodehive-entity-internal-id={archievements?.paragraphInternalId ?? null}
+        data-nodehive-parent_id={parentId ?? null}
       >
         <h2 class="font-heading font-semibold text-[52px] text-headline mb-12" data-nodehive-field="field_title">{archTitle}</h2>
         <div class="flex justify-center gap-8 flex-wrap">
@@ -152,6 +163,7 @@ const identitySubtitle = identity?.subtitle ?? (isEn ? 'Our DNA' : 'Nuestro ADN'
         data-nodehive-entity-bundle="_component_about_certificaction"
         data-nodehive-entity-id={cert?.paragraphId ?? null}
         data-nodehive-entity-internal-id={cert?.paragraphInternalId ?? null}
+        data-nodehive-parent_id={parentId ?? null}
       >
         <h2 class="font-heading font-semibold text-[42px] text-white whitespace-nowrap" data-nodehive-field="field_title">{certTitle}</h2>
         <div class="w-[2px] h-20 bg-white/50 mx-12 flex-shrink-0"></div>
@@ -173,6 +185,7 @@ const identitySubtitle = identity?.subtitle ?? (isEn ? 'Our DNA' : 'Nuestro ADN'
           data-nodehive-entity-bundle="_component_about_objetives"
           data-nodehive-entity-id={objectifs.paragraphId ?? null}
           data-nodehive-entity-internal-id={objectifs.paragraphInternalId ?? null}
+          data-nodehive-parent_id={parentId ?? null}
         >
           <div class="max-w-[1300px] mx-auto px-[8%] py-[90px] flex flex-col gap-[70px]">
             {objectifs.title && (
@@ -214,6 +227,7 @@ const identitySubtitle = identity?.subtitle ?? (isEn ? 'Our DNA' : 'Nuestro ADN'
           data-nodehive-entity-bundle="_component_about_identity"
           data-nodehive-entity-id={identity.paragraphId ?? null}
           data-nodehive-entity-internal-id={identity.paragraphInternalId ?? null}
+          data-nodehive-parent_id={parentId ?? null}
         >
           <p class="font-body font-semibold text-[18px] text-primary tracking-[2px] uppercase mb-2.5" data-nodehive-field="field_subtitle_primary">
             {identitySubtitle}

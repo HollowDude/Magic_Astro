@@ -6,6 +6,7 @@ import type { Lang } from '@/i18n/ui';
 
 const lang = (Astro.currentLocale ?? getLangFromUrl(Astro.url)) as Lang;
 const data = await getContactUsParagraphData(lang);
+const { parentId = null } = Astro.props;
 
 const fallbackTitulo = lang === 'en' ? 'Contact Us' : 'Contáctenos';
 const fallbackDescripcion = lang === 'en'
@@ -21,6 +22,8 @@ const descripcion = data?.descripcion ?? fallbackDescripcion;
   data-nodehive-entity-type="paragraph"
   data-nodehive-entity-bundle="_component_home_contact_us"
   data-nodehive-entity-id={data?.paragraphId}
+  data-nodehive-entity-internal-id={data?.paragraphInternalId ?? null}
+  data-nodehive-parent_id={parentId ?? null}
 >
   <div class="max-w-[80rem] mx-auto">
     <div class="flex flex-col items-center text-center mb-12">

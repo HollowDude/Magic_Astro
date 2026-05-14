@@ -7,6 +7,7 @@ import type { Lang } from '@/i18n/ui';
 const lang = (Astro.currentLocale ?? getLangFromUrl(Astro.url)) as Lang;
 const data = await getContactUsParagraphData(lang);
 const prefix = getPrefix(lang);
+const { parentId = null } = Astro.props;
 
 const descripcionFallback = lang === 'en'
   ? "We bring your floral dreams to life. We design unique arrangements tailored to your tastes and needs, ideal for weddings, celebrations, corporate events, or special gifts."
@@ -24,6 +25,8 @@ const ctaHref   = data?.ctaUrl    ?? `${prefix}/`;
   data-nodehive-entity-type="paragraph"
   data-nodehive-entity-bundle="_component_home_contact_us"
   data-nodehive-entity-id={data?.paragraphId}
+  data-nodehive-entity-internal-id={data?.paragraphInternalId ?? null}
+  data-nodehive-parent_id={parentId ?? null}
 >
   <div class="max-w-[1200px] mx-auto px-6 flex flex-col lg:flex-row items-center gap-12 lg:gap-20">
     

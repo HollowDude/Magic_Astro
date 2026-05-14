@@ -104,25 +104,34 @@
       });
       el.classList.add('--nh-active');
 
-      var entityEl = el.closest('[data-nodehive-entity-id]');
+      var entityEl = el.closest('[data-nodehive-type],[data-nodehive-entity-id]');
       if (!entityEl) return;
 
-      sendToEditor({
-        type: 'field:click',
-        entityType:   entityEl.dataset.nodehiveEntityType   || '',
-        entityBundle: entityEl.dataset.nodehiveEntityBundle || '',
-        entityId:     entityEl.dataset.nodehiveEntityId     || '',
-        field:        el.dataset.nodehiveField              || '',
-      });
+      var entityType = entityEl.dataset.nodehiveType || entityEl.dataset.nodehiveEntityType || '';
+      var entityUuid = entityEl.dataset.nodehiveUuid || entityEl.dataset.nodehiveEntityId || '';
+      var entityInternalId = entityEl.dataset.nodehiveId || entityEl.dataset.nodehiveEntityInternalId || '';
+      var entityParentId = entityEl.dataset.nodehiveParent_id || entityEl.dataset.nodehiveParentId || '';
+      var langcode = entityEl.dataset.nodehiveLangcode || (window.__NODEHIVE_LANG__ || document.documentElement.lang || 'es');
+      var fieldName = el.dataset.nodehiveField || '';
 
-      if (entityEl.dataset.nodehiveEntityType === 'paragraph') {
+      if (fieldName) {
         sendToEditor({
-          type:      'paragraph:click',
-          uuid:      entityEl.dataset.nodehiveEntityId   || '',
-          id:        entityEl.dataset.nodehiveEntityInternalId || entityEl.dataset.nodehiveEntityId || '',
-          parent_id: entityEl.dataset.nodehiveParentId   || '',
+          type:     'field',
+          field:    fieldName,
+          id:       entityInternalId || entityUuid || '',
+          pathname: window.location.pathname,
+          lang:     langcode,
+        });
+      }
+
+      if (entityType === 'paragraph') {
+        sendToEditor({
+          type:      'paragraph',
+          uuid:      entityUuid || '',
+          id:        entityInternalId || entityUuid || '',
+          parent_id: entityParentId || '',
           pathname:  window.location.pathname,
-          langcode: entityEl.dataset.nodehiveLangcode   || (window.__NODEHIVE_LANG__ || document.documentElement.lang || 'es'),
+          langcode:  langcode,
         });
       }
     }, true);

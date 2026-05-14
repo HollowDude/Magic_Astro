@@ -4,8 +4,7 @@
  * Servicio de autenticación de usuarios en NodeHive (Drupal).
  */
 
-const NODEHIVE_BASE_URL = import.meta.env.NODEHIVE_BASE_URL as string;
-const NODEHIVE_API_KEY  = import.meta.env.NODEHIVE_API_KEY  as string;
+import { nodehiveFetch } from './nodehive.client';
 
 export interface LoginData {
   username: string;
@@ -30,22 +29,21 @@ export interface LoginResult {
 
 export async function login(data: LoginData): Promise<LoginResult> {
   try {
-    const res = await fetch(`${NODEHIVE_BASE_URL}/user/login?_format=json`, {
+    const res = await nodehiveFetch<Record<string, unknown>>('/user/login?_format=json', {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Accept': 'application/json',
-        'api-key': NODEHIVE_API_KEY,
-      },
-      body: JSON.stringify({
+      body: {
         name: data.username,
         pass: data.password,
-      }),
+      },
+      headers: {
+        'Content-Type': 'application/json',
+        Accept: 'application/json',
+      },
     });
 
-    const json = await res.json().catch(() => ({}));
+    const json = (res.data && typeof res.data === 'object') ? res.data as any : {};
 
-    if (!res.ok) {
+    if (res.status < 200 || res.status >= 300) {
       const msg = json?.message ?? 'Credenciales incorrectas.';
       return { ok: false, statusCode: res.status, error: msg };
     }
@@ -62,7 +60,7 @@ export async function login(data: LoginData): Promise<LoginResult> {
       },
     };
   } catch (err) {
-    return { ok: false, error: 'No se pudo conectar con el servidor.' };
+    return { ok: false, statusCode: 503, error: 'No se pudo conectar con el servidor.' };
   }
 }
 
@@ -71,13 +69,12 @@ export async function logout(
   sessionCookie?: string,
 ): Promise<{ ok: boolean }> {
   try {
-    await fetch(`${NODEHIVE_BASE_URL}/user/logout?_format=json&token=${logoutToken}`, {
+    await nodehiveFetch(`/user/logout?_format=json&token=${logoutToken}`, {
       method: 'GET',
       headers: {
-        'Accept': 'application/json',
-        'api-key': NODEHIVE_API_KEY,
-        ...(sessionCookie ? { Cookie: sessionCookie } : {}),
+        Accept: 'application/json',
       },
+      sessionCookie,
     });
   } catch {}
   return { ok: true };

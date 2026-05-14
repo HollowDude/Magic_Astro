@@ -19,7 +19,8 @@ export const POST: APIRoute = async ({ request, cookies }) => {
   const result = await login({ username: username.trim(), password });
 
   if (!result.ok) {
-    return json({ ok: false, error: result.error }, result.statusCode === 403 ? 403 : 401);
+    const status = result.statusCode ?? 401;
+    return json({ ok: false, error: result.error }, status);
   }
 
   await setSession(cookies, result.data); // ← await

@@ -21,7 +21,7 @@ interface MenuResponse {
 
 let navLinks: { label: string; href: string }[] = [];
 try {
-  const res = await nodehiveFetch<MenuResponse>('/api/menu_items/main', {
+  const res = await nodehiveFetch<MenuResponse>('/jsonapi/menu_items/main', {
     lang,
     cacheTtl: 30_000,
   });

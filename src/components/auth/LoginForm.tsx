@@ -21,12 +21,22 @@ export default function LoginForm({ lang = 'es' }: Props) {
   const [loading, setLoading] = useState(false);
   const [alert, setAlert] = useState<AlertState | null>(null);
 
+  function friendlyLoginError(status: number, message?: string): string {
+    if (status === 400) return 'Revisa los datos e intenta de nuevo.';
+    if (status === 401 || status === 403) return 'Usuario o contrasena incorrectos.';
+    if (status === 503) return 'No pudimos conectar con el servidor. Intenta otra vez.';
+    if (message && message.length < 120 && !/json|token|exception|stack|trace|sql/i.test(message)) {
+      return message;
+    }
+    return 'Ocurrio un problema. Intenta mas tarde.';
+  }
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setAlert(null);
 
     if (!username.trim() || !password) {
-      setAlert({ type: 'error', message: 'Por favor, completa todos los campos.' });
+      setAlert({ type: 'error', message: 'Completa usuario y contrasena para continuar.' });
       return;
     }
 
@@ -38,16 +48,17 @@ export default function LoginForm({ lang = 'es' }: Props) {
         body: JSON.stringify({ username: username.trim(), password }),
       });
 
-      const data = await res.json();
+      const status = res.status;
+      const data = await res.json().catch(() => ({}));
 
       if (data.ok) {
         setAlert({ type: 'success', message: `¡Bienvenido, ${data.user.name}!` });
         setTimeout(() => { window.location.assign(`/${lang}/dashboard`); }, 600);
       } else {
-        setAlert({ type: 'error', message: data.error ?? 'Credenciales incorrectas.' });
+        setAlert({ type: 'error', message: friendlyLoginError(status, data.error) });
       }
     } catch {
-      setAlert({ type: 'error', message: 'No se pudo conectar con el servidor.' });
+      setAlert({ type: 'error', message: 'No pudimos conectar con el servidor. Intenta otra vez.' });
     } finally {
       setLoading(false);
     }
@@ -85,9 +96,9 @@ export default function LoginForm({ lang = 'es' }: Props) {
       <form className="flex flex-col gap-5 mt-6" onSubmit={handleSubmit} noValidate>
         <InputField
           id="username"
-          label="Usuario o correo electrónico"
+          label="Usuario o correo electronico"
           type="text"
-          placeholder="tu_usuario"
+          placeholder="Tu usuario o correo"
           icon="person"
           required
           autoComplete="username"
@@ -99,7 +110,7 @@ export default function LoginForm({ lang = 'es' }: Props) {
           id="password"
           label="Contraseña"
           type="password"
-          placeholder="Ingresa tu contraseña"
+          placeholder="Ingresa tu contrasena"
           icon="lock"
           required
           autoComplete="current-password"

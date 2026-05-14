@@ -434,7 +434,7 @@
     border-radius: var(--radius);
     border: 1px solid var(--border);
     background: var(--bg-light);
-    padding-left: 2.75rem;
+    padding-left: 3.75rem;
     padding-right: 2.75rem;
     font-size: 0.875rem;
     color: var(--text-main);

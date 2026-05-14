@@ -23,21 +23,38 @@ export default function RegisterForm({ lang = 'es' }: Props) {
   const [loading,  setLoading]  = useState(false);
   const [alert,    setAlert]    = useState<AlertState | null>(null);
 
+  function friendlyRegisterError(status: number, message?: string): string {
+    if (status === 400) return 'Revisa los datos e intenta de nuevo.';
+    if (status === 409) return 'Ese usuario o correo ya existe.';
+    if (status === 503) return 'No pudimos conectar con el servidor. Intenta otra vez.';
+    if (message && message.length < 140 && !/json|token|exception|stack|trace|sql/i.test(message)) {
+      return message;
+    }
+    return 'Ocurrio un problema. Intenta mas tarde.';
+  }
+
+  function isValidPassword(value: string): boolean {
+    if (value.length < 8) return false;
+    if (!/[a-zA-Z]/.test(value)) return false;
+    if (!/\d/.test(value)) return false;
+    return true;
+  }
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setAlert(null);
 
     // Validaciones del lado del cliente
     if (!username.trim() || !email.trim() || !password || !confirm) {
-      setAlert({ type: 'error', message: 'Por favor, completá todos los campos.' });
+      setAlert({ type: 'error', message: 'Completa todos los campos para continuar.' });
       return;
     }
     if (password !== confirm) {
-      setAlert({ type: 'error', message: 'Las contraseñas no coinciden.' });
+      setAlert({ type: 'error', message: 'Las contrasenas no coinciden.' });
       return;
     }
-    if (password.length < 6) {
-      setAlert({ type: 'error', message: 'La contraseña debe tener al menos 6 caracteres.' });
+    if (!isValidPassword(password)) {
+      setAlert({ type: 'error', message: 'Usa al menos 8 caracteres e incluye una letra y un numero.' });
       return;
     }
 
@@ -53,7 +70,8 @@ export default function RegisterForm({ lang = 'es' }: Props) {
         }),
       });
 
-      const data = await res.json();
+      const status = res.status;
+      const data = await res.json().catch(() => ({}));
 
       if (data.ok) {
         setAlert({
@@ -62,10 +80,10 @@ export default function RegisterForm({ lang = 'es' }: Props) {
         });
         setTimeout(() => { window.location.href = `/${lang}/login`; }, 1800);
       } else {
-        setAlert({ type: 'error', message: data.error ?? 'No se pudo crear la cuenta.' });
+        setAlert({ type: 'error', message: friendlyRegisterError(status, data.error) });
       }
     } catch {
-      setAlert({ type: 'error', message: 'No se pudo conectar con el servidor.' });
+      setAlert({ type: 'error', message: 'No pudimos conectar con el servidor. Intenta otra vez.' });
     } finally {
       setLoading(false);
     }
@@ -91,7 +109,7 @@ export default function RegisterForm({ lang = 'es' }: Props) {
           id="username"
           label="Nombre de usuario"
           type="text"
-          placeholder="tu_usuario"
+          placeholder="Tu usuario"
           icon="person"
           required
           autoComplete="username"
@@ -101,7 +119,7 @@ export default function RegisterForm({ lang = 'es' }: Props) {
 
         <InputField
           id="email"
-          label="Correo electrónico"
+          label="Correo electronico"
           type="email"
           placeholder="tu@correo.com"
           icon="mail"
@@ -115,7 +133,7 @@ export default function RegisterForm({ lang = 'es' }: Props) {
           id="password"
           label="Contraseña"
           type="password"
-          placeholder="Mínimo 6 caracteres"
+          placeholder="Minimo 8 caracteres"
           icon="lock"
           required
           autoComplete="new-password"
@@ -125,10 +143,10 @@ export default function RegisterForm({ lang = 'es' }: Props) {
 
         <InputField
           id="confirm"
-          label="Confirmá la contraseña"
+          label="Confirmar contraseña"
           type="password"
-          placeholder="Repetí tu contraseña"
-          icon="lock_check"
+          placeholder="Repite tu contraseña"
+          icon="check"
           required
           autoComplete="new-password"
           value={confirm}

@@ -24,6 +24,7 @@ interface Props {
   lang?:         Lang;
   componentId?:  string;
   componentInternalId?: number;
+  parentId?:     string | number | null;
 }
 
 const INTERVAL = 5000;
@@ -37,6 +38,7 @@ export default function HeroCarousel({
   lang = 'es',
   componentId,
   componentInternalId,
+  parentId,
 }: Props) {
   const fallbackTitle       = t(lang, 'hero.title');
   const fallbackSubtitle    = t(lang, 'hero.slogan');
@@ -94,6 +96,7 @@ export default function HeroCarousel({
       data-nodehive-entity-bundle="_component_home_hero"
       data-nodehive-entity-id={componentId ?? null}
       data-nodehive-entity-internal-id={componentInternalId ?? null}
+      data-nodehive-parent_id={parentId ?? undefined}
       data-nodehive-langcode={lang}
     >
       {activeSlides.map((slide, i) => {

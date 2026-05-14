@@ -3,94 +3,363 @@
 // Lee TODOS los params de URL y los pasa como props SSR a ShopClient
 // para que el servidor pre-renderice el estado correcto de filtros.
 import HomeLayout from '@/layouts/HomeLayout.astro';
-import HomeHeader from '@/components/home/HomeHeader.astro';
 import Breadcrumb from '@/components/ui/Breadcrumb.astro';
 import ShopClient from '@/components/shop/ShopClient';
-import Footer from '@/components/ui/Footer.astro';
 import { getFloresProducts } from '@/services/nodehive/nodehive.commerce';
 import { getCategoriasDeFlores } from '@/services/nodehive/nodehive.taxonomy';
+import { getShopPageData } from '@/services/nodehive/nodehive.paragraphs';
 import { getProductThumbnail } from '@/types/nodehive';
 import { useTranslations, getLangFromUrl } from '@/i18n/utils';
 import type { Lang } from '@/i18n/ui';
 import type { ProductCardData } from '@/components/shop/ProductCard';
-import type { ShopCategory, SortKey } from '@/components/shop/ShopClient';
+import type { ShopCategory, SortKey, ShopFilterKey } from '@/components/shop/ShopClient';
 
 const lang   = (Astro.currentLocale ?? getLangFromUrl(Astro.url)) as Lang;
 const t      = useTranslations(lang);
+const isEn   = lang === 'en';
 const prefix = lang === 'en' ? '/en' : '';
 const DRUPAL_BASE_URL = import.meta.env.NODEHIVE_BASE_URL as string;
 
+const shopPage = await getShopPageData(lang);
+const shopHeader = shopPage?.header ?? null;
+const shopBody = shopPage?.body ?? null;
+const parentId = shopHeader?.parentId ?? shopBody?.parentId ?? shopPage?.pageInternalId ?? null;
+
+const headerTitle = shopHeader?.title ?? t('shop.title');
+const headerDescription = shopHeader?.description ?? t('shop.description');
+const headerTitleField = shopHeader?.titleField ?? 'field_title';
+const headerDescriptionField = shopHeader?.descriptionField ?? 'field_description';
+
+const bodyFields = shopBody
+  ? {
+      filters: shopBody.filtersField ?? 'field_filters',
+      sorts: shopBody.sortsField ?? 'field_sorts',
+      itemsPerPage: shopBody.itemsPerPageField ?? 'field_products_per_page',
+    }
+  : null;
+
+const DEFAULT_FILTERS: ShopFilterKey[] = ['categories', 'price', 'colors', 'type'];
+const DEFAULT_SORTS: SortKey[] = ['featured', 'price_asc', 'price_desc', 'newest'];
+
+const FILTER_ALIASES: Record<ShopFilterKey, string[]> = {
+  categories: ['categories', 'category', 'categorias', 'categoria', 'cats', 'cat'],
+  price: ['price', 'precio', 'precios', 'pricing'],
+  colors: ['colors', 'color', 'colores', 'palette', 'paleta'],
+  type: ['type', 'types', 'tipo', 'tipos'],
+};
+
+const SORT_ALIASES: Record<SortKey, string[]> = {
+  featured: ['featured', 'destacado', 'destacados', 'highlight'],
+  price_asc: ['price_asc', 'price-asc', 'price asc', 'precio_asc', 'precio-asc', 'precio asc', 'low_to_high'],
+  price_desc: ['price_desc', 'price-desc', 'price desc', 'precio_desc', 'precio-desc', 'precio desc', 'high_to_low'],
+  newest: ['newest', 'latest', 'recent', 'recientes', 'mas_nuevos', 'nuevo'],
+};
+
+function normalizeChoice(value: string): string {
+  return value
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '_')
+    .replace(/^_+|_+$/g, '');
+}
+
+function mapFilters(list: string[] | null | undefined): ShopFilterKey[] {
+  if (list == null) return DEFAULT_FILTERS;
+  if (list.length === 0) return [];
+  const mapped: ShopFilterKey[] = [];
+  for (const raw of list) {
+    const token = normalizeChoice(raw);
+    const match = (Object.keys(FILTER_ALIASES) as ShopFilterKey[]).find((key) =>
+      FILTER_ALIASES[key].some((alias) => normalizeChoice(alias) === token || token.includes(normalizeChoice(alias))),
+    );
+    if (match && !mapped.includes(match)) mapped.push(match);
+  }
+  return mapped.length > 0 ? mapped : DEFAULT_FILTERS;
+}
+
+function mapSorts(list: string[] | null | undefined): SortKey[] {
+  if (list == null) return DEFAULT_SORTS;
+  if (list.length === 0) return [];
+  const mapped: SortKey[] = [];
+  for (const raw of list) {
+    const token = normalizeChoice(raw);
+    const match = (Object.keys(SORT_ALIASES) as SortKey[]).find((key) =>
+      SORT_ALIASES[key].some((alias) => normalizeChoice(alias) === token || token.includes(normalizeChoice(alias))),
+    );
+    if (match && !mapped.includes(match)) mapped.push(match);
+  }
+  return mapped.length > 0 ? mapped : DEFAULT_SORTS;
+}
+
+const enabledFilters = mapFilters(shopBody?.filters);
+const enabledSorts = mapSorts(shopBody?.sorts);
+const filterSet = new Set(enabledFilters);
+const sortOptions = enabledSorts.length > 0 ? enabledSorts : ['featured'];
+const itemsPerPage = shopBody?.itemsPerPage && shopBody.itemsPerPage > 0 ? shopBody.itemsPerPage : 9;
+
 // Leer todos los parámetros de filtro desde la URL para pre-renderizado SSR correcto
-const sp          = Astro.url.searchParams;
-const initialCat  = sp.get('cat')    ?? '';
-const initialPrice = sp.get('price') ?? '';
-const initialColors = sp.get('colors') ?? '';
-const initialTipos  = sp.get('tipos')  ?? '';
-const VALID_SORTS: SortKey[] = ['featured', 'price_asc', 'price_desc', 'newest'];
+const sp           = Astro.url.searchParams;
+const initialCat   = filterSet.has('categories') ? (sp.get('cat') ?? '') : '';
+const initialPrice = filterSet.has('price') ? (sp.get('price') ?? '') : '';
+const initialColors = filterSet.has('colors') ? (sp.get('colors') ?? '') : '';
+const initialTipos  = filterSet.has('type') ? (sp.get('tipos') ?? '') : '';
 const rawSort = sp.get('sort') as SortKey | null;
-const initialSort: SortKey = rawSort && VALID_SORTS.includes(rawSort) ? rawSort : 'featured';
+const initialSort: SortKey = rawSort && sortOptions.includes(rawSort) ? rawSort : (sortOptions[0] ?? 'featured');
 const initialPage = Math.max(1, parseInt(sp.get('page') ?? '1', 10));
 
 const [rawProducts, rawCategories] = await Promise.all([
   getFloresProducts(lang),
-  getCategoriasDeFlores(10, lang),
+  filterSet.has('categories') ? getCategoriasDeFlores(10, lang) : Promise.resolve([]),
 ]);
 
-const products: ProductCardData[] = rawProducts.map(p => {
-  const v = p.variations?.[0];
-  return {
-    id:          p.id,
-    title:       p.title,
-    price:       v?.price?.formatted               ?? '',
-    priceNumber: parseFloat(v?.price?.number       ?? '0'),
-    thumbnail:   getProductThumbnail(p, DRUPAL_BASE_URL),
-    badge:       null,
-    tipo:        v?.field_tipo                     ?? null,
-    colorName:   v?.field_color?.name   ?? null,
-    colorHex:    v?.field_color?.field_color_hex ?? null,
-    category:    p.field_categoria?.name           ?? null,
-  };
-});
+const fallbackCategories: ShopCategory[] = isEn
+  ? [
+      { id: 'cat-roses',   name: 'Roses',   slug: 'roses' },
+      { id: 'cat-tulips',  name: 'Tulips',  slug: 'tulips' },
+      { id: 'cat-mixed',   name: 'Mixed',   slug: 'mixed' },
+      { id: 'cat-events',  name: 'Events',  slug: 'events' },
+    ]
+  : [
+      { id: 'cat-rosas',     name: 'Rosas',     slug: 'rosas' },
+      { id: 'cat-tulipanes', name: 'Tulipanes', slug: 'tulipanes' },
+      { id: 'cat-mixtos',    name: 'Mixtos',    slug: 'mixtos' },
+      { id: 'cat-eventos',   name: 'Eventos',   slug: 'eventos' },
+    ];
 
-const categories: ShopCategory[] = rawCategories.map(c => ({
-  id:   String(c.drupal_internal__tid),
-  name: c.name,
-  slug: c.name.toLowerCase().replace(/\s+/g, '-'),
-}));
+const fallbackProducts: ProductCardData[] = isEn
+  ? [
+      {
+        id: 'fallback-rose-classic',
+        title: 'Classic Roses',
+        price: '$85',
+        priceNumber: 85,
+        thumbnail: null,
+        badge: null,
+        tipo: 'natural',
+        colorName: 'Red',
+        colorHex: '#d1495b',
+        category: 'Roses',
+      },
+      {
+        id: 'fallback-pastel-bouquet',
+        title: 'Pastel Bouquet',
+        price: '$95',
+        priceNumber: 95,
+        thumbnail: null,
+        badge: null,
+        tipo: 'natural',
+        colorName: 'Pink',
+        colorHex: '#f2a0a0',
+        category: 'Mixed',
+      },
+      {
+        id: 'fallback-tulip-white',
+        title: 'White Tulips',
+        price: '$70',
+        priceNumber: 70,
+        thumbnail: null,
+        badge: null,
+        tipo: 'natural',
+        colorName: 'White',
+        colorHex: '#f5f5f5',
+        category: 'Tulips',
+      },
+      {
+        id: 'fallback-box-deluxe',
+        title: 'Deluxe Box',
+        price: '$120',
+        priceNumber: 120,
+        thumbnail: null,
+        badge: null,
+        tipo: 'artificial',
+        colorName: 'Ivory',
+        colorHex: '#f3e7d3',
+        category: 'Events',
+      },
+      {
+        id: 'fallback-dry-center',
+        title: 'Dried Centerpiece',
+        price: '$60',
+        priceNumber: 60,
+        thumbnail: null,
+        badge: null,
+        tipo: 'seco',
+        colorName: 'Beige',
+        colorHex: '#d8c3a5',
+        category: 'Events',
+      },
+      {
+        id: 'fallback-spring-set',
+        title: 'Spring Set',
+        price: '$110',
+        priceNumber: 110,
+        thumbnail: null,
+        badge: null,
+        tipo: 'artificial',
+        colorName: 'Yellow',
+        colorHex: '#f2c94c',
+        category: 'Mixed',
+      },
+    ]
+  : [
+      {
+        id: 'fallback-rosas-clasicas',
+        title: 'Rosas Clasicas',
+        price: '$85',
+        priceNumber: 85,
+        thumbnail: null,
+        badge: null,
+        tipo: 'natural',
+        colorName: 'Rojo',
+        colorHex: '#d1495b',
+        category: 'Rosas',
+      },
+      {
+        id: 'fallback-bouquet-pastel',
+        title: 'Bouquet Pastel',
+        price: '$95',
+        priceNumber: 95,
+        thumbnail: null,
+        badge: null,
+        tipo: 'natural',
+        colorName: 'Rosa',
+        colorHex: '#f2a0a0',
+        category: 'Mixtos',
+      },
+      {
+        id: 'fallback-tulipanes-blancos',
+        title: 'Tulipanes Blancos',
+        price: '$70',
+        priceNumber: 70,
+        thumbnail: null,
+        badge: null,
+        tipo: 'natural',
+        colorName: 'Blanco',
+        colorHex: '#f5f5f5',
+        category: 'Tulipanes',
+      },
+      {
+        id: 'fallback-box-deluxe',
+        title: 'Box Deluxe',
+        price: '$120',
+        priceNumber: 120,
+        thumbnail: null,
+        badge: null,
+        tipo: 'artificial',
+        colorName: 'Marfil',
+        colorHex: '#f3e7d3',
+        category: 'Eventos',
+      },
+      {
+        id: 'fallback-centro-seco',
+        title: 'Centro Seco',
+        price: '$60',
+        priceNumber: 60,
+        thumbnail: null,
+        badge: null,
+        tipo: 'seco',
+        colorName: 'Beige',
+        colorHex: '#d8c3a5',
+        category: 'Eventos',
+      },
+      {
+        id: 'fallback-set-primaveral',
+        title: 'Set Primaveral',
+        price: '$110',
+        priceNumber: 110,
+        thumbnail: null,
+        badge: null,
+        tipo: 'artificial',
+        colorName: 'Amarillo',
+        colorHex: '#f2c94c',
+        category: 'Mixtos',
+      },
+    ];
+
+const products: ProductCardData[] = rawProducts.length > 0
+  ? rawProducts.map(p => {
+      const v = p.variations?.[0];
+      return {
+        id:          p.id,
+        title:       p.title,
+        price:       v?.price?.formatted               ?? '',
+        priceNumber: parseFloat(v?.price?.number       ?? '0'),
+        thumbnail:   getProductThumbnail(p, DRUPAL_BASE_URL),
+        badge:       null,
+        tipo:        v?.field_tipo                     ?? null,
+        colorName:   v?.field_color?.name   ?? null,
+        colorHex:    v?.field_color?.field_color_hex ?? null,
+        category:    p.field_categoria?.name           ?? null,
+      };
+    })
+  : fallbackProducts;
+
+const categories: ShopCategory[] = rawCategories.length > 0
+  ? rawCategories.map(c => ({
+      id:   String(c.drupal_internal__tid),
+      name: c.name,
+      slug: c.name.toLowerCase().replace(/\s+/g, '-'),
+    }))
+  : fallbackCategories;
 ---
 
 <HomeLayout title={t('shop.title')}>
   <div class="flex flex-col min-h-screen">
     <main class="main-container">
-      <header class="mb-10">
+      <header
+        class="mb-10"
+        data-nodehive-entity-type={shopHeader ? 'paragraph' : undefined}
+        data-nodehive-entity-bundle={shopHeader?.bundle ?? undefined}
+        data-nodehive-entity-id={shopHeader?.paragraphId ?? undefined}
+        data-nodehive-entity-internal-id={shopHeader?.paragraphInternalId ?? undefined}
+        data-nodehive-parent_id={shopHeader ? (parentId ?? undefined) : undefined}
+      >
         <Breadcrumb crumbs={[
           { label: t('nav.home'), href: prefix || '/' },
           { label: t('shop.title') },
         ]} />
         <div class="mt-5 flex flex-wrap items-end justify-between gap-4">
           <div class="max-w-xl">
-            <h1 class="font-heading text-4xl md:text-5xl font-semibold tracking-tight text-headline leading-[1.1] mb-2">
-              {t('shop.title')}
+            <h1
+              class="font-heading text-4xl md:text-5xl font-semibold tracking-tight text-headline leading-[1.1] mb-2"
+              data-nodehive-field={headerTitleField}
+            >
+              {headerTitle}
             </h1>
-            <p class="font-body text-[0.9375rem] text-text-muted leading-relaxed">
-              {t('shop.description')}
+            <p
+              class="font-body text-[0.9375rem] text-text-muted leading-relaxed"
+              data-nodehive-field={headerDescriptionField}
+            >
+              {headerDescription}
             </p>
           </div>
         </div>
       </header>
 
-      <ShopClient
-        products={products}
-        categories={categories}
-        lang={lang}
-        initialCat={initialCat}
-        initialPrice={initialPrice}
-        initialColors={initialColors}
-        initialTipos={initialTipos}
-        initialSort={initialSort}
-        initialPage={initialPage}
-        client:load
-      />
+      <section
+        data-nodehive-entity-type={shopBody ? 'paragraph' : undefined}
+        data-nodehive-entity-bundle={shopBody?.bundle ?? undefined}
+        data-nodehive-entity-id={shopBody?.paragraphId ?? undefined}
+        data-nodehive-entity-internal-id={shopBody?.paragraphInternalId ?? undefined}
+        data-nodehive-parent_id={shopBody ? (parentId ?? undefined) : undefined}
+      >
+        <ShopClient
+          products={products}
+          categories={categories}
+          lang={lang}
+          initialCat={initialCat}
+          initialPrice={initialPrice}
+          initialColors={initialColors}
+          initialTipos={initialTipos}
+          initialSort={initialSort}
+          initialPage={initialPage}
+          enabledFilters={enabledFilters}
+          enabledSorts={enabledSorts}
+          itemsPerPage={itemsPerPage}
+          bodyFields={bodyFields}
+          client:load
+        />
+      </section>
     </main>
   </div>
 </HomeLayout>
