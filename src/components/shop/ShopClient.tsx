@@ -411,16 +411,16 @@ export default function ShopClient({
                 <>
                   <div className="fixed inset-0 z-10" onClick={() => setSortOpen(false)} />
                   <div className="absolute right-0 top-[calc(100%+6px)] w-48 bg-white border border-border rounded-xl shadow-xl z-20 overflow-hidden">
-                    {(Object.keys(sortLabels) as SortKey[]).map(key => (
-                      <button key={key}
-                        onClick={() => { setSortBy(key); setSortOpen(false); setPage(1); }}
-                        className={`block w-full px-4 py-2.5 text-left font-body text-sm transition-colors ${
-                          sortBy === key ? 'text-primary font-bold bg-primary/5' : 'text-headline font-medium hover:bg-gray-50'
-                        }`}
-                      >
-                        {sortLabels[key]}
-                      </button>
-                    ))}
+{sortOptions.map(key => (
+                        <button key={key}
+                          onClick={() => { setSortBy(key); setSortOpen(false); setPage(1); }}
+                          className={`block w-full px-4 py-2.5 text-left font-body text-sm transition-colors ${
+                            sortBy === key ? 'text-primary font-bold bg-primary/5' : 'text-headline font-medium hover:bg-gray-50'
+                          }`}
+                        >
+                          {sortLabels[key]}
+                        </button>
+                      ))}
                   </div>
                 </>
               )}

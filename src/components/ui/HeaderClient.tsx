@@ -244,6 +244,7 @@ export default function HeaderClient({ isLoggedIn, currentPath, lang, navLinks: 
     if (targetLang === lang) return;
     try {
       localStorage.setItem('mf-lang', targetLang);
+      document.cookie = `mf-lang=${targetLang};Path=/;Max-Age=31536000;SameSite=Lax`;
       if (window.__NODEHIVE_EDITOR__) {
         window.__NODEHIVE_EDITOR__.setLang(targetLang);
       }

@@ -16,6 +16,7 @@ interface Props {
   formSubtitle?: string | null;
   formParagraphId?: string | null;
   formParagraphInternalId?: number | null;
+  formParentId?: string | number | null;
 }
 
 const TRANSLATIONS = {
@@ -63,6 +64,7 @@ export default function LoginForm({
   formSubtitle,
   formParagraphId,
   formParagraphInternalId,
+  formParentId,
 }: Props) {
   const t = TRANSLATIONS[lang] ?? TRANSLATIONS.es;
   const displayTitle = formTitle ?? t.title;
@@ -122,6 +124,7 @@ export default function LoginForm({
       data-nodehive-entity-type={formParagraphId ? 'paragraph' : undefined}
       data-nodehive-entity-id={formParagraphId ?? undefined}
       data-nodehive-entity-internal-id={formParagraphInternalId ?? undefined}
+      data-nodehive-parent_id={formParentId ?? undefined}
     >
       <div className="text-center mb-8">
         <h2
