@@ -12,9 +12,61 @@ interface AlertState {
 
 interface Props {
   lang?: Lang;
+  formTitle?: string | null;
+  formSubtitle?: string | null;
+  formParagraphId?: string | null;
+  formParagraphInternalId?: number | null;
 }
 
-export default function LoginForm({ lang = 'es' }: Props) {
+const TRANSLATIONS = {
+  es: {
+    title: 'Bienvenido de nuevo',
+    subtitle: 'Ingresa tus datos para continuar aprendiendo.',
+    tabLogin: 'Iniciar Sesión',
+    tabRegister: 'Registrarme',
+    usernameLabel: 'Usuario o correo electrónico',
+    usernamePlaceholder: 'Tu usuario o correo',
+    passwordLabel: 'Contraseña',
+    passwordPlaceholder: 'Ingresa tu contraseña',
+    rememberMe: 'Recordarme',
+    forgotPassword: '¿Olvidaste tu contraseña?',
+    submitButton: 'Iniciar Sesión',
+    noAccount: '¿Aún no tienes una cuenta?',
+    registerHere: 'Regístrate aquí',
+    errorEmpty: 'Completa usuario y contraseña para continuar.',
+    errorServer: 'No pudimos conectar con el servidor. Intenta otra vez.',
+    success: (name: string) => `¡Bienvenido, ${name}!`,
+  },
+  en: {
+    title: 'Welcome back',
+    subtitle: 'Enter your details to continue learning.',
+    tabLogin: 'Sign In',
+    tabRegister: 'Register',
+    usernameLabel: 'Username or email',
+    usernamePlaceholder: 'Your username or email',
+    passwordLabel: 'Password',
+    passwordPlaceholder: 'Enter your password',
+    rememberMe: 'Remember me',
+    forgotPassword: 'Forgot your password?',
+    submitButton: 'Sign In',
+    noAccount: "Don't have an account?",
+    registerHere: 'Register here',
+    errorEmpty: 'Please enter username and password to continue.',
+    errorServer: 'Could not connect to server. Try again.',
+    success: (name: string) => `Welcome, ${name}!`,
+  },
+} as const;
+
+export default function LoginForm({
+  lang = 'es',
+  formTitle,
+  formSubtitle,
+  formParagraphId,
+  formParagraphInternalId,
+}: Props) {
+  const t = TRANSLATIONS[lang] ?? TRANSLATIONS.es;
+  const displayTitle = formTitle ?? t.title;
+  const displaySubtitle = formSubtitle ?? t.subtitle;
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [remember, setRemember] = useState(false);
@@ -22,13 +74,13 @@ export default function LoginForm({ lang = 'es' }: Props) {
   const [alert, setAlert] = useState<AlertState | null>(null);
 
   function friendlyLoginError(status: number, message?: string): string {
-    if (status === 400) return 'Revisa los datos e intenta de nuevo.';
-    if (status === 401 || status === 403) return 'Usuario o contrasena incorrectos.';
-    if (status === 503) return 'No pudimos conectar con el servidor. Intenta otra vez.';
+    if (status === 400) return t.errorEmpty;
+    if (status === 401 || status === 403) return lang === 'es' ? 'Usuario o contraseña incorrectos.' : 'Invalid username or password.';
+    if (status === 503) return t.errorServer;
     if (message && message.length < 120 && !/json|token|exception|stack|trace|sql/i.test(message)) {
       return message;
     }
-    return 'Ocurrio un problema. Intenta mas tarde.';
+    return lang === 'es' ? 'Ocurrió un problema. Intenta más tarde.' : 'Something went wrong. Try again later.';
   }
 
   async function handleSubmit(e: React.FormEvent) {
@@ -36,7 +88,7 @@ export default function LoginForm({ lang = 'es' }: Props) {
     setAlert(null);
 
     if (!username.trim() || !password) {
-      setAlert({ type: 'error', message: 'Completa usuario y contrasena para continuar.' });
+      setAlert({ type: 'error', message: t.errorEmpty });
       return;
     }
 
@@ -52,26 +104,37 @@ export default function LoginForm({ lang = 'es' }: Props) {
       const data = await res.json().catch(() => ({}));
 
       if (data.ok) {
-        setAlert({ type: 'success', message: `¡Bienvenido, ${data.user.name}!` });
+        setAlert({ type: 'success', message: t.success(data.user.name) });
         setTimeout(() => { window.location.assign(`/${lang}/dashboard`); }, 600);
       } else {
         setAlert({ type: 'error', message: friendlyLoginError(status, data.error) });
       }
     } catch {
-      setAlert({ type: 'error', message: 'No pudimos conectar con el servidor. Intenta otra vez.' });
+      setAlert({ type: 'error', message: t.errorServer });
     } finally {
       setLoading(false);
     }
   }
 
   return (
-    <div className="w-full max-w-[480px]">
+    <div
+      className="w-full max-w-[480px]"
+      data-nodehive-entity-type={formParagraphId ? 'paragraph' : undefined}
+      data-nodehive-entity-id={formParagraphId ?? undefined}
+      data-nodehive-entity-internal-id={formParagraphInternalId ?? undefined}
+    >
       <div className="text-center mb-8">
-        <h2 className="text-[1.875rem] font-extrabold tracking-tight text-text-main mb-1.5">
-          Bienvenido de nuevo
+        <h2
+          className="text-[1.875rem] font-extrabold tracking-tight text-text-main mb-1.5"
+          data-nodehive-field={formParagraphId ? 'field_title' : undefined}
+        >
+          {displayTitle}
         </h2>
-        <p className="text-text-muted text-[0.9375rem]">
-          Ingresa tus datos para continuar aprendiendo.
+        <p
+          className="text-text-muted text-[0.9375rem]"
+          data-nodehive-field={formParagraphId ? 'field_subtitle' : undefined}
+        >
+          {displaySubtitle}
         </p>
       </div>
 
@@ -81,13 +144,13 @@ export default function LoginForm({ lang = 'es' }: Props) {
           href={`/${lang}/login`}
           className="flex-1 pb-3 text-center border-b-[3px] border-primary font-bold text-sm text-primary transition-colors"
         >
-          Iniciar Sesión
+          {t.tabLogin}
         </a>
         <a
           href={`/${lang}/register`}
           className="flex-1 pb-3 text-center border-b-[3px] border-transparent font-bold text-sm text-text-muted hover:text-text-main transition-colors"
         >
-          Registrarme
+          {t.tabRegister}
         </a>
       </nav>
 
@@ -96,9 +159,9 @@ export default function LoginForm({ lang = 'es' }: Props) {
       <form className="flex flex-col gap-5 mt-6" onSubmit={handleSubmit} noValidate>
         <InputField
           id="username"
-          label="Usuario o correo electronico"
+          label={t.usernameLabel}
           type="text"
-          placeholder="Tu usuario o correo"
+          placeholder={t.usernamePlaceholder}
           icon="person"
           required
           autoComplete="username"
@@ -108,9 +171,9 @@ export default function LoginForm({ lang = 'es' }: Props) {
 
         <InputField
           id="password"
-          label="Contraseña"
+          label={t.passwordLabel}
           type="password"
-          placeholder="Ingresa tu contrasena"
+          placeholder={t.passwordPlaceholder}
           icon="lock"
           required
           autoComplete="current-password"
@@ -126,13 +189,13 @@ export default function LoginForm({ lang = 'es' }: Props) {
               onChange={(e) => setRemember(e.target.checked)}
               className="w-4 h-4 accent-primary cursor-pointer"
             />
-            <span>Recordarme</span>
+            <span>{t.rememberMe}</span>
           </label>
           <a
             href={`/${lang}/forgot-password`}
             className="text-sm font-semibold text-primary hover:text-primary-dark hover:underline transition-colors"
           >
-            ¿Olvidaste tu contraseña?
+            {t.forgotPassword}
           </a>
         </div>
 
@@ -145,18 +208,18 @@ export default function LoginForm({ lang = 'es' }: Props) {
           {loading ? (
             <span className="w-[1.125rem] h-[1.125rem] border-[2.5px] border-white/35 border-t-white rounded-full animate-spin" />
           ) : (
-            'Iniciar Sesión'
+            t.submitButton
           )}
         </button>
       </form>
 
       <p className="mt-8 text-center text-sm text-text-muted">
-        ¿Aún no tienes una cuenta?{' '}
+        {t.noAccount}{' '}
         <a
           href={`/${lang}/register`}
           className="font-bold text-primary hover:text-primary-dark hover:underline transition-colors"
         >
-          Regístrate aquí
+          {t.registerHere}
         </a>
       </p>
     </div>

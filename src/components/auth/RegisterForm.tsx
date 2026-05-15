@@ -13,9 +13,69 @@ interface AlertState {
 
 interface Props {
   lang?: Lang;
+  formTitle?: string | null;
+  formSubtitle?: string | null;
+  formParagraphId?: string | null;
+  formParagraphInternalId?: number | null;
 }
 
-export default function RegisterForm({ lang = 'es' }: Props) {
+const TRANSLATIONS = {
+  es: {
+    title: 'Crear una cuenta',
+    subtitle: 'Completá tus datos para empezar a aprender.',
+    tabLogin: 'Iniciar Sesión',
+    tabRegister: 'Registrarme',
+    usernameLabel: 'Nombre de usuario',
+    usernamePlaceholder: 'Tu usuario',
+    emailLabel: 'Correo electrónico',
+    emailPlaceholder: 'tu@correo.com',
+    passwordLabel: 'Contraseña',
+    passwordPlaceholder: 'Mínimo 8 caracteres',
+    confirmLabel: 'Confirmar contraseña',
+    confirmPlaceholder: 'Repite tu contraseña',
+    submitButton: 'Crear cuenta',
+    hasAccount: '¿Ya tenés una cuenta?',
+    loginHere: 'Iniciá sesión aquí',
+    errorEmpty: 'Completa todos los campos para continuar.',
+    errorPasswordMismatch: 'Las contraseñas no coinciden.',
+    errorPasswordWeak: 'Usa al menos 8 caracteres e incluye una letra y un número.',
+    errorServer: 'No pudimos conectar con el servidor. Intenta otra vez.',
+    success: (name: string) => `¡Cuenta creada! Bienvenido, ${name}. Redirigiendo al login…`,
+  },
+  en: {
+    title: 'Create your account',
+    subtitle: 'Fill in your details to start learning.',
+    tabLogin: 'Sign In',
+    tabRegister: 'Register',
+    usernameLabel: 'Username',
+    usernamePlaceholder: 'Your username',
+    emailLabel: 'Email address',
+    emailPlaceholder: 'you@example.com',
+    passwordLabel: 'Password',
+    passwordPlaceholder: 'At least 8 characters',
+    confirmLabel: 'Confirm password',
+    confirmPlaceholder: 'Repeat your password',
+    submitButton: 'Create account',
+    hasAccount: 'Already have an account?',
+    loginHere: 'Sign in here',
+    errorEmpty: 'Please fill in all fields to continue.',
+    errorPasswordMismatch: 'Passwords do not match.',
+    errorPasswordWeak: 'Use at least 8 characters with a letter and a number.',
+    errorServer: 'Could not connect to server. Try again.',
+    success: (name: string) => `Account created! Welcome, ${name}. Redirecting to login…`,
+  },
+} as const;
+
+export default function RegisterForm({
+  lang = 'es',
+  formTitle,
+  formSubtitle,
+  formParagraphId,
+  formParagraphInternalId,
+}: Props) {
+  const t = TRANSLATIONS[lang] ?? TRANSLATIONS.es;
+  const displayTitle = formTitle ?? t.title;
+  const displaySubtitle = formSubtitle ?? t.subtitle;
   const [username, setUsername] = useState('');
   const [email,    setEmail]    = useState('');
   const [password, setPassword] = useState('');
@@ -24,13 +84,13 @@ export default function RegisterForm({ lang = 'es' }: Props) {
   const [alert,    setAlert]    = useState<AlertState | null>(null);
 
   function friendlyRegisterError(status: number, message?: string): string {
-    if (status === 400) return 'Revisa los datos e intenta de nuevo.';
-    if (status === 409) return 'Ese usuario o correo ya existe.';
-    if (status === 503) return 'No pudimos conectar con el servidor. Intenta otra vez.';
+    if (status === 400) return t.errorEmpty;
+    if (status === 409) return lang === 'es' ? 'Ese usuario o correo ya existe.' : 'Username or email already exists.';
+    if (status === 503) return t.errorServer;
     if (message && message.length < 140 && !/json|token|exception|stack|trace|sql/i.test(message)) {
       return message;
     }
-    return 'Ocurrio un problema. Intenta mas tarde.';
+    return lang === 'es' ? 'Ocurrió un problema. Intenta más tarde.' : 'Something went wrong. Try again later.';
   }
 
   function isValidPassword(value: string): boolean {
@@ -44,17 +104,16 @@ export default function RegisterForm({ lang = 'es' }: Props) {
     e.preventDefault();
     setAlert(null);
 
-    // Validaciones del lado del cliente
     if (!username.trim() || !email.trim() || !password || !confirm) {
-      setAlert({ type: 'error', message: 'Completa todos los campos para continuar.' });
+      setAlert({ type: 'error', message: t.errorEmpty });
       return;
     }
     if (password !== confirm) {
-      setAlert({ type: 'error', message: 'Las contrasenas no coinciden.' });
+      setAlert({ type: 'error', message: t.errorPasswordMismatch });
       return;
     }
     if (!isValidPassword(password)) {
-      setAlert({ type: 'error', message: 'Usa al menos 8 caracteres e incluye una letra y un numero.' });
+      setAlert({ type: 'error', message: t.errorPasswordWeak });
       return;
     }
 
@@ -76,30 +135,45 @@ export default function RegisterForm({ lang = 'es' }: Props) {
       if (data.ok) {
         setAlert({
           type:    'success',
-          message: `¡Cuenta creada! Bienvenido, ${data.user.name}. Redirigiendo al login…`,
+          message: t.success(data.user.name),
         });
         setTimeout(() => { window.location.href = `/${lang}/login`; }, 1800);
       } else {
         setAlert({ type: 'error', message: friendlyRegisterError(status, data.error) });
       }
     } catch {
-      setAlert({ type: 'error', message: 'No pudimos conectar con el servidor. Intenta otra vez.' });
+      setAlert({ type: 'error', message: t.errorServer });
     } finally {
       setLoading(false);
     }
   }
 
   return (
-    <div className="form-panel">
+    <div
+      className="form-panel"
+      data-nodehive-entity-type={formParagraphId ? 'paragraph' : undefined}
+      data-nodehive-entity-id={formParagraphId ?? undefined}
+      data-nodehive-entity-internal-id={formParagraphInternalId ?? undefined}
+    >
       <div className="form-header">
-        <h2 className="form-title">Crear una cuenta</h2>
-        <p className="form-subtitle">Completá tus datos para empezar a aprender.</p>
+        <h2
+          className="form-title"
+          data-nodehive-field={formParagraphId ? 'field_title' : undefined}
+        >
+          {displayTitle}
+        </h2>
+        <p
+          className="form-subtitle"
+          data-nodehive-field={formParagraphId ? 'field_subtitle' : undefined}
+        >
+          {displaySubtitle}
+        </p>
       </div>
 
       {/* Tabs */}
       <nav className="auth-tabs">
-        <a href={`/${lang}/login`}    className="auth-tab">Iniciar Sesión</a>
-        <a href={`/${lang}/register`} className="auth-tab auth-tab--active">Registrarme</a>
+        <a href={`/${lang}/login`}    className="auth-tab">{t.tabLogin}</a>
+        <a href={`/${lang}/register`} className="auth-tab auth-tab--active">{t.tabRegister}</a>
       </nav>
 
       <Alert type={alert?.type ?? 'error'} message={alert?.message ?? null} />
@@ -107,9 +181,9 @@ export default function RegisterForm({ lang = 'es' }: Props) {
       <form className="register-form" onSubmit={handleSubmit} noValidate>
         <InputField
           id="username"
-          label="Nombre de usuario"
+          label={t.usernameLabel}
           type="text"
-          placeholder="Tu usuario"
+          placeholder={t.usernamePlaceholder}
           icon="person"
           required
           autoComplete="username"
@@ -119,9 +193,9 @@ export default function RegisterForm({ lang = 'es' }: Props) {
 
         <InputField
           id="email"
-          label="Correo electronico"
+          label={t.emailLabel}
           type="email"
-          placeholder="tu@correo.com"
+          placeholder={t.emailPlaceholder}
           icon="mail"
           required
           autoComplete="email"
@@ -131,9 +205,9 @@ export default function RegisterForm({ lang = 'es' }: Props) {
 
         <InputField
           id="password"
-          label="Contraseña"
+          label={t.passwordLabel}
           type="password"
-          placeholder="Minimo 8 caracteres"
+          placeholder={t.passwordPlaceholder}
           icon="lock"
           required
           autoComplete="new-password"
@@ -143,9 +217,9 @@ export default function RegisterForm({ lang = 'es' }: Props) {
 
         <InputField
           id="confirm"
-          label="Confirmar contraseña"
+          label={t.confirmLabel}
           type="password"
-          placeholder="Repite tu contraseña"
+          placeholder={t.confirmPlaceholder}
           icon="check"
           required
           autoComplete="new-password"
@@ -158,13 +232,13 @@ export default function RegisterForm({ lang = 'es' }: Props) {
           disabled={loading}
           className={`submit-btn${loading ? ' loading' : ''}`}
         >
-          {loading ? <span className="btn-spinner" /> : 'Crear cuenta'}
+          {loading ? <span className="btn-spinner" /> : t.submitButton}
         </button>
       </form>
 
       <p className="login-hint">
-        ¿Ya tenés una cuenta?{' '}
-        <a href={`/${lang}/login`} className="login-link">Iniciá sesión aquí</a>
+        {t.hasAccount}{' '}
+        <a href={`/${lang}/login`} className="login-link">{t.loginHere}</a>
       </p>
 
       <style>{`

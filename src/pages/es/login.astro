@@ -5,16 +5,38 @@ import AuthLayout from '@/layouts/AuthLayout.astro';
 import HeroPanel from '@/components/auth/HeroPanel.astro';
 import LoginForm from '@/components/auth/LoginForm';
 import { getSession } from '@/services/session.service';
+import { getAuthPageData } from '@/services/nodehive/nodehive.paragraphs';
+import type { Lang } from '@/i18n/ui';
 
+const lang: Lang = 'es';
 const session = await getSession(Astro.cookies);
 if (session) return Astro.redirect('/es/dashboard', 302);
+
+const pageData = await getAuthPageData('login', lang);
+const hero = pageData?.heroPanel ?? null;
+const formHeader = pageData?.formHeader ?? null;
 ---
-<AuthLayout title="Iniciar Sesión" lang="es">
+<AuthLayout title="Iniciar Sesión" lang="es" pageData={pageData}>
   <main class="auth-main">
-    <HeroPanel />
+    <HeroPanel
+      title={hero?.title}
+      description={hero?.description}
+      fotoUrl={hero?.fotoUrl}
+      paragraphId={hero?.paragraphId}
+      paragraphInternalId={hero?.paragraphInternalId}
+      parentId={pageData?.pageInternalId}
+      bundle={hero?.bundle}
+    />
     <section class="form-section">
       <div class="form-container">
-        <LoginForm lang="es" client:load />
+        <LoginForm
+          lang="es"
+          formTitle={formHeader?.title}
+          formSubtitle={formHeader?.subtitle}
+          formParagraphId={formHeader?.paragraphId}
+          formParagraphInternalId={formHeader?.paragraphInternalId}
+          client:load
+        />
       </div>
     </section>
   </main>

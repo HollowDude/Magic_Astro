@@ -1,12 +1,41 @@
 ---
-// Panel izquierdo decorativo del layout de autenticación
+interface Props {
+  title?: string | null;
+  description?: string | null;
+  fotoUrl?: string | null;
+  paragraphId?: string | null;
+  paragraphInternalId?: number | null;
+  parentId?: string | number | null;
+  bundle?: string | null;
+}
+
+const FALLBACK_FOTO = 'https://lh3.googleusercontent.com/aida-public/AB6AXuCjSe0_Qz6_SN8vKCVuFwTExt2M0w1wiF_Yg7YsXCnG2_JNpq1VS4Q6oD3DcwFJ_CyxqK9QhQUQBqmcstzzYb-pdGI-knucx9G7SPBnTRDMf_5VvwCEUcpWWtEwPYIAUJaSxCpWVhwO1hj3Cb6O1OTJSkCbRJrF2uIeNVDncz7So3lB6yWvVQ_M33YPUJfStR-0PRDtfDdz4gtxWubxJVjoSa14Sn3KGcrkt18cq00BYpI1Z4lSOj_LCWU_ehKK1IaYcyt54NVnsaA';
+
+const {
+  title = 'Descubre el arte floral',
+  description = 'Únete a nuestra comunidad de apasionados por las flores. Aprende técnicas exclusivas y crea arreglos unflorecientes.',
+  fotoUrl = null,
+  paragraphId = null,
+  paragraphInternalId = null,
+  parentId = null,
+  bundle = null,
+} = Astro.props;
+
+const bgImage = fotoUrl ?? FALLBACK_FOTO;
 ---
 
-<aside class="hero-panel">
+<aside
+  class="hero-panel"
+  data-nodehive-entity-type={bundle ? 'paragraph' : undefined}
+  data-nodehive-entity-bundle={bundle ?? undefined}
+  data-nodehive-entity-id={paragraphId ?? undefined}
+  data-nodehive-entity-internal-id={paragraphInternalId ?? undefined}
+  data-nodehive-parent_id={parentId ?? undefined}
+>
   <div class="hero-bg">
     <img
-      src="https://lh3.googleusercontent.com/aida-public/AB6AXuCjSe0_Qz6_SN8vKCVuFwTExt2M0w1wiF_Yg7YsXCnG2_JNpq1VS4Q6oD3DcwFJ_CyxqK9QhQUQBqmcstzzYb-pdGI-knucx9G7SPBnTRDMf_5VvwCEUcpWWtEwPYIAUJaSxCpWVhwO1hj3Cb6O1OTJSkCbRJrF2uIeNVDncz7So3lB6yWvVQ_M33YPUJfStR-0PRDtfDdz4gtxWubxJVjoSa14Sn3KGcrkt18cq00BYpI1Z4lSOj_LCWU_ehKK1IaYcyt54NVnsaA"
-      alt="Arreglo floral elegante con rosas rosadas"
+      src={bgImage}
+      alt={title ?? 'Imagen decorativa'}
       class="hero-img"
       loading="eager"
     />
@@ -15,11 +44,20 @@
   </div>
 
   <div class="hero-content">
-    <h1 class="hero-title">Descubre el arte floral</h1>
-    <p class="hero-desc">
-      Únete a nuestra comunidad de apasionados por las flores.
-      Aprende técnicas exclusivas y crea arreglos inolvidables.
-    </p>
+    <h1
+      class="hero-title"
+      data-nodehive-field={paragraphId ? 'field_title' : undefined}
+    >
+      {title}
+    </h1>
+    {description && (
+      <p
+        class="hero-desc"
+        data-nodehive-field={paragraphId ? 'field_description_long' : undefined}
+      >
+        {description}
+      </p>
+    )}
   </div>
 </aside>
 

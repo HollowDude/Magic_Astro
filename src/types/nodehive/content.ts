@@ -280,3 +280,31 @@ export interface AboutObjectifsData {
   title: string | null;
   items: AboutObjectiveItem[];
 }
+
+// ─── Auth Page Paragraphs ───────────────────────────────────────────────────
+
+export interface AuthHeroPanelData {
+  paragraphId: string | null;
+  paragraphInternalId: number | null;
+  parentId?: string | number | null;
+  bundle: string;
+  title: string | null;
+  description: string | null;
+  fotoUrl: string | null;
+}
+
+export interface AuthFormHeaderData {
+  paragraphId: string | null;
+  paragraphInternalId: number | null;
+  parentId?: string | number | null;
+  bundle: string;
+  title: string | null;
+  subtitle: string | null;
+}
+
+export interface AuthPageData {
+  pageId?: string;
+  pageInternalId?: number | null;
+  heroPanel: AuthHeroPanelData | null;
+  formHeader: AuthFormHeaderData | null;
+}

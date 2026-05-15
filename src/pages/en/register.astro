@@ -5,16 +5,38 @@ import AuthLayout from '@/layouts/AuthLayout.astro';
 import HeroPanel from '@/components/auth/HeroPanel.astro';
 import RegisterForm from '@/components/auth/RegisterForm';
 import { getSession } from '@/services/session.service';
+import { getAuthPageData } from '@/services/nodehive/nodehive.paragraphs';
+import type { Lang } from '@/i18n/ui';
 
+const lang: Lang = 'en';
 const session = await getSession(Astro.cookies);
 if (session) return Astro.redirect('/en/dashboard', 302);
+
+const pageData = await getAuthPageData('register', lang);
+const hero = pageData?.heroPanel ?? null;
+const formHeader = pageData?.formHeader ?? null;
 ---
-<AuthLayout title="Create Account" lang="en">
+<AuthLayout title="Create Account" lang="en" pageData={pageData}>
   <main class="auth-main">
-    <HeroPanel />
+    <HeroPanel
+      title={hero?.title}
+      description={hero?.description}
+      fotoUrl={hero?.fotoUrl}
+      paragraphId={hero?.paragraphId}
+      paragraphInternalId={hero?.paragraphInternalId}
+      parentId={pageData?.pageInternalId}
+      bundle={hero?.bundle}
+    />
     <section class="form-section">
       <div class="form-container">
-        <RegisterForm lang="en" client:load />
+        <RegisterForm
+          lang="en"
+          formTitle={formHeader?.title}
+          formSubtitle={formHeader?.subtitle}
+          formParagraphId={formHeader?.paragraphId}
+          formParagraphInternalId={formHeader?.paragraphInternalId}
+          client:load
+        />
       </div>
     </section>
   </main>

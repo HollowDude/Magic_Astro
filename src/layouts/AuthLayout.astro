@@ -3,9 +3,16 @@
 import '@/styles/global.css';
 import Header from '@/components/ui/Header.astro';
 import Footer from '@/components/ui/Footer.astro';
+import NodeHiveConnector from '@/components/nodehive/NodeHiveConnector.astro';
+import type { AuthPageData } from '@/types/nodehive/content';
 
-interface Props { title?: string; lang?: string }
-const { title = 'Inicio', lang = 'es' } = Astro.props;
+interface Props {
+  title?: string;
+  lang?: string;
+  pageData?: AuthPageData | null;
+}
+const { title = 'Inicio', lang = 'es', pageData } = Astro.props;
+const pageInternalId = pageData?.pageInternalId ?? null;
 ---
 
 <!doctype html>
@@ -15,14 +22,21 @@ const { title = 'Inicio', lang = 'es' } = Astro.props;
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="robots" content="noindex" />
+    <meta http-equiv="X-Frame-Options" content="ALLOWALL" />
     
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     
     <title>{title} — Maggy Flowers</title>
+
+    <script define:vars={{ nodehiveBaseUrl: import.meta.env.NODEHIVE_BASE_URL, nodehiveLang: lang }}>
+      window.__NODEHIVE_BASE_URL__ = nodehiveBaseUrl;
+      window.__NODEHIVE_LANG__ = nodehiveLang;
+    </script>
   </head>
   <body>
     <Header />
     <slot />
     <Footer></Footer>
+    <NodeHiveConnector />
   </body>
 </html>

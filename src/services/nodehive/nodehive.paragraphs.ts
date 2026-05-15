@@ -18,6 +18,9 @@ import type {
   ShopPageData,
   ShopHeaderData,
   ShopBodyData,
+  AuthPageData,
+  AuthHeroPanelData,
+  AuthFormHeaderData,
 } from '../../types/nodehive/content';
 
 const dataFormatter = new Jsona();
@@ -1018,6 +1021,148 @@ export async function getAboutObjectifsData(lang?: Lang): Promise<AboutObjectifs
     };
   } catch (err) {
     console.error('[Paragraphs] Error getAboutObjectifsData:', err);
+  }
+  return null;
+}
+
+// ── Auth Page Data ────────────────────────────────────────────────────────────
+
+const AUTH_LEFT_HINTS = [
+  'left_content',
+  'login_left',
+  'register_left',
+  'login_hero',
+  'register_hero',
+  'hero',
+  'panel',
+];
+const AUTH_RIGHT_HINTS = [
+  'right_side',
+  'login_right',
+  'register_right',
+  'login_form',
+  'register_form',
+  'form',
+];
+
+export async function getAuthPageData(
+  pageSlug: 'login' | 'register',
+  lang?: Lang,
+): Promise<AuthPageData | null> {
+  const defaultLang = (import.meta.env.NODEHIVE_DEFAULT_LANG as string) ?? 'es';
+  const effectiveLang = lang ?? defaultLang;
+
+  try {
+    const params = new DrupalJsonApiParams();
+    params
+      .addInclude(['field_component'])
+      .addFields('node--content_page', ['id', 'title', 'field_component', 'drupal_internal__nid'])
+      .addPageLimit(30);
+
+    const raw = await fetchWithLangFallback<Record<string, unknown>>(
+      `/jsonapi/node/content_page?${params.getQueryString()}`,
+      effectiveLang,
+      defaultLang,
+    );
+    if (raw.status !== 200) {
+      console.error(`[Auth] HTTP ${raw.status} fetching content_page`);
+      return null;
+    }
+
+    const pages = (dataFormatter.deserialize(raw.data) as any[]) ?? [];
+
+    const titles = pageSlug === 'login'
+      ? ['login', 'iniciar sesión', 'iniciar sesion', 'sign in']
+      : ['register', 'registro', 'crear cuenta', 'create account'];
+
+    const page = pages.find((p: any) => {
+      const t = (p.title ?? '').toLowerCase();
+      return titles.some((s) => t.includes(s));
+    });
+    if (!page) return null;
+
+    const rawData = raw.data as any;
+    const rawPage = rawData?.data?.find((p: any) => p.id === page.id);
+    const pageInternalId = rawPage?.attributes?.drupal_internal__nid ?? null;
+
+    const components: any[] = Array.isArray(page.field_component) ? page.field_component : [];
+
+    const leftComp = components.find((c: any) =>
+      matchesHints(c.type ?? '', AUTH_LEFT_HINTS)
+    ) ?? components[0] ?? null;
+
+    const rightComp = components.find((c: any) =>
+      c !== leftComp && matchesHints(c.type ?? '', AUTH_RIGHT_HINTS)
+    ) ?? components[1] ?? null;
+
+    let heroPanel: AuthHeroPanelData | null = null;
+    if (leftComp?.id && leftComp?.type) {
+      const bundle = getParagraphBundle(leftComp.type);
+      const leftParams = new DrupalJsonApiParams();
+      leftParams
+        .addInclude(['field_head_photo', 'field_head_photo.field_media_image'])
+        .addFields(`paragraph--${bundle}`, [
+          'id', 'drupal_internal__id', 'parent_id', 'field_title', 'field_description_long', 'field_head_photo',
+        ])
+        .addFields('media--image', ['name', 'field_media_image'])
+        .addFields('file--file', ['filename', 'uri']);
+
+      const leftRaw = await fetchWithLangFallback<Record<string, unknown>>(
+        `/jsonapi/paragraph/${bundle}/${leftComp.id}?${leftParams.getQueryString()}`,
+        effectiveLang,
+        defaultLang,
+      );
+      if (leftRaw.status === 200) {
+        const d = dataFormatter.deserialize(leftRaw.data) as any;
+        const rawAttrs = (leftRaw.data as any)?.data?.attributes ?? {};
+
+        let fotoUrl: string | null = null;
+        if (d?.field_head_photo) {
+          fotoUrl = nodehiveMediaUrl(d.field_head_photo, NODEHIVE_BASE_URL);
+        }
+
+        heroPanel = {
+          paragraphId: d?.id ?? null,
+          paragraphInternalId: rawAttrs.drupal_internal__id ?? null,
+          parentId: rawAttrs.parent_id ?? null,
+          bundle,
+          title: d?.field_title ?? null,
+          description: d?.field_description_long ?? null,
+          fotoUrl,
+        };
+      }
+    }
+
+    let formHeader: AuthFormHeaderData | null = null;
+    if (rightComp?.id && rightComp?.type) {
+      const bundle = getParagraphBundle(rightComp.type);
+      const rightParams = new DrupalJsonApiParams();
+      rightParams.addFields(`paragraph--${bundle}`, [
+        'id', 'drupal_internal__id', 'parent_id', 'field_title', 'field_subtitle',
+      ]);
+
+      const rightRaw = await fetchWithLangFallback<Record<string, unknown>>(
+        `/jsonapi/paragraph/${bundle}/${rightComp.id}?${rightParams.getQueryString()}`,
+        effectiveLang,
+        defaultLang,
+      );
+      if (rightRaw.status === 200) {
+        const d = dataFormatter.deserialize(rightRaw.data) as any;
+        const rawAttrs = (rightRaw.data as any)?.data?.attributes ?? {};
+        formHeader = {
+          paragraphId: d?.id ?? null,
+          paragraphInternalId: rawAttrs.drupal_internal__id ?? null,
+          parentId: rawAttrs.parent_id ?? null,
+          bundle,
+          title: d?.field_title ?? null,
+          subtitle: d?.field_subtitle ?? null,
+        };
+      }
+    }
+
+    return { pageId: page.id, pageInternalId, heroPanel, formHeader };
+  } catch (err) {
+    console.error('[Auth] Error getAuthPageData:', err);
   }
   return null;
 }
