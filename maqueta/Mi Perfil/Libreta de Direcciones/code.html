@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+
+<html lang="es">
+
+<head>
+  <meta charset="utf-8" />
+  <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+  <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;700&amp;display=swap"
+    rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght@100..700,0..1&amp;display=swap"
+    rel="stylesheet" />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
+    rel="stylesheet" />
+  <script id="tailwind-config">
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          colors: {
+            "primary": "#eb4763",
+            "background-light": "#f8f6f6",
+            "background-dark": "#211114",
+          },
+          fontFamily: {
+            "display": ["Be Vietnam Pro"], "display2":["Oddval Text", "semibold"]
+          },
+          borderRadius: { "DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px" },
+        },
+      },
+    }
+  </script>
+</head>
+
+<body class="bg-background-light dark:bg-background-dark font-display text-slate-900 dark:text-slate-100 antialiased">
+  <div class="flex h-screen overflow-hidden">
+    <!-- Sidebar -->
+     <aside class="w-64 bg-white dark:bg-slate-900 border-r border-slate-200 dark:border-slate-800 flex flex-col">
+            <div class="p-6 flex items-center gap-3">
+                <div class="h-10 w-10 rounded-full bg-primary/20 flex items-center justify-center text-primary">
+                    <span class="material-symbols-outlined">local_florist</span>
+                </div>
+                <div>
+                    <h1 class="text-sm font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Maggy
+                        Flowers</h1>
+                </div>
+            </div>
+            <div class="px-4 py-2">
+                <div
+                    class="flex items-center gap-3 p-3 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer group">
+                    <div class="h-10 w-10 rounded-full bg-cover bg-center border-2 border-primary/30"
+                        data-alt="Professional headshot portrait of Maggy Flowers"
+                        style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuBt13uSBbCYxN-pI2MFdF7kH0JuchS4nMxIoOxYtGtDsnuLameBFFbC2jkAlroBaCwBvKkcsUuRRkbnQQKxYal71lBFKPXr7glfgKCLvlJbviQrYaKHOzV_jYr5RdFOC2kn24htRTYMEHT0fBtyiLm8ScqQBvIUQA3koOrmsvyDNpLMTgQR869oXSAJ5Nee1fXeonefPGvy-Q6sWbPnuIBohItz7X_QlzZdBuV2K5Tbl-VK5gR66pYM_L6ZqsXSqB9-eGeQXloSVgM')">
+                    </div>
+                    <div class="flex flex-col">
+                        <p class="text-sm font-medium text-slate-900 dark:text-slate-100 leading-tight">Maggy Flowers
+                        </p>
+                        <p class="text-xs text-slate-500 dark:text-slate-400">Administrador</p>
+                    </div>
+                </div>
+            </div>
+            <nav class="flex-1 mt-4 px-2 space-y-1">
+
+              <a class="flex items-center gap-3 px-4 py-3 text-[#89656b] bg-primary/10 rounded-lg active-link"
+                  href="#">
+                  <span class="material-symbols-outlined">location_on</span>
+                  <span class="text-sm font-medium">Direcciones</span>
+              </a>
+
+              <a class="flex items-center gap-3 px-4 py-3 text-[#89656b] dark:text-slate-400 hover:text-primary dark:hover:text-primary transition-colors"
+                  href="#">
+                  <span class="material-symbols-outlined">shopping_bag</span>
+                  <span class="text-sm font-medium">Pedidos</span>
+              </a>
+
+              <a class="flex items-center gap-3 px-4 py-3 text-[#89656b] hover:text-primary dark:hover:text-primary transition-colors"
+                href="#">
+                  <span class="material-symbols-outlined">shopping_cart</span>
+                  <span class="text-sm font-medium">Mi carrito</span>
+              </a>
+
+              <a class="flex items-center gap-3 px-4 py-3 text-[#89656b] dark:text-slate-400 hover:text-primary dark:hover:text-primary transition-colors"
+                  href="#">
+                  <span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1">person</span>
+                  <span class="text-sm font-bold">Perfil</span>
+              </a>
+
+            </nav>
+            <div class="p-4 border-t border-slate-200 dark:border-slate-800">
+                <button
+                    class="flex items-center gap-3 px-4 py-3 w-full text-slate-500 dark:text-slate-400 hover:text-red-500 transition-colors">
+                    <span class="material-symbols-outlined">logout</span>
+                    <span class="text-sm font-medium">Cerrar Sesión</span>
+                </button>
+            </div>
+        </aside>
+    <!-- Main Content Area -->
+    <main class="flex-1 overflow-y-auto bg-background-light dark:bg-background-dark">
+      <div class="max-w-4xl mx-auto py-10 px-8">
+        <!-- Page Title -->
+        <div class="mb-8">
+          <h2 class="text-3xl font-display2 text-[#89656b] dark:text-slate-100">Crear nueva dirección de facturación</h2>
+          <p class="text-slate-500 dark:text-slate-400 mt-2">Complete los siguientes campos para registrar una nueva
+            dirección.</p>
+        </div>
+        <!-- Form Container -->
+        <div
+          class="bg-white dark:bg-slate-900/50 rounded-xl border border-slate-200 dark:border-slate-800 p-8 shadow-sm">
+          <form class="space-y-6">
+            <!-- Grid 1: Name & Last Name -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div class="flex flex-col gap-2">
+                <label class="text-sm font-semibold text-slate-700 dark:text-slate-300">Nombre</label>
+                <input
+                  class="w-full px-4 py-3 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-primary focus:border-primary outline-none transition-all"
+                  placeholder="Ej. Maria" type="text" />
+              </div>
+              <div class="flex flex-col gap-2">
+                <label class="text-sm font-semibold text-slate-700 dark:text-slate-300">Apellidos</label>
+                <input
+                  class="w-full px-4 py-3 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-primary focus:border-primary outline-none transition-all"
+                  placeholder="Ej. Rodriguez" type="text" />
+              </div>
+            </div>
+            <!-- Grid 2: ID & Phone -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div class="flex flex-col gap-2">
+                <label class="text-sm font-semibold text-slate-700 dark:text-slate-300">CI|Pasaporte</label>
+                <input
+                  class="w-full px-4 py-3 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-primary focus:border-primary outline-none transition-all"
+                  placeholder="Ej. 12345678" type="text" />
+              </div>
+              <div class="flex flex-col gap-2">
+                <label class="text-sm font-semibold text-slate-700 dark:text-slate-300">No de Telefono</label>
+                <input
+                  class="w-full px-4 py-3 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-primary focus:border-primary outline-none transition-all"
+                  placeholder="Ej. +53 50000000" type="tel" />
+              </div>
+            </div>
+            <!-- Address Row -->
+            <div class="flex flex-col gap-2">
+              <label class="text-sm font-semibold text-slate-700 dark:text-slate-300">Direccion</label>
+              <input
+                class="w-full px-4 py-3 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-primary focus:border-primary outline-none transition-all"
+                placeholder="Calle, No, Apto, Edificio" type="text" />
+            </div>
+            <!-- Grid 3: Country, State, Zip -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <div class="flex flex-col gap-2">
+                <label class="text-sm font-semibold text-slate-700 dark:text-slate-300">Pais</label>
+                <select
+                  class="w-full px-4 py-3 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-primary focus:border-primary outline-none transition-all appearance-none">
+                  <option value="">Seleccionar país</option>
+                  <option value="CU">Cuba</option>
+                  <option value="ES">España</option>
+                  <option value="MX">México</option>
+                  <option value="US">Estados Unidos</option>
+                </select>
+              </div>
+              <div class="flex flex-col gap-2">
+                <label class="text-sm font-semibold text-slate-700 dark:text-slate-300">Estado|Provincia</label>
+                <input
+                  class="w-full px-4 py-3 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-primary focus:border-primary outline-none transition-all"
+                  placeholder="Ej. La Habana" type="text" />
+              </div>
+              <div class="flex flex-col gap-2">
+                <label class="text-sm font-semibold text-slate-700 dark:text-slate-300">Codigo Portal</label>
+                <input
+                  class="w-full px-4 py-3 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-primary focus:border-primary outline-none transition-all"
+                  placeholder="Ej. 10400" type="text" />
+              </div>
+            </div>
+            <!-- Submit Button Section -->
+            <div class="pt-6 flex justify-end gap-4">
+              <button
+                class="px-6 py-3 rounded-lg border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-400 font-medium hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors"
+                type="button">
+                Cancelar
+              </button>
+              <button
+                class="px-8 py-3 rounded-lg bg-primary text-white font-bold shadow-lg shadow-primary/30 hover:bg-primary/90 transition-all active:scale-95"
+                type="submit">
+                Guardar dirección
+              </button>
+            </div>
+          </form>
+        </div>
+        <!-- Optional: Informational Card -->
+        <div class="mt-8 p-4 rounded-lg bg-primary/5 border border-primary/10 flex items-start gap-3">
+          <span class="material-symbols-outlined text-primary">info</span>
+          <p class="text-sm text-slate-600 dark:text-slate-400">
+            Esta dirección se utilizará por defecto para sus facturas de compra. Puede cambiarla en cualquier momento
+            desde su configuración de perfil.
+          </p>
+        </div>
+      </div>
+    </main>
+  </div>
+</body>
+
+</html>

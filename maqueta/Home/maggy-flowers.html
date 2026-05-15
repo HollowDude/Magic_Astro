@@ -1,0 +1,744 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Maggy Flowers – Donde las flores se convierten en magia</title>
+  <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --primary:    #eb4763;
+      --bg-soft:    #fdeff1;
+      --title:      #6d5157;
+      --body:       #89656b;
+      --btn-buy:    #ad808a;
+      --sage:       #8da399;
+      --sage-light: #e8f7ee;
+      --white:      #ffffff;
+      --f-display: 'Oddval', 'Georgia', serif;
+      --f-body:    'Be Vietnam Pro', sans-serif;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+    body {
+      font-family: var(--f-body);
+      color: var(--body);
+      background: var(--white);
+      overflow-x: hidden;
+    }
+    img { display: block; width: 100%; object-fit: cover; }
+    a { text-decoration: none; color: inherit; }
+
+    /* ══ NAVBAR ══ */
+    .navbar {
+      position: sticky; top: 0; z-index: 100;
+      background: var(--white);
+      box-shadow: 0 1px 12px rgba(0,0,0,.06);
+      display: flex; align-items: center;
+      padding: 0 80px; height: 72px; gap: 40px;
+    }
+    .nav-logo {
+      display: flex; align-items: center; gap: 10px;
+      font-family: var(--f-body); font-weight: 600; font-size: 18px;
+      color: var(--title); white-space: nowrap;
+    }
+    .nav-logo svg { width: 36px; height: 36px; flex-shrink: 0; }
+    .nav-links {
+      display: flex; gap: 32px; list-style: none;
+      font-size: 15px; font-weight: 500; color: var(--body);
+    }
+    .nav-links li a:hover { color: var(--title); }
+    .nav-links li a.active { color: var(--primary); }
+    .nav-right { margin-left: auto; display: flex; align-items: center; gap: 16px; }
+    .search-wrap { position: relative; display: flex; align-items: center; }
+    .search-wrap input {
+      width: 0; opacity: 0;
+      border: 2px solid var(--primary); border-radius: 999px;
+      padding: 6px 38px 6px 16px;
+      font-family: var(--f-body); font-size: 14px; color: var(--title);
+      outline: none;
+      transition: width .35s ease, opacity .35s ease;
+      background: var(--white);
+    }
+    .search-wrap:focus-within input, .search-wrap.open input { width: 220px; opacity: 1; }
+    .search-icon {
+      position: absolute; right: 8px;
+      color: var(--primary); cursor: pointer;
+      z-index: 2; line-height: 0;
+    }
+    .nav-icon-btn {
+      background: none; border: none; cursor: pointer;
+      color: var(--body); position: relative;
+      display: flex; align-items: center;
+    }
+    .nav-icon-btn:hover { color: var(--primary); }
+    .cart-badge {
+      position: absolute; top: -6px; right: -6px;
+      background: var(--primary); color: var(--white);
+      font-size: 10px; font-weight: 600;
+      width: 16px; height: 16px; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+    }
+
+    /* ══════════════════════════════════════════════════════════════
+       HERO — background crossfade, content stays fixed
+    ══════════════════════════════════════════════════════════════ */
+    .hero {
+      position: relative; height: 560px; overflow: hidden;
+    }
+    /* Background slides */
+    .hero-bg { position: absolute; inset: 0; }
+    .hero-bg-slide {
+      position: absolute; inset: 0;
+      background-size: cover; background-position: center;
+      opacity: 0;
+      transition: opacity 1.4s ease;
+    }
+    .hero-bg-slide.active { opacity: 1; }
+
+    .hero-overlay {
+      position: absolute; inset: 0;
+      background: linear-gradient(to right, rgba(109,81,87,.65) 40%, rgba(109,81,87,.2));
+      pointer-events: none; z-index: 1;
+    }
+    /* Static content — always on top */
+    .hero-content {
+      position: absolute; inset: 0; z-index: 2;
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      text-align: center; padding: 0 120px; gap: 16px;
+      color: var(--white);
+    }
+    .hero-content h1 {
+      font-family: var(--f-display);
+      font-size: 62px; font-weight: 600; line-height: 1.1;
+      letter-spacing: -.5px;
+    }
+    .hero-content .hero-sub { font-size: 26px; font-weight: 500; }
+    .hero-content .hero-desc {
+      font-size: 20px; font-weight: 400; line-height: 1.6;
+      max-width: 600px; opacity: .92;
+    }
+    .hero-buttons { display: flex; gap: 16px; margin-top: 8px; }
+    .btn-primary {
+      background: var(--primary); color: var(--white);
+      border: none; border-radius: 999px;
+      padding: 14px 34px; font-family: var(--f-body);
+      font-size: 18px; font-weight: 500; cursor: pointer;
+      transition: transform .2s, box-shadow .2s;
+    }
+    .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(235,71,99,.35); }
+    .btn-secondary {
+      background: var(--white); color: var(--title);
+      border: 2.5px solid var(--white); border-radius: 999px;
+      padding: 14px 34px; font-family: var(--f-body);
+      font-size: 18px; font-weight: 500; cursor: pointer;
+      transition: transform .2s, background .2s;
+    }
+    .btn-secondary:hover { background: rgba(255,255,255,.88); transform: translateY(-2px); }
+    .hero-dots {
+      position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%);
+      display: flex; gap: 8px; z-index: 3;
+    }
+    .hero-dot {
+      width: 10px; height: 10px; border-radius: 50%;
+      background: rgba(255,255,255,.5); cursor: pointer;
+      border: none; transition: background .3s, transform .3s;
+    }
+    .hero-dot.active { background: var(--white); transform: scale(1.25); }
+
+    /* ══ SECTIONS ══ */
+    .section { padding: 72px 120px; }
+    .section-header { display: flex; align-items: flex-end; justify-content: space-between; margin-bottom: 40px; }
+    .section-header-left { display: flex; flex-direction: column; gap: 4px; }
+    .section-title {
+      font-family: var(--f-display);
+      font-size: 52px; font-weight: 600; color: var(--title); line-height: 1.1;
+    }
+    .section-sub { font-size: 22px; font-weight: 400; color: var(--body); }
+    .link-primary {
+      font-family: var(--f-body); font-size: 18px; font-weight: 600;
+      color: var(--primary); cursor: pointer;
+      border-bottom: 1.5px solid transparent; transition: border-color .2s;
+    }
+    .link-primary:hover { border-color: var(--primary); }
+
+    /* ══════════════════════════════════════════════════════════════
+       CATEGORÍAS — taller images
+    ══════════════════════════════════════════════════════════════ */
+    .cats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 24px; }
+    .cat-card { cursor: pointer; }
+    .cat-card img {
+      height: 380px;                /* ← taller */
+      border-radius: 18px;
+      transition: transform .25s, box-shadow .25s;
+    }
+    .cat-card:hover img { transform: translateY(-6px); box-shadow: 0 12px 32px rgba(109,81,87,.18); }
+    .cat-card:hover .cat-card-name { color: var(--primary); }
+    .cat-card-name {
+      font-family: var(--f-body); font-size: 18px; font-weight: 600;
+      color: var(--title); margin-top: 12px; transition: color .25s;
+    }
+
+    /* ══════════════════════════════════════════════════════════════
+       PRODUCTOS — taller images, price below name, button bottom-right
+    ══════════════════════════════════════════════════════════════ */
+    .products-header { display: flex; align-items: center; gap: 24px; margin-bottom: 40px; }
+    .products-header .section-title { flex-shrink: 0; }
+    .products-rule { flex: 1; height: 2px; background: var(--primary); border-radius: 2px; }
+    .products-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 24px; }
+
+    .prod-card {
+      background: var(--bg-soft); border-radius: 18px; padding: 12px 12px 16px;
+      display: flex; flex-direction: column; gap: 8px;
+      transition: box-shadow .25s, transform .25s; cursor: pointer;
+    }
+    .prod-card:hover { transform: translateY(-6px); box-shadow: 0 14px 36px rgba(109,81,87,.16); }
+    .prod-card:hover .btn-buy { background: var(--primary); }
+
+    .prod-img-wrap { border-radius: 12px; overflow: hidden; }
+    .prod-img-wrap img { height: 280px; }        /* ← taller */
+
+    .prod-name {
+      font-family: var(--f-body); font-size: 17px; font-weight: 600; color: var(--title);
+      margin-top: 4px;
+    }
+    .prod-price {
+      font-size: 18px; font-weight: 600; color: var(--primary);
+    }
+    .prod-btn-row {
+      display: flex; justify-content: flex-end; margin-top: auto;
+    }
+    .btn-buy {
+      background: var(--btn-buy); color: var(--white);
+      border: none; border-radius: 999px;
+      padding: 10px 20px; font-family: var(--f-body);
+      font-size: 14px; font-weight: 500; cursor: pointer;
+      white-space: nowrap; transition: background .25s, transform .2s;
+    }
+    .btn-buy:hover { transform: translateY(-1px); }
+
+    /* ══ PERSONALIZACIÓN & EVENTOS ══ */
+    .pers-section {
+      background: var(--bg-soft); padding: 80px;
+      display: flex; align-items: center; gap: 80px;
+    }
+    .pers-img-wrap { position: relative; flex-shrink: 0; width: 440px; height: 360px; }
+    .pers-frame {
+      position: absolute; top: 0; right: 0;
+      width: 400px; height: 330px;
+      border: 2.5px solid var(--primary); border-radius: 18px; z-index: 1;
+    }
+    .pers-photo {
+      position: absolute; bottom: 0; left: 0;
+      width: 400px; height: 330px;
+      border-radius: 18px; overflow: hidden; z-index: 2;
+    }
+    .pers-photo img { height: 100%; }
+    .pers-text { flex: 1; }
+    .pers-text h2 {
+      font-family: var(--f-display);
+      font-size: 52px; font-weight: 600; color: var(--title);
+      line-height: 1.15; margin-bottom: 18px;
+    }
+    .pers-text p { font-size: 22px; line-height: 1.65; color: var(--body); margin-bottom: 28px; }
+
+    /* ══════════════════════════════════════════════════════════════
+       SERVICIOS CAROUSEL — peek layout, centered, 3 visible
+    ══════════════════════════════════════════════════════════════ */
+    .services-section { padding: 80px 0; }
+
+    .services-header {
+      text-align: center;
+      padding: 0 80px;
+      margin-bottom: 48px;
+    }
+    .services-label {
+      font-family: var(--f-body); font-size: 18px; font-weight: 600;
+      color: var(--primary); margin-bottom: 8px;
+    }
+    .services-title {
+      font-family: var(--f-display); font-size: 52px; font-weight: 600;
+      color: var(--title); line-height: 1.1; margin-bottom: 8px;
+    }
+    .services-sub { font-size: 20px; color: var(--body); }
+
+    /* Carousel viewport — full width, clips the track */
+    .services-carousel-wrap {
+      position: relative;
+      overflow: hidden;
+      width: 950px;
+      max-width: 100%;
+      margin: 0 auto;
+    }
+    .services-track {
+      display: flex;
+      gap: 24px;
+      transition: transform .5s cubic-bezier(.4,0,.2,1);
+    }
+
+    .srv-card {
+      width: 520px;
+      flex-shrink: 0;
+      border-radius: 18px; 
+      overflow: hidden;
+      background: #f9f9f9; /* Un blanco un tilín gris */
+      box-shadow: 0 4px 20px rgba(109,81,87,.08);
+      transition: transform .3s ease;
+    }
+    .srv-card img { height: 400px; } /* Más espacio hacia abajo */
+    .srv-card-body { padding: 20px 24px 24px; }
+    .srv-card-body h3 {
+      font-family: var(--f-body); font-size: 19px; font-weight: 600;
+      color: var(--title); margin-bottom: 8px;
+    }
+    .srv-card-body p { font-size: 16px; color: var(--body); line-height: 1.6; }
+
+    /* Arrows — absolute inside the carousel wrap, at the card edges */
+    .srv-arrow {
+      position: absolute; top: 50%; transform: translateY(-50%);
+      width: 44px; height: 44px; border-radius: 50%;
+      background: rgba(255,255,255,.95); border: none;
+      box-shadow: 0 2px 16px rgba(0,0,0,.18);
+      cursor: pointer; z-index: 5;
+      display: flex; align-items: center; justify-content: center;
+      color: var(--title); font-size: 22px;
+      transition: background .2s, box-shadow .2s;
+    }
+    .srv-arrow:hover { background: var(--white); box-shadow: 0 4px 20px rgba(0,0,0,.22); }
+    /* Positions set in JS based on viewport size */
+
+    /* Dots */
+    .srv-dots { display: flex; gap: 8px; justify-content: center; margin-top: 28px; }
+    .srv-dot {
+      width: 12px; height: 12px; border-radius: 50%;
+      background: var(--bg-soft); border: 2px solid var(--btn-buy);
+      cursor: pointer; transition: background .3s;
+    }
+    .srv-dot.active { background: var(--primary); border-color: var(--primary); }
+
+    /* ══ TESTIMONIALS ══ */
+    .testimonials { background: var(--sage); padding: 72px 80px; }
+    .test-header {
+      display: flex; align-items: flex-start; justify-content: space-between;
+      margin-bottom: 48px;
+    }
+    .test-header-left h2 {
+      font-family: var(--f-display);
+      font-size: 48px; font-weight: 600; color: var(--white); line-height: 1.1;
+    }
+    .test-header-left p { font-size: 20px; color: rgba(255,255,255,.85); margin-top: 6px; }
+    .test-nav { display: flex; gap: 12px; }
+    .test-nav-btn {
+      width: 44px; height: 44px; border-radius: 50%;
+      background: rgba(255,255,255,.25); border: none;
+      display: flex; align-items: center; justify-content: center;
+      cursor: pointer; color: var(--white); font-size: 18px;
+      transition: background .2s;
+    }
+    .test-nav-btn:hover { background: rgba(255,255,255,.4); }
+    .test-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; }
+    .test-card {
+      background: var(--white); border-radius: 18px;
+      padding: 28px; display: flex; flex-direction: column; gap: 12px;
+    }
+    .stars { display: flex; gap: 4px; }
+    .star { color: #f5a623; font-size: 20px; }
+    .test-quote { font-size: 15px; line-height: 1.65; color: var(--body); }
+    .test-author { text-align: right; }
+    .test-author strong { display: block; font-size: 16px; font-weight: 600; color: var(--title); }
+    .test-author span { font-size: 13px; font-weight: 400; color: var(--btn-buy); }
+
+    /* ══ FOOTER ══ */
+    footer {
+      background: var(--bg-soft); padding: 48px 80px;
+      display: flex; justify-content: space-between; align-items: center;
+      font-size: 14px; color: var(--body);
+    }
+    .footer-logo { display: flex; align-items: center; gap: 8px; font-weight: 600; font-size: 16px; color: var(--title); }
+    footer a { color: var(--body); }
+    footer a:hover { color: var(--primary); }
+  </style>
+</head>
+<body>
+
+<!-- ═══════════════════ NAVBAR ═══════════════════ -->
+<nav class="navbar">
+  <a href="#" class="nav-logo">
+    <svg viewBox="0 0 36 36" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <circle cx="18" cy="18" r="5" fill="#eb4763"/>
+      <ellipse cx="18" cy="9"  rx="4" ry="6" fill="#eb4763" opacity=".75"/>
+      <ellipse cx="18" cy="27" rx="4" ry="6" fill="#eb4763" opacity=".75"/>
+      <ellipse cx="9"  cy="18" rx="6" ry="4" fill="#eb4763" opacity=".6"/>
+      <ellipse cx="27" cy="18" rx="6" ry="4" fill="#eb4763" opacity=".6"/>
+    </svg>
+    Maggy Flowers
+  </a>
+  <ul class="nav-links">
+    <li><a href="#">Tienda</a></li>
+    <li><a href="#">Cursos</a></li>
+    <li><a href="#">Portafolio</a></li>
+    <li><a href="#" class="active">Sobre Nosotros</a></li>
+  </ul>
+  <div class="nav-right">
+    <div class="search-wrap" id="searchWrap">
+      <input type="text" placeholder="Buscar flores..." id="searchInput" />
+      <button class="search-icon nav-icon-btn" onclick="toggleSearch()" aria-label="Buscar">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      </button>
+    </div>
+    <button class="nav-icon-btn" aria-label="Perfil">
+      <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+    </button>
+    <button class="nav-icon-btn" aria-label="Carrito" style="position:relative">
+      <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>
+      <span class="cart-badge">2</span>
+    </button>
+  </div>
+</nav>
+
+<!-- ═══════════════════ HERO — crossfade backgrounds, fixed content ═══════════════════ -->
+<section class="hero">
+  <!-- Background images only — they crossfade -->
+  <div class="hero-bg" id="heroBg">
+    <div class="hero-bg-slide active"
+         style="background-image: url('https://images.unsplash.com/photo-1490750967868-88df5691166e?w=1600&q=80')"></div>
+    <div class="hero-bg-slide"
+         style="background-image: url('https://images.unsplash.com/photo-1519378058457-4c29a0a2efac?w=1600&q=80')"></div>
+    <div class="hero-bg-slide"
+         style="background-image: url('https://images.unsplash.com/photo-1561181286-d3fee7d55364?w=1600&q=80')"></div>
+  </div>
+
+  <!-- Overlay always on top of images -->
+  <div class="hero-overlay"></div>
+
+  <!-- Static content — never moves -->
+  <div class="hero-content">
+    <h1>Bienvenida a Maggy Flowers</h1>
+    <p class="hero-sub">Donde las flores se convierten en magia</p>
+    <p class="hero-desc">Creamos diseños florales artificiales y naturales para regalar, decorar y celebrar momentos inolvidables. Y además, te enseñamos a hacer lo mismo desde cero, con confianza, creatividad y propósito.</p>
+    <div class="hero-buttons">
+      <button class="btn-primary">Ver ofertas</button>
+      <button class="btn-secondary">Explorar cursos</button>
+    </div>
+  </div>
+
+  <!-- Dots -->
+  <div class="hero-dots" id="heroDots">
+    <button class="hero-dot active" onclick="goHero(0)"></button>
+    <button class="hero-dot" onclick="goHero(1)"></button>
+    <button class="hero-dot" onclick="goHero(2)"></button>
+  </div>
+</section>
+
+<!-- ═══════════════════ CATEGORÍAS DESTACADAS ═══════════════════ -->
+<section class="section">
+  <div class="section-header">
+    <div class="section-header-left">
+      <h2 class="section-title">Categorías Destacadas</h2>
+      <p class="section-sub">Encuentra el detalle perfecto para cada momento...</p>
+    </div>
+    <a href="#" class="link-primary">Ver todo</a>
+  </div>
+  <div class="cats-grid">
+    <div class="cat-card">
+      <img src="https://images.unsplash.com/photo-1562157873-818bc0726f68?w=600&q=80" alt="Ramos" />
+      <p class="cat-card-name">Ramos</p>
+    </div>
+    <div class="cat-card">
+      <img src="https://images.unsplash.com/photo-1519378058457-4c29a0a2efac?w=600&q=80" alt="Arreglos especiales" />
+      <p class="cat-card-name">Arreglos especiales</p>
+    </div>
+    <div class="cat-card">
+      <img src="https://images.unsplash.com/photo-1490750967868-88df5691166e?w=600&q=80" alt="Personalizaciones" />
+      <p class="cat-card-name">Personalizaciones</p>
+    </div>
+    <div class="cat-card">
+      <img src="https://images.unsplash.com/photo-1561181286-d3fee7d55364?w=600&q=80" alt="Ofertas" />
+      <p class="cat-card-name">Ofertas</p>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════ PRODUCTOS DESTACADOS ═══════════════════ -->
+<section class="section" style="padding-top:0">
+  <div class="products-header">
+    <h2 class="section-title">Productos destacados</h2>
+    <div class="products-rule"></div>
+  </div>
+  <div class="products-grid">
+    <div class="prod-card">
+      <div class="prod-img-wrap">
+        <img src="https://images.unsplash.com/photo-1508610048659-a06b669e3321?w=600&q=80" alt="Ramo Primavera" />
+      </div>
+      <p class="prod-name">Ramo Primavera</p>
+      <p class="prod-price">$45.00</p>
+      <div class="prod-btn-row"><button class="btn-buy">Comprar</button></div>
+    </div>
+    <div class="prod-card">
+      <div class="prod-img-wrap">
+        <img src="https://images.unsplash.com/photo-1519378058457-4c29a0a2efac?w=600&q=80" alt="Rosas clásicas" />
+      </div>
+      <p class="prod-name">Rosas clásicas</p>
+      <p class="prod-price">$65.00</p>
+      <div class="prod-btn-row"><button class="btn-buy">Comprar</button></div>
+    </div>
+    <div class="prod-card">
+      <div class="prod-img-wrap">
+        <img src="https://images.unsplash.com/photo-1487530811015-780780169993?w=600&q=80" alt="Arreglo Silvestre" />
+      </div>
+      <p class="prod-name">Arreglo Silvestre</p>
+      <p class="prod-price">$38.00</p>
+      <div class="prod-btn-row"><button class="btn-buy">Comprar</button></div>
+    </div>
+    <div class="prod-card">
+      <div class="prod-img-wrap">
+        <img src="https://images.unsplash.com/photo-1548460090-73a49e0eac21?w=600&q=80" alt="Lirios Blancos" />
+      </div>
+      <p class="prod-name">Lirios Blancos</p>
+      <p class="prod-price">$52.00</p>
+      <div class="prod-btn-row"><button class="btn-buy">Comprar</button></div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════ PERSONALIZACIÓN & EVENTOS ═══════════════════ -->
+<section class="pers-section">
+  <div class="pers-img-wrap">
+    <div class="pers-frame"></div>
+    <div class="pers-photo">
+      <img src="https://images.unsplash.com/photo-1561181286-d3fee7d55364?w=800&q=80" alt="Evento floral" />
+    </div>
+  </div>
+  <div class="pers-text">
+    <h2>Personalizaciones<br>& Eventos</h2>
+    <p>Hacemos realidad tus sueños florales. Diseñamos arreglos únicos adaptados a tus gustos y necesidades, ideales para bodas, celebraciones, eventos corporativos o regalos especiales. Cuéntanos tu idea y nosotros pondremos la magia.</p>
+    <button class="btn-primary">Contáctenos</button>
+  </div>
+</section>
+
+<!-- ═══════════════════ SERVICIOS CAROUSEL — peek, centered ═══════════════════ -->
+<section class="services-section">
+  <div class="services-header">
+    <p class="services-label">Experiencias &amp; Servicios</p>
+    <h2 class="services-title">Todo lo que ofrecemos</h2>
+    <p class="services-sub">Descubre como podemos ayudarte a florecer en cada ocasión especial..</p>
+  </div>
+
+  <div class="services-outer" style="position: relative; width: 950px; max-width: 100%; margin: 0 auto;">
+    <button class="srv-arrow" id="srvArrowLeft"  onclick="moveSrv(-1)" aria-label="Anterior">&#8249;</button>
+    <div class="services-carousel-wrap" id="srvWrap">
+      <div class="services-track" id="srvTrack">
+        <div class="srv-card">
+          <img src="https://images.unsplash.com/photo-1490750967868-88df5691166e?w=800&q=80" alt="Ramos artesanales" />
+          <div class="srv-card-body">
+            <h3>Ramos artesanales</h3>
+            <p>Diseños únicos elaborados a mano con flores frescas o artificiales de la más alta calidad.</p>
+          </div>
+        </div>
+        <div class="srv-card">
+          <img src="https://images.unsplash.com/photo-1519225421980-715cb0215aed?w=800&q=80" alt="Decoración de eventos" />
+          <div class="srv-card-body">
+            <h3>Decoración de eventos</h3>
+            <p>Decoración integral de eventos y bodas, creando atmósferas inolvidables y personalizadas.</p>
+          </div>
+        </div>
+        <div class="srv-card">
+          <img src="https://images.unsplash.com/photo-1562157873-818bc0726f68?w=800&q=80" alt="Cursos de floral design" />
+          <div class="srv-card-body">
+            <h3>Cursos de diseño floral</h3>
+            <p>Aprende desde cero a crear arreglos florales increíbles con nuestros cursos online y presenciales.</p>
+          </div>
+        </div>
+        <div class="srv-card">
+          <img src="https://images.unsplash.com/photo-1508610048659-a06b669e3321?w=800&q=80" alt="Regalos personalizados" />
+          <div class="srv-card-body">
+            <h3>Regalos personalizados</h3>
+            <p>Creamos el regalo floral perfecto para cualquier ocasión con un toque único y personal.</p>
+          </div>
+        </div>
+        <div class="srv-card">
+          <img src="https://images.unsplash.com/photo-1548460090-73a49e0eac21?w=800&q=80" alt="Suscripciones florales" />
+          <div class="srv-card-body">
+            <h3>Suscripciones florales</h3>
+            <p>Recibe flores frescas en tu hogar u oficina de forma regular. ¡Tu espacio siempre florido!</p>
+          </div>
+        </div>
+      </div>
+    </div>
+    <button class="srv-arrow" id="srvArrowRight" onclick="moveSrv(1)"  aria-label="Siguiente">&#8250;</button>
+  </div>
+
+  <div class="srv-dots" id="srvDots">
+    <button class="srv-dot active" onclick="goSrv(0)"></button>
+    <button class="srv-dot" onclick="goSrv(1)"></button>
+    <button class="srv-dot" onclick="goSrv(2)"></button>
+    <button class="srv-dot" onclick="goSrv(3)"></button>
+    <button class="srv-dot" onclick="goSrv(4)"></button>
+  </div>
+</section>
+
+<!-- ═══════════════════ TESTIMONIALS ═══════════════════ -->
+<section class="testimonials">
+  <div class="test-header">
+    <div class="test-header-left">
+      <h2>Lo que dicen nuestros clientes</h2>
+      <p>Sus palabras son nuestra mejor inspiración.</p>
+    </div>
+    <div class="test-nav">
+      <button class="test-nav-btn" onclick="moveTest(-1)" aria-label="Anterior">&#8249;</button>
+      <button class="test-nav-btn" onclick="moveTest(1)"  aria-label="Siguiente">&#8250;</button>
+    </div>
+  </div>
+  <div class="test-grid" id="testGrid">
+    <div class="test-card">
+      <div class="stars">★★★★★</div>
+      <p class="test-quote">"Los arreglos para mi boda superaron todas mis expectativas. Maggy capturó exactamente la esencia que queríamos transmitir. ¡Simplemente mágico!"</p>
+      <div class="test-author"><strong>Sofía Ramírez</strong><span>Novia feliz</span></div>
+    </div>
+    <div class="test-card">
+      <div class="stars">★★★★★</div>
+      <p class="test-quote">"El curso online de diseño floral es increíble. Aprendí técnicas que nunca imaginé y ahora puedo hacer mis propios arreglos en casa. ¡Muy recomendado!"</p>
+      <div class="test-author"><strong>Camila Torres</strong><span>Alumna de la Academia</span></div>
+    </div>
+    <div class="test-card">
+      <div class="stars">★★★★★</div>
+      <p class="test-quote">"Compré un ramo para el aniversario de mis padres y quedaron fascinados. La frescura y la combinación de colores fueron perfectas. Gracias Maggy."</p>
+      <div class="test-author"><strong>Alejandro M.</strong><span>Cliente frecuente</span></div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════ FOOTER ═══════════════════ -->
+<footer>
+  <div class="footer-logo">
+    <svg viewBox="0 0 36 36" width="28" height="28" fill="none">
+      <circle cx="18" cy="18" r="5" fill="#eb4763"/>
+      <ellipse cx="18" cy="9"  rx="4" ry="6" fill="#eb4763" opacity=".75"/>
+      <ellipse cx="18" cy="27" rx="4" ry="6" fill="#eb4763" opacity=".75"/>
+      <ellipse cx="9"  cy="18" rx="6" ry="4" fill="#eb4763" opacity=".6"/>
+      <ellipse cx="27" cy="18" rx="6" ry="4" fill="#eb4763" opacity=".6"/>
+    </svg>
+    Maggy Flowers
+  </div>
+  <div style="display:flex;gap:32px">
+    <a href="#">Tienda</a>
+    <a href="#">Cursos</a>
+    <a href="#">Portafolio</a>
+    <a href="#">Sobre Nosotros</a>
+    <a href="#">Contacto</a>
+  </div>
+  <p>© 2026 Maggy Flowers. Todos los derechos reservados.</p>
+</footer>
+
+<script>
+/* ═══════════════════════════════════════════
+   HERO — crossfade background images only
+═══════════════════════════════════════════ */
+/* ═══════════════════════════════════════════
+   HERO — crossfade background images only
+═══════════════════════════════════════════ */
+let heroIdx = 0;
+const heroBgSlides = document.querySelectorAll('.hero-bg-slide');
+const heroDotBtns  = document.querySelectorAll('.hero-dot');
+
+function goHero(n) {
+  heroBgSlides[heroIdx].classList.remove('active');
+  heroDotBtns[heroIdx].classList.remove('active');
+  heroIdx = n;
+  heroBgSlides[heroIdx].classList.add('active');
+  heroDotBtns[heroIdx].classList.add('active');
+}
+
+setInterval(() => goHero((heroIdx + 1) % heroBgSlides.length), 5000);
+
+/* ═══════════════════════════════════════════
+   SEARCH EXPAND
+═══════════════════════════════════════════ */
+function toggleSearch() {
+  const wrap = document.getElementById('searchWrap');
+  wrap.classList.toggle('open');
+  if (wrap.classList.contains('open')) document.getElementById('searchInput').focus();
+}
+
+/* ═══════════════════════════════════════════
+   SERVICES CAROUSEL — peek layout
+   Center card active, side cards partially visible
+═══════════════════════════════════════════ */
+const CARD_W = 520;
+const GAP    = 24;
+const TOTAL  = 5;
+
+let srvIdx = 1; // Start at second card
+const srvTrack     = document.getElementById('srvTrack');
+const srvWrap      = document.getElementById('srvWrap');
+const srvDotBtns   = document.querySelectorAll('.srv-dot');
+const srvArrowLeft = document.getElementById('srvArrowLeft');
+const srvArrowRight= document.getElementById('srvArrowRight');
+
+function positionSrvArrows() {
+  const offset = -30; // Distancia hacia afuera
+
+  // Posicionar flechas relativas a .services-outer
+  srvArrowLeft.style.left  = offset + 'px';
+  srvArrowRight.style.left = 'auto';
+  srvArrowRight.style.right = offset + 'px';
+}
+
+function updateSrv() {
+  const containerWidth = srvWrap.offsetWidth;
+  
+  // Calculate translation: Center of container - Center of active card
+  const activeCardCenter = (srvIdx * (CARD_W + GAP)) + (CARD_W / 2);
+  const translateX = (containerWidth / 2) - activeCardCenter;
+
+  srvTrack.style.transform = `translateX(${translateX}px)`;
+  srvDotBtns.forEach((d, i) => d.classList.toggle('active', i === srvIdx));
+}
+
+function moveSrv(dir) {
+  srvIdx = (srvIdx + dir + TOTAL) % TOTAL;
+  updateSrv();
+}
+function goSrv(n) { srvIdx = n; updateSrv(); }
+
+// Init
+window.addEventListener('resize', () => { positionSrvArrows(); updateSrv(); });
+window.addEventListener('load', () => { positionSrvArrows(); updateSrv(); });
+positionSrvArrows();
+updateSrv();
+
+/* ═══════════════════════════════════════════
+   TESTIMONIALS
+═══════════════════════════════════════════ */
+const allTestimonials = [
+  { stars: 5, quote: '"Los arreglos para mi boda superaron todas mis expectativas. Maggy capturó exactamente la esencia que queríamos transmitir. ¡Simplemente mágico!"', name: 'Sofía Ramírez', role: 'Novia feliz' },
+  { stars: 5, quote: '"El curso online de diseño floral es increíble. Aprendí técnicas que nunca imaginé y ahora puedo hacer mis propios arreglos en casa. ¡Muy recomendado!"', name: 'Camila Torres', role: 'Alumna de la Academia' },
+  { stars: 5, quote: '"Compré un ramo para el aniversario de mis padres y quedaron fascinados. La frescura y la combinación de colores fueron perfectas. Gracias Maggy."', name: 'Alejandro M.', role: 'Cliente frecuente' },
+  { stars: 5, quote: '"Cada vez que necesito un regalo especial, recurro a Maggy Flowers. ¡Nunca me han fallado! Los arreglos son únicos y el servicio es excelente."', name: 'María López', role: 'Cliente fiel' },
+  { stars: 5, quote: '"El taller presencial fue una experiencia increíble. Aprendí tanto en un solo día. ¡Ya quiero el siguiente curso!"', name: 'Laura Vega', role: 'Alumna presencial' },
+  { stars: 5, quote: '"Decoraron mi quinceañera de una forma absolutamente hermosa. Todo el mundo preguntó quién lo hizo. ¡Gracias de corazón!"', name: 'Valentina Cruz', role: 'Quinceañera feliz' },
+];
+let testPage = 0;
+const testGrid = document.getElementById('testGrid');
+
+function renderTest() {
+  const start = testPage * 3;
+  const slice = allTestimonials.slice(start, start + 3);
+  testGrid.innerHTML = slice.map(t => `
+    <div class="test-card">
+      <div class="stars">${'★'.repeat(t.stars)}</div>
+      <p class="test-quote">${t.quote}</p>
+      <div class="test-author"><strong>${t.name}</strong><span>${t.role}</span></div>
+    </div>
+  `).join('');
+}
+function moveTest(dir) {
+  const maxPage = Math.floor((allTestimonials.length - 1) / 3);
+  testPage = Math.max(0, Math.min(maxPage, testPage + dir));
+  renderTest();
+}
+</script>
+</body>
+</html>

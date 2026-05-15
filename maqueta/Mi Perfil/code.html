@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <title>Maggy Flowers - Mi Perfil</title>
+    <link href="https://fonts.googleapis.com" rel="preconnect" />
+    <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect" />
+    <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;700;900&amp;display=swap"
+        rel="stylesheet" />
+    <link
+        href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
+        rel="stylesheet" />
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#eb4763",
+                        "primary-dark": "#d63a54",
+                        "sage": "#9dc183",
+                        "sage-dark": "#7fa565",
+                        "background-light": "#f8f6f6",
+                        "background-dark": "#211114",
+                        "neutral-surface": "#ffffff",
+                        "neutral-border": "#e5dcdd",
+                        "text-main": "#181112",
+                        "text-muted": "#886369",
+                    },
+                    fontFamily: {
+                        "display": ["Be Vietnam Pro", "sans-serif"], "display2":["Oddval Text", "semibold"]
+                    },
+                    borderRadius: { "DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px" },
+                },
+            },
+        }
+    </script>
+</head>
+
+<body
+    class="bg-background-light dark:bg-background-dark font-display antialiased text-text-main h-screen overflow-hidden flex flex-col">
+
+    <main class="flex-1 overflow-y-auto">
+        <div
+            class="max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-8 md:py-10 flex flex-col lg:flex-row gap-8 lg:gap-12">
+            <aside class="w-64 bg-white dark:bg-slate-900 border-r border-slate-200 dark:border-slate-800 flex flex-col">
+            <div class="p-6 flex items-center gap-3">
+                <div class="h-10 w-10 rounded-full bg-primary/20 flex items-center justify-center text-primary">
+                    <span class="material-symbols-outlined">local_florist</span>
+                </div>
+                <div>
+                    <h1 class="text-sm font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Maggy
+                        Flowers</h1>
+                </div>
+            </div>
+            <div class="px-4 py-2">
+                <div
+                    class="flex items-center gap-3 p-3 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer group">
+                    <div class="h-10 w-10 rounded-full bg-cover bg-center border-2 border-primary/30"
+                        data-alt="Professional headshot portrait of Maggy Flowers"
+                        style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuBt13uSBbCYxN-pI2MFdF7kH0JuchS4nMxIoOxYtGtDsnuLameBFFbC2jkAlroBaCwBvKkcsUuRRkbnQQKxYal71lBFKPXr7glfgKCLvlJbviQrYaKHOzV_jYr5RdFOC2kn24htRTYMEHT0fBtyiLm8ScqQBvIUQA3koOrmsvyDNpLMTgQR869oXSAJ5Nee1fXeonefPGvy-Q6sWbPnuIBohItz7X_QlzZdBuV2K5Tbl-VK5gR66pYM_L6ZqsXSqB9-eGeQXloSVgM')">
+                    </div>
+                    <div class="flex flex-col">
+                        <p class="text-sm font-medium text-slate-900 dark:text-slate-100 leading-tight">Maggy Flowers
+                        </p>
+                        <p class="text-xs text-slate-500 dark:text-slate-400">Administrador</p>
+                    </div>
+                </div>
+            </div>
+            <nav class="flex-1 mt-4 px-2 space-y-1">
+
+                <a class="flex items-center gap-3 px-4 py-3 text-[#89656b] dark:text-slate-400 hover:text-primary dark:hover:text-primary transition-colors"
+                    href="#">
+                    <span class="material-symbols-outlined">location_on</span>
+                    <span class="text-sm font-medium">Direcciones</span>
+                </a>
+  
+                <a class="flex items-center gap-3 px-4 py-3 text-[#89656b] dark:text-slate-400 hover:text-primary dark:hover:text-primary transition-colors"
+                    href="#">
+                    <span class="material-symbols-outlined">shopping_bag</span>
+                    <span class="text-sm font-medium">Pedidos</span>
+                </a>
+  
+                <a class="flex items-center gap-3 px-4 py-3 text-[#89656b] hover:text-primary dark:hover:text-primary transition-colors"
+                  href="#">
+                    <span class="material-symbols-outlined">shopping_cart</span>
+                    <span class="text-sm font-medium">Mi carrito</span>
+                </a>
+  
+                <a class="flex items-center gap-3 px-4 py-3 text-[#89656b] bg-primary/10 rounded-lg active-link"
+                    href="#">
+                    <span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1">person</span>
+                    <span class="text-sm font-bold">Perfil</span>
+                </a>
+  
+              </nav>
+            <div class="p-4 border-t border-slate-200 dark:border-slate-800">
+                <button
+                    class="flex items-center gap-3 px-4 py-3 w-full text-slate-500 dark:text-slate-400 hover:text-red-500 transition-colors">
+                    <span class="material-symbols-outlined">logout</span>
+                    <span class="text-sm font-medium">Cerrar Sesión</span>
+                </button>
+            </div>
+        </aside>
+            <div class="flex-1 flex flex-col gap-10 pb-10">
+                <section>
+                    <div class="mb-5">
+                        <h1 class="text-2xl sm:text-3xl font-display2 text-[#89656b] tracking-tight">Mi Perfil</h1>
+                        <p class="text-text-muted text-sm mt-1">Gestiona tu información personal y direcciones.</p>
+                    </div>
+                    <div class="bg-neutral-surface rounded-xl border border-neutral-border p-6 sm:p-8 shadow-sm">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-y-8 gap-x-12">
+                            <div
+                                class="flex justify-between items-start gap-4 pb-6 md:pb-0 border-b border-neutral-border md:border-none">
+                                <div>
+                                    <h4 class="text-xs font-bold text-text-muted uppercase tracking-wider mb-2">Nombre
+                                        Completo</h4>
+                                    <p class="text-text-main font-medium text-base">Ana María López García</p>
+                                </div>
+                                
+                            </div>
+                            <div
+                                class="flex justify-between items-start gap-4 pb-6 md:pb-0 border-b border-neutral-border md:border-none">
+                                <div>
+                                    <h4 class="text-xs font-bold text-text-muted uppercase tracking-wider mb-2">Correo
+                                        Electrónico</h4>
+                                    <p class="text-text-main font-medium text-base">ana.lopez@correo.com</p>
+                                </div>
+                                
+                            </div>
+                            <div
+                                class="flex justify-between items-start gap-4 md:col-span-2 pt-0 md:pt-6 md:border-t md:border-neutral-border">
+                                <div>
+                                    <h4 class="text-xs font-bold text-text-muted uppercase tracking-wider mb-2">
+                                        Dirección de Envío Principal</h4>
+                                    <p class="text-text-main font-medium text-base leading-relaxed">
+                                        Av. de las Rosas 123, Int. 4<br />
+                                        Col. Primavera, C.P. 45000<br />
+                                        Ciudad de México, México
+                                    </p>
+                                </div>
+                                <button
+                                    class="text-primary hover:text-primary-dark font-bold text-sm flex items-center gap-1 bg-primary/5 hover:bg-primary/10 px-3 py-1.5 rounded-md transition-colors">
+                                    <span class="material-symbols-outlined text-[16px]">edit</span>
+                                    Editar Perfil
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+                <section>
+                    <div class="flex justify-between items-end mb-5">
+                        <div>
+                            <h2 class="text-xl sm:text-2xl font-bold text-text-main tracking-tight">Pedidos Recientes
+                            </h2>
+                            <p class="text-text-muted text-sm mt-1">Tus últimas compras de arreglos florales.</p>
+                        </div>
+                        <a class="text-sage-dark hover:text-sage font-bold text-sm flex items-center gap-1 transition-colors pb-1"
+                            href="#">
+                            Ver todos <span class="material-symbols-outlined text-[18px]">arrow_forward</span>
+                        </a>
+                    </div>
+                    <div class="flex flex-col gap-4">
+                        <div
+                            class="bg-neutral-surface rounded-xl border border-neutral-border p-4 sm:p-5 flex flex-col sm:flex-row items-start sm:items-center gap-4 sm:gap-6 shadow-sm hover:shadow-md transition-shadow">
+                            <div
+                                class="w-full sm:w-24 h-32 sm:h-24 rounded-lg bg-background-light overflow-hidden shrink-0">
+                                <img alt="Floral arrangement" class="w-full h-full object-cover"
+                                    data-alt="Elegant floral arrangement with pink roses"
+                                    src="https://lh3.googleusercontent.com/aida-public/AB6AXuCjSe0_Qz6_SN8vKCVuFwTExt2M0w1wiF_Yg7YsXCnG2_JNpq1VS4Q6oD3DcwFJ_CyxqK9QhQUQBqmcstzzYb-pdGI-knucx9G7SPBnTRDMf_5VvwCEUcpWWtEwPYIAUJaSxCpWVhwO1hj3Cb6O1OTJSkCbRJrF2uIeNVDncz7So3lB6yWvVQ_M33YPUJfStR-0PRDtfDdz4gtxWubxJVjoSa14Sn3KGcrkt18cq00BYpI1Z4lSOj_LCWU_ehKK1IaYcyt54NVnsaA" />
+                            </div>
+                            <div class="flex-1 w-full">
+                                <div class="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-2 mb-1">
+                                    <h4 class="font-bold text-text-main text-lg">Ramo "Dulce Atardecer"</h4>
+                                    <span
+                                        class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold bg-sage/20 text-sage-dark self-start">
+                                        <span class="w-1.5 h-1.5 rounded-full bg-sage-dark"></span>
+                                        Entregado
+                                    </span>
+                                </div>
+                                <div
+                                    class="text-sm text-text-muted mb-3 flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-3">
+                                    <span>Pedido #ORD-4921</span>
+                                    <span class="hidden sm:inline text-neutral-300">•</span>
+                                    <span>4 de marzo, 2026</span>
+                                </div>
+                                <p class="text-text-main font-bold text-base">$1,250.00 MXN</p>
+                            </div>
+                            <div class="w-full sm:w-auto mt-2 sm:mt-0">
+                                <button
+                                    class="w-full sm:w-auto px-5 py-2.5 border border-neutral-border rounded-lg text-sm font-bold text-text-main hover:bg-background-light hover:border-neutral-300 transition-all focus:ring-2 focus:ring-primary/20 outline-none">
+                                    Ver Detalle
+                                </button>
+                            </div>
+                        </div>
+                        <div
+                            class="bg-neutral-surface rounded-xl border border-neutral-border p-4 sm:p-5 flex flex-col sm:flex-row items-start sm:items-center gap-4 sm:gap-6 shadow-sm hover:shadow-md transition-shadow">
+                            <div
+                                class="w-full sm:w-24 h-32 sm:h-24 rounded-lg bg-background-light overflow-hidden shrink-0 flex items-center justify-center border border-neutral-border/50">
+                                <span class="material-symbols-outlined text-4xl text-neutral-300">local_florist</span>
+                            </div>
+                            <div class="flex-1 w-full">
+                                <div class="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-2 mb-1">
+                                    <h4 class="font-bold text-text-main text-lg">Centro de Mesa "Elegancia"</h4>
+                                    <span
+                                        class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold bg-amber-100 text-amber-800 self-start">
+                                        <span class="w-1.5 h-1.5 rounded-full bg-amber-600"></span>
+                                        En preparación
+                                    </span>
+                                </div>
+                                <div
+                                    class="text-sm text-text-muted mb-3 flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-3">
+                                    <span>Pedido #ORD-5012</span>
+                                    <span class="hidden sm:inline text-neutral-300">•</span>
+                                    <span>20 de Octubre, 2023</span>
+                                </div>
+                                <p class="text-text-main font-bold text-base">$850.00 MXN</p>
+                            </div>
+                            <div class="w-full sm:w-auto mt-2 sm:mt-0">
+                                <button
+                                    class="w-full sm:w-auto px-5 py-2.5 border border-neutral-border rounded-lg text-sm font-bold text-text-main hover:bg-background-light hover:border-neutral-300 transition-all focus:ring-2 focus:ring-primary/20 outline-none">
+                                    Ver Detalle
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+            </div>
+        </div>
+        <footer class="py-6 text-center border-t border-neutral-border bg-neutral-surface/50 w-full mt-auto">
+            <p class="text-xs text-text-muted">© 2023 Maggy Flowers. Todos los derechos reservados.</p>
+            <div class="flex justify-center gap-4 mt-2">
+                <a class="text-xs text-text-muted hover:text-text-main transition-colors" href="#">Privacidad</a>
+                <a class="text-xs text-text-muted hover:text-text-main transition-colors" href="#">Términos</a>
+            </div>
+        </footer>
+    </main>
+
+</body>
+
+</html>

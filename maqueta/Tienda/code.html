@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Maggy Flowers - Shop</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script>
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#eb4763",
+                        "background-light": "#f8f6f6",
+                        "background-dark": "#211114",
+                        "sage": {
+                            50: '#f4f7f4',
+                            100: '#e3ebe3',
+                            500: '#84a98c',
+                            900: '#354f52',
+                        },
+                        "blush": {
+                            50: '#fff0f3',
+                            100: '#ffe3e8',
+                            500: '#e5989b',
+                            900: '#6d6875',
+                        }
+                    },
+                    fontFamily: {
+                        "display": ["Be Vietnam Pro", "sans-serif"],"display2":["Oddval Text", "semibold"]
+                    },
+                    borderRadius: {"DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px"},
+                },
+            },
+        }
+    </script>
+</head>
+<body class="bg-background-light dark:bg-background-dark font-display text-slate-900 dark:text-slate-100 min-h-screen flex flex-col">
+<main class="flex-1 w-full max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-10 py-8">
+<!-- Breadcrumbs & Title -->
+<div class="flex flex-col gap-4 mb-8">
+<div class="flex items-center gap-2 text-sm text-slate-500 dark:text-slate-400">
+<a class="hover:text-primary transition-colors" href="#">Home</a>
+<span class="material-symbols-outlined text-[14px]">chevron_right</span>
+<a class="hover:text-primary transition-colors" href="#">Shop</a>
+<span class="material-symbols-outlined text-[14px]">chevron_right</span>
+<span class="font-medium text-6d5157 dark:text-slate-100">Fresh Flowers</span>
+</div>
+<div class="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
+<div>
+<h1 class="text-3xl sm:text-4xl font-display2 text-[#89656b] tracking-tight mb-2">Fresh Flowers</h1>
+<p class="text-slate-600 dark:text-slate-300 max-w-xl">Curated seasonal blooms perfect for any occasion. From hand-tied bouquets to elaborate arrangements.</p>
+</div>
+<div class="relative group min-w-[200px]">
+<button class="flex w-full items-center justify-between gap-x-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-4 py-2.5 hover:border-primary transition-colors">
+<span class="text-sm font-medium">Sort by: Featured</span>
+<span class="material-symbols-outlined text-[20px]">keyboard_arrow_down</span>
+</button>
+<!-- Dropdown Content (Hidden by default, shown on hover/focus for demo) -->
+<div class="hidden group-hover:block absolute right-0 top-full mt-1 w-full rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 shadow-lg z-10 py-1">
+<a class="block px-4 py-2 text-sm hover:bg-slate-50 dark:hover:bg-slate-700" href="#">Price: Low to High</a>
+<a class="block px-4 py-2 text-sm hover:bg-slate-50 dark:hover:bg-slate-700" href="#">Price: High to Low</a>
+<a class="block px-4 py-2 text-sm hover:bg-slate-50 dark:hover:bg-slate-700" href="#">Newest Arrivals</a>
+</div>
+</div>
+</div>
+</div>
+<div class="flex flex-col lg:flex-row gap-8">
+<!-- Sidebar Filters -->
+<aside class="w-full lg:w-64 flex-shrink-0 space-y-8">
+<!-- Categories -->
+<div class="space-y-3">
+<h3 class="font-bold text-lg">Categories</h3>
+<div class="space-y-2">
+<label class="flex items-center gap-3 cursor-pointer group">
+<input class="size-4 rounded border-slate-300 text-primary focus:ring-primary/20 transition duration-150 ease-in-out" type="checkbox"/>
+<span class="text-sm text-slate-600 dark:text-slate-300 group-hover:text-primary transition-colors">Bouquets</span>
+</label>
+<label class="flex items-center gap-3 cursor-pointer group">
+<input checked="" class="size-4 rounded border-slate-300 text-primary focus:ring-primary/20 transition duration-150 ease-in-out" type="checkbox"/>
+<span class="text-sm text-slate-600 dark:text-slate-300 group-hover:text-primary transition-colors">Arrangements</span>
+</label>
+<label class="flex items-center gap-3 cursor-pointer group">
+<input class="size-4 rounded border-slate-300 text-primary focus:ring-primary/20 transition duration-150 ease-in-out" type="checkbox"/>
+<span class="text-sm text-slate-600 dark:text-slate-300 group-hover:text-primary transition-colors">Dried Flowers</span>
+</label>
+<label class="flex items-center gap-3 cursor-pointer group">
+<input class="size-4 rounded border-slate-300 text-primary focus:ring-primary/20 transition duration-150 ease-in-out" type="checkbox"/>
+<span class="text-sm text-slate-600 dark:text-slate-300 group-hover:text-primary transition-colors">Plants</span>
+</label>
+</div>
+</div>
+<!-- Price Range -->
+<div class="space-y-3">
+<h3 class="font-bold text-lg">Price</h3>
+<div class="space-y-2">
+<label class="flex items-center gap-3 cursor-pointer group">
+<input class="size-4 border-slate-300 text-primary focus:ring-primary/20" name="price" type="radio"/>
+<span class="text-sm text-slate-600 dark:text-slate-300">Under $50</span>
+</label>
+<label class="flex items-center gap-3 cursor-pointer group">
+<input class="size-4 border-slate-300 text-primary focus:ring-primary/20" name="price" type="radio"/>
+<span class="text-sm text-slate-600 dark:text-slate-300">$50 - $100</span>
+</label>
+<label class="flex items-center gap-3 cursor-pointer group">
+<input class="size-4 border-slate-300 text-primary focus:ring-primary/20" name="price" type="radio"/>
+<span class="text-sm text-slate-600 dark:text-slate-300">$100 - $200</span>
+</label>
+<label class="flex items-center gap-3 cursor-pointer group">
+<input class="size-4 border-slate-300 text-primary focus:ring-primary/20" name="price" type="radio"/>
+<span class="text-sm text-slate-600 dark:text-slate-300">Over $200</span>
+</label>
+</div>
+</div>
+<!-- Colors -->
+<div class="space-y-3">
+<h3 class="font-bold text-lg">Color Palette</h3>
+<div class="flex flex-wrap gap-3">
+<button class="size-8 rounded-full bg-white border border-slate-200 shadow-sm hover:scale-110 transition-transform focus:ring-2 ring-offset-2 ring-primary"></button>
+<button class="size-8 rounded-full bg-pink-100 border border-pink-200 shadow-sm hover:scale-110 transition-transform"></button>
+<button class="size-8 rounded-full bg-red-500 border border-red-600 shadow-sm hover:scale-110 transition-transform"></button>
+<button class="size-8 rounded-full bg-yellow-100 border border-yellow-200 shadow-sm hover:scale-110 transition-transform"></button>
+<button class="size-8 rounded-full bg-orange-300 border border-orange-400 shadow-sm hover:scale-110 transition-transform"></button>
+<button class="size-8 rounded-full bg-purple-200 border border-purple-300 shadow-sm hover:scale-110 transition-transform"></button>
+</div>
+</div>
+<!-- Occasion -->
+<div class="space-y-3">
+<h3 class="font-bold text-lg">Occasion</h3>
+<div class="space-y-2">
+<label class="flex items-center gap-3 cursor-pointer group">
+<input class="size-4 rounded border-slate-300 text-primary focus:ring-primary/20 transition duration-150 ease-in-out" type="checkbox"/>
+<span class="text-sm text-slate-600 dark:text-slate-300 group-hover:text-primary transition-colors">Birthday</span>
+</label>
+<label class="flex items-center gap-3 cursor-pointer group">
+<input class="size-4 rounded border-slate-300 text-primary focus:ring-primary/20 transition duration-150 ease-in-out" type="checkbox"/>
+<span class="text-sm text-slate-600 dark:text-slate-300 group-hover:text-primary transition-colors">Anniversary</span>
+</label>
+<label class="flex items-center gap-3 cursor-pointer group">
+<input class="size-4 rounded border-slate-300 text-primary focus:ring-primary/20 transition duration-150 ease-in-out" type="checkbox"/>
+<span class="text-sm text-slate-600 dark:text-slate-300 group-hover:text-primary transition-colors">Sympathy</span>
+</label>
+<label class="flex items-center gap-3 cursor-pointer group">
+<input class="size-4 rounded border-slate-300 text-primary focus:ring-primary/20 transition duration-150 ease-in-out" type="checkbox"/>
+<span class="text-sm text-slate-600 dark:text-slate-300 group-hover:text-primary transition-colors">Wedding</span>
+</label>
+</div>
+</div>
+</aside>
+<!-- Product Grid -->
+<div class="flex-1">
+<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+<!-- Product Card 1 -->
+<div class="group flex flex-col bg-white dark:bg-slate-800 rounded-xl overflow-hidden hover:shadow-xl transition-shadow duration-300 border border-slate-100 dark:border-slate-700">
+<div class="relative aspect-[4/5] overflow-hidden bg-slate-100">
+<img alt="Blush pink roses bouquet in vase" class="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105" data-alt="Blush pink roses bouquet in vase" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAA25aNxSsmReFMQt1SbzPUFJgFptdUUVtkdV2fKA8DSXpADUN_ecNS4v8WlWJdRUZAdPfrXrWozuk_ozz-n5H2lALFmaVOu8chD9JCWPV6jrzi83eOE3LNmfjMXE3YhVsmyTTivvnJaBQWHPBdEHyF3lP7QpHwYIOD_ssNEz9jatwggP0DtUVOFZHPO3RiZI74y34jkjd3ypp-iCJPTAg9DRajnWi4LMN0L2Nkc5WxbdDXYvuuSYSD8wnC3BIUCiilhCAPRdsA-OY"/>
+<div class="absolute top-3 left-3">
+<span class="px-2 py-1 text-xs font-bold uppercase bg-white/90 text-slate-900 rounded shadow-sm">Bestseller</span>
+</div>
+<button class="absolute bottom-4 right-4 size-10 bg-white/90 rounded-full flex items-center justify-center shadow-md hover:bg-primary hover:text-white transition-colors translate-y-14 group-hover:translate-y-0 duration-300">
+<span class="material-symbols-outlined text-[20px]">favorite</span>
+</button>
+</div>
+<div class="p-4 flex flex-col gap-2">
+<div class="flex justify-between items-start">
+<div>
+<h3 class="font-bold text-lg text-slate-900 dark:text-white group-hover:text-primary transition-colors">Blush Harmony</h3>
+<p class="text-sm text-slate-500 dark:text-slate-400">Roses &amp; Peonies</p>
+</div>
+<span class="font-bold text-lg text-slate-900 dark:text-white">$85.00</span>
+</div>
+<button class="mt-2 w-full bg-[#ad808a] dark:bg-slate-700 text-white py-2.5 rounded-lg text-sm font-bold hover:bg-primary transition-colors flex items-center justify-center gap-2 group-active:scale-95">
+<span class="material-symbols-outlined text-[18px]">shopping_bag</span>
+                                Añadir al carrito
+                            </button>
+</div>
+</div>
+<!-- Product Card 2 -->
+<div class="group flex flex-col bg-white dark:bg-slate-800 rounded-xl overflow-hidden hover:shadow-xl transition-shadow duration-300 border border-slate-100 dark:border-slate-700">
+<div class="relative aspect-[4/5] overflow-hidden bg-slate-100">
+<img alt="Vibrant pink flower arrangement on table" class="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105" data-alt="Vibrant pink flower arrangement on table" src="https://lh3.googleusercontent.com/aida-public/AB6AXuC9DgFDSdwtITXaulO4jHxQ4oweYpwBVjpteTZ43pWZtSkml5xqTcdv6HkolfQ-e67WG-KCblYVQQYN_ae80976cv2F-QUgrQV8Ah9v3lu3vJamJA9BD9lktn9xVsPdXwMU8oVFc6wpwgW322VRLBJxw8-WiH9Mq2RxLPmLD2KL-VVfErwoqDrK9PkKM4gSF4hENts6uLs7g41YG-ZxnKRli4QpERothopve72cEgCmz2suFTGUwZZmLPnBBcagYpHBXaeEAuN6ax0"/>
+<button class="absolute bottom-4 right-4 size-10 bg-white/90 rounded-full flex items-center justify-center shadow-md hover:bg-primary hover:text-white transition-colors translate-y-14 group-hover:translate-y-0 duration-300">
+<span class="material-symbols-outlined text-[20px]">favorite</span>
+</button>
+</div>
+<div class="p-4 flex flex-col gap-2">
+<div class="flex justify-between items-start">
+<div>
+<h3 class="font-bold text-lg text-slate-900 dark:text-white group-hover:text-primary transition-colors">Spring Sage</h3>
+<p class="text-sm text-slate-500 dark:text-slate-400">Mixed Seasonal</p>
+</div>
+<span class="font-bold text-lg text-slate-900 dark:text-white">$65.00</span>
+</div>
+<button class="mt-2 w-full bg-[#ad808a] dark:bg-slate-700 text-white py-2.5 rounded-lg text-sm font-bold hover:bg-primary transition-colors flex items-center justify-center gap-2 group-active:scale-95">
+<span class="material-symbols-outlined text-[18px]">shopping_bag</span>
+                                Añadir al carrito
+                            </button>
+</div>
+</div>
+<!-- Product Card 3 -->
+<div class="group flex flex-col bg-white dark:bg-slate-800 rounded-xl overflow-hidden hover:shadow-xl transition-shadow duration-300 border border-slate-100 dark:border-slate-700">
+<div class="relative aspect-[4/5] overflow-hidden bg-slate-100">
+<img alt="Elegant white and pink floral centerpiece" class="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105" data-alt="Elegant white and pink floral centerpiece" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCeDXCMfIFSJu__W7GM_DW_lF-8kAcvD1ezIzE0cnQ3CLrKl2IznmifXMH4_kij0ZeBLtFCPrqwlm-qZENeKh9NF27_tPSm6MVBJ0Z0w9T6VFFYIspwjYY7hFdh41lt2sb_JNqU8sknPU3aFGBBJEGphxt-5R65LgDegZL3mADnWKpXYHXBP3AYrRYpMNrK1BM6PHV99z553JIiSfNdKP6tZjasVrE_01gj1DlWw_uAjSMa6zrOF-GA1uaX_n4ktl9auvF23_Uk_64"/>
+<div class="absolute top-3 left-3">
+<span class="px-2 py-1 text-xs font-bold uppercase bg-primary text-white rounded shadow-sm">New</span>
+</div>
+<button class="absolute bottom-4 right-4 size-10 bg-white/90 rounded-full flex items-center justify-center shadow-md hover:bg-primary hover:text-white transition-colors translate-y-14 group-hover:translate-y-0 duration-300">
+<span class="material-symbols-outlined text-[20px]">favorite</span>
+</button>
+</div>
+<div class="p-4 flex flex-col gap-2">
+<div class="flex justify-between items-start">
+<div>
+<h3 class="font-bold text-lg text-slate-900 dark:text-white group-hover:text-primary transition-colors">Sweet Delight</h3>
+<p class="text-sm text-slate-500 dark:text-slate-400">Lilies &amp; Roses</p>
+</div>
+<span class="font-bold text-lg text-slate-900 dark:text-white">$120.00</span>
+</div>
+<button class="mt-2 w-full bg-[#ad808a] dark:bg-slate-700 text-white py-2.5 rounded-lg text-sm font-bold hover:bg-primary transition-colors flex items-center justify-center gap-2 group-active:scale-95">
+<span class="material-symbols-outlined text-[18px]">shopping_bag</span>
+                                Añadir al carrito
+                            </button>
+</div>
+</div>
+<!-- Product Card 4 -->
+<div class="group flex flex-col bg-white dark:bg-slate-800 rounded-xl overflow-hidden hover:shadow-xl transition-shadow duration-300 border border-slate-100 dark:border-slate-700">
+<div class="relative aspect-[4/5] overflow-hidden bg-slate-100">
+<img alt="Rust orange and green floral bouquet" class="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105" data-alt="Rust orange and green floral bouquet" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAVYhLichsRaj-Qv4KWOXbyET2pTE_3RkKnPR5sLjQKzRRqoPqMl8M4Q1Sbk7zAfusQzfblFR9Z7v98p7f6WyZJjZoM6GZlBXd6uZYTw-5gHh-zd1_ktgGCKLIztc2oMmS_FUCgv1Gk0Cjfw2SV7olq1AWWp_4LOL-pseA--lad6RQVUUQpggRcFvQ1qVTtY_c2qHcpbWa7yA9ECQb3YPAVS9-AWAd9ISLsNhFE_8oeVZpyQ2ciPfNGbf0M0J5pL51CuPTM3ZtxV4A"/>
+<button class="absolute bottom-4 right-4 size-10 bg-white/90 rounded-full flex items-center justify-center shadow-md hover:bg-primary hover:text-white transition-colors translate-y-14 group-hover:translate-y-0 duration-300">
+<span class="material-symbols-outlined text-[20px]">favorite</span>
+</button>
+</div>
+<div class="p-4 flex flex-col gap-2">
+<div class="flex justify-between items-start">
+<div>
+<h3 class="font-bold text-lg text-slate-900 dark:text-white group-hover:text-primary transition-colors">Autumn Whisper</h3>
+<p class="text-sm text-slate-500 dark:text-slate-400">Dried Arrangement</p>
+</div>
+<span class="font-bold text-lg text-slate-900 dark:text-white">$55.00</span>
+</div>
+<button class="mt-2 w-full bg-[#ad808a] dark:bg-slate-700 text-white py-2.5 rounded-lg text-sm font-bold hover:bg-primary transition-colors flex items-center justify-center gap-2 group-active:scale-95">
+<span class="material-symbols-outlined text-[18px]">shopping_bag</span>
+                                Añadir al carrito
+                            </button>
+</div>
+</div>
+<!-- Product Card 5 -->
+<div class="group flex flex-col bg-white dark:bg-slate-800 rounded-xl overflow-hidden hover:shadow-xl transition-shadow duration-300 border border-slate-100 dark:border-slate-700">
+<div class="relative aspect-[4/5] overflow-hidden bg-slate-100">
+<img alt="Soft pink tulips in a bundle" class="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105" data-alt="Soft pink tulips in a bundle" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBjPNIaYcqPWMuTbzoxD7lnZzLLusfXltdQzvxy6IgKIZj57-uRS3STplg9WPBJgPALamvl6V9Ad6BU8ThKQVDHXoomzIWm49vFNnhZMF0YFuOig484WLFa1g5MSfKFAR-G2cj1tj1X4rcxeQ0EuE_EHpCl25EpTilAihZA7cRowH_rhoFIirEp2w3lTGpFb8b-Fuyfq38LZ2lcnocXGThzeDPtXBr9FzCfgk9HgCN1-66kHu_j5NKFGAt2wxV4X5qjz6wf4tGOXEM"/>
+<button class="absolute bottom-4 right-4 size-10 bg-white/90 rounded-full flex items-center justify-center shadow-md hover:bg-primary hover:text-white transition-colors translate-y-14 group-hover:translate-y-0 duration-300">
+<span class="material-symbols-outlined text-[20px]">favorite</span>
+</button>
+</div>
+<div class="p-4 flex flex-col gap-2">
+<div class="flex justify-between items-start">
+<div>
+<h3 class="font-bold text-lg text-slate-900 dark:text-white group-hover:text-primary transition-colors">Tulip Dream</h3>
+<p class="text-sm text-slate-500 dark:text-slate-400">Fresh Tulips</p>
+</div>
+<span class="font-bold text-lg text-slate-900 dark:text-white">$45.00</span>
+</div>
+<button class="mt-2 w-full bg-[#ad808a] dark:bg-slate-700 text-white py-2.5 rounded-lg text-sm font-bold hover:bg-primary transition-colors flex items-center justify-center gap-2 group-active:scale-95">
+<span class="material-symbols-outlined text-[18px]">shopping_bag</span>
+                                Añadir al carrito
+                            </button>
+</div>
+</div>
+<!-- Product Card 6 -->
+<div class="group flex flex-col bg-white dark:bg-slate-800 rounded-xl overflow-hidden hover:shadow-xl transition-shadow duration-300 border border-slate-100 dark:border-slate-700">
+<div class="relative aspect-[4/5] overflow-hidden bg-slate-100">
+<img alt="Luxurious pink orchid plant in pot" class="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105" data-alt="Luxurious pink orchid plant in pot" src="https://lh3.googleusercontent.com/aida-public/AB6AXuC28NP81zRFRDPGXOuqJPZaNkybEg10oZ45WhnpPtBZis_kwDDX3Er8I6BgBEOfv38Za3doMDzczATXrPjyy_kcMaqn18Tr8AdGUGo14J6Qv9zd9bJz2xUZlwjFw9ntvkEw9iYQS55HdyrMpZZdL7LMDrkFM4dDCyC3RUg55xChoEDdHJFj4VKjZyo8YYJMRlQ51bi8qqB_ZPauTiIuC1nKEdTc7ggzzsp3PREMqw4aA301iEb376cNTJNUB77NiPLAa0qzrls6Iy4"/>
+<div class="absolute top-3 left-3">
+<span class="px-2 py-1 text-xs font-bold uppercase bg-slate-900 text-white rounded shadow-sm">Low Stock</span>
+</div>
+<button class="absolute bottom-4 right-4 size-10 bg-white/90 rounded-full flex items-center justify-center shadow-md hover:bg-primary hover:text-white transition-colors translate-y-14 group-hover:translate-y-0 duration-300">
+<span class="material-symbols-outlined text-[20px]">favorite</span>
+</button>
+</div>
+<div class="p-4 flex flex-col gap-2">
+<div class="flex justify-between items-start">
+<div>
+<h3 class="font-bold text-lg text-slate-900 dark:text-white group-hover:text-primary transition-colors">Royal Orchid</h3>
+<p class="text-sm text-slate-500 dark:text-slate-400">Potted Plant</p>
+</div>
+<span class="font-bold text-lg text-slate-900 dark:text-white">$95.00</span>
+</div>
+<button class="mt-2 w-full bg-[#ad808a] dark:bg-slate-700 text-white py-2.5 rounded-lg text-sm font-bold hover:bg-primary transition-colors flex items-center justify-center gap-2 group-active:scale-95">
+<span class="material-symbols-outlined text-[18px]">shopping_bag</span>
+                                Añadir al carrito
+                            </button>
+</div>
+</div>
+</div>
+<!-- Pagination -->
+<div class="mt-12 flex justify-center">
+<div class="flex gap-2">
+<button class="flex size-10 items-center justify-center rounded-lg border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800 disabled:opacity-50">
+<span class="material-symbols-outlined text-[20px]">chevron_left</span>
+</button>
+<button class="flex size-10 items-center justify-center rounded-lg bg-primary text-white font-bold">1</button>
+<button class="flex size-10 items-center justify-center rounded-lg border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800 font-medium">2</button>
+<button class="flex size-10 items-center justify-center rounded-lg border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800 font-medium">3</button>
+<span class="flex items-center justify-center px-2 text-slate-400">...</span>
+<button class="flex size-10 items-center justify-center rounded-lg border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800">
+<span class="material-symbols-outlined text-[20px]">chevron_right</span>
+</button>
+</div>
+</div>
+</div>
+</div>
+</main>
+</body></html>

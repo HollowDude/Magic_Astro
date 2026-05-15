@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+
+<html lang="es">
+
+<head>
+  <meta charset="utf-8" />
+  <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+  <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;700;900&amp;display=swap"
+    rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght@100..700,0..1&amp;display=swap"
+    rel="stylesheet" />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
+    rel="stylesheet" />
+  <script id="tailwind-config">
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          colors: {
+            "primary": "#eb4763",
+            "background-light": "#f8f6f6",
+            "background-dark": "#211114",
+          },
+          fontFamily: {
+            "display": ["Be Vietnam Pro"], "display2":["Oddval Text", "semibold"]
+          },
+          borderRadius: { "DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px" },
+        },
+      },
+    }
+  </script>
+</head>
+
+<body class="bg-background-light dark:bg-background-dark font-display text-slate-900 dark:text-slate-100 min-h-screen">
+  <div class="flex h-screen overflow-hidden">
+    <!-- Side Navigation Bar -->
+     <aside class="w-64 bg-white dark:bg-slate-900 border-r border-slate-200 dark:border-slate-800 flex flex-col">
+            <div class="p-6 flex items-center gap-3">
+                <div class="h-10 w-10 rounded-full bg-primary/20 flex items-center justify-center text-primary">
+                    <span class="material-symbols-outlined">local_florist</span>
+                </div>
+                <div>
+                    <h1 class="text-sm font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Maggy
+                        Flowers</h1>
+                </div>
+            </div>
+            <div class="px-4 py-2">
+                <div
+                    class="flex items-center gap-3 p-3 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer group">
+                    <div class="h-10 w-10 rounded-full bg-cover bg-center border-2 border-primary/30"
+                        data-alt="Professional headshot portrait of Maggy Flowers"
+                        style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuBt13uSBbCYxN-pI2MFdF7kH0JuchS4nMxIoOxYtGtDsnuLameBFFbC2jkAlroBaCwBvKkcsUuRRkbnQQKxYal71lBFKPXr7glfgKCLvlJbviQrYaKHOzV_jYr5RdFOC2kn24htRTYMEHT0fBtyiLm8ScqQBvIUQA3koOrmsvyDNpLMTgQR869oXSAJ5Nee1fXeonefPGvy-Q6sWbPnuIBohItz7X_QlzZdBuV2K5Tbl-VK5gR66pYM_L6ZqsXSqB9-eGeQXloSVgM')">
+                    </div>
+                    <div class="flex flex-col">
+                        <p class="text-sm font-medium text-slate-900 dark:text-slate-100 leading-tight">Maggy Flowers
+                        </p>
+                        <p class="text-xs text-slate-500 dark:text-slate-400">Administrador</p>
+                    </div>
+                </div>
+            </div>
+            <nav class="flex-1 mt-4 px-2 space-y-1">
+
+              <a class="flex items-center gap-3 px-4 py-3 text-[#89656b] dark:text-slate-400 hover:text-primary dark:hover:text-primary transition-colors"
+                  href="#">
+                  <span class="material-symbols-outlined">location_on</span>
+                  <span class="text-sm font-medium">Direcciones</span>
+              </a>
+
+              <a class="flex items-center gap-3 px-4 py-3 text-[#89656b] bg-primary/10 rounded-lg active-link"
+                  href="#">
+                  <span class="material-symbols-outlined">shopping_bag</span>
+                  <span class="text-sm font-medium">Pedidos</span>
+              </a>
+
+              <a class="flex items-center gap-3 px-4 py-3 text-[#89656b] hover:text-primary dark:hover:text-primary transition-colors"
+                href="#">
+                  <span class="material-symbols-outlined">shopping_cart</span>
+                  <span class="text-sm font-medium">Mi carrito</span>
+              </a>
+
+              <a class="flex items-center gap-3 px-4 py-3 text-[#89656b] dark:text-slate-400 hover:text-primary dark:hover:text-primary transition-colors"
+                  href="#">
+                  <span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1">person</span>
+                  <span class="text-sm font-bold">Perfil</span>
+              </a>
+            <div class="p-4 border-t border-slate-200 dark:border-slate-800">
+                <button
+                    class="flex items-center gap-3 px-4 py-30 w-full text-slate-500 dark:text-slate-400 hover:text-red-500 transition-colors">
+                    <span class="material-symbols-outlined">logout</span>
+                    <span class="text-sm font-medium">Cerrar Sesión</span>
+                </button>
+            </div>
+        </aside>
+    <!-- Main Content Area -->
+    <main class="flex-1 overflow-y-auto">
+      <div class="max-w-5xl mx-auto p-8">
+        <!-- Page Header -->
+        <div class="flex flex-col gap-2 mb-8">
+          <h2 class="text-3xl font-display2 text-[#89656b]">Mis pedidos</h2>
+          <p class="text-slate-600 dark:text-slate-400">Gestiona y rastrea tus pedidos recientes de arreglos florales y
+            cursos.</p>
+        </div>
+        <!-- Tabs/Filters -->
+        <div class="mb-6">
+          <div class="flex border-b border-primary/10 gap-8 overflow-x-auto">
+            <a class="flex flex-col items-center justify-center border-b-2 border-primary text-primary pb-3 pt-2 whitespace-nowrap"
+              href="#">
+              <span class="text-sm font-bold">Todos los pedidos</span>
+            </a>
+            <a class="flex flex-col items-center justify-center border-b-2 border-transparent text-slate-500 dark:text-slate-400 hover:text-primary pb-3 pt-2 whitespace-nowrap"
+              href="#">
+              <span class="text-sm font-bold">En preparación</span>
+            </a>
+            <a class="flex flex-col items-center justify-center border-b-2 border-transparent text-slate-500 dark:text-slate-400 hover:text-primary pb-3 pt-2 whitespace-nowrap"
+              href="#">
+              <span class="text-sm font-bold">En camino</span>
+            </a>
+            <a class="flex flex-col items-center justify-center border-b-2 border-transparent text-slate-500 dark:text-slate-400 hover:text-primary pb-3 pt-2 whitespace-nowrap"
+              href="#">
+              <span class="text-sm font-bold">Entregados</span>
+            </a>
+          </div>
+        </div>
+        <!-- Orders Table Container -->
+        <div
+          class="bg-white dark:bg-slate-900 rounded-xl border border-primary/10 shadow-sm overflow-hidden @container">
+          <table class="w-full text-left border-collapse">
+            <thead>
+              <tr class="bg-slate-50 dark:bg-slate-800/50">
+                <th class="px-6 py-4 text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">ID
+                  Pedido</th>
+                <th class="px-6 py-4 text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+                  Fecha</th>
+                <th class="px-6 py-4 text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+                  Estado</th>
+                <th
+                  class="px-6 py-4 text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 text-right">
+                  Total</th>
+                <th
+                  class="px-6 py-4 text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 text-center">
+                  Acciones</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-primary/5">
+              <tr class="hover:bg-primary/5 transition-colors">
+                <td class="px-6 py-5">
+                  <span class="font-bold text-slate-900 dark:text-slate-100">#MF-1048</span>
+                </td>
+                <td class="px-6 py-5 text-sm text-slate-600 dark:text-slate-400">
+                  05 Nov 2023
+                </td>
+                <td class="px-6 py-5">
+                  <span
+                    class="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400">
+                    En preparación
+                  </span>
+                </td>
+                <td class="px-6 py-5 text-sm font-bold text-right text-slate-900 dark:text-slate-100">
+                  $92.00
+                </td>
+                <td class="px-6 py-5 text-center">
+                  <button class="text-primary hover:bg-primary/10 p-2 rounded-lg transition-colors">
+                    <span class="material-symbols-outlined text-lg">visibility</span>
+                  </button>
+                </td>
+              </tr>
+              <tr class="hover:bg-primary/5 transition-colors">
+                <td class="px-6 py-5">
+                  <span class="font-bold text-slate-900 dark:text-slate-100">#MF-1042</span>
+                </td>
+                <td class="px-6 py-5 text-sm text-slate-600 dark:text-slate-400">
+                  02 Nov 2023
+                </td>
+                <td class="px-6 py-5">
+                  <span
+                    class="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400">
+                    En preparación
+                  </span>
+                </td>
+                <td class="px-6 py-5 text-sm font-bold text-right text-slate-900 dark:text-slate-100">
+                  $45.00
+                </td>
+                <td class="px-6 py-5 text-center">
+                  <button class="text-primary hover:bg-primary/10 p-2 rounded-lg transition-colors">
+                    <span class="material-symbols-outlined text-lg">visibility</span>
+                  </button>
+                </td>
+              </tr>
+              <tr class="hover:bg-primary/5 transition-colors">
+                <td class="px-6 py-5">
+                  <span class="font-bold text-slate-900 dark:text-slate-100">#MF-1035</span>
+                </td>
+                <td class="px-6 py-5 text-sm text-slate-600 dark:text-slate-400">
+                  15 Oct 2023
+                </td>
+                <td class="px-6 py-5">
+                  <span
+                    class="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400">
+                    Entregado
+                  </span>
+                </td>
+                <td class="px-6 py-5 text-sm font-bold text-right text-slate-900 dark:text-slate-100">
+                  $120.50
+                </td>
+                <td class="px-6 py-5 text-center">
+                  <button class="text-primary hover:bg-primary/10 p-2 rounded-lg transition-colors">
+                    <span class="material-symbols-outlined text-lg">visibility</span>
+                  </button>
+                </td>
+              </tr>
+              <tr class="hover:bg-primary/5 transition-colors">
+                <td class="px-6 py-5">
+                  <span class="font-bold text-slate-900 dark:text-slate-100">#MF-1029</span>
+                </td>
+                <td class="px-6 py-5 text-sm text-slate-600 dark:text-slate-400">
+                  12 Oct 2023
+                </td>
+                <td class="px-6 py-5">
+                  <span
+                    class="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400">
+                    Entregado
+                  </span>
+                </td>
+                <td class="px-6 py-5 text-sm font-bold text-right text-slate-900 dark:text-slate-100">
+                  $85.00
+                </td>
+                <td class="px-6 py-5 text-center">
+                  <button class="text-primary hover:bg-primary/10 p-2 rounded-lg transition-colors">
+                    <span class="material-symbols-outlined text-lg">visibility</span>
+                  </button>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <!-- Pagination -->
+        <div class="flex items-center justify-between mt-8">
+          <p class="text-sm text-slate-500 dark:text-slate-400">Mostrando <span class="font-bold">1</span> a <span
+              class="font-bold">4</span> de <span class="font-bold">12</span> pedidos</p>
+          <div class="flex items-center gap-2">
+            <button
+              class="flex size-10 items-center justify-center rounded-lg border border-primary/10 text-slate-400 hover:bg-primary/5 disabled:opacity-50"
+              disabled="">
+              <span class="material-symbols-outlined">chevron_left</span>
+            </button>
+            <button
+              class="text-sm font-bold flex size-10 items-center justify-center text-white rounded-lg bg-primary">1</button>
+            <button
+              class="text-sm font-medium flex size-10 items-center justify-center text-slate-600 dark:text-slate-400 rounded-lg hover:bg-primary/5">2</button>
+            <button
+              class="text-sm font-medium flex size-10 items-center justify-center text-slate-600 dark:text-slate-400 rounded-lg hover:bg-primary/5">3</button>
+            <button
+              class="flex size-10 items-center justify-center rounded-lg border border-primary/10 text-slate-600 dark:text-slate-400 hover:bg-primary/5">
+              <span class="material-symbols-outlined">chevron_right</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+</body>
+
+</html>

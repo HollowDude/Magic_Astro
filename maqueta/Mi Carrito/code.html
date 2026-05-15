@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+
+<html lang="es">
+
+<head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;700;900&amp;display=swap"
+        rel="stylesheet" />
+    <link
+        href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
+        rel="stylesheet" />
+    <link
+        href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
+        rel="stylesheet" />
+    <script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#eb4763",
+                        "background-light": "#f8f6f6",
+                        "background-dark": "#211114",
+                    },
+                    fontFamily: {
+                        "display": ["Be Vietnam Pro"]
+                    },
+                    borderRadius: { "DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px" },
+                },
+            },
+        }
+    </script>
+    <title>Maggy Flowers - Mi Carrito</title>
+</head>
+
+<body class="bg-background-light dark:bg-background-dark font-display text-slate-900 dark:text-slate-100">
+    <div class="flex h-screen overflow-hidden">
+        <!-- Sidebar Navigation -->
+        <aside class="w-64 bg-white dark:bg-slate-900 border-r border-slate-200 dark:border-slate-800 flex flex-col">
+            <div class="p-6 flex items-center gap-3">
+                <div class="h-10 w-10 rounded-full bg-primary/20 flex items-center justify-center text-primary">
+                    <span class="material-symbols-outlined">local_florist</span>
+                </div>
+                <div>
+                    <h1 class="text-sm font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Maggy
+                        Flowers</h1>
+                </div>
+            </div>
+            <div class="px-4 py-2">
+                <div
+                    class="flex items-center gap-3 p-3 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer group">
+                    <div class="h-10 w-10 rounded-full bg-cover bg-center border-2 border-primary/30"
+                        data-alt="Professional headshot portrait of Maggy Flowers"
+                        style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuBt13uSBbCYxN-pI2MFdF7kH0JuchS4nMxIoOxYtGtDsnuLameBFFbC2jkAlroBaCwBvKkcsUuRRkbnQQKxYal71lBFKPXr7glfgKCLvlJbviQrYaKHOzV_jYr5RdFOC2kn24htRTYMEHT0fBtyiLm8ScqQBvIUQA3koOrmsvyDNpLMTgQR869oXSAJ5Nee1fXeonefPGvy-Q6sWbPnuIBohItz7X_QlzZdBuV2K5Tbl-VK5gR66pYM_L6ZqsXSqB9-eGeQXloSVgM')">
+                    </div>
+                    <div class="flex flex-col">
+                        <p class="text-sm font-medium text-slate-900 dark:text-slate-100 leading-tight">Maggy Flowers
+                        </p>
+                        <p class="text-xs text-slate-500 dark:text-slate-400">Administrador</p>
+                    </div>
+                </div>
+            </div>
+            <nav class="flex-1 mt-4 px-2 space-y-1">
+
+                <a class="flex items-center gap-3 px-4 py-3 text-[#89656b] dark:text-slate-400 hover:text-primary dark:hover:text-primary transition-colors"
+                    href="#">
+                    <span class="material-symbols-outlined">location_on</span>
+                    <span class="text-sm font-medium">Direcciones</span>
+                </a>
+
+                <a class="flex items-center gap-3 px-4 py-3 text-[#89656b] dark:text-slate-400 hover:text-primary dark:hover:text-primary transition-colors"
+                    href="#">
+                    <span class="material-symbols-outlined">shopping_bag</span>
+                    <span class="text-sm font-medium">Pedidos</span>
+                </a>
+
+                <a class="flex items-center gap-3 px-4 py-3 text-[#89656b] bg-primary/10 rounded-lg active-link" href="#">
+                    <span class="material-symbols-outlined">shopping_cart</span>
+                    <span class="text-sm font-medium">Mi carrito</span>
+                </a>
+
+                <a class="flex items-center gap-3 px-4 py-3 text-[#89656b] dark:text-slate-400 hover:text-primary dark:hover:text-primary transition-colors"
+                    href="#">
+                    <span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1">person</span>
+                    <span class="text-sm font-bold">Perfil</span>
+                </a>
+
+            </nav>
+            <div class="p-4 border-t border-slate-200 dark:border-slate-800">
+                <button
+                    class="flex items-center gap-3 px-4 py-3 w-full text-slate-500 dark:text-slate-400 hover:text-red-500 transition-colors">
+                    <span class="material-symbols-outlined">logout</span>
+                    <span class="text-sm font-medium">Cerrar Sesión</span>
+                </button>
+            </div>
+        </aside>
+        <!-- Main Content Area -->
+        <main class="flex-1 overflow-y-auto p-8 lg:p-12">
+            <div class="max-w-5xl mx-auto">
+                <header class="mb-10">
+                    <h2 class="text-3xl font-black text-[#89656b] dark:text-slate-100 tracking-tight">Mi Carrito</h2>
+                    <p class="text-slate-500 dark:text-slate-400 mt-2">Revisa tus productos antes de finalizar la
+                        compra.</p>
+                </header>
+                <!-- Cart Table -->
+                <div class="bg-white dark:bg-slate-900 rounded-xl border border-primary/10 overflow-hidden shadow-sm">
+                    <table class="w-full text-left border-collapse">
+                        <thead>
+                            <tr class="bg-primary/5 text-primary text-xs font-bold uppercase tracking-wider">
+                                <th class="px-6 py-4">Producto</th>
+                                <th class="px-6 py-4">Precio Unitario</th>
+                                <th class="px-6 py-4">Cantidad</th>
+                                <th class="px-6 py-4 text-right">Subtotal</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-primary/10">
+                            <!-- Item 1 -->
+                            <tr class="group hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
+                                <td class="px-6 py-6">
+                                    <div class="flex items-center gap-4">
+                                        <div
+                                            class="size-20 rounded-lg overflow-hidden flex-shrink-0 border border-primary/10">
+                                            <img alt="Producto" class="w-full h-full object-cover"
+                                                data-alt="Premium red roses flower arrangement"
+                                                src="https://lh3.googleusercontent.com/aida-public/AB6AXuA-U2A1AEMXNOzrIZghmklNffzLQJYO1tpEvsy6mRt7Gd_C1WtNk_RkAS5KdNeXATkryB0KQwZ4InijcmSvgRaWpAriZInaGrqu1YNeIgTIyl2mTcgQErGggGByOAUdmXG5gPoqb500MMxRYKJKhB1-nC0qgBDkptqhn0DtAoFXFxJBwqRsLK_OnyG6zZqw9rxtc-6PtlHfYvvz3kp-pDGXU40BsKFhjtSANXpV-sWnGXh_lp_lN2jPL_mkV8A187UXPKJXwqWfXgI" />
+                                        </div>
+                                        <div>
+                                            <p class="font-bold text-slate-900 dark:text-slate-100">Arreglo de Rosas
+                                                Premium</p>
+                                            <p class="text-xs text-slate-500 mt-1 italic">Rojo Pasión</p>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td class="px-6 py-6 text-slate-600 dark:text-slate-400 font-medium">$450.00</td>
+                                <td class="px-6 py-6">
+                                    <div
+                                        class="flex items-center border border-primary/20 rounded-lg w-max overflow-hidden bg-background-light dark:bg-slate-800">
+                                        <button class="px-3 py-1 hover:bg-primary/10 text-primary transition-colors">
+                                            <span class="material-symbols-outlined text-sm leading-none">remove</span>
+                                        </button>
+                                        <span class="px-4 py-1 text-sm font-bold border-x border-primary/10">1</span>
+                                        <button class="px-3 py-1 hover:bg-primary/10 text-primary transition-colors">
+                                            <span class="material-symbols-outlined text-sm leading-none">add</span>
+                                        </button>
+                                    </div>
+                                </td>
+                                <td class="px-6 py-6 text-right font-bold text-slate-900 dark:text-slate-100">$450.00
+                                </td>
+                            </tr>
+                            <!-- Item 2 -->
+                            <tr class="group hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
+                                <td class="px-6 py-6">
+                                    <div class="flex items-center gap-4">
+                                        <div
+                                            class="size-20 rounded-lg overflow-hidden flex-shrink-0 border border-primary/10">
+                                            <img alt="Producto" class="w-full h-full object-cover"
+                                                data-alt="Colorful tulip bouquet box"
+                                                src="https://lh3.googleusercontent.com/aida-public/AB6AXuD2QjQ7aQgVk5K3JHEBleXHDbkh9-bgzyXy_FZHz9aureJpumS6bWZZDCo_mNsF9jr2BX2Z4PGUAgLy6G7ZU1cxe8XqgPpgmrT_KnnOPUvwA-iVeQAEg1skuzEGTQloSJE_6l6phgYhI_YOtH4HXDdnITg00XiYO3Em0e25dH2dMQr1vGSaHBB_lGOnCuo-rhf5sfiaCVL5RXYytMEgbN3DD94BRftoU3RFUNlz6ItaXxBufq_xH49ZEHx7eCLvdkcushMvWDG7zZE" />
+                                        </div>
+                                        <div>
+                                            <p class="font-bold text-slate-900 dark:text-slate-100">Caja de Tulipanes
+                                                Variados</p>
+                                            <p class="text-xs text-slate-500 mt-1 italic">10 Unidades</p>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td class="px-6 py-6 text-slate-600 dark:text-slate-400 font-medium">$620.00</td>
+                                <td class="px-6 py-6">
+                                    <div
+                                        class="flex items-center border border-primary/20 rounded-lg w-max overflow-hidden bg-background-light dark:bg-slate-800">
+                                        <button class="px-3 py-1 hover:bg-primary/10 text-primary transition-colors">
+                                            <span class="material-symbols-outlined text-sm leading-none">remove</span>
+                                        </button>
+                                        <span class="px-4 py-1 text-sm font-bold border-x border-primary/10">2</span>
+                                        <button class="px-3 py-1 hover:bg-primary/10 text-primary transition-colors">
+                                            <span class="material-symbols-outlined text-sm leading-none">add</span>
+                                        </button>
+                                    </div>
+                                </td>
+                                <td class="px-6 py-6 text-right font-bold text-slate-900 dark:text-slate-100">$1,240.00
+                                </td>
+                            </tr>
+                            <!-- Item 3 -->
+                            <tr class="group hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
+                                <td class="px-6 py-6">
+                                    <div class="flex items-center gap-4">
+                                        <div
+                                            class="size-20 rounded-lg overflow-hidden flex-shrink-0 border border-primary/10">
+                                            <img alt="Producto" class="w-full h-full object-cover"
+                                                data-alt="Orchid plant in ceramic pot"
+                                                src="https://lh3.googleusercontent.com/aida-public/AB6AXuBlab6mIEnV-17cG4m0YTB21Tgf3eZo1-XsdloWiS4eU1q0epzxdngunPNQEJLlxdoPuGuuC3CN8zcESVSJ0q0BMqGaapKubvj-V1zaZNq8-DCG9UHb2v2xM8pxmGK9ipiK7LX5TY59xIBVaBahDv5iRXKJVdn4m6HX4bQgAvobsZNWLzm1ddUFnwA5vbdqbCHo6nv-mo_OqCLt0Nn1hDnovwECCfT68z5Kd7sVt_m5TgHOwmtuprBV_610UU48szR4MV1v93jmLVY" />
+                                        </div>
+                                        <div>
+                                            <p class="font-bold text-slate-900 dark:text-slate-100">Orquídea en Maceta
+                                            </p>
+                                            <p class="text-xs text-slate-500 mt-1 italic">Cerámica Blanca</p>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td class="px-6 py-6 text-slate-600 dark:text-slate-400 font-medium">$850.00</td>
+                                <td class="px-6 py-6">
+                                    <div
+                                        class="flex items-center border border-primary/20 rounded-lg w-max overflow-hidden bg-background-light dark:bg-slate-800">
+                                        <button class="px-3 py-1 hover:bg-primary/10 text-primary transition-colors">
+                                            <span class="material-symbols-outlined text-sm leading-none">remove</span>
+                                        </button>
+                                        <span class="px-4 py-1 text-sm font-bold border-x border-primary/10">1</span>
+                                        <button class="px-3 py-1 hover:bg-primary/10 text-primary transition-colors">
+                                            <span class="material-symbols-outlined text-sm leading-none">add</span>
+                                        </button>
+                                    </div>
+                                </td>
+                                <td class="px-6 py-6 text-right font-bold text-slate-900 dark:text-slate-100">$850.00
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <!-- Order Summary -->
+                <div class="mt-8 grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
+                    <!-- Coupon/Notes Area -->
+                    <div class="lg:col-span-2 space-y-4">
+                        
+                    </div>
+                    <!-- Totals -->
+                    <div class="bg-white dark:bg-slate-900 p-6 rounded-xl border border-primary/10 shadow-sm space-y-4">
+                        <div class="flex justify-between items-center text-sm">
+                            <span class="text-slate-500 dark:text-slate-400">Subtotal</span>
+                            <span class="font-medium text-slate-900 dark:text-slate-100">$2,540.00</span>
+                        </div>
+                        <div class="flex justify-between items-center text-sm">
+                            <span class="text-slate-500 dark:text-slate-400">Envío</span>
+                            <span class="font-medium text-slate-900 dark:text-slate-100">$150.00</span>
+                        </div>
+                        <div class="pt-4 border-t border-primary/10 flex justify-between items-end">
+                            <span class="text-lg font-bold text-slate-900 dark:text-slate-100">Total</span>
+                            <div class="text-right">
+                                <span class="block text-2xl font-black text-primary leading-none">$2,690.00</span>
+                                <span class="text-[10px] text-slate-400 uppercase tracking-tighter">IVA Incluido</span>
+                            </div>
+                        </div>
+                        <button
+                            class="w-full bg-primary hover:bg-primary/90 text-white font-bold py-4 px-6 rounded-xl shadow-lg shadow-primary/25 transition-all flex items-center justify-center gap-2 group mt-2">
+                            <span>Proceder al Pago</span>
+                            <span
+                                class="material-symbols-outlined group-hover:translate-x-1 transition-transform">arrow_forward</span>
+                        </button>
+                        <div class="flex items-center justify-center gap-2 pt-2">
+                            <span class="material-symbols-outlined text-slate-400 text-sm">lock</span>
+                            <span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Pago 100%
+                                Seguro</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+</body>
+
+</html>

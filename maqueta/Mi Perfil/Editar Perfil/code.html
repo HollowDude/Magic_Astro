@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+
+<html lang="es">
+
+<head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <title>Editar Perfil - Maggy Flowers</title>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;700&amp;display=swap"
+        rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght@100..700,0..1&amp;display=swap"
+        rel="stylesheet" />
+    <link
+        href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
+        rel="stylesheet" />
+    <script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#eb4763",
+                        "background-light": "#f8f6f6",
+                        "background-dark": "#211114",
+                    },
+                    fontFamily: {
+                        "display": ["Be Vietnam Pro", "sans-serif"], "display2":["Oddval Text", "semibold"]
+                    },
+                    borderRadius: { "DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px" },
+                },
+            },
+        }
+    </script>
+    <style>
+        body {
+            font-family: 'Be Vietnam Pro', sans-serif;
+        }
+
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+
+        .active-link {
+            background-color: rgba(235, 71, 99, 0.1);
+            border-right: 4px solid #eb4763;
+        }
+    </style>
+</head>
+
+<body class="bg-background-light dark:bg-background-dark text-slate-900 dark:text-slate-100 font-display">
+    <div class="flex h-screen overflow-hidden">
+        <!-- Sidebar Navigation -->
+        <aside class="w-64 bg-white dark:bg-slate-900 border-r border-slate-200 dark:border-slate-800 flex flex-col">
+            <div class="p-6 flex items-center gap-3">
+                <div class="h-10 w-10 rounded-full bg-primary/20 flex items-center justify-center text-primary">
+                    <span class="material-symbols-outlined">local_florist</span>
+                </div>
+                <div>
+                    <h1 class="text-sm font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Maggy
+                        Flowers</h1>
+                </div>
+            </div>
+            <div class="px-4 py-2">
+                <div
+                    class="flex items-center gap-3 p-3 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer group">
+                    <div class="h-10 w-10 rounded-full bg-cover bg-center border-2 border-primary/30"
+                        data-alt="Professional headshot portrait of Maggy Flowers"
+                        style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuBt13uSBbCYxN-pI2MFdF7kH0JuchS4nMxIoOxYtGtDsnuLameBFFbC2jkAlroBaCwBvKkcsUuRRkbnQQKxYal71lBFKPXr7glfgKCLvlJbviQrYaKHOzV_jYr5RdFOC2kn24htRTYMEHT0fBtyiLm8ScqQBvIUQA3koOrmsvyDNpLMTgQR869oXSAJ5Nee1fXeonefPGvy-Q6sWbPnuIBohItz7X_QlzZdBuV2K5Tbl-VK5gR66pYM_L6ZqsXSqB9-eGeQXloSVgM')">
+                    </div>
+                    <div class="flex flex-col">
+                        <p class="text-sm font-medium text-slate-900 dark:text-slate-100 leading-tight">Maggy Flowers
+                        </p>
+                        <p class="text-xs text-slate-500 dark:text-slate-400">Administrador</p>
+                    </div>
+                </div>
+            </div>
+            <nav class="flex-1 mt-4 px-2 space-y-1">
+
+                <a class="flex items-center gap-3 px-4 py-3 text-[#89656b] dark:text-slate-400 hover:text-primary dark:hover:text-primary transition-colors"
+                    href="#">
+                    <span class="material-symbols-outlined">location_on</span>
+                    <span class="text-sm font-medium">Direcciones</span>
+                </a>
+
+                <a class="flex items-center gap-3 px-4 py-3 text-[#89656b] dark:text-slate-400 hover:text-primary dark:hover:text-primary transition-colors"
+                    href="#">
+                    <span class="material-symbols-outlined">shopping_bag</span>
+                    <span class="text-sm font-medium">Pedidos</span>
+                </a>
+
+                <a class="flex items-center gap-3 px-4 py-3 text-[#89656b] hover:text-primary dark:hover:text-primary transition-colors"
+                     href="#">
+                    <span class="material-symbols-outlined">shopping_cart</span>
+                    <span class="text-sm font-medium">Mi carrito</span>
+                </a>
+
+                <a class="flex items-center gap-3 px-4 py-3 text-[#89656b] bg-primary/10 rounded-lg active-link" href="#">
+                    <span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1">person</span>
+                    <span class="text-sm font-bold">Perfil</span>
+                </a>
+            </nav>
+            <div class="p-4 border-t border-slate-200 dark:border-slate-800">
+                <button
+                    class="flex items-center gap-3 px-4 py-3 w-full text-slate-500 dark:text-slate-400 hover:text-red-500 transition-colors">
+                    <span class="material-symbols-outlined">logout</span>
+                    <span class="text-sm font-medium">Cerrar Sesión</span>
+                </button>
+            </div>
+        </aside>
+        <!-- Main Content Area -->
+        <main class="flex-1 overflow-y-auto bg-background-light dark:bg-background-dark p-8 md:p-12">
+            <div class="max-w-3xl mx-auto">
+                <div class="mb-10">
+                    <h2 class="text-3xl font-display2 text-[#89656b] dark:text-slate-100 tracking-tight">Editar Perfil</h2>
+                    <p class="text-slate-500 dark:text-slate-400 mt-2">Actualiza tu información personal y de contacto
+                        para mantener tu cuenta al día.</p>
+                </div>
+                <div
+                    class="bg-white dark:bg-slate-900 rounded-xl shadow-sm border border-slate-200 dark:border-slate-800 overflow-hidden">
+                    <div class="p-8">
+                        <form class="space-y-6">
+                            <!-- Avatar Upload Section -->
+                            <div
+                                class="flex items-center gap-6 pb-6 border-bottom border-slate-100 dark:border-slate-800">
+                                <div class="relative group">
+                                    <div class="h-24 w-24 rounded-full bg-cover bg-center border-4 border-slate-50 dark:border-slate-800"
+                                        data-alt="User profile avatar preview"
+                                        style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuBsKdD0-WI1n4bmC1DzlcknMCsMVgKtbSC-oN-LwweODnud9YrDDx0gQXUh_PWhtveAxGJ5T0gfynaq2M_vyq7Jt8yg8KWR4v1n9-kubXy5RBTUIsv7mVnN3AGwcqkwAWp_ZRIuRf0A2l-zskiVQl-oeLfMH7LSk7Cdwjjx-a50dxpeuv-3S5fnDGDOmPE-hX7dDzeLngXGrrMTU5ESPfuqDVrrvnktXkuMNDswy9Y0qDz-PlwsSgo7u4avtKJ3-hXi6BjRB2sW-zo')">
+                                    </div>
+                                    <button
+                                        class="absolute inset-0 flex items-center justify-center bg-black/40 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+                                        type="button">
+                                        <span class="material-symbols-outlined text-white">photo_camera</span>
+                                    </button>
+                                </div>
+                                <div>
+                                    <h3 class="text-lg font-medium text-slate-900 dark:text-slate-100">Foto de perfil
+                                    </h3>
+                                    <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">JPG o PNG. Tamaño máximo
+                                        2MB.</p>
+                                    <div class="flex gap-3 mt-3">
+                                        <button
+                                            class="text-xs font-semibold px-3 py-1.5 rounded bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors"
+                                            type="button">Cambiar</button>
+                                        <button
+                                            class="text-xs font-semibold px-3 py-1.5 text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded transition-colors"
+                                            type="button">Eliminar</button>
+                                    </div>
+                                </div>
+                            </div>
+                            <hr class="border-slate-100 dark:border-slate-800" />
+                            <!-- Form Fields -->
+                            <div class="grid grid-cols-1 gap-y-6">
+                                <div>
+                                    <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2"
+                                        for="full_name">Nombre Completo</label>
+                                    <div class="relative">
+                                        <input
+                                            class="w-full pl-4 pr-4 py-3 rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-primary focus:border-transparent transition-all outline-none"
+                                            id="full_name" name="full_name" type="text" value="Maggy Flowers" />
+                                    </div>
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2"
+                                        for="email">Correo Electrónico</label>
+                                    <div class="relative">
+                                        <input
+                                            class="w-full pl-4 pr-4 py-3 rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-primary focus:border-transparent transition-all outline-none"
+                                            id="email" name="email" type="email" value="maggy@flowershop.com" />
+                                    </div>
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2"
+                                        for="phone">Dirección de Envío Principal</label>
+                                    <div class="relative">
+                                        <input
+                                            class="w-full pl-4 pr-4 py-3 rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-primary focus:border-transparent transition-all outline-none"
+                                            id="phone" name="phone" type="text" value="Av. de las Rosas 123, Int. 4
+Col. Primavera, C.P. 45000
+Ciudad de México, México " />
+                                    </div>
+                            </div>
+                            <hr class="border-slate-100 dark:border-slate-800" />
+                            <!-- Submit Buttons -->
+                            <div class="flex items-center justify-end gap-4 pt-4">
+                                <button
+                                    class="px-6 py-2.5 rounded-lg border border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400 font-medium hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors"
+                                    type="button">
+                                    Cancelar
+                                </button>
+                                <button
+                                    class="px-8 py-2.5 rounded-lg bg-primary text-white font-bold hover:bg-primary/90 shadow-lg shadow-primary/20 transition-all"
+                                    type="submit">
+                                    Guardar Cambios
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+                <!-- Security Section Placeholder -->
+                <div
+                    class="mt-8 bg-white dark:bg-slate-900 rounded-xl shadow-sm border border-slate-200 dark:border-slate-800 p-6 flex items-center justify-between">
+                    <div class="flex items-center gap-4">
+                        <div class="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center text-primary">
+                            <span class="material-symbols-outlined">lock</span>
+                        </div>
+                        <div>
+                            <h4 class="font-bold text-slate-900 dark:text-slate-100">Seguridad de la cuenta</h4>
+                            <p class="text-sm text-slate-500 dark:text-slate-400">Gestiona tu contraseña y
+                                autenticación.</p>
+                        </div>
+                    </div>
+                    <button class="text-sm font-bold text-primary hover:underline">Cambiar contraseña</button>
+                </div>
+            </div>
+        </main>
+    </div>
+</body>
+
+</html>

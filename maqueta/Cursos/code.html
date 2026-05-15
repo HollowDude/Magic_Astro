@@ -1,0 +1,438 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Maggy Flowers - Floral Academy</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;700;900&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+  tailwind.config = {
+    darkMode: "class",
+    theme: {
+      extend: {
+        colors: {
+          "primary":          "#eb4763",
+          "primary-dark":     "#d63651",
+          "secondary":        "#886369",
+          "sage":             "#e1e6e1",
+          "blush":            "#fff0f2",
+          "background-light": "#f8f6f6",
+          "background-dark":  "#211114",
+        },
+        fontFamily: { "display": ["Be Vietnam Pro", "sans-serif"], "display_title":["Oddval Text","SemiBold" ] },
+        borderRadius: { "DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px" },
+      },
+    },
+  }
+</script>
+<style>
+  body { font-family: 'Be Vietnam Pro', sans-serif; }
+
+  .material-symbols-outlined {
+    font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    vertical-align: middle;
+    line-height: 1;
+    flex-shrink: 0;
+  }
+
+  /* Slider */
+  .slider-track { display: flex; transition: transform 0.55s cubic-bezier(.4,0,.2,1); will-change: transform; }
+  .slide        { min-width: 100%; position: relative; }
+
+  .dot { width: 8px; height: 8px; border-radius: 9999px; background: rgba(255,255,255,.45); transition: all .3s; cursor: pointer; border: none; }
+  .dot.active { width: 24px; background: #fff; }
+
+  .slide-progress { height: 3px; background: rgba(255,255,255,.25); overflow: hidden; }
+  @keyframes progress { from { width: 0; } to { width: 100%; } }
+  .slide-progress-bar { height: 100%; background: #fff; animation: progress 5s linear forwards; }
+
+  /* Cards */
+  .course-card { transition: box-shadow .2s, transform .2s; }
+  .course-card:hover { box-shadow: 0 8px 28px rgba(0,0,0,.1); transform: translateY(-2px); }
+
+  .badge-inperson { background: #e1f0e1; color: #2a6b2a; }
+  .badge-digital  { background: #fff0f2; color: #d63651; border: 1px solid rgba(235,71,99,.18); }
+  .badge-workshop { background: #fff8e6; color: #9a6c00; }
+
+  .star-fill { font-variation-settings: 'FILL' 1, 'wght' 400, 'GRAD' 0, 'opsz' 24; }
+</style>
+</head>
+<body class="bg-background-light font-display text-slate-900 antialiased min-h-screen flex flex-col">
+
+<!-- ══════════════════════════════════════
+     BANNER / SLIDER
+══════════════════════════════════════ -->
+<section class="relative w-full overflow-hidden" style="height:clamp(300px,50vw,540px)">
+
+  <div class="slider-track h-full" id="sliderTrack">
+
+    <!-- Slide 1 -->
+    <div class="slide h-full">
+      <img src="https://lh3.googleusercontent.com/aida-public/AB6AXuCjSe0_Qz6_SN8vKCVuFwTExt2M0w1wiF_Yg7YsXCnG2_JNpq1VS4Q6oD3DcwFJ_CyxqK9QhQUQBqmcstzzYb-pdGI-knucx9G7SPBnTRDMf_5VvwCEUcpWWtEwPYIAUJaSxCpWVhwO1hj3Cb6O1OTJSkCbRJrF2uIeNVDncz7So3lB6yWvVQ_M33YPUJfStR-0PRDtfDdz4gtxWubxJVjoSa14Sn3KGcrkt18cq00BYpI1Z4lSOj_LCWU_ehKK1IaYcyt54NVnsaA"
+           alt="Floral arrangement" class="w-full h-full object-cover"/>
+      <div class="absolute inset-0 bg-gradient-to-r from-black/70 via-black/35 to-transparent"></div>
+      <div class="absolute inset-0 flex items-center px-8 md:px-20">
+        <div class="max-w-xl text-white">
+          <span class="inline-block bg-primary text-white text-xs font-black uppercase tracking-widest px-3 py-1 rounded-full mb-4">Academia Floral</span>
+          <h1 class="text-4xl md:text-5xl font-display_title leading-tight mb-4">Descubre el arte<br>de las flores</h1>
+          <p class="text-white/80 text-sm md:text-base mb-6 leading-relaxed max-w-md">Aprende técnicas exclusivas con instructores expertos. Cursos presenciales y digitales para todos los niveles.</p>
+          <div class="flex flex-wrap gap-3">
+            <a href="#cursos" class="inline-flex items-center gap-2 bg-primary hover:bg-primary-dark text-white font-bold px-5 py-2.5 rounded-xl transition-all text-sm shadow-lg shadow-primary/30">
+              Ver cursos <span class="material-symbols-outlined text-[16px]">arrow_downward</span>
+            </a>
+            <a href="#" class="inline-flex items-center gap-2 bg-white/15 backdrop-blur-sm hover:bg-white/25 text-white font-bold px-5 py-2.5 rounded-xl border border-white/30 text-sm transition-all">
+              Conoce Maggy
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Slide 2 -->
+    <div class="slide h-full">
+      <img src="https://lh3.googleusercontent.com/aida-public/AB6AXuD8mwchEpkUA8pbOZR9WjHrkpXY7VSPnp5FFg9882n83E9Spru1bfmnVEycZFPu0uVu23Ho9Y6Ci9aO_WkuwhN_rBo_OQkhth0WjBTtZYjV2iwAEZpeuucQEub5uJTz5EAIe8YXxNCtGR3qfR9-FOHyn2ZXtdDFHj1NHaNEbIVcZGMrvYG5RZZ4NGf3sJtO2pPhUOuJGdIiT1E6CboXLivRDEvaS01gtUQ_5LNL6SYAw_WTFcI4KmhP-H9FUhjNC3aYnDFkXoBaDuo"
+           alt="Talleres presenciales" class="w-full h-full object-cover"/>
+      <div class="absolute inset-0 bg-gradient-to-r from-black/70 via-black/35 to-transparent"></div>
+      <div class="absolute inset-0 flex items-center px-8 md:px-20">
+        <div class="max-w-xl text-white">
+          <span class="inline-block bg-amber-500 text-white text-xs font-black uppercase tracking-widest px-3 py-1 rounded-full mb-4">Talleres Presenciales</span>
+          <h1 class="text-4xl md:text-5xl font-display_title leading-tight mb-4">Aprende haciendo,<br>no solo viendo</h1>
+          <p class="text-white/80 text-sm md:text-base mb-6 leading-relaxed max-w-md">Talleres prácticos con materiales premium incluidos. Grupos pequeños y atención completamente personalizada.</p>
+          <a href="#cursos" class="inline-flex items-center gap-2 bg-primary hover:bg-primary-dark text-white font-bold px-5 py-2.5 rounded-xl text-sm transition-all shadow-lg shadow-primary/30">
+            Ver talleres <span class="material-symbols-outlined text-[16px]">arrow_downward</span>
+          </a>
+        </div>
+      </div>
+    </div>
+
+    <!-- Slide 3 -->
+    <div class="slide h-full">
+      <img src="https://lh3.googleusercontent.com/aida-public/AB6AXuBK881TjRvyjdKwtMIxsnY-q6zsslLsA-6MzWft4ZfmyO_7UomhygKEI3aLK64qBd6EIkHqnDt3QWMiIzNLzsjba9FZhWFXTatxsTBdgurt8k9gr0q6bhvYz875rUODNzWyU8d8VadoQkRUwaXw8zV8Vem8Rf8SuJFwotePQPndDPUBVZp6KEHrExCI3sT9h7eFX9giedQOviWE5y4i_sstIaUVxAHNQE6QpPnayp7TaiQOhcSWyuRDNrr08b8suRJ4Ywl5_rcVLDY"
+           alt="Cursos digitales" class="w-full h-full object-cover"/>
+      <div class="absolute inset-0 bg-gradient-to-r from-black/70 via-black/35 to-transparent"></div>
+      <div class="absolute inset-0 flex items-center px-8 md:px-20">
+        <div class="max-w-xl text-white">
+          <span class="inline-block bg-violet-600 text-white text-xs font-black uppercase tracking-widest px-3 py-1 rounded-full mb-4">Cursos Digitales</span>
+          <h1 class="text-4xl md:text-5xl font-display_title leading-tight mb-4">Aprende desde<br>donde estés</h1>
+          <p class="text-white/80 text-sm md:text-base mb-6 leading-relaxed max-w-md">Biblioteca de cursos online, acceso de por vida, videos HD y comunidad exclusiva de estudiantes.</p>
+          <a href="#cursos" class="inline-flex items-center gap-2 bg-primary hover:bg-primary-dark text-white font-bold px-5 py-2.5 rounded-xl text-sm transition-all shadow-lg shadow-primary/30">
+            Explorar cursos <span class="material-symbols-outlined text-[16px]">arrow_downward</span>
+          </a>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Progress -->
+  <div class="slide-progress absolute bottom-0 left-0 right-0 z-10">
+    <div class="slide-progress-bar" id="progressBar"></div>
+  </div>
+
+  <!-- Dots -->
+  <div class="absolute bottom-5 left-1/2 -translate-x-1/2 flex items-center gap-2 z-10">
+    <button class="dot active" onclick="goSlide(0)"></button>
+    <button class="dot" onclick="goSlide(1)"></button>
+    <button class="dot" onclick="goSlide(2)"></button>
+  </div>
+
+  <!-- Arrows -->
+  <button onclick="prevSlide()" class="absolute left-4 top-1/2 -translate-y-1/2 z-10 w-9 h-9 rounded-full bg-black/30 hover:bg-black/50 text-white flex items-center justify-center transition-all">
+    <span class="material-symbols-outlined text-[20px]">chevron_left</span>
+  </button>
+  <button onclick="nextSlide()" class="absolute right-4 top-1/2 -translate-y-1/2 z-10 w-9 h-9 rounded-full bg-black/30 hover:bg-black/50 text-white flex items-center justify-center transition-all">
+    <span class="material-symbols-outlined text-[20px]">chevron_right</span>
+  </button>
+
+</section>
+
+<!-- ══════════════════════════════════════
+     STATS STRIP
+══════════════════════════════════════ -->
+<div class="bg-white border-b border-slate-100 shadow-sm">
+  <div class="w-full max-w-[1200px] mx-auto px-4 md:px-10 py-4 grid grid-cols-2 md:grid-cols-4 divide-x divide-slate-100 text-center">
+    <div class="px-4 py-2">
+      <p class="text-xl font-black text-primary">+2,000</p>
+      <p class="text-xs text-secondary mt-0.5">Estudiantes formados</p>
+    </div>
+    <div class="px-4 py-2">
+      <p class="text-xl font-black text-primary">18</p>
+      <p class="text-xs text-#89656b text-secondary mt-0.5">Cursos disponibles</p>
+    </div>
+    <div class="px-4 py-2">
+      <p class="text-xl font-black text-primary">4.9 ★</p>
+      <p class="text-xs text-secondary mt-0.5">Valoración promedio</p>
+    </div>
+    <div class="px-4 py-2">
+      <p class="text-xl font-black text-primary">100%</p>
+      <p class="text-xs text-secondary mt-0.5">Satisfacción garantizada</p>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════
+     COURSE GRID
+══════════════════════════════════════ -->
+<main id="cursos" class="flex-1 w-full max-w-[1200px] mx-auto px-4 md:px-10 py-10 flex flex-col gap-8">
+
+  <!-- Header + filtros -->
+  <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+    <div>
+      <h2 class="text-2xl md:text-3xl text-[#89656b] font-display_title leading-tight">Cursos disponibles</h2>
+      <p class="text-secondary text-sm mt-1">Elige el formato que mejor se adapte a ti</p>
+    </div>
+    <div class="flex flex-wrap gap-2" id="filterPills">
+      <button onclick="filterCards('all',this)"       class="filter-pill px-4 py-1.5 rounded-full text-sm font-bold bg-primary text-white border border-primary transition-all">Todos</button>
+      <button onclick="filterCards('in-person',this)" class="filter-pill px-4 py-1.5 rounded-full text-sm font-bold bg-white border border-slate-200 text-secondary hover:border-primary/40 transition-all">Presencial</button>
+      <button onclick="filterCards('digital',this)"   class="filter-pill px-4 py-1.5 rounded-full text-sm font-bold bg-white border border-slate-200 text-secondary hover:border-primary/40 transition-all">Digital</button>
+      <button onclick="filterCards('workshop',this)"  class="filter-pill px-4 py-1.5 rounded-full text-sm font-bold bg-white border border-slate-200 text-secondary hover:border-primary/40 transition-all">Taller</button>
+    </div>
+  </div>
+
+  <!-- Grid -->
+  <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6" id="cardsGrid">
+
+    <!-- Card 1 -->
+    <article class="course-card bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden flex flex-col" data-type="in-person">
+      <div class="relative h-48 overflow-hidden">
+        <img src="https://lh3.googleusercontent.com/aida-public/AB6AXuDyr3QyYkCtCer78riD1x7KeJ_hkZLzi9-G06WL9tLEAFxe0LjtriEj2GOuksWxSWaxPKqkxL1AGMUjj2qRVQNDhC6dVEa39FQVfqp4Pb1YiQx9HQT6nvt1UP1gYQDpFQStPrDq4ZJyhnylOi27QX5P4mgMj_HPk2mvW4VUFU7dP7Rrabv8OVheuXnFoaj0K0EoB161lqCM4dKIY1bm6GB0CBVJqPyYZmOKfkw-RqQ6jz8-0bEWnZjUahVzN113oRB8CCDGuysTitA"
+             alt="Wedding Floral" class="w-full h-full object-cover transition-transform duration-500 hover:scale-105"/>
+        <div class="absolute inset-0 bg-gradient-to-t from-black/25 to-transparent"></div>
+        <span class="absolute top-3 left-3 badge-inperson text-xs font-bold px-2.5 py-1 rounded-full">Presencial</span>
+        <span class="absolute top-3 right-3 bg-black/50 text-white text-xs font-black px-2.5 py-1 rounded-full">$450</span>
+      </div>
+      <div class="flex flex-col flex-1 p-5 gap-3">
+        <div class="flex-1">
+          <h3 class="text-base font-bold text-slate-900 leading-snug mb-1">Wedding Floral Design Masterclass</h3>
+          <p class="text-secondary text-sm line-clamp-2 leading-relaxed">Domina los arreglos florales para bodas con materiales premium. Grupos reducidos y certificado incluido.</p>
+        </div>
+        <div class="flex flex-wrap gap-x-4 gap-y-1 text-xs text-secondary">
+          <span class="flex items-center gap-1"><span class="material-symbols-outlined text-[14px]">calendar_month</span>Oct 15–16</span>
+          <span class="flex items-center gap-1"><span class="material-symbols-outlined text-[14px]">schedule</span>2 días · 10am–4pm</span>
+          <span class="flex items-center gap-1"><span class="material-symbols-outlined text-[14px]">bar_chart</span>Intermedio</span>
+        </div>
+        <div class="flex items-center gap-1 text-xs">
+          <span class="material-symbols-outlined star-fill text-yellow-400 text-[14px]">star</span>
+          <span class="font-bold text-slate-900">4.8</span>
+          <span class="text-secondary">(94 reseñas)</span>
+        </div>
+        <a href="https://example.com/curso/wedding-masterclass" target="_blank" rel="noopener"
+           class="flex items-center justify-center gap-2 w-full py-2.5 rounded-xl bg-primary hover:bg-primary-dark text-white text-sm font-bold transition-all">
+          Ver curso <span class="material-symbols-outlined text-[15px]">open_in_new</span>
+        </a>
+      </div>
+    </article>
+
+    <!-- Card 2 -->
+    <article class="course-card bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden flex flex-col" data-type="digital">
+      <div class="relative h-48 overflow-hidden">
+        <img src="https://lh3.googleusercontent.com/aida-public/AB6AXuBOzJz3te1RQZcAxlsrBTtSoS__ex9QDYoQcoha3hSORRM_vc99ZJG3MXDNJJt2qIVby8EC83zW1yRS0FlF-v2oy3N6PiS4vDR2sTCSrx9fhE317JQQUt95lKXj-i_-lKUWRqx6DeScg4nQqNSOEPpBxHKoegdK04Wx787xLhH5sZqBJnze8vBqWqpuwq-tSaKOYM2LoPl-viX-W5L7b8EW8GySoZK-4AXs9ljTA4T3PTnmAyFnKnCB7OF7JoYOEBvMt3iEDhjhL_U"
+             alt="Spring Bouquet" class="w-full h-full object-cover transition-transform duration-500 hover:scale-105"/>
+        <div class="absolute inset-0 bg-gradient-to-t from-black/25 to-transparent"></div>
+        <span class="absolute top-3 left-3 badge-digital text-xs font-bold px-2.5 py-1 rounded-full">Digital</span>
+        <span class="absolute top-3 right-3 bg-black/50 text-white text-xs font-black px-2.5 py-1 rounded-full">$120</span>
+      </div>
+      <div class="flex flex-col flex-1 p-5 gap-3">
+        <div class="flex-1">
+          <h3 class="text-base font-bold text-slate-900 leading-snug mb-1">Spring Bouquet Arrangement Basics</h3>
+          <p class="text-secondary text-sm line-clamp-2 leading-relaxed">Crea bouquets primaverales vibrantes desde cero. Acceso de por vida y recursos descargables.</p>
+        </div>
+        <div class="flex flex-wrap gap-x-4 gap-y-1 text-xs text-secondary">
+          <span class="flex items-center gap-1"><span class="material-symbols-outlined text-[14px]">play_circle</span>A tu ritmo</span>
+          <span class="flex items-center gap-1"><span class="material-symbols-outlined text-[14px]">schedule</span>3 h de video</span>
+          <span class="flex items-center gap-1"><span class="material-symbols-outlined text-[14px]">bar_chart</span>Principiante</span>
+        </div>
+        <div class="flex items-center gap-1 text-xs">
+          <span class="material-symbols-outlined star-fill text-yellow-400 text-[14px]">star</span>
+          <span class="font-bold text-slate-900">4.9</span>
+          <span class="text-secondary">(128 reseñas)</span>
+        </div>
+        <a href="https://example.com/curso/spring-bouquet" target="_blank" rel="noopener"
+           class="flex items-center justify-center gap-2 w-full py-2.5 rounded-xl bg-primary hover:bg-primary-dark text-white text-sm font-bold transition-all">
+          Ver curso <span class="material-symbols-outlined text-[15px]">open_in_new</span>
+        </a>
+      </div>
+    </article>
+
+    <!-- Card 3 -->
+    <article class="course-card bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden flex flex-col" data-type="workshop">
+      <div class="relative h-48 overflow-hidden">
+        <img src="https://lh3.googleusercontent.com/aida-public/AB6AXuD8xjA2WDspQmiGOC7vOfzZ6BaqZiGX-1oj6F5w1edfFo-PQ_GsSJIosOT9WUsK9M8_GIT-iuCv-MYHHKMdUz4nmaOHFK9JPGQBW8fSniRb1i5pXkBknNvEuopaYlD6k_X6MsI1iB-GNpt3w_MCmdEYfQS_T3t-hOxFRoRXHoF724OX-ccWBq2QpSUYeaSere1VYBXJD8y_AIoaOvTR_rLsDmpyVSsTMIerh1Z_vFvlUpFTY-NYI2Ar0ea4XARwMsghkYkk0BLHllQ"
+             alt="Dried Installations" class="w-full h-full object-cover transition-transform duration-500 hover:scale-105"/>
+        <div class="absolute inset-0 bg-gradient-to-t from-black/25 to-transparent"></div>
+        <span class="absolute top-3 left-3 badge-workshop text-xs font-bold px-2.5 py-1 rounded-full">Taller</span>
+        <span class="absolute top-3 right-3 bg-black/50 text-white text-xs font-black px-2.5 py-1 rounded-full">$350</span>
+        <span class="absolute bottom-3 right-3 bg-red-500 text-white text-[10px] font-black px-2 py-0.5 rounded-full">12 cupos</span>
+      </div>
+      <div class="flex flex-col flex-1 p-5 gap-3">
+        <div class="flex-1">
+          <h3 class="text-base font-bold text-slate-900 leading-snug mb-1">Advanced Dried Installations</h3>
+          <p class="text-secondary text-sm line-clamp-2 leading-relaxed">Instalaciones con flores secas para eventos. Técnicas avanzadas y tendencias actuales de decoración.</p>
+        </div>
+        <div class="flex flex-wrap gap-x-4 gap-y-1 text-xs text-secondary">
+          <span class="flex items-center gap-1"><span class="material-symbols-outlined text-[14px]">calendar_month</span>Nov 12</span>
+          <span class="flex items-center gap-1"><span class="material-symbols-outlined text-[14px]">schedule</span>1 día · 9am–5pm</span>
+          <span class="flex items-center gap-1"><span class="material-symbols-outlined text-[14px]">bar_chart</span>Avanzado</span>
+        </div>
+        <div class="flex items-center gap-1 text-xs">
+          <span class="material-symbols-outlined star-fill text-yellow-400 text-[14px]">star</span>
+          <span class="font-bold text-slate-900">4.7</span>
+          <span class="text-secondary">(41 reseñas)</span>
+        </div>
+        <a href="https://example.com/curso/dried-installations" target="_blank" rel="noopener"
+           class="flex items-center justify-center gap-2 w-full py-2.5 rounded-xl bg-primary hover:bg-primary-dark text-white text-sm font-bold transition-all">
+          Ver curso <span class="material-symbols-outlined text-[15px]">open_in_new</span>
+        </a>
+      </div>
+    </article>
+
+    <!-- Card 4 -->
+    <article class="course-card bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden flex flex-col" data-type="digital">
+      <div class="relative h-48 overflow-hidden">
+        <img src="https://lh3.googleusercontent.com/aida-public/AB6AXuAlF5WpIenAlKuoVRHr-nDZxLbm1SaVnUet49AF1MS9MMYO3gsHExvqvCX4LzkGibAuE-QmHCWF0GIwpFfzq8vxL2sjPpzNmZGOAZ-ViySRnEgmk-QIh0p0M5rlF1xHUJ3RDTGSRX2VpvzrFi701G55b5wtnU2rF2rGHjZ168wvzgKWy4Yz2sg1Pni1ZpE6Lniyntakvw64HH9m2DPuz0PaxRAqwSnvmex5wFRCHH64qM4lokNr0YkQT1kAv4AqrDSyzQr3n6SeZHw"
+             alt="Sustainable Floristry" class="w-full h-full object-cover transition-transform duration-500 hover:scale-105"/>
+        <div class="absolute inset-0 bg-gradient-to-t from-black/25 to-transparent"></div>
+        <span class="absolute top-3 left-3 badge-digital text-xs font-bold px-2.5 py-1 rounded-full">Digital</span>
+        <span class="absolute top-3 right-3 bg-black/50 text-white text-xs font-black px-2.5 py-1 rounded-full">$95</span>
+      </div>
+      <div class="flex flex-col flex-1 p-5 gap-3">
+        <div class="flex-1">
+          <h3 class="text-base font-bold text-slate-900 leading-snug mb-1">Sustainable Floristry Practices</h3>
+          <p class="text-secondary text-sm line-clamp-2 leading-relaxed">Diseño floral responsable con el ambiente. Flores de temporada, técnicas eco-friendly y tendencias verdes.</p>
+        </div>
+        <div class="flex flex-wrap gap-x-4 gap-y-1 text-xs text-secondary">
+          <span class="flex items-center gap-1"><span class="material-symbols-outlined text-[14px]">play_circle</span>A tu ritmo</span>
+          <span class="flex items-center gap-1"><span class="material-symbols-outlined text-[14px]">schedule</span>2.5 h de video</span>
+          <span class="flex items-center gap-1"><span class="material-symbols-outlined text-[14px]">bar_chart</span>Todos los niveles</span>
+        </div>
+        <div class="flex items-center gap-1 text-xs">
+          <span class="material-symbols-outlined star-fill text-yellow-400 text-[14px]">star</span>
+          <span class="font-bold text-slate-900">5.0</span>
+          <span class="text-secondary">(56 reseñas)</span>
+        </div>
+        <a href="https://example.com/curso/sustainable-floristry" target="_blank" rel="noopener"
+           class="flex items-center justify-center gap-2 w-full py-2.5 rounded-xl bg-primary hover:bg-primary-dark text-white text-sm font-bold transition-all">
+          Ver curso <span class="material-symbols-outlined text-[15px]">open_in_new</span>
+        </a>
+      </div>
+    </article>
+
+    <!-- Card 5 -->
+    <article class="course-card bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden flex flex-col" data-type="in-person">
+      <div class="relative h-48 overflow-hidden">
+        <img src="https://lh3.googleusercontent.com/aida-public/AB6AXuAQHqqd-0T9HcGNUZsyD2DGRqx_wQj8W-JVW7YSrJKpIpQkF0WSbLuoQhBFX2NBcvbk0MQtzcWrCti9y_Qht705Tchruso8qyXzLhEr6hCqIackICZBtKopCmBLR5wWQDcdhX_mj745Ix5MDXS91jQ4_iR83sixSqALBzc3NM3_rEhIFnDgp__8NKEshauJEYfLmnPvB8uwShLZl5dtxaa3B3oa5lP0nVp-rhWJO6nPEcuUBzfT-xF-T36xDg_VDz1PP5eb1auoF8I"
+             alt="Taller Primaveral" class="w-full h-full object-cover transition-transform duration-500 hover:scale-105"/>
+        <div class="absolute inset-0 bg-gradient-to-t from-black/25 to-transparent"></div>
+        <span class="absolute top-3 left-3 badge-inperson text-xs font-bold px-2.5 py-1 rounded-full">Presencial</span>
+        <span class="absolute top-3 right-3 bg-black/50 text-white text-xs font-black px-2.5 py-1 rounded-full">$280</span>
+      </div>
+      <div class="flex flex-col flex-1 p-5 gap-3">
+        <div class="flex-1">
+          <h3 class="text-base font-bold text-slate-900 leading-snug mb-1">Taller de Arreglos Primaverales</h3>
+          <p class="text-secondary text-sm line-clamp-2 leading-relaxed">Arreglos frescos con flores de temporada. Ideal para principiantes con un ambiente acogedor y divertido.</p>
+        </div>
+        <div class="flex flex-wrap gap-x-4 gap-y-1 text-xs text-secondary">
+          <span class="flex items-center gap-1"><span class="material-symbols-outlined text-[14px]">calendar_month</span>Dic 5</span>
+          <span class="flex items-center gap-1"><span class="material-symbols-outlined text-[14px]">schedule</span>Medio día · 10am–2pm</span>
+          <span class="flex items-center gap-1"><span class="material-symbols-outlined text-[14px]">bar_chart</span>Principiante</span>
+        </div>
+        <div class="flex items-center gap-1 text-xs">
+          <span class="material-symbols-outlined star-fill text-yellow-400 text-[14px]">star</span>
+          <span class="font-bold text-slate-900">4.9</span>
+          <span class="text-secondary">(72 reseñas)</span>
+        </div>
+        <a href="https://example.com/curso/arreglos-primaverales" target="_blank" rel="noopener"
+           class="flex items-center justify-center gap-2 w-full py-2.5 rounded-xl bg-primary hover:bg-primary-dark text-white text-sm font-bold transition-all">
+          Ver curso <span class="material-symbols-outlined text-[15px]">open_in_new</span>
+        </a>
+      </div>
+    </article>
+
+    <!-- Card 6 -->
+    <article class="course-card bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden flex flex-col" data-type="digital">
+      <div class="relative h-48 overflow-hidden">
+        <img src="https://lh3.googleusercontent.com/aida-public/AB6AXuD8mwchEpkUA8pbOZR9WjHrkpXY7VSPnp5FFg9882n83E9Spru1bfmnVEycZFPu0uVu23Ho9Y6Ci9aO_WkuwhN_rBo_OQkhth0WjBTtZYjV2iwAEZpeuucQEub5uJTz5EAIe8YXxNCtGR3qfR9-FOHyn2ZXtdDFHj1NHaNEbIVcZGMrvYG5RZZ4NGf3sJtO2pPhUOuJGdIiT1E6CboXLivRDEvaS01gtUQ_5LNL6SYAw_WTFcI4KmhP-H9FUhjNC3aYnDFkXoBaDuo"
+             alt="Teoría del Color" class="w-full h-full object-cover transition-transform duration-500 hover:scale-105"/>
+        <div class="absolute inset-0 bg-gradient-to-t from-black/25 to-transparent"></div>
+        <span class="absolute top-3 left-3 badge-digital text-xs font-bold px-2.5 py-1 rounded-full">Digital</span>
+        <span class="absolute top-3 right-3 bg-emerald-600 text-white text-xs font-black px-2.5 py-1 rounded-full">Gratis</span>
+      </div>
+      <div class="flex flex-col flex-1 p-5 gap-3">
+        <div class="flex-1">
+          <h3 class="text-base font-bold text-slate-900 leading-snug mb-1">Introducción a la Teoría del Color Floral</h3>
+          <p class="text-secondary text-sm line-clamp-2 leading-relaxed">Psicología del color aplicada a los arreglos florales. Curso introductorio gratuito para empezar.</p>
+        </div>
+        <div class="flex flex-wrap gap-x-4 gap-y-1 text-xs text-secondary">
+          <span class="flex items-center gap-1"><span class="material-symbols-outlined text-[14px]">play_circle</span>A tu ritmo</span>
+          <span class="flex items-center gap-1"><span class="material-symbols-outlined text-[14px]">schedule</span>45 min</span>
+          <span class="flex items-center gap-1"><span class="material-symbols-outlined text-[14px]">bar_chart</span>Principiante</span>
+        </div>
+        <div class="flex items-center gap-1 text-xs">
+          <span class="material-symbols-outlined star-fill text-yellow-400 text-[14px]">star</span>
+          <span class="font-bold text-slate-900">4.6</span>
+          <span class="text-secondary">(203 reseñas)</span>
+        </div>
+        <a href="https://example.com/curso/teoria-color" target="_blank" rel="noopener"
+           class="flex items-center justify-center gap-2 w-full py-2.5 rounded-xl bg-primary hover:bg-primary-dark text-white text-sm font-bold transition-all">
+          Ver curso <span class="material-symbols-outlined text-[15px]">open_in_new</span>
+        </a>
+      </div>
+    </article>
+
+  </div>
+
+  <!-- Load more -->
+  <div class="flex justify-center">
+    <button class="flex items-center gap-2 px-7 py-3 rounded-xl border border-slate-200 bg-white text-slate-600 font-bold text-sm hover:border-primary/40 hover:text-primary transition-all shadow-sm">
+      <span class="material-symbols-outlined text-[18px]">expand_more</span>
+      Cargar más cursos
+    </button>
+  </div>
+
+</main>
+
+<script>
+  // ── Slider ──
+  const TOTAL = 3;
+  let current = 0;
+  let timer;
+
+  const track   = document.getElementById('sliderTrack');
+  const dots    = document.querySelectorAll('.dot');
+  const progBar = document.getElementById('progressBar');
+
+  function goSlide(n) {
+    current = (n + TOTAL) % TOTAL;
+    track.style.transform = `translateX(-${current * 100}%)`;
+    dots.forEach((d,i) => d.classList.toggle('active', i === current));
+    progBar.style.animation = 'none';
+    void progBar.offsetWidth;
+    progBar.style.animation = 'progress 5s linear forwards';
+    clearInterval(timer);
+    timer = setInterval(nextSlide, 5000);
+  }
+  function nextSlide() { goSlide(current + 1); }
+  function prevSlide() { goSlide(current - 1); }
+  timer = setInterval(nextSlide, 5000);
+
+  // ── Filters ──
+  function filterCards(type, btn) {
+    document.querySelectorAll('.filter-pill').forEach(p => {
+      p.classList.remove('bg-primary','text-white','border-primary');
+      p.classList.add('bg-white','text-secondary','border-slate-200');
+    });
+    btn.classList.remove('bg-white','text-secondary','border-slate-200');
+    btn.classList.add('bg-primary','text-white','border-primary');
+
+    document.querySelectorAll('#cardsGrid article').forEach(card => {
+      card.style.display = (type === 'all' || card.dataset.type === type) ? '' : 'none';
+    });
+  }
+</script>
+</body>
+</html>

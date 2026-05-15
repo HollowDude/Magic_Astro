@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Maggy Flowers – Header</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'Be Vietnam Pro', sans-serif;
+    background: #fff;
+  }
+
+  header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 48px;
+    height: 72px;
+    background: #fff;
+    border-bottom: 1px solid #f0e8e8;
+  }
+
+  /* ── LOGO ── */
+  .logo {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    text-decoration: none;
+    flex-shrink: 0;
+  }
+
+  .logo-icon {
+    width: 36px;
+    height: 36px;
+  }
+
+  .logo-name {
+    font-weight: 700;
+    font-size: 18px;
+    color: #2a2a2a;
+    letter-spacing: -0.3px;
+  }
+
+  /* ── NAV ── */
+  nav {
+    display: flex;
+    align-items: center;
+    gap: 40px;
+    margin: 0 auto;
+  }
+
+  nav a {
+    font-size: 17px;
+    font-weight: 500;
+    color: #89656b;
+    text-decoration: none;
+    transition: color 0.2s;
+  }
+
+  nav a:hover { color: #eb4763; }
+  nav a.active { color: #eb4763; }
+
+  /* ── RIGHT AREA ── */
+  .header-right {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    flex-shrink: 0;
+  }
+
+  /* Search — collapsed (icon only) */
+  .search-wrap {
+    position: relative;
+    display: flex;
+    align-items: center;
+  }
+
+  .search-btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 6px;
+    color: #89656b;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: color 0.2s;
+    border-radius: 50%;
+  }
+  .search-btn:hover { color: #eb4763; }
+
+  /* Expanded search input */
+  .search-input-wrap {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    border: 1.8px solid #eb4763;
+    border-radius: 50px;
+    padding: 8px 20px;
+    background: #fff;
+    /* hidden by default */
+    width: 0;
+    opacity: 0;
+    overflow: hidden;
+    transition: width 0.35s ease, opacity 0.25s ease;
+    position: absolute;
+    right: 0;
+    white-space: nowrap;
+  }
+
+  .search-input-wrap.open {
+    width: 280px;
+    opacity: 1;
+    overflow: visible;
+  }
+
+  .search-input-wrap svg {
+    color: #eb4763;
+    flex-shrink: 0;
+  }
+
+  .search-input-wrap input {
+    border: none;
+    outline: none;
+    font-family: 'Be Vietnam Pro', sans-serif;
+    font-size: 16px;
+    color: #89656b;
+    background: transparent;
+    width: 100%;
+  }
+
+  .search-input-wrap input::placeholder { color: #c4a0a8; }
+
+  /* When search is open, hide the lone icon */
+  .search-wrap.open .search-btn { display: none; }
+
+  /* ── ICONS ── */
+  .icon-btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 4px;
+    color: #89656b;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    transition: color 0.2s;
+  }
+  .icon-btn:hover { color: #eb4763; }
+
+  .cart-wrap {
+    position: relative;
+  }
+
+  .cart-badge {
+    position: absolute;
+    top: -4px;
+    right: -4px;
+    background: #eb4763;
+    color: #fff;
+    font-size: 10px;
+    font-weight: 700;
+    width: 17px;
+    height: 17px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+</style>
+</head>
+<body>
+
+<header>
+
+  <!-- LOGO -->
+  <a href="#" class="logo">
+    <svg class="logo-icon" viewBox="0 0 36 36" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <circle cx="18" cy="18" r="18" fill="#fdeff1"/>
+      <!-- flower petals -->
+      <ellipse cx="18" cy="11" rx="4" ry="6" fill="#eb4763" opacity="0.85"/>
+      <ellipse cx="18" cy="25" rx="4" ry="6" fill="#eb4763" opacity="0.85"/>
+      <ellipse cx="11" cy="18" rx="6" ry="4" fill="#eb4763" opacity="0.85"/>
+      <ellipse cx="25" cy="18" rx="6" ry="4" fill="#eb4763" opacity="0.85"/>
+      <ellipse cx="12.5" cy="12.5" rx="3.5" ry="5.5" fill="#eb4763" opacity="0.65" transform="rotate(-45 12.5 12.5)"/>
+      <ellipse cx="23.5" cy="23.5" rx="3.5" ry="5.5" fill="#eb4763" opacity="0.65" transform="rotate(-45 23.5 23.5)"/>
+      <ellipse cx="23.5" cy="12.5" rx="3.5" ry="5.5" fill="#eb4763" opacity="0.65" transform="rotate(45 23.5 12.5)"/>
+      <ellipse cx="12.5" cy="23.5" rx="3.5" ry="5.5" fill="#eb4763" opacity="0.65" transform="rotate(45 12.5 23.5)"/>
+      <circle cx="18" cy="18" r="5" fill="#eb4763"/>
+      <circle cx="18" cy="18" r="3" fill="#fff" opacity="0.5"/>
+    </svg>
+    <span class="logo-name">Maggy Flowers</span>
+  </a>
+
+  <!-- NAV -->
+  <nav>
+    <a href="#">Tienda</a>
+    <a href="#">Cursos</a>
+    <a href="#">Portafolio</a>
+    <a href="#" class="active">Sobre Nosotros</a>
+  </nav>
+
+  <!-- RIGHT -->
+  <div class="header-right">
+
+    <!-- Search -->
+    <div class="search-wrap" id="searchWrap">
+      <!-- Icon-only button (collapsed state) -->
+      <button class="search-btn" id="searchToggle" aria-label="Buscar">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="11" cy="11" r="8"/>
+          <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+        </svg>
+      </button>
+
+      <!-- Expanded search -->
+      <div class="search-input-wrap" id="searchInput">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#eb4763" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="11" cy="11" r="8"/>
+          <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+        </svg>
+        <input type="text" placeholder="Buscar flores..." id="searchField" autocomplete="off"/>
+      </div>
+    </div>
+
+    <!-- User -->
+    <button class="icon-btn" aria-label="Mi cuenta">
+      <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="12" cy="8" r="4"/>
+        <path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/>
+      </svg>
+    </button>
+
+    <!-- Cart -->
+    <div class="cart-wrap">
+      <button class="icon-btn" aria-label="Carrito">
+        <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/>
+          <line x1="3" y1="6" x2="21" y2="6"/>
+          <path d="M16 10a4 4 0 01-8 0"/>
+        </svg>
+      </button>
+      <span class="cart-badge">2</span>
+    </div>
+
+  </div>
+</header>
+
+<script>
+  const wrap = document.getElementById('searchWrap');
+  const toggle = document.getElementById('searchToggle');
+  const inputWrap = document.getElementById('searchInput');
+  const field = document.getElementById('searchField');
+
+  toggle.addEventListener('click', () => {
+    wrap.classList.add('open');
+    inputWrap.classList.add('open');
+    setTimeout(() => field.focus(), 50);
+  });
+
+  // Close when clicking outside
+  document.addEventListener('click', (e) => {
+    if (!wrap.contains(e.target)) {
+      wrap.classList.remove('open');
+      inputWrap.classList.remove('open');
+    }
+  });
+
+  // Close on Escape
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
+      wrap.classList.remove('open');
+      inputWrap.classList.remove('open');
+    }
+  });
+</script>
+
+</body>
+</html>

@@ -1,0 +1,681 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sobre Nosotros – Maggy Flowers</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  @import url('https://fonts.cdnfonts.com/css/oddval-2');
+
+  :root {
+    --primary: #eb4763;
+    --light-pink: #fdeff1;
+    --title-color: #6d5157;
+    --text-color: #89656b;
+    --accent-text: #ad808a;
+    --green-bg: #8da399;
+    --green-tag: #e8f7ee;
+    --white: #ffffff;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'Be Vietnam Pro', sans-serif;
+    background: var(--white);
+    color: var(--text-color);
+    overflow-x: hidden;
+  }
+
+  /* ── SECTION 1: HERO ── */
+  .hero {
+    position: relative;
+    width: 100%;
+    height: 340px;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    text-align: center;
+  }
+
+  .hero-bg {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(135deg, #f2a4a4 0%, #e8889a 40%, #d4778a 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .hero-flowers {
+    position: absolute;
+    inset: 0;
+    background-image: 
+      radial-gradient(ellipse 120px 100px at 20% 80%, rgba(235,71,99,0.35) 0%, transparent 70%),
+      radial-gradient(ellipse 180px 160px at 50% 70%, rgba(220,60,90,0.25) 0%, transparent 70%),
+      radial-gradient(ellipse 100px 90px at 80% 85%, rgba(235,71,99,0.30) 0%, transparent 70%),
+      radial-gradient(ellipse 200px 200px at 50% 50%, rgba(255,150,150,0.2) 0%, transparent 60%);
+  }
+
+  /* Decorative petal shapes */
+  .hero-flowers::before {
+    content: '';
+    position: absolute;
+    width: 280px;
+    height: 280px;
+    background: radial-gradient(ellipse, rgba(255,120,120,0.4) 0%, rgba(230,80,100,0.2) 50%, transparent 75%);
+    border-radius: 50% 60% 50% 60%;
+    top: -60px;
+    left: 50%;
+    transform: translateX(-50%);
+    filter: blur(2px);
+  }
+
+  .hero-overlay {
+    position: absolute;
+    inset: 0;
+    background: rgba(180, 80, 95, 0.38);
+  }
+
+  .hero-content {
+    position: relative;
+    z-index: 2;
+    text-align: center;
+  }
+
+  .hero-title {
+    font-family: 'Oddval', 'Georgia', serif;
+    font-weight: 600;
+    font-size: 72px;
+    color: var(--white);
+    line-height: 1.1;
+    letter-spacing: -1px;
+  }
+
+  .hero-subtitle {
+    font-family: 'Be Vietnam Pro', sans-serif;
+    font-weight: 500;
+    font-size: 22px;
+    color: var(--white);
+    margin-top: 12px;
+    letter-spacing: 0.3px;
+  }
+
+  /* ── SECTION 2: HISTORIA ── */
+  .historia {
+    padding: 90px 8%;
+    display: flex;
+    align-items: flex-start;
+    gap: 80px;
+    max-width: 1300px;
+    margin: 0 auto;
+  }
+
+  .historia-img-wrap {
+    position: relative;
+    flex: 0 0 450px;
+    height: 700px;
+  }
+
+  .historia-frame {
+    position: absolute;
+    width: 390px;
+    height: 545px;
+    border: 2.5px solid var(--primary);
+    border-radius: 20px;
+    top: 24px;
+    right: -24px;
+    z-index: 1;
+  }
+
+  .historia-photo {
+    position: absolute;
+    width: 390px;
+    height: 575px;
+    border-radius: 20px;
+    object-fit: cover;
+    bottom: 0;
+    left: -20px;
+    z-index: 2;
+    /* placeholder */
+    background: linear-gradient(160deg, #f8c5c5 0%, #f2a0a0 40%, #e88888 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+  }
+
+  /* Florist silhouette placeholder */
+  .historia-photo-inner {
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(180deg, #fbbcbc 0%, #f09090 60%, #e07070 100%);
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+    position: relative;
+  }
+
+  .historia-photo-inner::before {
+    content: '🌸';
+    font-size: 120px;
+    position: absolute;
+    bottom: 20px;
+    opacity: 0.6;
+  }
+
+  .historia-text {
+    flex: 1;
+    padding-top: 12px;
+  }
+
+  .historia-label {
+    font-family: 'Be Vietnam Pro', sans-serif;
+    font-weight: 600;
+    font-size: 18px;
+    color: var(--primary);
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    margin-bottom: 10px;
+  }
+
+  .historia-title {
+    font-family: 'Oddval', 'Georgia', serif;
+    font-weight: 600;
+    font-size: 52px;
+    color: var(--title-color);
+    line-height: 1.1;
+    margin-bottom: 28px;
+  }
+
+  .historia-body {
+    font-size: 18px;
+    line-height: 38px;
+    color: var(--text-color);
+    font-weight: 400;
+  }
+
+  /* ── SECTION 3: LOGROS ── */
+  .logros {
+    padding: 70px 8% 80px;
+    text-align: center;
+    background: var(--white);
+  }
+
+  .logros-title {
+    font-family: 'Oddval', 'Georgia', serif;
+    font-weight: 600;
+    font-size: 52px;
+    color: var(--title-color);
+    margin-bottom: 50px;
+  }
+
+  .logros-grid {
+    display: flex;
+    justify-content: center;
+    gap: 32px;
+    flex-wrap: wrap;
+  }
+
+  .logro-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 20px;
+    min-width: 280px;
+    max-width: 340px;
+  }
+
+  .logro-card {
+    background: var(--white);
+    border-radius: 16px;
+    box-shadow: 6px 6px 20px rgba(0,0,0,0.08);
+    padding: 36px 48px;
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 110px;
+  }
+
+  .logro-logo {
+    height: 48px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+  }
+
+  /* Amazon Influencers logo text */
+  .amazon-logo {
+    font-family: 'Be Vietnam Pro', sans-serif;
+    font-size: 17px;
+    font-weight: 600;
+    color: #555;
+  }
+  .amazon-logo span { color: #FF9900; font-size: 22px; }
+
+  /* Hotmart logo */
+  .hotmart-logo {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-family: 'Be Vietnam Pro', sans-serif;
+    font-size: 19px;
+    font-weight: 600;
+    color: #555;
+  }
+  .hotmart-icon {
+    width: 30px;
+    height: 30px;
+    background: #FF543E;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 16px;
+    font-weight: 700;
+  }
+
+  /* VIP */
+  .vip-logo {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-family: 'Be Vietnam Pro', sans-serif;
+    font-size: 15px;
+    font-weight: 700;
+    color: #555;
+    letter-spacing: 1px;
+    border: 1.5px solid #bbb;
+    border-radius: 6px;
+    padding: 6px 14px;
+  }
+
+  .logro-desc {
+    font-size: 16px;
+    font-weight: 500;
+    color: var(--primary);
+    line-height: 1.4;
+    text-align: center;
+  }
+
+  /* ── SECTION 4: CERTIFICACIONES ── */
+  .certificaciones {
+    background: var(--green-bg);
+    padding: 44px 8%;
+    display: flex;
+    align-items: center;
+    gap: 0;
+  }
+
+  .cert-title {
+    font-family: 'Oddval', 'Georgia', serif;
+    font-weight: 600;
+    font-size: 42px;
+    color: var(--white);
+    white-space: nowrap;
+  }
+
+  .cert-divider {
+    width: 2px;
+    height: 80px;
+    background: rgba(255,255,255,0.5);
+    margin: 0 48px;
+    flex-shrink: 0;
+  }
+
+  .cert-logo-area {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    margin-right: 48px;
+    flex-shrink: 0;
+  }
+
+  /* Miami Dade logo */
+  .mdc-logo {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+  }
+
+  .mdc-icon {
+    width: 52px;
+    height: 42px;
+    background: var(--white);
+    clip-path: polygon(0 0, 55% 0, 100% 50%, 55% 100%, 0 100%, 45% 50%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .mdc-text {
+    font-family: 'Be Vietnam Pro', sans-serif;
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--white);
+    text-align: center;
+    letter-spacing: 0.5px;
+  }
+
+  .cert-desc {
+    font-family: 'Be Vietnam Pro', sans-serif;
+    font-size: 22px;
+    font-weight: 400;
+    color: var(--white);
+    line-height: 1.5;
+  }
+
+  /* ── SECTION 5: MISIÓN / VISIÓN ── */
+  .mision-vision {
+    padding: 90px 8%;
+    max-width: 1300px;
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    gap: 70px;
+  }
+
+  .mv-row {
+    display: flex;
+    align-items: center;
+    gap: 70px;
+  }
+
+  .mv-row.reverse {
+    flex-direction: row-reverse;
+  }
+
+  .mv-text {
+    flex: 1;
+  }
+
+  .mv-title {
+    font-family: 'Oddval', 'Georgia', serif;
+    font-weight: 600;
+    font-size: 52px;
+    color: var(--title-color);
+    margin-bottom: 24px;
+  }
+
+  .mv-body {
+    font-size: 20px;
+    line-height: 38px;
+    color: var(--text-color);
+    font-weight: 400;
+  }
+
+  .mv-img-wrap {
+    position: relative;
+    flex: 0 0 460px;
+    height: 360px;
+  }
+
+  .mv-frame {
+    position: absolute;
+    border: 2.5px solid var(--primary);
+    border-radius: 18px;
+    width: 420px;
+    height: 330px;
+  }
+
+  /* Misión: photo goes bottom-left, frame top-right */
+  .mv-row:not(.reverse) .mv-frame {
+    top: 20px;
+    right: 0;
+  }
+  .mv-row:not(.reverse) .mv-photo {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    z-index: 2;
+  }
+
+  /* Visión: photo goes bottom-right, frame top-left */
+  .mv-row.reverse .mv-frame {
+    top: 20px;
+    left: 0;
+  }
+  .mv-row.reverse .mv-photo {
+    position: absolute;
+    bottom: 0;
+    right: 0;
+    z-index: 2;
+  }
+
+  .mv-photo {
+    width: 420px;
+    height: 330px;
+    border-radius: 18px;
+    object-fit: cover;
+    /* placeholder */
+    background: linear-gradient(135deg, #fce4ec 0%, #f8bbd0 50%, #f48fb1 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 64px;
+    overflow: hidden;
+  }
+
+  .mv-photo.green {
+    background: linear-gradient(135deg, #e8f5e9 0%, #c8e6c9 50%, #a5d6a7 100%);
+  }
+
+  /* ── SECTION 6: IDENTIDAD Y VALORES ── */
+  .valores {
+    padding: 80px 8%;
+    text-align: center;
+    background: var(--white);
+  }
+
+  .valores-label {
+    font-family: 'Be Vietnam Pro', sans-serif;
+    font-weight: 600;
+    font-size: 18px;
+    color: var(--primary);
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    margin-bottom: 10px;
+  }
+
+  .valores-title {
+    font-family: 'Oddval', 'Georgia', serif;
+    font-weight: 600;
+    font-size: 52px;
+    color: var(--title-color);
+    margin-bottom: 50px;
+  }
+
+  .tags-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 18px;
+  }
+
+  .tags-row {
+    display: flex;
+    justify-content: center;
+    gap: 16px;
+    flex-wrap: wrap;
+  }
+
+  .tag {
+    font-family: 'Be Vietnam Pro', sans-serif;
+    font-size: 18px;
+    font-weight: 500;
+    color: var(--title-color);
+    padding: 14px 30px;
+    border-radius: 50px;
+    white-space: nowrap;
+  }
+
+  .tag.pink { background: var(--light-pink); }
+  .tag.green { background: var(--green-tag); }
+</style>
+</head>
+<body>
+
+<!-- SECTION 1: HERO -->
+<section class="hero">
+  <div class="hero-bg">
+    <div class="hero-flowers"></div>
+    <div class="hero-overlay"></div>
+  </div>
+  <div class="hero-content">
+    <h1 class="hero-title">Sobre Nosotros</h1>
+    <p class="hero-subtitle">Diseño floral con magia, alma y propósito</p>
+  </div>
+</section>
+
+<!-- SECTION 2: HISTORIA -->
+<section style="background: var(--white); padding: 0;">
+  <div class="historia">
+    <div class="historia-img-wrap">
+      <div class="historia-frame"></div>
+      <div class="historia-photo">
+        <div class="historia-photo-inner"></div>
+      </div>
+    </div>
+    <div class="historia-text">
+      <p class="historia-label">Maggy Flowers</p>
+      <h2 class="historia-title">Nuestra historia</h2>
+      <p class="historia-body">
+        Maggy Flowers nació de una pasión que se convirtió en propósito: crear magia con flores. Con más de 15 años de experiencia, Maggy ha trabajado tanto con flores naturales como artificiales, diseñando arreglos para regalar, decorar hogares y transformar eventos. Estudió planificación de eventos y bodas en Miami Dade College, especializándose en diseño para momentos memorables. Lo que más la emociona es crear arreglos irrepetibles con lo que tiene a la mano, porque para ella, diseñar flores es pura magia. Con el tiempo, su misión evolucionó: no solo crear, sino también enseñar. Hoy, Maggy Flowers es un estudio floral y academia que inspira a mujeres emprendedoras a monetizar su talento floral a través de cursos digitales, clases online y talleres presenciales. Su comunidad es activa, solidaria y llena de buenas vibras, con un enfoque práctico, tradicional e innovador a la vez.
+      </p>
+    </div>
+  </div>
+</section>
+
+<!-- SECTION 3: LOGROS -->
+<section class="logros">
+  <h2 class="logros-title">Nuestros logros</h2>
+  <div class="logros-grid">
+
+    <div class="logro-item">
+      <div class="logro-card">
+        <div class="logro-logo">
+          <div class="amazon-logo">
+            <div style="display:flex;align-items:center;gap:6px;">
+              <span style="font-size:26px;">📦</span>
+              <div>
+                <div style="font-size:14px;font-weight:700;color:#232f3e;font-family:'Be Vietnam Pro',sans-serif;">amazon</div>
+                <div style="font-size:11px;color:#555;font-family:'Be Vietnam Pro',sans-serif;">influencers</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <p class="logro-desc">Amazon Influencer<br>aprobada</p>
+    </div>
+
+    <div class="logro-item">
+      <div class="logro-card">
+        <div class="logro-logo">
+          <div class="hotmart-logo">
+            <div class="hotmart-icon">🔥</div>
+            <span>hotmart</span>
+          </div>
+        </div>
+      </div>
+      <p class="logro-desc">Cursos de diseño floral<br>en Hotmart</p>
+    </div>
+
+    <div class="logro-item">
+      <div class="logro-card">
+        <div class="logro-logo">
+          <div class="vip-logo">
+            <span>👑</span>
+            <span>COMUNIDAD VIP</span>
+          </div>
+        </div>
+      </div>
+      <p class="logro-desc">Comunidad VIP activa de<br>alumnas emprendedoras</p>
+    </div>
+
+  </div>
+</section>
+
+<!-- SECTION 4: CERTIFICACIONES -->
+<section class="certificaciones">
+  <h2 class="cert-title">Certificaciones</h2>
+  <div class="cert-divider"></div>
+  <div class="cert-logo-area">
+    <div class="mdc-logo">
+      <svg width="54" height="44" viewBox="0 0 54 44" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <polygon points="0,0 30,0 54,22 30,44 0,44 24,22" fill="white"/>
+      </svg>
+      <div class="mdc-text">Miami Dade<br>College</div>
+    </div>
+  </div>
+  <p class="cert-desc">Formación en planificación de eventos y<br>bodas – Miami Dade College</p>
+</section>
+
+<!-- SECTION 5: MISIÓN / VISIÓN -->
+<section style="background: var(--white);">
+  <div class="mision-vision">
+
+    <!-- Misión -->
+    <div class="mv-row">
+      <div class="mv-text">
+        <h2 class="mv-title">Misión</h2>
+        <p class="mv-body">Inspirar y acompañar a mujeres emprendedoras a descubrir su talento floral, transformarlo en arte y convertirlo en un negocio sostenible mediante educación práctica, creativa y basada en la experiencia real.</p>
+      </div>
+      <div class="mv-img-wrap">
+        <div class="mv-frame"></div>
+        <div class="mv-photo">🌷</div>
+      </div>
+    </div>
+
+    <!-- Visión -->
+    <div class="mv-row reverse">
+      <div class="mv-text" style="text-align:right;">
+        <h2 class="mv-title">Visión</h2>
+        <p class="mv-body">Ser una marca global referente en diseño floral artificial y natural, reconocida por su creatividad, enseñanza de alto valor, productos digitales y diseños florales que conectan emocionalmente con cada persona.</p>
+      </div>
+      <div class="mv-img-wrap">
+        <div class="mv-frame"></div>
+        <div class="mv-photo green">🌹</div>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<!-- SECTION 6: IDENTIDAD Y VALORES -->
+<section class="valores">
+  <p class="valores-label">Nuestro ADN</p>
+  <h2 class="valores-title">Identidad y Valores</h2>
+
+  <div class="tags-container">
+    <!-- Row 1: 3 tags — pink, green, pink -->
+    <div class="tags-row">
+      <span class="tag pink">Creatividad</span>
+      <span class="tag green">Excelencia</span>
+      <span class="tag pink">Tradición con innovación</span>
+    </div>
+    <!-- Row 2: 4 tags — green, pink, pink, green -->
+    <div class="tags-row">
+      <span class="tag green">Magia en cada diseño</span>
+      <span class="tag pink">Empatía</span>
+      <span class="tag pink">Comunidad y apoyo</span>
+      <span class="tag green">Compromiso</span>
+    </div>
+    <!-- Row 3: 2 tags — pink, green -->
+    <div class="tags-row">
+      <span class="tag pink">Educación con propósito</span>
+      <span class="tag green">Inspiración</span>
+    </div>
+  </div>
+</section>
+
+</body>
+</html>

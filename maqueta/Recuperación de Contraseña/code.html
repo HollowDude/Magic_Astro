@@ -1,0 +1,403 @@
+<!DOCTYPE html>
+<html lang="es"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Maggy Flowers - Recuperar Contraseña</title>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;700;900&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+  tailwind.config = {
+    darkMode: "class",
+    theme: {
+      extend: {
+        colors: {
+          "primary": "#eb4763",
+          "primary-dark": "#d63a54",
+          "background-light": "#f8f6f6",
+          "background-dark": "#211114",
+          "neutral-surface": "#ffffff",
+          "neutral-border": "#e5dcdd",
+          "text-main": "#181112",
+          "text-muted": "#886369",
+        },
+        fontFamily: {
+          "display": ["Be Vietnam Pro", "sans-serif"], "display2":["Oddval Text", "semibold"]
+        },
+        borderRadius: {"DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px"},
+      },
+    },
+  }
+</script>
+<style>
+  @keyframes fadeInUp {
+    from { opacity: 0; transform: translateY(16px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes fadeIn {
+    from { opacity: 0; }
+    to   { opacity: 1; }
+  }
+  .anim-1 { animation: fadeInUp 0.45s ease both 0.05s; }
+  .anim-2 { animation: fadeInUp 0.45s ease both 0.15s; }
+  .anim-3 { animation: fadeInUp 0.45s ease both 0.25s; }
+  .anim-4 { animation: fadeInUp 0.45s ease both 0.35s; }
+
+  /* Step transitions */
+  .step { display: none; }
+  .step.active { display: flex; flex-direction: column; gap: 1.25rem; }
+
+  /* Success icon pulse */
+  @keyframes pop {
+    0%   { transform: scale(0.6); opacity: 0; }
+    60%  { transform: scale(1.1); }
+    100% { transform: scale(1);   opacity: 1; }
+  }
+  .icon-pop { animation: pop 0.45s cubic-bezier(.36,.07,.19,.97) both; }
+
+  /* OTP input style */
+  .otp-input {
+    width: 3rem; height: 3.25rem;
+    text-align: center;
+    font-size: 1.25rem;
+    font-weight: 700;
+    border-radius: 0.5rem;
+    border: 1.5px solid #e5dcdd;
+    background: #f8f6f6;
+    color: #181112;
+    outline: none;
+    transition: border-color 0.2s, box-shadow 0.2s;
+  }
+  .otp-input:focus {
+    border-color: #eb4763;
+    box-shadow: 0 0 0 3px rgba(235,71,99,0.15);
+  }
+  .otp-input.filled { border-color: #eb4763; }
+</style>
+</head>
+<body class="bg-background-light dark:bg-background-dark font-display antialiased text-text-main h-screen overflow-hidden flex flex-col">
+
+<main class="flex-1 flex overflow-hidden">
+
+  <!-- Left Side: Image -->
+  <div class="hidden lg:flex lg:w-1/2 relative bg-primary/10 items-center justify-center overflow-hidden">
+    <div class="absolute inset-0 z-0">
+      <img alt="Elegant floral arrangement with pink roses"
+           class="w-full h-full object-cover opacity-90"
+           src="https://lh3.googleusercontent.com/aida-public/AB6AXuCjSe0_Qz6_SN8vKCVuFwTExt2M0w1wiF_Yg7YsXCnG2_JNpq1VS4Q6oD3DcwFJ_CyxqK9QhQUQBqmcstzzYb-pdGI-knucx9G7SPBnTRDMf_5VvwCEUcpWWtEwPYIAUJaSxCpWVhwO1hj3Cb6O1OTJSkCbRJrF2uIeNVDncz7So3lB6yWvVQ_M33YPUJfStR-0PRDtfDdz4gtxWubxJVjoSa14Sn3KGcrkt18cq00BYpI1Z4lSOj_LCWU_ehKK1IaYcyt54NVnsaA"/>
+      <div class="absolute inset-0 bg-primary/20 mix-blend-overlay"></div>
+      <div class="absolute inset-0 bg-gradient-to-t from-background-dark/40 to-[#b3b3b3]"></div>
+    </div>
+    <div class="relative z-10 p-12 text-white max-w-lg">
+      <h1 class="text-5xl font-display2 mb-6 tracking-tight drop-shadow-md">¿Olvidaste tu contraseña?</h1>
+      <p class="text-lg font-medium leading-relaxed drop-shadow-sm opacity-90">
+        No te preocupes. Te enviaremos un código de verificación para que puedas recuperar tu cuenta en unos segundos.
+      </p>
+      <div class="mt-8 flex gap-4">
+        <div class="flex -space-x-3 overflow-hidden">
+          <img alt="User avatar" class="inline-block h-10 w-10 rounded-full ring-2 ring-white object-cover"
+               src="https://lh3.googleusercontent.com/aida-public/AB6AXuBtCF34oXfbOelUGT14XU6eS6Bx5ViNYzYuHOG-2vElTg-ZfGxfCdzzGk6vloZ98gFI1eKhuBRcid2lIm1lyHSQ-_VvXeKnrMwAV4KmZg6OQX7LZ1g-AreIxtLYt0frmSGMP52zqMJ1yAAISQgd1ehzkHrKjZcsz6vZ2PelyuaigYBef_zpDrJ_EAvnsygemPNvToD3iFCOowF8EgAC7knJ-EvnQE_8Cfebbk78qXjZ5D4JbWKH6zLyA9e9AlAUoXnEDuxx176KFE0"/>
+          <img alt="User avatar" class="inline-block h-10 w-10 rounded-full ring-2 ring-white object-cover"
+               src="https://lh3.googleusercontent.com/aida-public/AB6AXuDav3vuvTX2AzXUEd6deWzrODz-For6Y0o0DjMD2Mxrr5UxPYRmsmq642z_Ob9oEabVHW-u5slnGW0clR6_wkNujBDfx1165QPUmlZSvp2YAIwSAumNfzAbKZAR2ZnsB2lv_ghrYVvAR_MRp3LWAmoxsHDCUPKv0ws64LAf4dtBRqepuS3dPhX-2it4W76CLOsIpNuRdrWXGZe41ns044MnuTcPgTlgna7ZtxiJ1Dp2tieC4YwOlP-DEc98fG4RR8fsUsBFiUmKs_M"/>
+          <img alt="User avatar" class="inline-block h-10 w-10 rounded-full ring-2 ring-white object-cover"
+               src="https://lh3.googleusercontent.com/aida-public/AB6AXuBNy3Z5gUwnxYEZsgMaIflQkFMSGU1n_0tBwnpI68FS9KCDc83ao-kPkIlEcw12GRzNrJWyOWErISBPApb0uNy5PzDC4UR1cJ7rR27jO1qtrFeG50MaBp7-53etnR9S2d3ft-4TUxLn1OpB_D2ZPoTn7e-nbHbKmxvfcNx7u2B5sUlsMJlSfkuhRM3nSVuyCecV0GfGZkSKEtjHBsEkaLPAlpn354510ERvCys8EHbksbx1zbzB9mFZCH90g1dO5XgTlV8kdFjyap8"/>
+          <div class="flex h-10 w-10 items-center justify-center rounded-full bg-white/20 ring-2 ring-white backdrop-blur-sm">
+            <span class="text-xs font-bold">+2k</span>
+          </div>
+        </div>
+        <div class="flex flex-col justify-center">
+          <div class="flex text-yellow-300 text-xs">
+            <span class="material-symbols-outlined text-[16px]">star</span>
+            <span class="material-symbols-outlined text-[16px]">star</span>
+            <span class="material-symbols-outlined text-[16px]">star</span>
+            <span class="material-symbols-outlined text-[16px]">star</span>
+            <span class="material-symbols-outlined text-[16px]">star</span>
+          </div>
+          <span class="text-xs font-medium">Estudiantes felices</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Right Side: Form -->
+  <div class="w-full lg:w-1/2 flex flex-col bg-white overflow-y-auto">
+    <div class="flex-1 flex flex-col justify-center items-center py-10 px-6 sm:px-12 md:px-24">
+      <div class="w-full max-w-[480px]">
+
+        <!-- Progress indicator -->
+        <div class="flex items-center gap-2 mb-8 anim-1" id="progress-bar">
+          <div class="step-dot flex items-center gap-2" data-step="1">
+            <div class="w-7 h-7 rounded-full bg-primary text-white flex items-center justify-center text-xs font-bold step-circle-1">1</div>
+            <span class="text-xs font-semibold text-primary hidden sm:block">Correo</span>
+          </div>
+          <div class="flex-1 h-[2px] bg-neutral-border step-line-1-2"></div>
+          <div class="step-dot flex items-center gap-2" data-step="2">
+            <div class="w-7 h-7 rounded-full bg-neutral-border text-text-muted flex items-center justify-center text-xs font-bold step-circle-2">2</div>
+            <span class="text-xs font-semibold text-text-muted hidden sm:block step-label-2">Verificación</span>
+          </div>
+          <div class="flex-1 h-[2px] bg-neutral-border step-line-2-3"></div>
+          <div class="step-dot flex items-center gap-2" data-step="3">
+            <div class="w-7 h-7 rounded-full bg-neutral-border text-text-muted flex items-center justify-center text-xs font-bold step-circle-3">3</div>
+            <span class="text-xs font-semibold text-text-muted hidden sm:block step-label-3">Nueva contraseña</span>
+          </div>
+        </div>
+
+        <!-- ── STEP 1: Email ── -->
+        <div id="step-1" class="step active">
+          <div class="anim-1">
+            <a href="#" class="inline-flex items-center gap-1 text-text-muted text-sm hover:text-primary transition-colors mb-1">
+              <span class="material-symbols-outlined text-[18px]">arrow_back</span>
+              Volver al inicio de sesión
+            </a>
+            <h2 class="text-[#89656b] text-3xl font-bold tracking-tight mt-3 mb-1">Recuperar contraseña</h2>
+            <p class="text-text-muted text-sm">Ingresa tu correo y te enviaremos un código de 6 dígitos.</p>
+          </div>
+
+          <label class="flex flex-col gap-2 anim-2">
+            <span class="text-text-main text-sm font-semibold">Correo electrónico</span>
+            <div class="relative">
+              <span class="absolute left-4 top-1/2 -translate-y-1/2 text-text-muted">
+                <span class="material-symbols-outlined text-[20px]">mail</span>
+              </span>
+              <input id="email-input"
+                     class="w-full h-12 rounded-lg border border-neutral-border bg-background-light pl-11 pr-4 text-text-main text-sm placeholder:text-text-muted focus:border-primary focus:ring-1 focus:ring-primary focus:outline-none transition-all"
+                     placeholder="ejemplo@correo.com" type="email"/>
+            </div>
+          </label>
+
+          <button onclick="goToStep(2)"
+                  class="anim-3 flex w-full h-12 items-center justify-center rounded-lg bg-primary text-white text-sm font-bold shadow-md hover:bg-primary-dark hover:shadow-lg transition-all active:scale-[0.98]">
+            Enviar código
+          </button>
+
+          <p class="text-sm text-text-muted text-center anim-4">
+            ¿Recordaste tu contraseña?
+            <a href="#" class="font-bold text-primary hover:text-primary-dark hover:underline">Iniciar sesión</a>
+          </p>
+        </div>
+
+        <!-- ── STEP 2: OTP ── -->
+        <div id="step-2" class="step">
+          <div>
+            <button onclick="goToStep(1)" class="inline-flex items-center gap-1 text-text-muted text-sm hover:text-primary transition-colors mb-1">
+              <span class="material-symbols-outlined text-[18px]">arrow_back</span>
+              Cambiar correo
+            </button>
+            <h2 class="text-text-main text-3xl font-bold tracking-tight mt-3 mb-1">Código de verificación</h2>
+            <p class="text-text-muted text-sm">Ingresa los 6 dígitos enviados a <span id="email-display" class="font-semibold text-text-main"></span></p>
+          </div>
+
+          <!-- OTP inputs -->
+          <div class="flex gap-3 justify-center my-2">
+            <input class="otp-input" id="otp-1" maxlength="1" type="text" inputmode="numeric"/>
+            <input class="otp-input" id="otp-2" maxlength="1" type="text" inputmode="numeric"/>
+            <input class="otp-input" id="otp-3" maxlength="1" type="text" inputmode="numeric"/>
+            <input class="otp-input" id="otp-4" maxlength="1" type="text" inputmode="numeric"/>
+            <input class="otp-input" id="otp-5" maxlength="1" type="text" inputmode="numeric"/>
+            <input class="otp-input" id="otp-6" maxlength="1" type="text" inputmode="numeric"/>
+          </div>
+
+          <!-- Timer -->
+          <div class="flex items-center justify-between text-sm">
+            <span class="text-text-muted">¿No recibiste el código?</span>
+            <button id="resend-btn" onclick="startTimer()" class="font-semibold text-primary hover:text-primary-dark hover:underline disabled:opacity-40 disabled:cursor-not-allowed" disabled>
+              Reenviar (<span id="timer">60</span>s)
+            </button>
+          </div>
+
+          <button onclick="goToStep(3)"
+                  class="flex w-full h-12 items-center justify-center rounded-lg bg-primary text-white text-sm font-bold shadow-md hover:bg-primary-dark hover:shadow-lg transition-all active:scale-[0.98]">
+            Verificar código
+          </button>
+        </div>
+
+        <!-- ── STEP 3: New Password ── -->
+        <div id="step-3" class="step">
+          <div>
+            <h2 class="text-text-main text-3xl font-bold tracking-tight mb-1">Nueva contraseña</h2>
+            <p class="text-text-muted text-sm">Elige una contraseña segura para tu cuenta.</p>
+          </div>
+
+          <label class="flex flex-col gap-2">
+            <span class="text-text-main text-sm font-semibold">Nueva contraseña</span>
+            <div class="relative">
+              <span class="absolute left-4 top-1/2 -translate-y-1/2 text-text-muted">
+                <span class="material-symbols-outlined text-[20px]">lock</span>
+              </span>
+              <input id="new-pass"
+                     class="w-full h-12 rounded-lg border border-neutral-border bg-background-light pl-11 pr-11 text-text-main text-sm placeholder:text-text-muted focus:border-primary focus:ring-1 focus:ring-primary focus:outline-none transition-all"
+                     placeholder="Mínimo 8 caracteres" type="password" oninput="checkStrength(this.value)"/>
+              <button onclick="togglePass('new-pass', this)" class="absolute right-3 top-1/2 -translate-y-1/2 text-text-muted hover:text-text-main p-1" type="button">
+                <span class="material-symbols-outlined text-[20px]">visibility_off</span>
+              </button>
+            </div>
+            <!-- Strength bar -->
+            <div class="flex gap-1 mt-1">
+              <div class="h-1 flex-1 rounded-full bg-neutral-border overflow-hidden"><div id="bar-1" class="h-full w-0 rounded-full transition-all duration-300"></div></div>
+              <div class="h-1 flex-1 rounded-full bg-neutral-border overflow-hidden"><div id="bar-2" class="h-full w-0 rounded-full transition-all duration-300"></div></div>
+              <div class="h-1 flex-1 rounded-full bg-neutral-border overflow-hidden"><div id="bar-3" class="h-full w-0 rounded-full transition-all duration-300"></div></div>
+              <div class="h-1 flex-1 rounded-full bg-neutral-border overflow-hidden"><div id="bar-4" class="h-full w-0 rounded-full transition-all duration-300"></div></div>
+            </div>
+            <span id="strength-label" class="text-xs text-text-muted"></span>
+          </label>
+
+          <label class="flex flex-col gap-2">
+            <span class="text-text-main text-sm font-semibold">Confirmar contraseña</span>
+            <div class="relative">
+              <span class="absolute left-4 top-1/2 -translate-y-1/2 text-text-muted">
+                <span class="material-symbols-outlined text-[20px]">lock_reset</span>
+              </span>
+              <input id="confirm-pass"
+                     class="w-full h-12 rounded-lg border border-neutral-border bg-background-light pl-11 pr-11 text-text-main text-sm placeholder:text-text-muted focus:border-primary focus:ring-1 focus:ring-primary focus:outline-none transition-all"
+                     placeholder="Repite tu contraseña" type="password"/>
+              <button onclick="togglePass('confirm-pass', this)" class="absolute right-3 top-1/2 -translate-y-1/2 text-text-muted hover:text-text-main p-1" type="button">
+                <span class="material-symbols-outlined text-[20px]">visibility_off</span>
+              </button>
+            </div>
+          </label>
+
+          <button onclick="goToStep(4)"
+                  class="flex w-full h-12 items-center justify-center rounded-lg bg-primary text-white text-sm font-bold shadow-md hover:bg-primary-dark hover:shadow-lg transition-all active:scale-[0.98]">
+            Guardar contraseña
+          </button>
+        </div>
+
+        <!-- ── STEP 4: Success ── -->
+        <div id="step-4" class="step">
+          <div class="flex flex-col items-center text-center py-6 gap-5">
+            <div class="w-20 h-20 rounded-full bg-primary/10 flex items-center justify-center icon-pop">
+              <span class="material-symbols-outlined text-primary text-[40px]" style="font-variation-settings:'FILL' 1">check_circle</span>
+            </div>
+            <div>
+              <h2 class="text-text-main text-3xl font-bold tracking-tight mb-2">¡Listo!</h2>
+              <p class="text-text-muted text-sm leading-relaxed">Tu contraseña ha sido actualizada correctamente.<br/>Ya puedes iniciar sesión con tu nueva contraseña.</p>
+            </div>
+            <a href="#"
+               class="mt-2 flex w-full h-12 items-center justify-center rounded-lg bg-primary text-white text-sm font-bold shadow-md hover:bg-primary-dark hover:shadow-lg transition-all active:scale-[0.98]">
+              Ir al inicio de sesión
+            </a>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</main>
+
+<script>
+  let timerInterval;
+
+  function goToStep(n) {
+    // Hide all
+    document.querySelectorAll('.step').forEach(s => s.classList.remove('active'));
+    document.getElementById('step-' + n).classList.add('active');
+
+    // Update progress
+    for (let i = 1; i <= 3; i++) {
+      const circle = document.querySelector('.step-circle-' + i);
+      const line12 = document.querySelector('.step-line-1-2');
+      const line23 = document.querySelector('.step-line-2-3');
+      if (!circle) continue;
+
+      if (i < n) {
+        circle.classList.remove('bg-neutral-border','text-text-muted');
+        circle.classList.add('bg-primary','text-white');
+        circle.innerHTML = '<span class="material-symbols-outlined text-[16px]" style="font-variation-settings:\'FILL\' 1">check</span>';
+      } else if (i === n && n <= 3) {
+        circle.classList.remove('bg-neutral-border','text-text-muted');
+        circle.classList.add('bg-primary','text-white');
+        circle.textContent = i;
+      } else {
+        circle.classList.add('bg-neutral-border','text-text-muted');
+        circle.classList.remove('bg-primary','text-white');
+        circle.textContent = i;
+      }
+    }
+    // Activate lines
+    const line12 = document.querySelector('.step-line-1-2');
+    const line23 = document.querySelector('.step-line-2-3');
+    if (n >= 2) line12.classList.replace ? line12.style.background = '#eb4763' : null;
+    if (n >= 3) line23.style.background = '#eb4763';
+    if (n < 2)  { line12.style.background = ''; line23.style.background = ''; }
+    if (n < 3)  line23.style.background = '';
+
+    // Show email in step 2
+    if (n === 2) {
+      const email = document.getElementById('email-input').value || 'tu correo';
+      document.getElementById('email-display').textContent = email;
+      setupOTP();
+      startTimer();
+    }
+
+    // Hide progress on success
+    document.getElementById('progress-bar').style.display = n === 4 ? 'none' : '';
+  }
+
+  function setupOTP() {
+    const inputs = document.querySelectorAll('.otp-input');
+    inputs.forEach((inp, idx) => {
+      inp.value = '';
+      inp.classList.remove('filled');
+      inp.addEventListener('input', () => {
+        if (inp.value) {
+          inp.classList.add('filled');
+          if (idx < inputs.length - 1) inputs[idx + 1].focus();
+        }
+      });
+      inp.addEventListener('keydown', (e) => {
+        if (e.key === 'Backspace' && !inp.value && idx > 0) inputs[idx - 1].focus();
+      });
+    });
+    inputs[0].focus();
+  }
+
+  function startTimer() {
+    clearInterval(timerInterval);
+    let sec = 60;
+    const btn = document.getElementById('resend-btn');
+    const timerEl = document.getElementById('timer');
+    btn.disabled = true;
+    timerEl.textContent = sec;
+    timerInterval = setInterval(() => {
+      sec--;
+      timerEl.textContent = sec;
+      if (sec <= 0) {
+        clearInterval(timerInterval);
+        btn.disabled = false;
+        btn.innerHTML = 'Reenviar código';
+      }
+    }, 1000);
+  }
+
+  function togglePass(id, btn) {
+    const inp = document.getElementById(id);
+    const isHidden = inp.type === 'password';
+    inp.type = isHidden ? 'text' : 'password';
+    btn.querySelector('.material-symbols-outlined').textContent = isHidden ? 'visibility' : 'visibility_off';
+  }
+
+  function checkStrength(val) {
+    const bars = [document.getElementById('bar-1'), document.getElementById('bar-2'),
+                  document.getElementById('bar-3'), document.getElementById('bar-4')];
+    const label = document.getElementById('strength-label');
+    let score = 0;
+    if (val.length >= 8) score++;
+    if (/[A-Z]/.test(val)) score++;
+    if (/[0-9]/.test(val)) score++;
+    if (/[^A-Za-z0-9]/.test(val)) score++;
+
+    const colors = ['#ef4444','#f97316','#eab308','#22c55e'];
+    const labels = ['Muy débil','Débil','Regular','Fuerte'];
+
+    bars.forEach((b, i) => {
+      if (i < score) { b.style.width = '100%'; b.style.background = colors[score - 1]; }
+      else { b.style.width = '0'; }
+    });
+
+    label.textContent = val.length ? labels[score - 1] || '' : '';
+    label.style.color = score > 0 ? colors[score - 1] : '';
+  }
+</script>
+</body></html>
