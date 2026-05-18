@@ -33,6 +33,119 @@ const FETCH_OPTIONS = {
   },
 } as const;
 
+function extractText(value: unknown): string | null {
+  if (typeof value === 'string') return value.trim() || null;
+  if (typeof value === 'number') return String(value);
+  if (Array.isArray(value)) return extractText(value[0]);
+  if (value && typeof value === 'object') {
+    const maybeObj = value as { value?: unknown; processed?: unknown };
+    if (typeof maybeObj.processed === 'string') return maybeObj.processed.trim() || null;
+    if (typeof maybeObj.value === 'string') return maybeObj.value.trim() || null;
+  }
+  return null;
+}
+
+function extractNumber(value: unknown): number | null {
+  if (typeof value === 'number' && Number.isFinite(value)) return value;
+  if (typeof value === 'string') {
+    const parsed = Number.parseInt(value, 10);
+    return Number.isFinite(parsed) ? parsed : null;
+  }
+  if (Array.isArray(value)) return extractNumber(value[0]);
+  if (value && typeof value === 'object') {
+    const maybeObj = value as { value?: unknown };
+    if (maybeObj.value !== undefined) return extractNumber(maybeObj.value);
+  }
+  return null;
+}
+
+function pickText(attrs: Record<string, unknown>, keys: string[]): string | null {
+  for (const key of keys) {
+    if (key in attrs) {
+      const value = extractText(attrs[key]);
+      if (value) return value;
+    }
+  }
+  return null;
+}
+
+function slugifyText(value: string): string {
+  return value
+    .toLowerCase()
+    .trim()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '');
+}
+
+async function fetchMediaImageUrl(mediaId: string, lang: string): Promise<string | null> {
+  const mediaRaw = await nodehiveFetch<Record<string, unknown>>(
+    `/jsonapi/media/image/${mediaId}?include=field_media_image&fields[media--image]=field_media_image&fields[file--file]=uri`,
+    { ...FETCH_OPTIONS, lang }
+  );
+  if (mediaRaw.status !== 200) return null;
+  const mediaResult = dataFormatter.deserialize(mediaRaw.data) as any;
+  const file = mediaResult?.field_media_image;
+  return file?.uri?.url ? `${NODEHIVE_BASE_URL}${file.uri.url}` : null;
+}
+
+async function fetchFileUrl(fileId: string, lang: string): Promise<string | null> {
+  const fileRaw = await nodehiveFetch<Record<string, unknown>>(
+    `/jsonapi/file/file/${fileId}?fields[file--file]=uri`,
+    { ...FETCH_OPTIONS, lang }
+  );
+  if (fileRaw.status !== 200) return null;
+  const fileResult = dataFormatter.deserialize(fileRaw.data) as any;
+  const uri = fileResult?.uri?.url ?? fileResult?.uri?.value ?? null;
+  return uri ? `${NODEHIVE_BASE_URL}${uri}` : null;
+}
+
+function getParagraphBundleName(type: string): string {
+  return type.startsWith('paragraph--') ? type.slice('paragraph--'.length) : type;
+}
+
+async function fetchParagraphItem(type: string, id: string, lang: string) {
+  const bundle = getParagraphBundleName(type);
+  const raw = await nodehiveFetch<Record<string, unknown>>(
+    `/jsonapi/paragraph/${bundle}/${id}`,
+    { ...FETCH_OPTIONS, lang }
+  );
+  if (raw.status !== 200) return null;
+  const item = (raw.data as any)?.data ?? null;
+  return item ? { id: item.id, attributes: item.attributes ?? {}, relationships: item.relationships ?? {} } : null;
+}
+
+async function resolveParagraphRefs(
+  refs: Array<{ type: string; id: string }>,
+  lang: string,
+): Promise<Array<{ id: string; attributes: Record<string, unknown>; relationships: Record<string, unknown> }>> {
+  const items = await Promise.all(
+    refs.map((ref) => (ref?.type?.startsWith('paragraph--') && ref?.id
+      ? fetchParagraphItem(ref.type, ref.id, lang)
+      : Promise.resolve(null)))
+  );
+  return items.filter(Boolean) as Array<{ id: string; attributes: Record<string, unknown>; relationships: Record<string, unknown> }>;
+}
+
+async function extractParagraphImageUrl(relationships: Record<string, any>, lang: string): Promise<string | null> {
+  const keys = Object.keys(relationships ?? {}).filter((key) => /photo|image/i.test(key));
+  for (const key of keys) {
+    const relData = relationships?.[key]?.data ?? null;
+    const refs = Array.isArray(relData) ? relData : relData ? [relData] : [];
+    for (const ref of refs) {
+      if (!ref?.type || !ref?.id) continue;
+      if (ref.type === 'media--image') {
+        const mediaUrl = await fetchMediaImageUrl(ref.id, lang);
+        if (mediaUrl) return mediaUrl;
+      }
+      if (ref.type === 'file--file') {
+        const fileUrl = await fetchFileUrl(ref.id, lang);
+        if (fileUrl) return fileUrl;
+      }
+    }
+  }
+  return null;
+}
+
 export async function getHomepageHeroData(lang?: Lang): Promise<HeroData | null> {
   const nodeHiveDefaultLang = (import.meta.env.NODEHIVE_DEFAULT_LANG as string) ?? 'es';
   const effectiveLang = lang ?? nodeHiveDefaultLang;
@@ -166,16 +279,40 @@ export async function getCategoryParagraphData(lang?: Lang): Promise<CategoryBlo
     });
 
     if (raw.status === 200) {
+      const rawItem = (raw.data as any)?.data?.[0];
       const result = dataFormatter.deserialize(raw.data) as any[];
       const paragraph = result?.[0];
-      if (!paragraph) return null;
+      if (!paragraph || !rawItem) return null;
 
-      const categorias = (paragraph.field_categories ?? []).map((cat: any) => ({
-        id: cat.id ?? '',
-        nombre: cat.name ?? '',
-        slug: cat.field_slug ?? cat.drupal_internal__tid?.toString() ?? cat.id ?? '',
-        imagen: cat.field_photo ? nodehiveMediaUrl(cat.field_photo, NODEHIVE_BASE_URL) : null,
-      }));
+      const relData = rawItem?.relationships?.field_categories?.data ?? [];
+      const rels = Array.isArray(relData) ? relData : relData ? [relData] : [];
+      const usesParagraphs = rels.some((ref: any) => typeof ref?.type === 'string' && ref.type.startsWith('paragraph--'));
+
+      let categorias: Array<{ id: string; nombre: string; slug: string; imagen: string | null }> = [];
+
+      if (usesParagraphs) {
+        const items = await resolveParagraphRefs(rels, effectiveLang);
+        categorias = await Promise.all(items.map(async (item, index) => {
+          const attrs = item.attributes ?? {};
+          const nombre = pickText(attrs, ['field_title', 'field_name', 'title', 'name']) ?? '';
+          const slugBase = pickText(attrs, ['field_slug', 'field_slug_value', 'field_machine_name']) ?? '';
+          const slug = slugBase || (nombre ? slugifyText(nombre) : '') || item.id || String(index);
+          const imagen = await extractParagraphImageUrl(item.relationships ?? {}, effectiveLang);
+          return {
+            id: item.id ?? String(index),
+            nombre,
+            slug,
+            imagen,
+          };
+        }));
+      } else {
+        categorias = (paragraph.field_categories ?? []).map((cat: any) => ({
+          id: cat.id ?? '',
+          nombre: cat.name ?? '',
+          slug: cat.field_slug ?? cat.drupal_internal__tid?.toString() ?? cat.id ?? '',
+          imagen: cat.field_photo ? nodehiveMediaUrl(cat.field_photo, NODEHIVE_BASE_URL) : null,
+        }));
+      }
 
       return {
         paragraphId: paragraph.id,
@@ -296,16 +433,39 @@ export async function getServicesParagraphData(lang?: Lang): Promise<ServicesBlo
     });
 
     if (raw.status === 200) {
+      const rawItem = (raw.data as any)?.data?.[0];
       const result = dataFormatter.deserialize(raw.data) as any[];
       const paragraph = result?.[0];
-      if (!paragraph) return null;
+      if (!paragraph || !rawItem) return null;
 
-      const servicios = (paragraph.field_services ?? []).map((svc: any) => ({
-        id: svc.id ?? '',
-        titulo: svc.field_name ?? svc.title ?? '',
-        descripcion: svc.field_description ?? '',
-        imagen: svc.field_photo ? nodehiveMediaUrl(svc.field_photo, NODEHIVE_BASE_URL) : null,
-      }));
+      const relData = rawItem?.relationships?.field_services?.data ?? [];
+      const rels = Array.isArray(relData) ? relData : relData ? [relData] : [];
+      const usesParagraphs = rels.some((ref: any) => typeof ref?.type === 'string' && ref.type.startsWith('paragraph--'));
+
+      let servicios: Array<{ id: string; titulo: string; descripcion: string; imagen: string | null }> = [];
+
+      if (usesParagraphs) {
+        const items = await resolveParagraphRefs(rels, effectiveLang);
+        servicios = await Promise.all(items.map(async (item, index) => {
+          const attrs = item.attributes ?? {};
+          const titulo = pickText(attrs, ['field_title', 'field_name', 'title', 'name']) ?? '';
+          const descripcion = pickText(attrs, ['field_description', 'field_description_long', 'field_body', 'body', 'field_text', 'field_summary']) ?? '';
+          const imagen = await extractParagraphImageUrl(item.relationships ?? {}, effectiveLang);
+          return {
+            id: item.id ?? String(index),
+            titulo,
+            descripcion,
+            imagen,
+          };
+        }));
+      } else {
+        servicios = (paragraph.field_services ?? []).map((svc: any) => ({
+          id: svc.id ?? '',
+          titulo: svc.field_name ?? svc.title ?? '',
+          descripcion: svc.field_description ?? '',
+          imagen: svc.field_photo ? nodehiveMediaUrl(svc.field_photo, NODEHIVE_BASE_URL) : null,
+        }));
+      }
 
       return {
         paragraphId: paragraph.id,
@@ -346,17 +506,42 @@ export async function getCommentsParagraphData(lang?: Lang): Promise<CommentsBlo
     });
 
     if (raw.status === 200) {
+      const rawItem = (raw.data as any)?.data?.[0];
       const result = dataFormatter.deserialize(raw.data) as any[];
       const paragraph = result?.[0];
-      if (!paragraph) return null;
+      if (!paragraph || !rawItem) return null;
 
-      const comentarios = (paragraph.field_comments ?? []).map((c: any) => ({
-        id: c.id ?? '',
-        nombre: c.field_person_name ?? c.title ?? '',
-        rol: c.field_person_rol ?? '',
-        comentario: c.field_comment ?? '',
-        calificacion: c.field_calification ?? 5,
-      }));
+      const relData = rawItem?.relationships?.field_comments?.data ?? [];
+      const rels = Array.isArray(relData) ? relData : relData ? [relData] : [];
+      const usesParagraphs = rels.some((ref: any) => typeof ref?.type === 'string' && ref.type.startsWith('paragraph--'));
+
+      let comentarios: Array<{ id: string; nombre: string; rol: string; comentario: string; calificacion: number }> = [];
+
+      if (usesParagraphs) {
+        const items = await resolveParagraphRefs(rels, effectiveLang);
+        comentarios = items.map((item, index) => {
+          const attrs = item.attributes ?? {};
+          const nombre = pickText(attrs, ['field_person_name', 'field_name', 'field_title', 'title', 'name']) ?? '';
+          const rol = pickText(attrs, ['field_person_rol', 'field_role']) ?? '';
+          const comentario = pickText(attrs, ['field_comment', 'field_description', 'body', 'field_body']) ?? '';
+          const calificacion = extractNumber(attrs.field_calification ?? attrs.field_rating ?? attrs.field_score) ?? 5;
+          return {
+            id: item.id ?? String(index),
+            nombre,
+            rol,
+            comentario,
+            calificacion,
+          };
+        });
+      } else {
+        comentarios = (paragraph.field_comments ?? []).map((c: any) => ({
+          id: c.id ?? '',
+          nombre: c.field_person_name ?? c.title ?? '',
+          rol: c.field_person_rol ?? '',
+          comentario: c.field_comment ?? '',
+          calificacion: c.field_calification ?? 5,
+        }));
+      }
 
       return {
         paragraphId: paragraph.id,
@@ -465,21 +650,6 @@ function isShopComponent(type: string): boolean {
   return normalizeToken(type).includes('shop');
 }
 
-function getParagraphBundle(type: string): string {
-  return type.startsWith('paragraph--') ? type.slice('paragraph--'.length) : type;
-}
-
-function extractText(value: unknown): string | null {
-  if (typeof value === 'string') return value.trim() || null;
-  if (typeof value === 'number') return String(value);
-  if (value && typeof value === 'object') {
-    const maybeObj = value as { value?: unknown; processed?: unknown };
-    if (typeof maybeObj.processed === 'string') return maybeObj.processed.trim() || null;
-    if (typeof maybeObj.value === 'string') return maybeObj.value.trim() || null;
-  }
-  return null;
-}
-
 function normalizeStringList(value: unknown): string[] {
   if (Array.isArray(value)) {
     return value
@@ -488,20 +658,6 @@ function normalizeStringList(value: unknown): string[] {
   }
   const single = extractText(value);
   return single ? [single] : [];
-}
-
-function extractNumber(value: unknown): number | null {
-  if (typeof value === 'number' && Number.isFinite(value)) return value;
-  if (typeof value === 'string') {
-    const parsed = Number.parseInt(value, 10);
-    return Number.isFinite(parsed) ? parsed : null;
-  }
-  if (Array.isArray(value)) return extractNumber(value[0]);
-  if (value && typeof value === 'object') {
-    const maybeObj = value as { value?: unknown };
-    if (maybeObj.value !== undefined) return extractNumber(maybeObj.value);
-  }
-  return null;
 }
 
 function pickStringField(attrs: Record<string, unknown>, keys: string[]) {
@@ -611,7 +767,7 @@ export async function getShopPageData(lang?: Lang): Promise<ShopPageData | null>
 
     let header: ShopHeaderData | null = null;
     if (headerComponent?.id && headerComponent?.type) {
-      const bundle = getParagraphBundle(headerComponent.type);
+      const bundle = getParagraphBundleName(headerComponent.type);
       const headerPath = `/jsonapi/paragraph/${bundle}/${headerComponent.id}`;
       const headerRaw = await fetchWithLangFallback<Record<string, unknown>>(
         headerPath,
@@ -640,7 +796,7 @@ export async function getShopPageData(lang?: Lang): Promise<ShopPageData | null>
 
     let body: ShopBodyData | null = null;
     if (bodyComponent?.id && bodyComponent?.type) {
-      const bundle = getParagraphBundle(bodyComponent.type);
+      const bundle = getParagraphBundleName(bodyComponent.type);
       const bodyPath = `/jsonapi/paragraph/${bundle}/${bodyComponent.id}`;
       const bodyRaw = await fetchWithLangFallback<Record<string, unknown>>(
         bodyPath,
@@ -815,19 +971,46 @@ export async function getAboutArchievementsData(lang?: Lang): Promise<AboutArchi
 
     const result = dataFormatter.deserialize(raw.data) as any[];
     const p = result?.[0];
-    if (!p) return null;
+    if (!p || !rawItem) return null;
 
-    const isEn = effectiveLang === 'en';
+    const relData = rawItem?.relationships?.field_archievements?.data ?? [];
+    const rels = Array.isArray(relData) ? relData : relData ? [relData] : [];
+    const usesParagraphs = rels.some((ref: any) => typeof ref?.type === 'string' && ref.type.startsWith('paragraph--'));
+
+    let items: AboutArchievementsData['items'] = [];
+
+    if (usesParagraphs) {
+      const paragraphs = await resolveParagraphRefs(rels, effectiveLang);
+      items = paragraphs.map((item, index) => {
+        const attrs = item.attributes ?? {};
+        const title = pickText(attrs, ['field_title', 'field_name', 'title', 'name']) ?? '';
+        const description = pickText(attrs, ['field_description', 'field_description_long', 'field_text', 'body']) ?? '';
+        const icon = pickText(attrs, ['field_icon', 'field_emoji', 'field_symbol']) ?? '✨';
+        return {
+          id: item.id ?? String(index),
+          internalId: index + 1,
+          title,
+          description,
+          icon,
+        };
+      });
+    }
+
+    if (items.length === 0) {
+      const isEn = effectiveLang === 'en';
+      items = [
+        { id: 'amazon', internalId: 1, title: 'Amazon Influencer', description: isEn ? 'approved' : 'aprobada', icon: '📦' },
+        { id: 'hotmart', internalId: 2, title: isEn ? 'Floral design courses' : 'Cursos de diseño floral', description: 'Hotmart', icon: '🔥' },
+        { id: 'vip', internalId: 3, title: isEn ? 'Active VIP community of entrepreneurial women' : 'Comunidad VIP activa de\r\nalumnas emprendedoras', description: '', icon: '👑' },
+      ];
+    }
+
     return {
       paragraphId: p.id ?? null,
       paragraphInternalId: p.drupal_internal__id ?? null,
       parentId,
       title: p.field_title ?? null,
-      items: [
-        { id: 'amazon', internalId: 1, title: 'Amazon Influencer', description: isEn ? 'approved' : 'aprobada', icon: '📦' },
-        { id: 'hotmart', internalId: 2, title: isEn ? 'Floral design courses' : 'Cursos de diseño floral', description: 'Hotmart', icon: '🔥' },
-        { id: 'vip', internalId: 3, title: isEn ? 'Active VIP community of entrepreneurial women' : 'Comunidad VIP activa de\r\nalumnas emprendedoras', description: '', icon: '👑' },
-      ],
+      items,
     };
   } catch (err) {
     console.error('[Paragraphs] Error getAboutArchievementsData:', err);
@@ -1097,7 +1280,7 @@ export async function getAuthPageData(
 
     let heroPanel: AuthHeroPanelData | null = null;
     if (leftComp?.id && leftComp?.type) {
-      const bundle = getParagraphBundle(leftComp.type);
+      const bundle = getParagraphBundleName(leftComp.type);
       const leftParams = new DrupalJsonApiParams();
       leftParams
         .addInclude(['field_head_photo', 'field_head_photo.field_media_image'])
@@ -1135,7 +1318,7 @@ export async function getAuthPageData(
 
     let formHeader: AuthFormHeaderData | null = null;
     if (rightComp?.id && rightComp?.type) {
-      const bundle = getParagraphBundle(rightComp.type);
+      const bundle = getParagraphBundleName(rightComp.type);
       const rightParams = new DrupalJsonApiParams();
       rightParams.addFields(`paragraph--${bundle}`, [
         'id', 'drupal_internal__id', 'parent_id', 'field_title', 'field_subtitle',

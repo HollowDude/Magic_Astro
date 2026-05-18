@@ -116,7 +116,8 @@ export default function HeroCarousel({
         );
       })}
 
-      <div className="absolute inset-0 bg-gradient-to-b from-[rgba(20,5,10,0.38)] to-[rgba(20,5,10,0.55)] z-[2]" />
+      <div className="absolute inset-0 bg-gradient-to-r from-black/70 via-black/40 to-transparent z-[2]" />
+      <div className="absolute inset-0 bg-gradient-to-b from-[rgba(20,5,10,0.30)] via-[rgba(20,5,10,0.45)] to-[rgba(20,5,10,0.65)] z-[2]" />
 
       <div className="relative z-10 flex flex-col items-center text-center gap-5 max-w-[52rem] py-20 px-6">
         <h1 
@@ -128,7 +129,7 @@ export default function HeroCarousel({
         
         {activeSubtitle && (
           <h2 
-            className="text-[clamp(1.25rem,3vw,2rem)] font-bold leading-tight text-[#fbdadd] tracking-[-0.02em] font-body m-0"
+            className="text-[clamp(1.25rem,3vw,2rem)] font-bold leading-tight text-[#fbdadd] tracking-[-0.02em] font-body m-0 [text-shadow:0_2px_12px_rgba(0,0,0,0.35)]"
             data-nodehive-field="field_subtitle"
           >
             {activeSubtitle}
@@ -136,7 +137,7 @@ export default function HeroCarousel({
         )}
         
         <p 
-          className="max-w-[38rem] text-[clamp(1rem,2vw,1.125rem)] leading-relaxed text-white/90 font-body m-0"
+          className="max-w-[38rem] text-[clamp(1rem,2vw,1.125rem)] leading-relaxed text-white/90 font-body m-0 [text-shadow:0_2px_12px_rgba(0,0,0,0.35)]"
           data-nodehive-field="field_description"
         >
           {activeDescription}

@@ -44,6 +44,8 @@
 
   if (!isInIframe) return; // Nada más que hacer en navegación normal
 
+  document.documentElement.classList.add('nh-editor');
+
   /* ── 3. Variables del editor ─────────────────────────────────────────── */
   var parentOrigin = '*';
 

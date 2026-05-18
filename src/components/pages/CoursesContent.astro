@@ -1,0 +1,50 @@
+---
+// src/components/pages/CoursesContent.astro
+import HomeLayout from '@/layouts/HomeLayout.astro';
+import CoursesHero from '@/components/courses/CoursesHero';
+import CoursesStats from '@/components/courses/CoursesStats.astro';
+import CoursesGrid from '@/components/courses/CoursesGrid';
+import { getCoursesPageData } from '@/services/nodehive/nodehive.courses';
+import { getLangFromUrl, useTranslations } from '@/i18n/utils';
+import type { Lang } from '@/i18n/ui';
+
+const lang = (Astro.currentLocale ?? getLangFromUrl(Astro.url)) as Lang;
+const t = useTranslations(lang);
+const data = await getCoursesPageData(lang);
+const parentId = data?.pageInternalId ?? null;
+---
+
+<HomeLayout title={t('courses.title')} lang={lang}>
+  <div class="flex flex-col min-h-screen">
+    <main class="flex-1 flex flex-col">
+      <CoursesHero
+        slides={data?.hero?.slides}
+        lang={lang}
+        paragraphId={data?.hero?.paragraphId}
+        paragraphInternalId={data?.hero?.paragraphInternalId}
+        parentId={parentId}
+        bundle={data?.hero?.bundle}
+        client:load
+      />
+
+      <CoursesStats
+        stats={data?.stats}
+        lang={lang}
+        parentId={parentId}
+      />
+
+      <CoursesGrid
+        courses={data?.grid?.courses}
+        title={data?.grid?.title}
+        subtitle={data?.grid?.subtitle}
+        itemsPerLoad={data?.grid?.itemsPerLoad}
+        lang={lang}
+        paragraphId={data?.grid?.paragraphId}
+        paragraphInternalId={data?.grid?.paragraphInternalId}
+        parentId={parentId}
+        bundle={data?.grid?.bundle}
+        client:load
+      />
+    </main>
+  </div>
+</HomeLayout>

@@ -362,3 +362,88 @@ export interface PortfolioPageData {
   header: PortfolioHeaderData | null;
   gallery: PortfolioGalleryData | null;
 }
+
+// Courses / Academy Page Paragraphs
+
+export type CourseFormat = 'in-person' | 'digital' | 'workshop';
+export type CourseLevel  = 'beginner' | 'intermediate' | 'advanced' | 'all';
+
+export interface CourseItem {
+  id:          string;
+  internalId:  number | null;
+  title:       string;
+  description: string | null;
+  imageUrl:    string | null;
+  price:       string | null;
+  isFree:      boolean;
+  format:      CourseFormat;
+  level:       CourseLevel | null;
+  date:        string | null;
+  duration:    string | null;
+  rating:      number | null;
+  reviewCount: number | null;
+  spotsLeft:   number | null;
+  ctaUrl:      string | null;
+  bundle:      string;
+}
+
+export interface CoursesHeroSlide {
+  image:       string;
+  label:       string;
+  badgeText:   string | null;
+  badgeColor:  string | null;
+  title:       string;
+  description: string | null;
+  ctaUrl:      string | null;
+  ctaText:     string | null;
+  ctaStyle?:   string | null;
+  ctaSecondaryUrl?:   string | null;
+  ctaSecondaryText?:  string | null;
+  ctaSecondaryStyle?: string | null;
+}
+
+export interface CoursesHeroData {
+  paragraphId:         string | null;
+  paragraphInternalId: number | null;
+  parentId?:           string | number | null;
+  bundle:              string;
+  slides:              CoursesHeroSlide[];
+}
+
+export interface CoursesStatsData {
+  paragraphId:         string | null;
+  paragraphInternalId: number | null;
+  parentId?:           string | number | null;
+  bundle:              string;
+  students:            string | null;
+  courses:             string | null;
+  rating:              string | null;
+  satisfaction:        string | null;
+  studentsPrefix?:     string | null;
+  studentsSuffix?:     string | null;
+  coursesPrefix?:      string | null;
+  coursesSuffix?:      string | null;
+  ratingPrefix?:       string | null;
+  ratingSuffix?:       string | null;
+  satisfactionPrefix?: string | null;
+  satisfactionSuffix?: string | null;
+}
+
+export interface CoursesGridData {
+  paragraphId:         string | null;
+  paragraphInternalId: number | null;
+  parentId?:           string | number | null;
+  bundle:              string;
+  title:               string | null;
+  subtitle:            string | null;
+  courses:             CourseItem[];
+  itemsPerLoad:        number;
+}
+
+export interface CoursesPageData {
+  pageId?:             string;
+  pageInternalId?:     number | null;
+  hero:                CoursesHeroData | null;
+  stats:               CoursesStatsData | null;
+  grid:                CoursesGridData | null;
+}

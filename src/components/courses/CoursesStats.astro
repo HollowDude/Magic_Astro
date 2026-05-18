@@ -1,0 +1,98 @@
+---
+// src/components/courses/CoursesStats.astro
+import type { CoursesStatsData } from '@/types/nodehive/content';
+import { useTranslations } from '@/i18n/utils';
+import type { Lang } from '@/i18n/ui';
+
+interface Props {
+  stats?: CoursesStatsData | null;
+  lang?: Lang;
+  parentId?: string | number | null;
+}
+
+const { stats, lang = 'es', parentId } = Astro.props;
+const t = useTranslations(lang);
+
+function buildStat(
+  value: string | null | undefined,
+  prefix: string | null | undefined,
+  suffix: string | null | undefined,
+  fallbackValue: string,
+  fallbackLabel: string,
+  field: string,
+  defaultPrefix = '',
+  defaultSuffix = '',
+) {
+  const base = value ?? fallbackValue;
+  const pre = prefix ?? defaultPrefix;
+  const suf = suffix ?? defaultSuffix;
+  const hasCustomSuffix = Boolean(suffix);
+  const hasSuffix = Boolean(suf);
+  const suffixIsWord = /[a-zA-Z]/.test(suf);
+  const baseText = String(base);
+  const prefixText = pre && !baseText.startsWith(pre) ? pre : '';
+  const suffixText = hasSuffix && !suffixIsWord && !baseText.endsWith(suf) ? suf : '';
+  const displayValue = `${prefixText}${baseText}${suffixText}`;
+  const label = hasCustomSuffix ? (suffix ?? fallbackLabel) : fallbackLabel;
+  return { value: displayValue, label, field };
+}
+
+const items = [
+  buildStat(
+    stats?.students,
+    stats?.studentsPrefix,
+    stats?.studentsSuffix,
+    '+2,000',
+    t('courses.stats.students'),
+    'field_estudiants_stadistic',
+    '+',
+    '',
+  ),
+  buildStat(
+    stats?.courses,
+    stats?.coursesPrefix,
+    stats?.coursesSuffix,
+    '18',
+    t('courses.stats.courses'),
+    'field_courses_stadistic',
+  ),
+  buildStat(
+    stats?.rating,
+    stats?.ratingPrefix,
+    stats?.ratingSuffix,
+    '4.9 ★',
+    t('courses.stats.rating'),
+    'field_valoration_stadistic',
+    '',
+    '★',
+  ),
+  buildStat(
+    stats?.satisfaction,
+    stats?.satisfactionPrefix,
+    stats?.satisfactionSuffix,
+    '100%',
+    t('courses.stats.satisfaction'),
+    'field_satisfaction_stadistic',
+    '',
+    '%',
+  ),
+];
+---
+
+<div
+  class="bg-white border-b border-slate-100 shadow-sm"
+  data-nodehive-entity-type={stats?.bundle ? 'paragraph' : undefined}
+  data-nodehive-entity-bundle={stats?.bundle ?? undefined}
+  data-nodehive-entity-id={stats?.paragraphId ?? undefined}
+  data-nodehive-entity-internal-id={stats?.paragraphInternalId ?? undefined}
+  data-nodehive-parent_id={parentId ?? undefined}
+>
+  <div class="w-full max-w-[1200px] mx-auto px-4 md:px-10 py-4 grid grid-cols-2 md:grid-cols-4 divide-x divide-slate-100 text-center">
+    {items.map((item) => (
+      <div class="px-4 py-2">
+        <p class="text-xl font-black text-primary" data-nodehive-field={item.field}>{item.value}</p>
+        <p class="text-xs text-[#89656b] mt-0.5">{item.label}</p>
+      </div>
+    ))}
+  </div>
+</div>
