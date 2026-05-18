@@ -93,7 +93,7 @@ export interface RawResponse<T> {
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
 function langPrefix(lang: string | undefined): string {
-  if (!lang || lang === NODEHIVE_DEFAULT_LANG) return '';
+  if (!lang) return '';
   return `/${lang}`;
 }
 

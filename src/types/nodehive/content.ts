@@ -308,3 +308,57 @@ export interface AuthPageData {
   heroPanel: AuthHeroPanelData | null;
   formHeader: AuthFormHeaderData | null;
 }
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Portfolio Page Paragraphs
+// ─────────────────────────────────────────────────────────────────────────────
+
+export interface PortfolioEventCategory {
+  id: string;
+  internalId: number | null;
+  name: string;
+  slug: string;
+}
+
+export interface PortfolioEventImage {
+  url: string;
+  alt: string;
+}
+
+export interface PortfolioEventItem {
+  id: string;
+  internalId: number | null;
+  bundle: string;
+  title: string;
+  subtitle: string | null;
+  category: PortfolioEventCategory | null;
+  images: PortfolioEventImage[];
+}
+
+export interface PortfolioHeaderData {
+  paragraphId: string | null;
+  paragraphInternalId: number | null;
+  parentId?: string | number | null;
+  bundle: string;
+  title: string | null;
+  subtitle: string | null;
+  description: string | null;
+}
+
+export interface PortfolioGalleryData {
+  paragraphId: string | null;
+  paragraphInternalId: number | null;
+  parentId?: string | number | null;
+  parentInternalId?: number | null;
+  bundle: string;
+  itemsPerLoad: number;
+  events: PortfolioEventItem[];
+  categories: PortfolioEventCategory[];
+}
+
+export interface PortfolioPageData {
+  pageId?: string;
+  pageInternalId?: number | null;
+  header: PortfolioHeaderData | null;
+  gallery: PortfolioGalleryData | null;
+}

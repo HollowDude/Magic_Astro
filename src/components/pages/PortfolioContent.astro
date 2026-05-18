@@ -1,0 +1,81 @@
+---
+export const prerender = false;
+
+import HomeLayout from '@/layouts/HomeLayout.astro';
+import PortfolioClient from '@/components/portfolio/PortfolioClient';
+import { getPortfolioPageData } from '@/services/nodehive/nodehive.portfolio';
+import { getLangFromUrl } from '@/i18n/utils';
+import type { Lang } from '@/i18n/ui';
+
+const lang = (Astro.currentLocale ?? getLangFromUrl(Astro.url)) as Lang;
+const data = await getPortfolioPageData(lang);
+const pageTitle = lang === 'en' ? 'Portfolio' : 'Portafolio';
+
+const heroTitle = data?.header?.title ?? (lang === 'en' ? 'Our Floral Portfolio' : 'Nuestro Portafolio Floral');
+const heroSubtitle = data?.header?.subtitle ?? null;
+const heroDesc = data?.header?.description ?? (lang === 'en'
+  ? 'Explore our gallery of bespoke floral arrangements.'
+  : 'Explora nuestra galería de arreglos florales únicos.');
+
+const events = data?.gallery?.events ?? [];
+const categories = data?.gallery?.categories ?? [];
+const itemsPerLoad = data?.gallery?.itemsPerLoad ?? 6;
+---
+
+<HomeLayout title={pageTitle} lang={lang}>
+  <div class="flex flex-col min-h-screen">
+    <main class="main-container">
+
+      <!-- Hero del portafolio -->
+      <div
+        class="flex flex-col gap-4 mb-10 max-w-2xl"
+        data-nodehive-entity-type={data?.header ? 'paragraph' : undefined}
+        data-nodehive-entity-bundle={data?.header?.bundle ?? undefined}
+        data-nodehive-entity-id={data?.header?.paragraphId ?? undefined}
+        data-nodehive-entity-internal-id={data?.header?.paragraphInternalId ?? undefined}
+        data-nodehive-parent_id={data?.pageInternalId ?? undefined}
+      >
+        <h1
+          class="font-heading text-[clamp(2rem,4vw,3rem)] font-semibold tracking-tight text-headline leading-tight"
+          data-nodehive-field={data?.header ? 'field_title' : undefined}
+        >
+          {heroTitle}
+        </h1>
+        {heroSubtitle && (
+          <p
+            class="font-body text-lg font-medium text-primary"
+            data-nodehive-field={data?.header ? 'field_subtitle' : undefined}
+          >
+            {heroSubtitle}
+          </p>
+        )}
+        <p
+          class="font-body text-[0.9375rem] text-body-color leading-relaxed"
+          data-nodehive-field={data?.header ? 'field_description' : undefined}
+        >
+          {heroDesc}
+        </p>
+      </div>
+
+      <!-- Galería con filtros -->
+      <div
+        data-nodehive-entity-type={data?.gallery ? 'paragraph' : undefined}
+        data-nodehive-entity-bundle={data?.gallery?.bundle ?? undefined}
+        data-nodehive-entity-id={data?.gallery?.paragraphId ?? undefined}
+        data-nodehive-entity-internal-id={data?.gallery?.paragraphInternalId ?? undefined}
+        data-nodehive-parent_id={data?.pageInternalId ?? undefined}
+      >
+        <PortfolioClient
+          lang={lang}
+          events={events}
+          categories={categories}
+          itemsPerLoad={itemsPerLoad}
+          galleryParagraphInternalId={data?.gallery?.paragraphInternalId ?? null}
+          pageInternalId={data?.pageInternalId ?? null}
+          client:load
+        />
+      </div>
+
+    </main>
+  </div>
+</HomeLayout>
