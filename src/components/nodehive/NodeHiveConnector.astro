@@ -113,7 +113,11 @@
       var entityUuid = entityEl.dataset.nodehiveUuid || entityEl.dataset.nodehiveEntityId || '';
       var entityInternalId = entityEl.dataset.nodehiveId || entityEl.dataset.nodehiveEntityInternalId || '';
       var entityParentId = entityEl.dataset.nodehiveParent_id || entityEl.dataset.nodehiveParentId || '';
-      var langcode = entityEl.dataset.nodehiveLangcode || (window.__NODEHIVE_LANG__ || document.documentElement.lang || 'es');
+
+      // Usar el idioma del pathname actual (del editor), NO el del atributo del párrafo
+      var pathLang = window.location.pathname.split('/')[1];
+      var langcode = (['es','en'].includes(pathLang)) ? pathLang : (window.__NODEHIVE_LANG__ || document.documentElement.lang || 'es');
+
       var fieldName = el.dataset.nodehiveField || '';
 
       if (fieldName) {
@@ -127,6 +131,14 @@
       }
 
       if (entityType === 'paragraph') {
+        console.log('[NH DEBUG paragraph click]', {
+          entityType,
+          entityUuid,
+          entityInternalId,
+          entityParentId,
+          langcode,
+          element: entityEl?.outerHTML?.slice(0, 200)
+        });
         sendToEditor({
           type:      'paragraph',
           uuid:      entityUuid || '',

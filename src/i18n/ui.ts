@@ -90,6 +90,12 @@ export const ui = {
     'shop.filters.type.natural':   'Natural',
     'shop.filters.type.artificial':'Artificial',
     'shop.filters.type.seco':      'Seco',
+    'shop.filters.ocasion':        'Ocasión',
+    'shop.filters.ocasion.birthday':      'Cumpleaños',
+    'shop.filters.ocasion.anniversary':   'Aniversario',
+    'shop.filters.ocasion.wedding':       'Bodas',
+    'shop.filters.ocasion.condolence':    'Condolencias',
+    'shop.filters.ocasion.aniversary':    'Aniversario',
     'shop.filters.clear':          'Limpiar filtros',
     'shop.add_to_cart':            'Añadir al carrito',
     'shop.price_on_request':       'Consultar precio',
@@ -109,6 +115,9 @@ export const ui = {
     'product.related.title':               'Productos Relacionados',
     'product.related.see_all':             'Ver todo',
     'product.not_found':                   'Producto no encontrado.',
+
+    // ── Portfolio ────────────────────────────────────────────────────────────
+    'portfolio.contact':                   'Contactar',
   },
   en: {
     // ── Navigation ──────────────────────────────────────────────────────────
@@ -189,6 +198,12 @@ export const ui = {
     'shop.filters.type.natural':   'Natural',
     'shop.filters.type.artificial':'Artificial',
     'shop.filters.type.seco':      'Dried',
+    'shop.filters.ocasion':        'Occasion',
+    'shop.filters.ocasion.birthday':      'Birthday',
+    'shop.filters.ocasion.anniversary':   'Anniversary',
+    'shop.filters.ocasion.wedding':       'Wedding',
+    'shop.filters.ocasion.condolence':    'Condolence',
+    'shop.filters.ocasion.aniversary':    'Anniversary',
     'shop.filters.clear':          'Clear filters',
     'shop.add_to_cart':            'Add to cart',
     'shop.price_on_request':       'Price on request',
@@ -208,6 +223,9 @@ export const ui = {
     'product.related.title':               'Related Products',
     'product.related.see_all':             'See all',
     'product.not_found':                   'Product not found.',
+
+    // ── Portfolio ────────────────────────────────────────────────────────────
+    'portfolio.contact':                   'Contact Us',
   },
 } as const;
 

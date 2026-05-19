@@ -109,6 +109,9 @@ export interface TestimonialItem {
  * Datos de comentarios desde el bloque.
  */
 export interface ComentariosData {
+  paragraphId?: string | null;
+  paragraphInternalId?: number | null;
+  parentId?: string | number | null;
   titulo: string | null;
   descripcion: string | null;
   comentarios: TestimonialItem[];
@@ -128,6 +131,9 @@ export interface CategoryData {
  * Datos de categorías desde el bloque.
  */
 export interface CategoryBlockData {
+  paragraphId?: string | null;
+  paragraphInternalId?: number | null;
+  parentId?: string | number | null;
   titulo: string | null;
   subTitulo: string | null;
   categorias: CategoryData[];
@@ -137,6 +143,9 @@ export interface CategoryBlockData {
  * Datos de contacto desde el bloque.
  */
 export interface ContactBlockData {
+  paragraphId?: string | null;
+  paragraphInternalId?: number | null;
+  parentId?: string | number | null;
   titulo: string | null;
   subTitulo: string | null;
   descripcion: string | null;
@@ -162,6 +171,9 @@ export interface FeaturedProduct {
  * Datos de productos destacados desde el bloque.
  */
 export interface FeaturedProductsData {
+  paragraphId?: string | null;
+  paragraphInternalId?: number | null;
+  parentId?: string | number | null;
   titulo: string | null;
   productos: FeaturedProduct[];
 }
@@ -230,6 +242,7 @@ export interface AboutArchievementItem {
   title: string;
   description: string;
   icon: string;
+  fotoUrl: string | null;
 }
 
 export interface AboutArchievementsData {

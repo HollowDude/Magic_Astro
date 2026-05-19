@@ -82,6 +82,10 @@ export interface RequestOptions {
    * 0         → sin timeout.
    */
   timeoutMs?: number;
+  /**
+   * Si true, no envía el header api-key (útil para login).
+   */
+  skipApiKey?: boolean;
 }
 
 export interface RawResponse<T> {
@@ -112,11 +116,13 @@ export async function nodehiveFetch<T = unknown>(
     lang,
     cacheTtl,
     timeoutMs,
+    skipApiKey,
   } = options;
 
   const effectiveTtl = cacheTtl ?? DEFAULT_TTL_MS;
   const effectiveTimeout = timeoutMs ?? DEFAULT_TIMEOUT_MS;
-  const url          = `${NODEHIVE_BASE_URL}${langPrefix(lang)}${path}`;
+  const baseUrl = NODEHIVE_BASE_URL.replace(/\/+$/, '');
+  const url          = `${baseUrl}${langPrefix(lang)}${path}`;
 
   // ── Hit de caché ────────────────────────────────────────────────────────────
   if (method === 'GET' && effectiveTtl > 0) {
@@ -129,7 +135,7 @@ export async function nodehiveFetch<T = unknown>(
   const headers: Record<string, string> = {
     'Content-Type': isForm ? 'application/x-www-form-urlencoded' : 'application/json',
     Accept:         'application/json',
-    'api-key':      NODEHIVE_API_KEY,
+    ...(!skipApiKey ? { 'api-key': NODEHIVE_API_KEY } : {}),
     ...extraHeaders,
   };
   if (sessionCookie) headers['Cookie'] = sessionCookie;

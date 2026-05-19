@@ -5,18 +5,18 @@ import type { ServiceItem } from '@/services/nodehive/nodehive.service';
 // ── Props ──────────────────────────────────────────────────────────────────────
 
 interface Props {
-  titulo?:    string | null;
-  subTitulo?: string | null;
-  eslogan?:   string | null;
-  services?:  ServiceItem[];
+  titulo?:          string | null;
+  subTitulo?:       string | null;
+  subTituloPrimary?: string | null;
+  services?:        ServiceItem[];
 }
 
 // ── Fallbacks del header ───────────────────────────────────────────────────────
 
 const FALLBACK_HEADER = {
-  titulo:    'Experiencias & Servicios',
-  subTitulo: 'Todo lo que ofrecemos',
-  eslogan:   'Descubre cómo podemos ayudarte a florecer en cada ocasión especial.',
+  titulo:          'Experiencias & Servicios',
+  subTitulo:       'Todo lo que ofrecemos',
+  subTituloPrimary: 'Descubre cómo podemos ayudarte a florecer en cada ocasión especial.',
 };
 
 // ── Servicios estáticos ────────────────────────────────────────────────────────
@@ -61,7 +61,7 @@ const SIDE_PAD = ARROW_D / 2 + 8;
 export default function ServicesCarousel({
   titulo,
   subTitulo,
-  eslogan,
+  subTituloPrimary,
   services: servicesProp = [],
 }: Props) {
   const activeServices = servicesProp.length > 0 ? servicesProp : STATIC_SERVICES;
@@ -100,15 +100,15 @@ export default function ServicesCarousel({
 
       {/* Header */}
       <div className="text-center mb-12 px-4">
-        <span className="block font-body text-[0.8125rem] font-bold tracking-[0.08em] uppercase text-primary mb-2" data-nodehive-field="field_title">
-          {titulo ?? FALLBACK_HEADER.titulo}
+        <span className="block font-body text-[0.8125rem] font-bold tracking-[0.08em] uppercase text-primary mb-2" data-nodehive-field="field_subtitle_primary">
+          {subTituloPrimary ?? FALLBACK_HEADER.subTituloPrimary}
         </span>
-        <h2 className="font-body text-[clamp(2rem,5vw,3rem)] font-black tracking-[-0.03em] text-headline m-0 mb-3" data-nodehive-field="field_subtitle">
-          {subTitulo ?? FALLBACK_HEADER.subTitulo}
+        <h2 className="font-body text-[clamp(2rem,5vw,3rem)] font-black tracking-[-0.03em] text-headline m-0 mb-3" data-nodehive-field="field_title">
+          {titulo ?? FALLBACK_HEADER.titulo}
         </h2>
-        {(eslogan ?? FALLBACK_HEADER.eslogan) && (
-          <p className="font-body text-base text-body-color m-0" data-nodehive-field="field_subtitle_primary">
-            {eslogan ?? FALLBACK_HEADER.eslogan}
+        {(subTitulo ?? FALLBACK_HEADER.subTitulo) && (
+          <p className="font-body text-base text-body-color m-0" data-nodehive-field="field_subtitle">
+            {subTitulo ?? FALLBACK_HEADER.subTitulo}
           </p>
         )}
       </div>

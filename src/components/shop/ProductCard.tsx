@@ -19,6 +19,26 @@ export interface ProductCardData {
   colorName: string | null;
   colorHex: string | null;
   category: string | null;
+  ocasiones: string[];
+}
+
+const COLOR_FALLBACK_MAP: Record<string, string> = {
+  orange: '#f97316', naranja: '#f97316',
+  pink: '#f9a8d4', rosa: '#f9a8d4',
+  purple: '#a855f7', morado: '#a855f7', lila: '#a855f7',
+  red: '#ef4444', rojo: '#ef4444',
+  white: '#f5f5f5', blanco: '#f5f5f5',
+  yellow: '#fde047', amarillo: '#fde047',
+  blue: '#3b82f6', azul: '#3b82f6',
+  green: '#22c55e', verde: '#22c55e',
+  ivory: '#f3e7d3', marfil: '#f3e7d3',
+  beige: '#d8c3a5',
+};
+
+function resolveColorHex(name: string | null, hex: string | null): string {
+  if (hex) return hex.startsWith('#') ? hex : `#${hex}`;
+  if (!name) return '';
+  return COLOR_FALLBACK_MAP[name.toLowerCase()] ?? '';
 }
 
 interface Props {
@@ -28,8 +48,9 @@ interface Props {
 }
 
 export default function ProductCard({ product, lang = 'es', href }: Props) {
-  const dotFill = product.colorHex || (product.colorName ? 'var(--muted)' : 'transparent');
-  const dotBorder = product.colorHex || (product.colorName ? 'var(--muted)' : 'var(--border)');
+  const resolvedHex = resolveColorHex(product.colorName, product.colorHex);
+  const dotFill = resolvedHex || (product.colorName ? 'var(--muted)' : 'transparent');
+  const dotBorder = resolvedHex || (product.colorName ? 'var(--muted)' : 'var(--border)');
 
   return (
     <article className="group relative flex flex-col bg-white rounded-xl overflow-hidden border border-border transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_12px_36px_color-mix(in_srgb,var(--headline)_12%,transparent)]">

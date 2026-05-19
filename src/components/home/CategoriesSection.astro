@@ -6,7 +6,8 @@ import type { Lang } from '@/i18n/ui';
 
 const lang = (Astro.currentLocale ?? getLangFromUrl(Astro.url)) as Lang;
 const data = await getCategoryParagraphData(lang);
-const { parentId = null } = Astro.props;
+const { parentId: propsParentId = null } = Astro.props;
+const parentId = data?.parentId ?? propsParentId;
 
 const fallbackTitulo = lang === 'en' ? 'Featured Categories' : 'Categorías Destacadas';
 const fallbackSubtitulo = lang === 'en' 
@@ -26,6 +27,7 @@ const prefix = getPrefix(lang);
   data-nodehive-entity-id={data?.paragraphId}
   data-nodehive-entity-internal-id={data?.paragraphInternalId ?? null}
   data-nodehive-parent_id={parentId ?? null}
+  data-nodehive-langcode={lang}
 >
   <button
     type="button"

@@ -38,7 +38,7 @@ const bodyFields = shopBody
     }
   : null;
 
-const DEFAULT_FILTERS: ShopFilterKey[] = ['categories', 'price', 'colors', 'type'];
+const DEFAULT_FILTERS: ShopFilterKey[] = ['categories', 'price', 'colors', 'type', 'ocasion'];
 const DEFAULT_SORTS: SortKey[] = ['featured', 'price_asc', 'price_desc', 'newest'];
 
 const FILTER_ALIASES: Record<ShopFilterKey, string[]> = {
@@ -46,6 +46,7 @@ const FILTER_ALIASES: Record<ShopFilterKey, string[]> = {
   price: ['price', 'precio', 'precios', 'pricing'],
   colors: ['colors', 'color', 'colores', 'palette', 'paleta'],
   type: ['type', 'types', 'tipo', 'tipos'],
+  ocasion: ['ocasion', 'ocasiones', 'occasion', 'occasions', 'field_ocasion', 'event', 'evento'],
 };
 
 const SORT_ALIASES: Record<SortKey, string[]> = {
@@ -92,6 +93,7 @@ function mapSorts(list: string[] | null | undefined): SortKey[] {
 }
 
 const enabledFilters = mapFilters(shopBody?.filters);
+if (!enabledFilters.includes('ocasion')) enabledFilters.push('ocasion');
 const enabledSorts = mapSorts(shopBody?.sorts);
 const filterSet = new Set(enabledFilters);
 const sortOptions = enabledSorts.length > 0 ? enabledSorts : ['featured'];
@@ -103,6 +105,7 @@ const initialCat   = filterSet.has('categories') ? (sp.get('cat') ?? '') : '';
 const initialPrice = filterSet.has('price') ? (sp.get('price') ?? '') : '';
 const initialColors = filterSet.has('colors') ? (sp.get('colors') ?? '') : '';
 const initialTipos  = filterSet.has('type') ? (sp.get('tipos') ?? '') : '';
+const initialOcasiones = filterSet.has('ocasion') ? (sp.get('ocasiones') ?? '') : '';
 const rawSort = sp.get('sort') as SortKey | null;
 const initialSort: SortKey = rawSort && sortOptions.includes(rawSort) ? rawSort : (sortOptions[0] ?? 'featured');
 const initialPage = Math.max(1, parseInt(sp.get('page') ?? '1', 10));
@@ -139,6 +142,7 @@ const fallbackProducts: ProductCardData[] = isEn
         colorName: 'Red',
         colorHex: '#d1495b',
         category: 'Roses',
+        ocasiones: ['Aniversary', 'Wedding'],
       },
       {
         id: 'fallback-pastel-bouquet',
@@ -151,6 +155,7 @@ const fallbackProducts: ProductCardData[] = isEn
         colorName: 'Pink',
         colorHex: '#f2a0a0',
         category: 'Mixed',
+        ocasiones: ['Birthday'],
       },
       {
         id: 'fallback-tulip-white',
@@ -163,6 +168,7 @@ const fallbackProducts: ProductCardData[] = isEn
         colorName: 'White',
         colorHex: '#f5f5f5',
         category: 'Tulips',
+        ocasiones: ['Condolence'],
       },
       {
         id: 'fallback-box-deluxe',
@@ -175,6 +181,7 @@ const fallbackProducts: ProductCardData[] = isEn
         colorName: 'Ivory',
         colorHex: '#f3e7d3',
         category: 'Events',
+        ocasiones: ['Wedding', 'Aniversary'],
       },
       {
         id: 'fallback-dry-center',
@@ -187,6 +194,7 @@ const fallbackProducts: ProductCardData[] = isEn
         colorName: 'Beige',
         colorHex: '#d8c3a5',
         category: 'Events',
+        ocasiones: [],
       },
       {
         id: 'fallback-spring-set',
@@ -199,6 +207,7 @@ const fallbackProducts: ProductCardData[] = isEn
         colorName: 'Yellow',
         colorHex: '#f2c94c',
         category: 'Mixed',
+        ocasiones: ['Birthday'],
       },
     ]
   : [
@@ -213,6 +222,7 @@ const fallbackProducts: ProductCardData[] = isEn
         colorName: 'Rojo',
         colorHex: '#d1495b',
         category: 'Rosas',
+        ocasiones: ['Aniversario', 'Bodas'],
       },
       {
         id: 'fallback-bouquet-pastel',
@@ -225,6 +235,7 @@ const fallbackProducts: ProductCardData[] = isEn
         colorName: 'Rosa',
         colorHex: '#f2a0a0',
         category: 'Mixtos',
+        ocasiones: ['Cumpleaños'],
       },
       {
         id: 'fallback-tulipanes-blancos',
@@ -237,6 +248,7 @@ const fallbackProducts: ProductCardData[] = isEn
         colorName: 'Blanco',
         colorHex: '#f5f5f5',
         category: 'Tulipanes',
+        ocasiones: ['Condolencias'],
       },
       {
         id: 'fallback-box-deluxe',
@@ -249,6 +261,7 @@ const fallbackProducts: ProductCardData[] = isEn
         colorName: 'Marfil',
         colorHex: '#f3e7d3',
         category: 'Eventos',
+        ocasiones: ['Bodas', 'Aniversario'],
       },
       {
         id: 'fallback-centro-seco',
@@ -261,6 +274,7 @@ const fallbackProducts: ProductCardData[] = isEn
         colorName: 'Beige',
         colorHex: '#d8c3a5',
         category: 'Eventos',
+        ocasiones: [],
       },
       {
         id: 'fallback-set-primaveral',
@@ -273,6 +287,7 @@ const fallbackProducts: ProductCardData[] = isEn
         colorName: 'Amarillo',
         colorHex: '#f2c94c',
         category: 'Mixtos',
+        ocasiones: ['Cumpleaños'],
       },
     ];
 
@@ -286,10 +301,16 @@ const products: ProductCardData[] = rawProducts.length > 0
         priceNumber: parseFloat(v?.price?.number       ?? '0'),
         thumbnail:   getProductThumbnail(p, DRUPAL_BASE_URL),
         badge:       null,
-        tipo:        v?.field_tipo                     ?? null,
+        tipo:        (v?.field_type ?? null)?.toLowerCase() ?? null,
         colorName:   v?.field_color?.name   ?? null,
         colorHex:    v?.field_color?.field_color_hex ?? null,
         category:    p.field_categoria?.name           ?? null,
+        ocasiones:   (() => {
+            const raw = p.field_ocasion;
+            if (Array.isArray(raw)) return raw.map((o: any) => o.name ?? '').filter(Boolean);
+            if (raw && typeof raw === 'object' && raw.name) return [raw.name];
+            return [];
+          })(),
       };
     })
   : fallbackProducts;
@@ -351,6 +372,7 @@ const categories: ShopCategory[] = rawCategories.length > 0
           initialPrice={initialPrice}
           initialColors={initialColors}
           initialTipos={initialTipos}
+          initialOcasiones={initialOcasiones}
           initialSort={initialSort}
           initialPage={initialPage}
           enabledFilters={enabledFilters}

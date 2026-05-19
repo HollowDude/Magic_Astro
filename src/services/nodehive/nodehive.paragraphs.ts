@@ -259,11 +259,11 @@ export async function getCategoryParagraphData(lang?: Lang): Promise<CategoryBlo
   try {
     const params = new DrupalJsonApiParams();
     params
-      .addInclude(['field_categories.field_photo.field_media_image'])
+      .addInclude(['field_categories.field_head_photo.field_media_image'])
       .addFields('paragraph--_component_home_categories', [
-        'id', 'drupal_internal__id', 'field_title', 'field_subtitle', 'field_categories',
+        'id', 'drupal_internal__id', 'parent_id', 'field_title', 'field_subtitle', 'field_categories',
       ])
-      .addFields('node--category', ['id', 'name', 'drupal_internal__tid', 'field_slug', 'field_photo'])
+      .addFields('node--category', ['id', 'name', 'drupal_internal__tid', 'field_slug', 'field_head_photo'])
       .addFields('media--image', ['name', 'field_media_image'])
       .addFields('file--file', ['filename', 'uri'])
       .addFields('taxonomy_term--flower_category', ['name', 'drupal_internal__tid', 'field_slug'])
@@ -284,9 +284,21 @@ export async function getCategoryParagraphData(lang?: Lang): Promise<CategoryBlo
       const paragraph = result?.[0];
       if (!paragraph || !rawItem) return null;
 
+      // DEBUG Task 1: Log raw paragraph data
+      console.log('[Categories DEBUG] rawItem.id:', rawItem?.id);
+      console.log('[Categories DEBUG] rawItem.attributes.drupal_internal__id:', rawItem?.attributes?.drupal_internal__id);
+      console.log('[Categories DEBUG] rawItem.attributes.parent_id:', rawItem?.attributes?.parent_id);
+      console.log('[Categories DEBUG] rawItem.type:', rawItem?.type);
+      console.log('[Categories DEBUG] paragraph.drupal_internal__id:', paragraph?.drupal_internal__id);
+
       const relData = rawItem?.relationships?.field_categories?.data ?? [];
       const rels = Array.isArray(relData) ? relData : relData ? [relData] : [];
+
+      // DEBUG Task 5: Log relationship refs
+      console.log('[Categories DEBUG] rels:', JSON.stringify(rels));
+
       const usesParagraphs = rels.some((ref: any) => typeof ref?.type === 'string' && ref.type.startsWith('paragraph--'));
+      console.log('[Categories DEBUG] usesParagraphs:', usesParagraphs);
 
       let categorias: Array<{ id: string; nombre: string; slug: string; imagen: string | null }> = [];
 
@@ -310,14 +322,22 @@ export async function getCategoryParagraphData(lang?: Lang): Promise<CategoryBlo
           id: cat.id ?? '',
           nombre: cat.name ?? '',
           slug: cat.field_slug ?? cat.drupal_internal__tid?.toString() ?? cat.id ?? '',
-          imagen: cat.field_photo ? nodehiveMediaUrl(cat.field_photo, NODEHIVE_BASE_URL) : null,
+          imagen: cat.field_head_photo ? nodehiveMediaUrl(cat.field_head_photo, NODEHIVE_BASE_URL) : null,
         }));
       }
 
+      // FIX Task 4: Read from raw instead of deserialized (Jsona may not flatten drupal_internal__id)
+      const paragraphInternalId = rawItem?.attributes?.drupal_internal__id ?? paragraph.drupal_internal__id ?? null;
+      const parentId = rawItem?.attributes?.parent_id ?? null;
+
       console.log('[Categories] paragraph.id:', paragraph?.id);
+      console.log('[Categories] paragraphInternalId:', paragraphInternalId);
+      console.log('[Categories] parentId:', parentId);
+
       return {
         paragraphId: paragraph.id,
-        paragraphInternalId: paragraph.drupal_internal__id ?? null,
+        paragraphInternalId,
+        parentId,
         titulo: paragraph.field_title ?? null,
         subTitulo: paragraph.field_subtitle ?? null,
         categorias,
@@ -342,7 +362,7 @@ export async function getFeaturedProductsParagraphData(lang?: Lang): Promise<Fea
         'field_products.variations.field_gallery_of_photos.field_media_image',
         'field_products.variations.field_color',
       ])
-      .addFields('paragraph--_component_home_products', ['id', 'drupal_internal__id', 'field_title', 'field_products'])
+      .addFields('paragraph--_component_home_products', ['id', 'drupal_internal__id', 'parent_id', 'field_title', 'field_products'])
       .addFields('commerce_product--flower', ['id', 'title', 'variations'])
       .addFields('commerce_product_variation--flower', ['id', 'sku', 'price', 'field_color', 'field_type', 'field_gallery_of_photos'])
       .addFields('media--image', ['name', 'field_media_image'])
@@ -360,6 +380,7 @@ export async function getFeaturedProductsParagraphData(lang?: Lang): Promise<Fea
     });
 
     if (raw.status === 200) {
+      const rawItem = (raw.data as any)?.data?.[0];
       const result = dataFormatter.deserialize(raw.data) as any[];
       const paragraph = result?.[0];
       if (!paragraph) return null;
@@ -396,9 +417,13 @@ export async function getFeaturedProductsParagraphData(lang?: Lang): Promise<Fea
         };
       });
 
+      const paragraphInternalId = rawItem?.attributes?.drupal_internal__id ?? paragraph.drupal_internal__id ?? null;
+      const parentId = rawItem?.attributes?.parent_id ?? null;
+
       return {
         paragraphId: paragraph.id,
-        paragraphInternalId: paragraph.drupal_internal__id ?? null,
+        paragraphInternalId,
+        parentId,
         titulo: paragraph.field_title ?? null,
         productos,
       };
@@ -415,68 +440,73 @@ export async function getServicesParagraphData(lang?: Lang): Promise<ServicesBlo
   try {
     const params = new DrupalJsonApiParams();
     params
-      .addInclude(['field_services.field_photo.field_media_image'])
+      .addInclude(['field_services.field_head_photo.field_media_image'])
       .addFields('paragraph--_component_home_services', [
-        'id', 'drupal_internal__id', 'field_title', 'field_subtitle', 'field_subtitle_primary', 'field_services',
+        'id', 'drupal_internal__id', 'parent_id', 'field_title', 'field_subtitle', 'field_subtitle_primary', 'field_services',
       ])
-      .addFields('node--services', ['id', 'title', 'field_name', 'field_description', 'field_photo'])
+      .addFields('node--services', ['id', 'title', 'field_name', 'field_description', 'field_head_photo'])
       .addFields('media--image', ['name', 'field_media_image'])
       .addFields('file--file', ['filename', 'uri'])
       .addPageLimit(1);
 
-    const path = `/jsonapi/paragraph/_component_home_services?${params.getQueryString()}`;
-    const langParam = (import.meta.env.NODEHIVE_DEFAULT_LANG as string) ?? 'es';
-    const effectiveLang = lang ?? langParam;
+      const path = `/jsonapi/paragraph/_component_home_services?${params.getQueryString()}`;
+      const langParam = (import.meta.env.NODEHIVE_DEFAULT_LANG as string) ?? 'es';
+      const effectiveLang = lang ?? langParam;
 
-    const raw = await nodehiveFetch<Record<string, unknown>>(path, {
-      ...FETCH_OPTIONS,
-      lang: effectiveLang,
-    });
+      const raw = await nodehiveFetch<Record<string, unknown>>(path, {
+        ...FETCH_OPTIONS,
+        lang: effectiveLang,
+      });
 
-    if (raw.status === 200) {
-      const rawItem = (raw.data as any)?.data?.[0];
-      const result = dataFormatter.deserialize(raw.data) as any[];
-      const paragraph = result?.[0];
-      if (!paragraph || !rawItem) return null;
+      if (raw.status === 200) {
+        const rawItem = (raw.data as any)?.data?.[0];
+        const result = dataFormatter.deserialize(raw.data) as any[];
+        const paragraph = result?.[0];
+        if (!paragraph || !rawItem) return null;
 
-      const relData = rawItem?.relationships?.field_services?.data ?? [];
-      const rels = Array.isArray(relData) ? relData : relData ? [relData] : [];
-      const usesParagraphs = rels.some((ref: any) => typeof ref?.type === 'string' && ref.type.startsWith('paragraph--'));
+        const relData = rawItem?.relationships?.field_services?.data ?? [];
+        const rels = Array.isArray(relData) ? relData : relData ? [relData] : [];
 
-      let servicios: Array<{ id: string; titulo: string; descripcion: string; imagen: string | null }> = [];
+        const usesParagraphs = rels.some((ref: any) => typeof ref?.type === 'string' && ref.type.startsWith('paragraph--'));
 
-      if (usesParagraphs) {
-        const items = await resolveParagraphRefs(rels, effectiveLang);
-        servicios = await Promise.all(items.map(async (item, index) => {
-          const attrs = item.attributes ?? {};
-          const titulo = pickText(attrs, ['field_title', 'field_name', 'title', 'name']) ?? '';
-          const descripcion = pickText(attrs, ['field_description', 'field_description_long', 'field_body', 'body', 'field_text', 'field_summary']) ?? '';
-          const imagen = await extractParagraphImageUrl(item.relationships ?? {}, effectiveLang);
-          return {
-            id: item.id ?? String(index),
-            titulo,
-            descripcion,
-            imagen,
-          };
-        }));
-      } else {
-        servicios = (paragraph.field_services ?? []).map((svc: any) => ({
-          id: svc.id ?? '',
-          titulo: svc.field_name ?? svc.title ?? '',
-          descripcion: svc.field_description ?? '',
-          imagen: svc.field_photo ? nodehiveMediaUrl(svc.field_photo, NODEHIVE_BASE_URL) : null,
-        }));
+        let servicios: Array<{ id: string; titulo: string; descripcion: string; imagen: string | null }> = [];
+
+        if (usesParagraphs) {
+          const items = await resolveParagraphRefs(rels, effectiveLang);
+          servicios = await Promise.all(items.map(async (item, index) => {
+            const attrs = item.attributes ?? {};
+            const titulo = pickText(attrs, ['field_title', 'field_name', 'title', 'name']) ?? '';
+            const descripcion = pickText(attrs, ['field_description', 'field_description_long', 'field_body', 'body', 'field_text', 'field_summary']) ?? '';
+            const imagen = await extractParagraphImageUrl(item.relationships ?? {}, effectiveLang);
+            return {
+              id: item.id ?? String(index),
+              titulo,
+              descripcion,
+              imagen,
+            };
+          }));
+        } else {
+          servicios = (paragraph.field_services ?? []).map((svc: any) => ({
+            id: svc.id ?? '',
+            titulo: svc.field_name ?? svc.title ?? '',
+            descripcion: svc.field_description ?? '',
+            imagen: svc.field_head_photo ? nodehiveMediaUrl(svc.field_head_photo, NODEHIVE_BASE_URL) : null,
+          }));
+        }
+
+        const paragraphInternalId = rawItem?.attributes?.drupal_internal__id ?? paragraph.drupal_internal__id ?? null;
+        const parentId = rawItem?.attributes?.parent_id ?? null;
+
+        return {
+          paragraphId: paragraph.id,
+          paragraphInternalId,
+          parentId,
+          titulo: paragraph.field_title ?? null,
+          subTitulo: paragraph.field_subtitle ?? null,
+          subTituloPrimary: paragraph.field_subtitle_primary ?? null,
+          servicios,
+        };
       }
-
-      console.log('[Services] paragraph.id:', paragraph?.id);
-      return {
-        paragraphId: paragraph.id,
-        paragraphInternalId: paragraph.drupal_internal__id ?? null,
-        titulo: paragraph.field_title ?? null,
-        subTitulo: paragraph.field_subtitle ?? null,
-        servicios,
-      };
-    }
   } catch (err) {
     console.error('[Paragraphs] Error getServicesParagraphData:', err);
   }
@@ -491,7 +521,7 @@ export async function getCommentsParagraphData(lang?: Lang): Promise<CommentsBlo
     params
       .addInclude(['field_comments'])
       .addFields('paragraph--_component_home_comments', [
-        'id', 'drupal_internal__id', 'field_title', 'field_subtitle', 'field_comments',
+        'id', 'drupal_internal__id', 'parent_id', 'field_title', 'field_subtitle', 'field_comments',
       ])
       .addFields('node--comment', [
         'id', 'title', 'field_person_name', 'field_person_rol', 'field_comment', 'field_calification',
@@ -545,9 +575,13 @@ export async function getCommentsParagraphData(lang?: Lang): Promise<CommentsBlo
         }));
       }
 
+      const paragraphInternalId = rawItem?.attributes?.drupal_internal__id ?? paragraph.drupal_internal__id ?? null;
+      const parentId = rawItem?.attributes?.parent_id ?? null;
+
       return {
         paragraphId: paragraph.id,
-        paragraphInternalId: paragraph.drupal_internal__id ?? null,
+        paragraphInternalId,
+        parentId,
         titulo: paragraph.field_title ?? null,
         subTitulo: paragraph.field_subtitle ?? null,
         comentarios,
@@ -567,7 +601,7 @@ export async function getContactUsParagraphData(lang?: Lang): Promise<ContactBlo
     params
       .addInclude(['field_button', 'field_head_photo.field_media_image'])
       .addFields('paragraph--_component_home_contact_us', [
-        'id', 'drupal_internal__id', 'field_title', 'field_description', 'field_button', 'field_head_photo',
+        'id', 'drupal_internal__id', 'parent_id', 'field_title', 'field_description', 'field_button', 'field_head_photo',
       ])
       .addFields('paragraph--button', ['field_button_text', 'field_button_link'])
       .addFields('media--image', ['name', 'field_media_image'])
@@ -584,6 +618,7 @@ export async function getContactUsParagraphData(lang?: Lang): Promise<ContactBlo
     });
 
     if (raw.status === 200) {
+      const rawItem = (raw.data as any)?.data?.[0];
       const result = dataFormatter.deserialize(raw.data) as any[];
       const paragraph = result?.[0];
       if (!paragraph) return null;
@@ -600,9 +635,13 @@ export async function getContactUsParagraphData(lang?: Lang): Promise<ContactBlo
       const ctaText = paragraph.field_button?.field_button_text ?? null;
       const ctaUrl = (paragraph.field_button?.field_button_link?.uri ?? null)?.replace(/^internal:/, '') ?? null;
 
+      const paragraphInternalId = rawItem?.attributes?.drupal_internal__id ?? paragraph.drupal_internal__id ?? null;
+      const parentId = rawItem?.attributes?.parent_id ?? null;
+
       return {
         paragraphId: paragraph.id,
-        paragraphInternalId: paragraph.drupal_internal__id ?? null,
+        paragraphInternalId,
+        parentId,
         titulo: paragraph.field_title ?? null,
         subTitulo: null,
         descripcion: paragraph.field_description ?? null,
@@ -953,9 +992,12 @@ export async function getAboutArchievementsData(lang?: Lang): Promise<AboutArchi
   try {
     const params = new DrupalJsonApiParams();
     params
+      .addInclude(['field_archievements', 'field_archievements.field_head_photo', 'field_archievements.field_head_photo.field_media_image'])
       .addFields('paragraph--_component_about_archievements', [
-        'id', 'drupal_internal__id', 'parent_id', 'field_title',
+        'id', 'drupal_internal__id', 'parent_id', 'field_title', 'field_archievements',
       ])
+      .addFields('paragraph--about_archivement', ['id', 'drupal_internal__id', 'field_title', 'field_head_photo'])
+      .addFields('file--file', ['filename', 'uri'])
       .addPageLimit(1);
 
     const path = `/jsonapi/paragraph/_component_about_archievements?${params.getQueryString()}`;
@@ -982,28 +1024,35 @@ export async function getAboutArchievementsData(lang?: Lang): Promise<AboutArchi
     let items: AboutArchievementsData['items'] = [];
 
     if (usesParagraphs) {
-      const paragraphs = await resolveParagraphRefs(rels, effectiveLang);
-      items = paragraphs.map((item, index) => {
-        const attrs = item.attributes ?? {};
-        const title = pickText(attrs, ['field_title', 'field_name', 'title', 'name']) ?? '';
-        const description = pickText(attrs, ['field_description', 'field_description_long', 'field_text', 'body']) ?? '';
-        const icon = pickText(attrs, ['field_icon', 'field_emoji', 'field_symbol']) ?? '✨';
+      const items_from_api = (p.field_archievements ?? []);
+      items = await Promise.all(items_from_api.map(async (arch: any, index: number) => {
+        let fotoUrl: string | null = null;
+        const media = arch.field_head_photo as any;
+        if (media) {
+          fotoUrl = nodehiveMediaUrl(media, NODEHIVE_BASE_URL);
+          if (!fotoUrl && media.field_media_image?.uri?.url) {
+            fotoUrl = `${NODEHIVE_BASE_URL}${media.field_media_image.uri.url}`;
+          } else if (!fotoUrl && media.uri?.url) {
+            fotoUrl = `${NODEHIVE_BASE_URL}${media.uri.url}`;
+          }
+        }
         return {
-          id: item.id ?? String(index),
-          internalId: index + 1,
-          title,
-          description,
-          icon,
+          id: arch.id ?? String(index),
+          internalId: arch.drupal_internal__id ?? index + 1,
+          title: arch.field_title ?? '',
+          description: '',
+          icon: fotoUrl ?? '✨',
+          fotoUrl,
         };
-      });
+      }));
     }
 
     if (items.length === 0) {
       const isEn = effectiveLang === 'en';
       items = [
-        { id: 'amazon', internalId: 1, title: 'Amazon Influencer', description: isEn ? 'approved' : 'aprobada', icon: '📦' },
-        { id: 'hotmart', internalId: 2, title: isEn ? 'Floral design courses' : 'Cursos de diseño floral', description: 'Hotmart', icon: '🔥' },
-        { id: 'vip', internalId: 3, title: isEn ? 'Active VIP community of entrepreneurial women' : 'Comunidad VIP activa de\r\nalumnas emprendedoras', description: '', icon: '👑' },
+        { id: 'amazon', internalId: 1, title: 'Amazon Influencer', description: isEn ? 'approved' : 'aprobada', icon: '📦', fotoUrl: null as string | null },
+        { id: 'hotmart', internalId: 2, title: isEn ? 'Floral design courses' : 'Cursos de diseño floral', description: 'Hotmart', icon: '🔥', fotoUrl: null as string | null },
+        { id: 'vip', internalId: 3, title: isEn ? 'Active VIP community of entrepreneurial women' : 'Comunidad VIP activa de\r\nalumnas emprendedoras', description: '', icon: '👑', fotoUrl: null as string | null },
       ];
     }
 

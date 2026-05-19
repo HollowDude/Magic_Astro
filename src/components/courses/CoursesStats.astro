@@ -8,9 +8,10 @@ interface Props {
   stats?: CoursesStatsData | null;
   lang?: Lang;
   parentId?: string | number | null;
+  class?: string;
 }
 
-const { stats, lang = 'es', parentId } = Astro.props;
+const { stats, lang = 'es', parentId, class: className = '' } = Astro.props;
 const t = useTranslations(lang);
 
 function buildStat(
@@ -80,7 +81,7 @@ const items = [
 ---
 
 <div
-  class="bg-white border-b border-slate-100 shadow-sm"
+  class:list={["bg-white border-b border-slate-100 shadow-sm", className]}
   data-nodehive-entity-type={stats?.bundle ? 'paragraph' : undefined}
   data-nodehive-entity-bundle={stats?.bundle ?? undefined}
   data-nodehive-entity-id={stats?.paragraphId ?? undefined}

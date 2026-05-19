@@ -39,6 +39,8 @@ export async function login(data: LoginData): Promise<LoginResult> {
         'Content-Type': 'application/json',
         Accept: 'application/json',
       },
+      skipApiKey: true,
+      timeoutMs: 10000,
     });
 
     const json = (res.data && typeof res.data === 'object') ? res.data as any : {};

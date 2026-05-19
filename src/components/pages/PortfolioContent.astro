@@ -4,12 +4,14 @@ export const prerender = false;
 import HomeLayout from '@/layouts/HomeLayout.astro';
 import PortfolioClient from '@/components/portfolio/PortfolioClient';
 import { getPortfolioPageData } from '@/services/nodehive/nodehive.portfolio';
-import { getLangFromUrl } from '@/i18n/utils';
+import { getLangFromUrl, getPrefix, useTranslations } from '@/i18n/utils';
 import type { Lang } from '@/i18n/ui';
 
 const lang = (Astro.currentLocale ?? getLangFromUrl(Astro.url)) as Lang;
+const t = useTranslations(lang);
 const data = await getPortfolioPageData(lang);
 const pageTitle = lang === 'en' ? 'Portfolio' : 'Portafolio';
+const prefix = getPrefix(lang);
 
 const heroTitle = data?.header?.title ?? (lang === 'en' ? 'Our Floral Portfolio' : 'Nuestro Portafolio Floral');
 const heroSubtitle = data?.header?.subtitle ?? null;
@@ -74,6 +76,15 @@ const itemsPerLoad = data?.gallery?.itemsPerLoad ?? 6;
           pageInternalId={data?.pageInternalId ?? null}
           client:load
         />
+      </div>
+
+      <div class="flex justify-end mt-12">
+        <a
+          href={`${prefix}/`}
+          class="inline-flex items-center justify-center h-14 px-10 rounded-full bg-primary text-white text-base font-bold no-underline transition-all duration-200 hover:scale-105 hover:bg-primary-dark shadow-[0_10px_20px_color-mix(in_srgb,var(--color-primary)_30%,transparent)]"
+        >
+          {t('portfolio.contact')}
+        </a>
       </div>
 
     </main>

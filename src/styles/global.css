@@ -197,10 +197,10 @@
   }
 
   .nh-only {
-    display: none;
+    display: none !important;
   }
   html.nh-editor .nh-only {
-    display: inline-flex;
+    display: inline-flex !important;
   }
 }
 

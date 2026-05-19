@@ -130,33 +130,37 @@ const identitySubtitle = identity?.subtitle ?? (isEn ? 'Our DNA' : 'Nuestro ADN'
         <h2 class="font-heading font-semibold text-[32px] sm:text-[44px] lg:text-[52px] text-headline mb-8 sm:mb-12" data-nodehive-field="field_title">{archTitle}</h2>
         <div class="flex justify-center gap-6 sm:gap-8 flex-wrap">
           {(archievements?.items ?? [
-            { id: 'amazon', icon: '📦', title: 'Amazon Influencer', description: isEn ? 'approved' : 'aprobada' },
-            { id: 'hotmart', icon: '🔥', title: isEn ? 'Floral design courses' : 'Cursos de diseño floral', description: 'Hotmart' },
-            { id: 'vip', icon: '👑', title: isEn ? 'Active VIP community of entrepreneurial women' : 'Comunidad VIP activa de\r\nalumnas emprendedoras', description: '' },
+            { id: 'amazon', icon: '📦', title: 'Amazon Influencer', description: isEn ? 'approved' : 'aprobada', fotoUrl: null },
+            { id: 'hotmart', icon: '🔥', title: isEn ? 'Floral design courses' : 'Cursos de diseño floral', description: 'Hotmart', fotoUrl: null },
+            { id: 'vip', icon: '👑', title: isEn ? 'Active VIP community of entrepreneurial women' : 'Comunidad VIP activa de\r\nalumnas emprendedoras', description: '', fotoUrl: null },
           ]).map((item: any) => (
             <div class="flex flex-col items-center gap-4 sm:gap-5 w-full max-w-[340px]">
               <div class="bg-white rounded-2xl shadow-[6px_6px_20px_rgba(0,0,0,0.08)] px-8 sm:px-12 py-7 sm:py-9 w-full flex items-center justify-center min-h-[96px] sm:min-h-[110px]">
-                <div class="font-body font-semibold text-[15px] sm:text-[17px] text-[#555] flex items-center gap-2">
-                  {item.id === 'amazon' ? (
-                    <div class="flex items-center gap-2">
-                      <span class="text-[22px]">📦</span>
-                      <div>
-                        <div class="text-[13px] sm:text-[14px] font-bold text-[#232f3e]">amazon</div>
-                        <div class="text-[10px] sm:text-[11px] text-[#555]">influencers</div>
+                {item.fotoUrl ? (
+                  <img src={item.fotoUrl} alt={item.title ?? ''} class="w-full h-full object-contain max-h-[80px]" />
+                ) : (
+                  <div class="font-body font-semibold text-[15px] sm:text-[17px] text-[#555] flex items-center gap-2">
+                    {item.id === 'amazon' ? (
+                      <div class="flex items-center gap-2">
+                        <span class="text-[22px]">📦</span>
+                        <div>
+                          <div class="text-[13px] sm:text-[14px] font-bold text-[#232f3e]">amazon</div>
+                          <div class="text-[10px] sm:text-[11px] text-[#555]">influencers</div>
+                        </div>
                       </div>
-                    </div>
-                  ) : item.id === 'hotmart' ? (
-                    <div class="flex items-center gap-2">
-                      <div class="w-[28px] h-[28px] sm:w-[30px] sm:h-[30px] bg-[#FF543E] rounded-full flex items-center justify-center text-white text-[15px] sm:text-[16px] font-bold">🔥</div>
-                      <span>hotmart</span>
-                    </div>
-                  ) : (
-                    <div class="flex items-center gap-2">
-                      <span class="text-[18px] sm:text-[20px]">👑</span>
-                      <span class="font-bold tracking-[1px] border border-[#bbb] rounded-md px-2 py-1 text-[13px] sm:text-[15px]">COMUNIDAD VIP</span>
-                    </div>
-                  )}
-                </div>
+                    ) : item.id === 'hotmart' ? (
+                      <div class="flex items-center gap-2">
+                        <div class="w-[28px] h-[28px] sm:w-[30px] sm:h-[30px] bg-[#FF543E] rounded-full flex items-center justify-center text-white text-[15px] sm:text-[16px] font-bold">🔥</div>
+                        <span>hotmart</span>
+                      </div>
+                    ) : (
+                      <div class="flex items-center gap-2">
+                        <span class="text-[18px] sm:text-[20px]">👑</span>
+                        <span class="font-bold tracking-[1px] border border-[#bbb] rounded-md px-2 py-1 text-[13px] sm:text-[15px]">COMUNIDAD VIP</span>
+                      </div>
+                    )}
+                  </div>
+                )}
               </div>
               <p class="text-[15px] sm:text-[16px] font-semibold text-primary leading-[1.4] text-center whitespace-pre-line">{item.title}</p>
             </div>

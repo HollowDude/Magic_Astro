@@ -18,6 +18,8 @@ export const POST: APIRoute = async ({ request, cookies }) => {
 
   const result = await login({ username: username.trim(), password });
 
+  console.log('[Auth Login] result:', JSON.stringify({ ok: result.ok, statusCode: result.statusCode, error: result.error }));
+
   if (!result.ok) {
     const status = result.statusCode ?? 401;
     return json({ ok: false, error: result.error }, status);

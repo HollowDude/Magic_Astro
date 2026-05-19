@@ -7,7 +7,8 @@ import type { Lang } from '@/i18n/ui';
 
 const lang = (Astro.currentLocale ?? getLangFromUrl(Astro.url)) as Lang;
 const data = await getServicesParagraphData(lang);
-const { parentId = null } = Astro.props;
+const { parentId: propsParentId = null } = Astro.props;
+const parentId = data?.parentId ?? propsParentId;
 
 const serviciosNormalizados = data?.servicios.map((s) => ({
   title: s.titulo,
@@ -23,6 +24,7 @@ const serviciosNormalizados = data?.servicios.map((s) => ({
   data-nodehive-entity-id={data?.paragraphId}
   data-nodehive-entity-internal-id={data?.paragraphInternalId ?? null}
   data-nodehive-parent_id={parentId ?? null}
+  data-nodehive-langcode={lang}
 >
   <button
     type="button"
@@ -35,7 +37,7 @@ const serviciosNormalizados = data?.servicios.map((s) => ({
   <ServicesCarousel
     titulo={data?.titulo}
     subTitulo={data?.subTitulo}
-    eslogan={null}
+    subTituloPrimary={data?.subTituloPrimary}
     services={serviciosNormalizados}
     client:load
   />
