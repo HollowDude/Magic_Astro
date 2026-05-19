@@ -314,6 +314,7 @@ export async function getCategoryParagraphData(lang?: Lang): Promise<CategoryBlo
         }));
       }
 
+      console.log('[Categories] paragraph.id:', paragraph?.id);
       return {
         paragraphId: paragraph.id,
         paragraphInternalId: paragraph.drupal_internal__id ?? null,
@@ -467,6 +468,7 @@ export async function getServicesParagraphData(lang?: Lang): Promise<ServicesBlo
         }));
       }
 
+      console.log('[Services] paragraph.id:', paragraph?.id);
       return {
         paragraphId: paragraph.id,
         paragraphInternalId: paragraph.drupal_internal__id ?? null,

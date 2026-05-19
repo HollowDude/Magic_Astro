@@ -106,7 +106,7 @@
       });
       el.classList.add('--nh-active');
 
-      var entityEl = el.closest('[data-nodehive-type],[data-nodehive-entity-id]');
+      var entityEl = el.closest('[data-nodehive-type],[data-nodehive-entity-id],[data-nodehive-entity-type]');
       if (!entityEl) return;
 
       var entityType = entityEl.dataset.nodehiveType || entityEl.dataset.nodehiveEntityType || '';
