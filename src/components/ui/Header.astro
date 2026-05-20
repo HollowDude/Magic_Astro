@@ -3,6 +3,7 @@ import HeaderClient from '@/components/ui/HeaderClient';
 import { nodehiveFetch } from '@/services/nodehive/nodehive.client';
 import { getSession } from '@/services/session.service';
 import { getLangFromUrl, getPrefix } from '@/i18n/utils';
+import { getHeaderLogoData } from '@/services/nodehive/nodehive.header';
 import type { Lang } from '@/i18n/ui';
 
 const session     = await getSession(Astro.cookies);
@@ -39,6 +40,8 @@ try {
       });
   }
 } catch (_) {}
+
+const headerLogo = await getHeaderLogoData(lang);
 ---
 
 <HeaderClient
@@ -46,5 +49,6 @@ try {
   currentPath={currentPath}
   lang={lang}
   navLinks={navLinks}
+  headerLogoData={headerLogo}
   client:load
 />

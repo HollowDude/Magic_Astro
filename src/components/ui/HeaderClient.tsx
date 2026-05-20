@@ -4,6 +4,7 @@ import { ui, defaultLang, languages } from '@/i18n/ui';
 import { getLocalizedPath, getNavLinks, getPrefix } from '@/i18n/utils';
 import type { Lang, UiKey } from '@/i18n/ui';
 import { Fragment } from 'react';
+import type { HeaderLogoData } from '@/services/nodehive/nodehive.header';
 
 // ── Tipos ─────────────────────────────────────────────────────────────────────
 
@@ -15,10 +16,11 @@ interface SearchResult {
 }
 
 interface Props {
-  isLoggedIn:  boolean;
-  currentPath: string;
-  lang:        Lang;
-  navLinks?:   { label: string; href: string }[];
+  isLoggedIn:    boolean;
+  currentPath:   string;
+  lang:          Lang;
+  navLinks?:     { label: string; href: string }[];
+  headerLogoData?: HeaderLogoData | null;
 }
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -157,7 +159,7 @@ function SearchResultPanel({
 
 // ── HeaderClient ──────────────────────────────────────────────────────────────
 
-export default function HeaderClient({ isLoggedIn, currentPath, lang, navLinks: navLinksProp }: Props) {
+export default function HeaderClient({ isLoggedIn, currentPath, lang, navLinks: navLinksProp, headerLogoData }: Props) {
   const [mobileOpen,    setMobileOpen]    = useState(false);
   const [searchOpen,    setSearchOpen]    = useState(false);
   const [searchValue,   setSearchValue]   = useState('');
@@ -260,8 +262,30 @@ export default function HeaderClient({ isLoggedIn, currentPath, lang, navLinks: 
 
         {/* ── Left: logo + nav ── */}
         <div className="flex items-center gap-10 min-w-0">
-          <a href={getPrefix(lang)} className="flex items-center gap-2 no-underline text-text-main shrink-0">
-            <img src="/logo_siglas.png" alt="Maggy Flowers" className="h-8 w-auto object-contain" />
+          <a href={headerLogoData?.linkUri?.replace(/^internal:/, '') ?? getPrefix(lang)} className="flex items-center gap-2 no-underline text-text-main shrink-0">
+            <div
+              data-nodehive-entity-type={headerLogoData?.entityType ?? undefined}
+              data-nodehive-entity-bundle={headerLogoData?.bundle ?? undefined}
+              data-nodehive-entity-id={headerLogoData?.paragraphId ?? undefined}
+              data-nodehive-entity-internal-id={headerLogoData?.paragraphInternalId ?? undefined}
+              className="relative"
+            >
+              <img
+                src={headerLogoData?.logoUrl ?? '/logo_siglas.png'}
+                alt="Maggy Flowers"
+                className="h-8 w-auto object-contain"
+                data-nodehive-field="field_logo"
+              />
+              <button
+                type="button"
+                className="nh-only absolute -top-1 -right-1 items-center justify-center w-5 h-5 rounded-full bg-primary text-white shadow-md z-50 p-0 border-none cursor-pointer"
+                aria-label="Editar logo"
+                data-nodehive-field="field_logo"
+                onClick={(e) => e.preventDefault()}
+              >
+                <span className="material-symbols-outlined" style={{ fontSize: '12px' }}>edit</span>
+              </button>
+            </div>
           </a>
 
           <nav className="hidden md:flex items-center gap-7">

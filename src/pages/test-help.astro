@@ -1,0 +1,7 @@
+---
+import { getHelpPageData } from '@/services/nodehive/nodehive.help';
+import type { Lang } from '@/i18n/ui';
+
+const helpData = await getHelpPageData('faq', 'es' as Lang);
+---
+<pre>{JSON.stringify(helpData, null, 2)}</pre>
