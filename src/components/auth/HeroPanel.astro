@@ -93,14 +93,14 @@ const bgImage = fotoUrl ?? FALLBACK_FOTO;
   .hero-overlay {
     position: absolute;
     inset: 0;
-    background: color-mix(in srgb, var(--primary) 25%, transparent);
+    background: color-mix(in srgb, var(--primary) 30%, transparent);
     mix-blend-mode: overlay;
   }
 
   .hero-gradient {
     position: absolute;
     inset: 0;
-    background: linear-gradient(to top, rgba(33, 17, 20, 0.55) 0%, transparent 60%);
+    background: linear-gradient(to top, rgba(33, 17, 20, 0.70) 0%, rgba(33, 17, 20, 0.35) 60%, rgba(33, 17, 20, 0.15) 100%);
   }
 
   .hero-content {
@@ -118,14 +118,14 @@ const bgImage = fotoUrl ?? FALLBACK_FOTO;
     line-height: 1.1;
     letter-spacing: -0.04em;
     margin-bottom: 1rem;
-    text-shadow: 0 2px 12px rgba(0 0 0 / 0.3);
+    text-shadow: 0 2px 8px rgba(0 0 0 / 0.6), 0 4px 20px rgba(0 0 0 / 0.4);
   }
 
   .hero-desc {
     font-family: var(--font-body);
     font-size: 1.0625rem;
     line-height: 1.65;
-    opacity: 0.88;
-    text-shadow: 0 1px 4px rgba(0 0 0 / 0.25);
+    opacity: 0.95;
+    text-shadow: 0 2px 8px rgba(0 0 0 / 0.6), 0 4px 20px rgba(0 0 0 / 0.4);
   }
 </style>

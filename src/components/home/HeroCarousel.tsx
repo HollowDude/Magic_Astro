@@ -116,12 +116,12 @@ export default function HeroCarousel({
         );
       })}
 
-      <div className="absolute inset-0 bg-gradient-to-r from-black/70 via-black/40 to-transparent z-[2]" />
-      <div className="absolute inset-0 bg-gradient-to-b from-[rgba(20,5,10,0.30)] via-[rgba(20,5,10,0.45)] to-[rgba(20,5,10,0.65)] z-[2]" />
+      <div className="absolute inset-0 bg-gradient-to-r from-black/75 via-black/50 to-transparent z-[2]" />
+      <div className="absolute inset-0 bg-gradient-to-b from-[rgba(20,5,10,0.45)] via-[rgba(20,5,10,0.55)] to-[rgba(20,5,10,0.75)] z-[2]" />
 
       <div className="relative z-10 flex flex-col items-center text-center gap-5 max-w-[52rem] py-20 px-6">
         <h1 
-          className="text-[clamp(2.25rem,6vw,4rem)] font-black leading-[1.1] tracking-[-0.03em] text-white [text-shadow:0_2px_16px_rgba(0,0,0,0.3)] font-body m-0"
+          className="text-[clamp(2.25rem,6vw,4rem)] font-black leading-[1.1] tracking-[-0.03em] text-white [text-shadow:0_2px_8px_rgba(0,0,0,0.6),0_4px_20px_rgba(0,0,0,0.4)] font-body m-0 [text-wrap:pretty]"
           data-nodehive-field="field_title"
         >
           {activeTitle}
@@ -129,7 +129,7 @@ export default function HeroCarousel({
         
         {activeSubtitle && (
           <h2 
-            className="text-[clamp(1.25rem,3vw,2rem)] font-bold leading-tight text-[#fbdadd] tracking-[-0.02em] font-body m-0 [text-shadow:0_2px_12px_rgba(0,0,0,0.35)]"
+            className="text-[clamp(1.25rem,3vw,2rem)] font-bold leading-tight text-[#fbdadd] tracking-[-0.02em] font-body m-0 [text-shadow:0_2px_8px_rgba(0,0,0,0.6),0_4px_20px_rgba(0,0,0,0.4)] [text-wrap:pretty]"
             data-nodehive-field="field_subtitle"
           >
             {activeSubtitle}
@@ -137,7 +137,7 @@ export default function HeroCarousel({
         )}
         
         <p 
-          className="max-w-[38rem] text-[clamp(1rem,2vw,1.125rem)] leading-relaxed text-white/90 font-body m-0 [text-shadow:0_2px_12px_rgba(0,0,0,0.35)]"
+          className="max-w-[38rem] text-[clamp(1rem,2vw,1.125rem)] leading-relaxed text-white/95 font-body m-0 [text-shadow:0_2px_8px_rgba(0,0,0,0.6),0_4px_20px_rgba(0,0,0,0.4)]"
           data-nodehive-field="field_description"
         >
           {activeDescription}

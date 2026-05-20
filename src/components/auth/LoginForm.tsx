@@ -76,9 +76,11 @@ export default function LoginForm({
   const [alert, setAlert] = useState<AlertState | null>(null);
 
   function friendlyLoginError(status: number, message?: string): string {
-    if (status === 400) return t.errorEmpty;
+    const msg = (message ?? '').toLowerCase();
     if (status === 401 || status === 403) return lang === 'es' ? 'Usuario o contraseña incorrectos.' : 'Invalid username or password.';
     if (status === 503) return t.errorServer;
+    if (msg.includes('required') || msg.includes('requerido') || msg.includes('completa')) return t.errorEmpty;
+    if (msg.includes('unauthorized') || msg.includes('forbidden') || msg.includes('incorrect') || msg.includes('invalid') || msg.includes('credencial') || msg.includes('contraseña') || msg.includes('password')) return lang === 'es' ? 'Usuario o contraseña incorrectos.' : 'Invalid username or password.';
     if (message && message.length < 120 && !/json|token|exception|stack|trace|sql/i.test(message)) {
       return message;
     }

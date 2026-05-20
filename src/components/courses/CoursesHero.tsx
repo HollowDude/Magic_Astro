@@ -115,8 +115,8 @@ export default function CoursesHero({
             className="w-full h-full object-cover"
           />
           <div className="absolute inset-0 bg-gradient-to-r from-black/70 via-black/35 to-transparent" />
-          <div className="absolute inset-0 flex items-center px-8 md:px-20">
-            <div className="max-w-xl text-white">
+          <div className="absolute inset-0 flex items-center px-4 sm:px-8 md:px-20">
+            <div className="max-w-full sm:max-w-xl text-white">
               {slide.badgeText && (
                 <span
                   className={`inline-block ${BADGE_COLORS[slide.badgeColor ?? 'primary'] ?? 'bg-primary'} text-white text-xs font-black uppercase tracking-widest px-3 py-1 rounded-full mb-4`}
@@ -139,27 +139,27 @@ export default function CoursesHero({
                 </p>
               )}
               {(slide.ctaUrl || slide.ctaSecondaryUrl) && (
-                <div className="flex flex-wrap items-center gap-3">
+                <div className="flex flex-wrap items-center gap-2 sm:gap-3">
                   {slide.ctaUrl && (
                     <a
                       href={slide.ctaUrl}
-                      className={`inline-flex items-center gap-2 font-bold px-5 py-2.5 rounded-xl transition-all text-sm ${
+                      className={`inline-flex items-center justify-center gap-1.5 sm:gap-2 font-bold px-4 sm:px-5 py-2 sm:py-2.5 rounded-xl transition-all text-[13px] sm:text-sm whitespace-nowrap ${
                         CTA_STYLES[slide.ctaStyle ?? 'primary'] ?? CTA_STYLES.primary
                       }`}
                     >
                       {slide.ctaText ?? t(lang, 'courses.view')}
-                      <span className="material-symbols-outlined text-[16px]">arrow_downward</span>
+                      <span className="material-symbols-outlined text-[14px] sm:text-[16px]">arrow_downward</span>
                     </a>
                   )}
                   {slide.ctaSecondaryUrl && (
                     <a
                       href={slide.ctaSecondaryUrl}
-                      className={`inline-flex items-center gap-2 font-bold px-5 py-2.5 rounded-xl transition-all text-sm ${
+                      className={`inline-flex items-center justify-center gap-1.5 sm:gap-2 font-bold px-4 sm:px-5 py-2 sm:py-2.5 rounded-xl transition-all text-[13px] sm:text-sm whitespace-nowrap ${
                         CTA_STYLES[slide.ctaSecondaryStyle ?? 'secondary'] ?? CTA_STYLES.secondary
                       }`}
                     >
                       {slide.ctaSecondaryText ?? t(lang, 'courses.view')}
-                      <span className="material-symbols-outlined text-[16px]">arrow_forward</span>
+                      <span className="material-symbols-outlined text-[14px] sm:text-[16px]">arrow_forward</span>
                     </a>
                   )}
                 </div>

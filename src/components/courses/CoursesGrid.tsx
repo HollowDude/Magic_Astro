@@ -299,7 +299,7 @@ function CourseCard({ course, lang }: { course: CourseItem; lang: Lang }) {
           </h3>
           {course.description && (
             <p
-              className="text-[#89656b] text-sm line-clamp-2 leading-relaxed"
+              className="text-[#89656b] text-sm leading-relaxed max-h-[4.5rem] overflow-y-auto pr-1"
               data-nodehive-field="field_description"
             >
               {course.description}

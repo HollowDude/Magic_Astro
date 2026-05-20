@@ -1,45 +1,526 @@
 ---
 // src/components/ui/Footer.astro
-const { lang = 'es' } = Astro.props;
+import { getFooterData } from '@/services/nodehive/nodehive.footer';
+import { getLangFromUrl, getPrefix } from '@/i18n/utils';
+import type { Lang } from '@/i18n/ui';
 
-const translations = {
-  es: {
-    rights: "Todos los derechos reservados.",
-    shop: "Tienda",
-    courses: "Cursos",
-    about: "Nosotros",
-    contact: "Contacto",
-    prefix: ""
-  },
-  en: {
-    rights: "All rights reserved.",
-    shop: "Shop",
-    courses: "Courses",
-    about: "About",
-    contact: "Contact",
-    prefix: "/en"
+interface Props {
+  lang?: Lang;
+}
+
+const { lang: langProp } = Astro.props;
+const lang = (langProp ?? Astro.currentLocale ?? getLangFromUrl(Astro.url)) as Lang;
+const prefix = getPrefix(lang);
+const { identity, contact } = await getFooterData(lang);
+
+// Links de ayuda — rutas ya existentes
+const helpLinks = lang === 'en'
+  ? [
+      { label: 'FAQ', href: `${prefix}/faq` },
+      { label: 'Shipping', href: `${prefix}/envios` },
+      { label: 'Returns', href: `${prefix}/devoluciones` },
+      { label: 'Terms & Conditions', href: `${prefix}/terminos` },
+      { label: 'Privacy Notice', href: `${prefix}/privacidad` },
+    ]
+  : [
+      { label: 'Preguntas frecuentes', href: `${prefix}/faq` },
+      { label: 'Envíos', href: `${prefix}/envios` },
+      { label: 'Devoluciones', href: `${prefix}/devoluciones` },
+      { label: 'Términos y condiciones', href: `${prefix}/terminos` },
+      { label: 'Aviso de privacidad', href: `${prefix}/privacidad` },
+    ];
+
+const aboutLinks = lang === 'en'
+  ? [
+      { label: 'Our Story', href: `${prefix}/about` },
+      { label: 'Courses', href: `${prefix}/courses` },
+      { label: 'Portfolio', href: `${prefix}/portfolio` },
+      { label: 'Contact', href: `${prefix}/` },
+    ]
+  : [
+      { label: 'Nuestra historia', href: `${prefix}/about` },
+      { label: 'Cursos', href: `${prefix}/courses` },
+      { label: 'Portafolio', href: `${prefix}/portfolio` },
+      { label: 'Contacto', href: `${prefix}/` },
+    ];
+
+const shopLinks = lang === 'en'
+  ? [
+      { label: 'Bouquets', href: `${prefix}/shop` },
+      { label: 'Arrangements', href: `${prefix}/shop` },
+      { label: 'Customizations', href: `${prefix}/shop` },
+      { label: 'Offers', href: `${prefix}/shop` },
+    ]
+  : [
+      { label: 'Ramos', href: `${prefix}/shop` },
+      { label: 'Arreglos', href: `${prefix}/shop` },
+      { label: 'Personalizaciones', href: `${prefix}/shop` },
+      { label: 'Ofertas', href: `${prefix}/shop` },
+    ];
+
+// Construir dirección legible
+function buildAddress(addr: NonNullable<typeof contact>['address']): string {
+  if (!addr) return '';
+  const parts = [addr.line1, addr.line2, addr.line3, addr.postalCode].filter(Boolean);
+  return parts.join(', ');
+}
+
+const addressText = contact?.address ? buildAddress(contact.address) : null;
+
+// SVG Icons para redes sociales — devuelve HTML string
+function getSocialIcon(iconTitle: string | null, iconUrl: string | null): string {
+  const title = (iconTitle ?? '').toLowerCase();
+  
+  if (iconUrl) {
+    return `<img src="${iconUrl}" alt="${iconTitle ?? ''}" class="social-icon-img" />`;
   }
-};
-
-const t = translations[lang as keyof typeof translations];
+  
+  if (title.includes('facebook')) {
+    return `<svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"/></svg>`;
+  }
+  if (title.includes('instagram')) {
+    return `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1" fill="currentColor" stroke="none"/></svg>`;
+  }
+  if (title.includes('youtube')) {
+    return `<svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M22.54 6.42a2.78 2.78 0 0 0-1.95-1.96C18.88 4 12 4 12 4s-6.88 0-8.59.46A2.78 2.78 0 0 0 1.46 6.42 29 29 0 0 0 1 12a29 29 0 0 0 .46 5.58 2.78 2.78 0 0 0 1.95 1.95C5.12 20 12 20 12 20s6.88 0 8.59-.47a2.78 2.78 0 0 0 1.95-1.95A29 29 0 0 0 23 12a29 29 0 0 0-.46-5.58z"/><polygon points="9.75 15.02 15.5 12 9.75 8.98 9.75 15.02" fill="white"/></svg>`;
+  }
+  if (title.includes('tiktok')) {
+    return `<svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 0 1-2.88 2.5 2.89 2.89 0 0 1-2.89-2.89 2.89 2.89 0 0 1 2.89-2.89c.28 0 .54.04.79.1V9.01a6.33 6.33 0 0 0-.79-.05 6.34 6.34 0 0 0-6.34 6.34 6.34 6.34 0 0 0 6.34 6.34 6.34 6.34 0 0 0 6.33-6.34V8.5a8.27 8.27 0 0 0 4.84 1.56V6.63a4.85 4.85 0 0 1-1.07-.06z"/></svg>`;
+  }
+  if (title.includes('twitter') || title.includes('x.com')) {
+    return `<svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>`;
+  }
+  if (title.includes('amazon')) {
+    return `<svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M.045 18.02c.071-.116.188-.185.348-.185h2.94c.16 0 .277.07.348.185.07.116.07.26-.001.432-.52 1.24-1.34 2.2-2.46 2.88C.09 22.02-.96 22.36-2.16 22.36c-.48 0-.96-.06-1.44-.18-.48-.12-.9-.3-1.26-.54-.36-.24-.6-.54-.72-.9-.12-.36-.12-.78 0-1.26.12-.48.36-.9.72-1.26.36-.36.78-.6 1.26-.72.48-.12.96-.18 1.44-.18.48 0 .96.06 1.44.18.48.12.9.3 1.26.54.36.24.6.54.72.9.12.36.12.78 0 1.26z"/></svg>`;
+  }
+  
+  return `<span class="material-symbols-outlined text-[1.125rem] leading-none">language</span>`;
+}
 ---
 
-<footer class="site-footer">
-  <div class="footer-inner">
-    <div class="footer-brand">
-      <span class="material-symbols-outlined text-primary text-2xl">local_florist</span>
-      <span>Maggy Flowers</span>
-    </div>
-    
-    <p class="text-[0.8125rem] opacity-50">
-      © {new Date().getFullYear()} Maggy Flowers. {t.rights}
-    </p>
+<footer class="footer-root">
+  <div class="footer-grid">
 
-    <nav class="footer-links">
-      <a href={`${t.prefix}/shop`}>{t.shop}</a>
-      <a href={`${t.prefix}/courses`}>{t.courses}</a>
-      <a href={`${t.prefix}/about`}>{t.about}</a>
-      <a href={`${t.prefix}/contact`}>{t.contact}</a>
-    </nav>
+    <!-- COLUMNA 1: Identity -->
+    <div
+      class="footer-identity relative"
+      data-nodehive-entity-type={identity ? 'nodehive_fragment' : undefined}
+      data-nodehive-entity-bundle={identity ? 'footer_identity' : undefined}
+      data-nodehive-entity-id={identity?.fragmentId ?? undefined}
+      data-nodehive-entity-internal-id={identity?.fragmentInternalId ?? undefined}
+    >
+      <!-- Botón editar (solo en editor) -->
+      <button
+        type="button"
+        class="nh-only absolute top-0 right-0 items-center gap-1 rounded-full border border-primary/25 bg-white/90 px-3 py-1 text-xs font-semibold text-primary shadow-sm"
+        data-nodehive-field="field_logo"
+        aria-label="Editar identity"
+      >
+        <span class="material-symbols-outlined text-[14px]">edit</span>
+        Editar
+      </button>
+
+      <!-- Logo + Nombre -->
+      <a href={prefix} class="footer-brand" data-nodehive-field="field_logo">
+        {identity?.logoUrl ? (
+          <img
+            src={identity.logoUrl}
+            alt={identity.title ?? 'Maggy Flowers'}
+            class="footer-logo-img"
+            loading="lazy"
+          />
+        ) : (
+          <span class="material-symbols-outlined text-4xl text-primary">local_florist</span>
+        )}
+        <span class="footer-brand-name" data-nodehive-field="field_title">
+          {identity?.title ?? 'Maggy Flowers'}
+        </span>
+      </a>
+
+      <!-- Frase -->
+      {(identity?.phrase || !identity) && (
+        <p class="footer-phrase" data-nodehive-field="field_phrase">
+          "{identity?.phrase ?? 'Diseño floral con magia, alma y propósito'}"
+        </p>
+      )}
+
+      <!-- Socials -->
+      {identity?.socials && identity.socials.length > 0 && (
+        <div class="footer-socials" data-nodehive-field="field_socials">
+          {identity.socials.map((social) => (
+            <a
+              href={social.linkUrl ?? '#'}
+              title={social.iconTitle ?? social.linkTitle ?? ''}
+              target="_blank"
+              rel="noopener noreferrer"
+              class="footer-social-btn"
+            >
+              <span set:html={getSocialIcon(social.iconTitle, social.iconUrl)} />
+            </a>
+          ))}
+        </div>
+      )}
+
+      {/* Fallback socials si NodeHive no devuelve nada */}
+      {(!identity?.socials || identity.socials.length === 0) && (
+        <div class="footer-socials">
+          <span class="text-xs text-white/30 italic">
+            {lang === 'en' ? 'Social links coming soon' : 'Redes sociales próximamente'}
+          </span>
+        </div>
+      )}
+    </div>
+
+    <!-- COLUMNA 2: Tienda -->
+    <div class="footer-col">
+      <h3 class="footer-col-title">
+        {lang === 'en' ? 'Shop' : 'Tienda'}
+      </h3>
+      <ul class="footer-link-list">
+        {shopLinks.map((link) => (
+          <li>
+            <a href={link.href} class="footer-link">{link.label}</a>
+          </li>
+        ))}
+      </ul>
+    </div>
+
+    <!-- COLUMNA 3: Nosotros + Ayuda (sub-grid) -->
+    <div class="footer-col-double">
+      <div class="footer-col">
+        <h3 class="footer-col-title">
+          {lang === 'en' ? 'About Us' : 'Nosotros'}
+        </h3>
+        <ul class="footer-link-list">
+          {aboutLinks.map((link) => (
+            <li>
+              <a href={link.href} class="footer-link">{link.label}</a>
+            </li>
+          ))}
+        </ul>
+      </div>
+      <div class="footer-col">
+        <h3 class="footer-col-title">
+          {lang === 'en' ? 'Help' : 'Ayuda'}
+        </h3>
+        <ul class="footer-link-list">
+          {helpLinks.map((link) => (
+            <li>
+              <a href={link.href} class="footer-link">{link.label}</a>
+            </li>
+          ))}
+        </ul>
+      </div>
+    </div>
+
+    <!-- COLUMNA 4: Contact -->
+    <div
+      class="footer-col relative"
+      data-nodehive-entity-type={contact ? 'nodehive_fragment' : undefined}
+      data-nodehive-entity-bundle={contact ? 'footer_contact' : undefined}
+      data-nodehive-entity-id={contact?.fragmentId ?? undefined}
+      data-nodehive-entity-internal-id={contact?.fragmentInternalId ?? undefined}
+    >
+      <button
+        type="button"
+        class="nh-only absolute top-0 right-0 items-center gap-1 rounded-full border border-primary/25 bg-white/90 px-3 py-1 text-xs font-semibold text-primary shadow-sm"
+        data-nodehive-field="field_title"
+        aria-label="Editar contacto"
+      >
+        <span class="material-symbols-outlined text-[14px]">edit</span>
+        Editar
+      </button>
+
+      <h3 class="footer-col-title" data-nodehive-field="field_title">
+        {contact?.title ?? (lang === 'en' ? 'Contact' : 'Contacto')}
+      </h3>
+
+      <ul class="footer-contact-list">
+        {addressText && (
+          <li class="footer-contact-item" data-nodehive-field="field_direction">
+            <span class="material-symbols-outlined footer-contact-icon">location_on</span>
+            <span>{addressText}</span>
+          </li>
+        )}
+        {contact?.zelle && (
+          <li class="footer-contact-item" data-nodehive-field="field_zelle">
+            <span class="material-symbols-outlined footer-contact-icon">phone_iphone</span>
+            <span>{contact.zelle}</span>
+          </li>
+        )}
+        {contact?.mail && (
+          <li class="footer-contact-item" data-nodehive-field="field_mail">
+            <span class="material-symbols-outlined footer-contact-icon">mail</span>
+            <a href={`mailto:${contact.mail}`} class="footer-link">{contact.mail}</a>
+          </li>
+        )}
+        {contact?.schedule && (
+          <li class="footer-contact-item" data-nodehive-field="field_shedule">
+            <span class="material-symbols-outlined footer-contact-icon">schedule</span>
+            <span>{contact.schedule}</span>
+          </li>
+        )}
+
+        {/* Fallbacks si no hay datos */}
+        {!contact?.mail && (
+          <li class="footer-contact-item">
+            <span class="material-symbols-outlined footer-contact-icon">mail</span>
+            <a href="mailto:Maggy_flowers@yahoo.com" class="footer-link">Maggy_flowers@yahoo.com</a>
+          </li>
+        )}
+      </ul>
+
+      <div class="footer-cta">
+        <a href={`${prefix}/`} class="footer-cta-btn">
+          {lang === 'en' ? 'Contact Us' : 'Contáctenos'}
+        </a>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Bottom bar -->
+  <div class="footer-bottom">
+    <p class="footer-copyright">
+      © {new Date().getFullYear()} Maggy Flowers.
+      {lang === 'en' ? 'All rights reserved.' : 'Todos los derechos reservados.'}
+    </p>
+    <div class="footer-payment">
+      <span class="footer-payment-label">
+        {lang === 'en' ? 'Payment methods:' : 'Métodos de pago:'}
+      </span>
+      <div class="footer-payment-badge">
+        <span class="footer-zelle-badge">Zelle</span>
+      </div>
+    </div>
   </div>
 </footer>
+
+<style>
+  .footer-root {
+    background: var(--color-background-dark);
+    color: color-mix(in srgb, var(--color-white) 70%, transparent);
+    padding-block: 4rem 0;
+    margin-top: auto;
+    font-family: var(--font-body);
+  }
+
+  .footer-grid {
+    max-width: 80rem;
+    margin-inline: auto;
+    padding-inline: 1.5rem;
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 3rem;
+  }
+
+  @media (min-width: 768px) {
+    .footer-grid { grid-template-columns: repeat(2, 1fr); }
+  }
+  @media (min-width: 1024px) {
+    .footer-grid { grid-template-columns: 1.4fr 0.8fr 1.2fr 1.2fr; gap: 2rem; }
+  }
+
+  /* Identity */
+  .footer-identity { display: flex; flex-direction: column; gap: 1.25rem; }
+
+  .footer-brand {
+    display: flex;
+    align-items: center;
+    gap: 0.625rem;
+    text-decoration: none;
+    color: var(--color-white);
+  }
+
+  .footer-logo-img {
+    height: 2.25rem;
+    width: auto;
+    object-fit: contain;
+  }
+
+  .footer-brand-name {
+    font-size: 1.375rem;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    color: var(--color-white);
+  }
+
+  .footer-phrase {
+    font-size: 0.9375rem;
+    font-style: italic;
+    color: color-mix(in srgb, var(--color-white) 60%, transparent);
+    line-height: 1.55;
+  }
+
+  .footer-socials {
+    display: flex;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+  }
+
+  .footer-social-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 2.5rem;
+    height: 2.5rem;
+    border-radius: 9999px;
+    background: color-mix(in srgb, var(--color-white) 10%, transparent);
+    color: var(--color-white);
+    text-decoration: none;
+    transition: background 0.2s, transform 0.15s;
+  }
+
+  .footer-social-btn:hover {
+    background: var(--primary);
+    transform: translateY(-2px);
+  }
+
+  .social-icon-img {
+    width: 1.125rem;
+    height: 1.125rem;
+    object-fit: contain;
+    filter: brightness(0) invert(1);
+  }
+
+  /* Columnas genéricas */
+  .footer-col { display: flex; flex-direction: column; gap: 0; }
+
+  .footer-col-double {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+  }
+
+  .footer-col-title {
+    font-size: 0.8125rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--color-white);
+    margin-bottom: 1.25rem;
+  }
+
+  .footer-link-list {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 0.625rem;
+  }
+
+  .footer-link {
+    font-size: 0.875rem;
+    color: color-mix(in srgb, var(--color-white) 60%, transparent);
+    text-decoration: none;
+    transition: color 0.2s;
+  }
+
+  .footer-link:hover { color: var(--primary); }
+
+  /* Contact */
+  .footer-contact-list {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 0.875rem;
+  }
+
+  .footer-contact-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.625rem;
+    font-size: 0.875rem;
+    color: color-mix(in srgb, var(--color-white) 65%, transparent);
+    line-height: 1.5;
+  }
+
+  .footer-contact-icon {
+    font-size: 1.125rem !important;
+    color: var(--primary);
+    margin-top: 0.0625rem;
+    flex-shrink: 0;
+  }
+
+  .footer-cta {
+    margin-top: 1.75rem;
+  }
+
+  .footer-cta-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    height: 2.5rem;
+    padding-inline: 1.5rem;
+    border-radius: 9999px;
+    background: var(--primary);
+    color: white;
+    font-family: var(--font-body);
+    font-size: 0.875rem;
+    font-weight: 700;
+    text-decoration: none;
+    transition: background 0.2s, transform 0.15s;
+    box-shadow: 0 4px 14px color-mix(in srgb, var(--primary) 35%, transparent);
+  }
+
+  .footer-cta-btn:hover {
+    background: var(--primary-dark);
+    transform: scale(1.03);
+  }
+
+  /* Bottom bar */
+  .footer-bottom {
+    max-width: 80rem;
+    margin-inline: auto;
+    padding-inline: 1.5rem;
+    margin-top: 3rem;
+    padding-block: 1.5rem;
+    border-top: 1px solid color-mix(in srgb, var(--color-white) 10%, transparent);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    text-align: center;
+  }
+
+  @media (min-width: 640px) {
+    .footer-bottom {
+      flex-direction: row;
+      text-align: left;
+    }
+  }
+
+  .footer-copyright {
+    font-size: 0.8125rem;
+    color: color-mix(in srgb, var(--color-white) 40%, transparent);
+  }
+
+  .footer-payment {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+  }
+
+  .footer-payment-label {
+    font-size: 0.8125rem;
+    font-weight: 500;
+    color: color-mix(in srgb, var(--color-white) 50%, transparent);
+  }
+
+  .footer-payment-badge {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    background: color-mix(in srgb, var(--color-white) 8%, transparent);
+    border: 1px solid color-mix(in srgb, var(--color-white) 10%, transparent);
+    border-radius: 0.375rem;
+    padding: 0.25rem 0.75rem;
+  }
+
+  .footer-zelle-badge {
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: #6d1ed4;
+    letter-spacing: 0.02em;
+  }
+</style>
