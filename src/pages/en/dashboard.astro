@@ -37,7 +37,12 @@ if (!session) return Astro.redirect('/en/login');
 
   <script>
     document.getElementById('logout-btn')?.addEventListener('click', async () => {
-      await fetch('/api/auth/logout', { method: 'POST', credentials: 'same-origin' });
+      await fetch('/api/auth/logout', { 
+        method: 'POST', 
+        credentials: 'same-origin',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({})
+      });
       window.location.href = '/en/';
     });
   </script>

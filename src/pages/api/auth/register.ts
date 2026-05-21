@@ -3,8 +3,8 @@
  *
  * POST /api/auth/register
  *
- * Recibe { username, email, password }, llama al servicio de registro de Drupal
- * y, si el sitio permite auto-login tras registro, inicia sesión automáticamente.
+ * Recibe { username, email }, llama al servicio de registro de Drupal.
+ * Drupal genera la contraseña y envía un one-time login link al correo.
  *
  * Respuestas:
  *   201  { ok: true,  user: { uid, name, mail } }
@@ -28,7 +28,7 @@ export const POST: APIRoute = async ({ request }) => {
     return json({ ok: false, error: 'El cuerpo de la petición debe ser JSON.' }, 400);
   }
 
-  const { username, email, password } = body as Record<string, string>;
+  const { username, email } = body as Record<string, string>;
 
   // ── 2. Validaciones ──────────────────────────────────────────────────────
   if (!username?.trim()) {
@@ -40,15 +40,11 @@ export const POST: APIRoute = async ({ request }) => {
   if (!email?.trim() || !EMAIL_RE.test(email.trim())) {
     return json({ ok: false, error: 'El correo electrónico no es válido.' }, 400);
   }
-  if (!password || password.length < 6) {
-    return json({ ok: false, error: 'La contraseña debe tener al menos 6 caracteres.' }, 400);
-  }
 
   // ── 3. Registrar en Drupal ───────────────────────────────────────────────
   const result = await register({
     username: username.trim(),
     email:    email.trim(),
-    password,
   });
 
   if (!result.ok) {

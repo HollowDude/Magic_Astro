@@ -9,7 +9,6 @@ import { nodehiveFetch } from './nodehive.client';
 export interface RegisterData {
   username: string;
   email: string;
-  password: string;
 }
 
 export interface RegisterResult {
@@ -30,7 +29,6 @@ export async function register(data: RegisterData): Promise<RegisterResult> {
       body: {
         name: { value: data.username },
         mail: { value: data.email },
-        pass: [{ value: data.password }],
       },
     });
 

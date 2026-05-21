@@ -30,18 +30,12 @@ const TRANSLATIONS = {
     usernamePlaceholder: 'Tu usuario',
     emailLabel: 'Correo electrónico',
     emailPlaceholder: 'tu@correo.com',
-    passwordLabel: 'Contraseña',
-    passwordPlaceholder: 'Mínimo 8 caracteres',
-    confirmLabel: 'Confirmar contraseña',
-    confirmPlaceholder: 'Repite tu contraseña',
     submitButton: 'Crear cuenta',
     hasAccount: '¿Ya tenés una cuenta?',
     loginHere: 'Iniciá sesión aquí',
     errorEmpty: 'Completa todos los campos para continuar.',
-    errorPasswordMismatch: 'Las contraseñas no coinciden.',
-    errorPasswordWeak: 'Usa al menos 8 caracteres e incluye una letra y un número.',
     errorServer: 'No pudimos conectar con el servidor. Intenta otra vez.',
-    success: (name: string) => `¡Cuenta creada! Bienvenido, ${name}. Redirigiendo al login…`,
+    success: () => `¡Cuenta creada! Revisa tu correo para activar tu acceso.`,
   },
   en: {
     title: 'Create your account',
@@ -52,18 +46,12 @@ const TRANSLATIONS = {
     usernamePlaceholder: 'Your username',
     emailLabel: 'Email address',
     emailPlaceholder: 'you@example.com',
-    passwordLabel: 'Password',
-    passwordPlaceholder: 'At least 8 characters',
-    confirmLabel: 'Confirm password',
-    confirmPlaceholder: 'Repeat your password',
     submitButton: 'Create account',
     hasAccount: 'Already have an account?',
     loginHere: 'Sign in here',
     errorEmpty: 'Please fill in all fields to continue.',
-    errorPasswordMismatch: 'Passwords do not match.',
-    errorPasswordWeak: 'Use at least 8 characters with a letter and a number.',
     errorServer: 'Could not connect to server. Try again.',
-    success: (name: string) => `Account created! Welcome, ${name}. Redirecting to login…`,
+    success: () => `Account created! Check your email to activate your access.`,
   },
 } as const;
 
@@ -80,8 +68,6 @@ export default function RegisterForm({
   const displaySubtitle = formSubtitle ?? t.subtitle;
   const [username, setUsername] = useState('');
   const [email,    setEmail]    = useState('');
-  const [password, setPassword] = useState('');
-  const [confirm,  setConfirm]  = useState('');
   const [loading,  setLoading]  = useState(false);
   const [alert,    setAlert]    = useState<AlertState | null>(null);
 
@@ -95,27 +81,12 @@ export default function RegisterForm({
     return lang === 'es' ? 'Ocurrió un problema. Intenta más tarde.' : 'Something went wrong. Try again later.';
   }
 
-  function isValidPassword(value: string): boolean {
-    if (value.length < 8) return false;
-    if (!/[a-zA-Z]/.test(value)) return false;
-    if (!/\d/.test(value)) return false;
-    return true;
-  }
-
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setAlert(null);
 
-    if (!username.trim() || !email.trim() || !password || !confirm) {
+    if (!username.trim() || !email.trim()) {
       setAlert({ type: 'error', message: t.errorEmpty });
-      return;
-    }
-    if (password !== confirm) {
-      setAlert({ type: 'error', message: t.errorPasswordMismatch });
-      return;
-    }
-    if (!isValidPassword(password)) {
-      setAlert({ type: 'error', message: t.errorPasswordWeak });
       return;
     }
 
@@ -127,7 +98,6 @@ export default function RegisterForm({
         body:    JSON.stringify({
           username: username.trim(),
           email:    email.trim(),
-          password,
         }),
       });
 
@@ -137,9 +107,8 @@ export default function RegisterForm({
       if (data.ok) {
         setAlert({
           type:    'success',
-          message: t.success(data.user.name),
+          message: t.success(),
         });
-        setTimeout(() => { window.location.href = `/${lang}/login`; }, 1800);
       } else {
         setAlert({ type: 'error', message: friendlyRegisterError(status, data.error) });
       }
@@ -204,30 +173,6 @@ export default function RegisterForm({
           autoComplete="email"
           value={email}
           onChange={setEmail}
-        />
-
-        <InputField
-          id="password"
-          label={t.passwordLabel}
-          type="password"
-          placeholder={t.passwordPlaceholder}
-          icon="lock"
-          required
-          autoComplete="new-password"
-          value={password}
-          onChange={setPassword}
-        />
-
-        <InputField
-          id="confirm"
-          label={t.confirmLabel}
-          type="password"
-          placeholder={t.confirmPlaceholder}
-          icon="check"
-          required
-          autoComplete="new-password"
-          value={confirm}
-          onChange={setConfirm}
         />
 
         <button
