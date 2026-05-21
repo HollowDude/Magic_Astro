@@ -75,6 +75,10 @@ export default function LoginForm({
   const [loading, setLoading] = useState(false);
   const [alert, setAlert] = useState<AlertState | null>(null);
 
+  const redirectUrl = typeof window !== 'undefined'
+    ? new URLSearchParams(window.location.search).get('redirect')
+    : null;
+
   function friendlyLoginError(status: number, message?: string): string {
     const msg = (message ?? '').toLowerCase();
     if (status === 401 || status === 403) return lang === 'es' ? 'Usuario o contraseña incorrectos.' : 'Invalid username or password.';
@@ -109,7 +113,8 @@ export default function LoginForm({
 
       if (data.ok) {
         setAlert({ type: 'success', message: t.success(data.user.name) });
-        setTimeout(() => { window.location.assign(`/${lang}/dashboard`); }, 600);
+        const target = redirectUrl || `/${lang}/dashboard`;
+        setTimeout(() => { window.location.assign(target); }, 600);
       } else {
         setAlert({ type: 'error', message: friendlyLoginError(status, data.error) });
       }
