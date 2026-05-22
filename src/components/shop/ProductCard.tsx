@@ -15,6 +15,7 @@ export interface ProductCardData {
   priceNumber: number;
   thumbnail: string | null;
   badge: string | null;
+  tag: string | null;
   tipo: string | null;
   colorName: string | null;
   colorHex: string | null;
@@ -84,6 +85,13 @@ export default function ProductCard({ product, lang = 'es', href }: Props) {
         {product.badge && (
           <span className="absolute top-3 left-3 px-2.5 py-1 font-body text-[0.6875rem] font-bold uppercase tracking-widest bg-primary text-white rounded-full shadow-md">
             {product.badge}
+          </span>
+        )}
+
+        {/* Tag */}
+        {product.tag && (
+          <span className="absolute bottom-12 left-3 px-2.5 py-1 font-body text-[0.6875rem] font-bold uppercase tracking-widest bg-amber-200/92 text-amber-900 rounded-full shadow-sm">
+            {product.tag}
           </span>
         )}
 

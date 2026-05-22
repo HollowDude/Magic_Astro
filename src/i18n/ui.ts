@@ -108,12 +108,19 @@ export const ui = {
 
     // ── Detalle de producto ──────────────────────────────────────────────────
     'product.personalization.label':       'Personalización (Tarjeta o Cinta)',
-    'product.personalization.hint':        'Escribe el mensaje que deseas incluir en la tarjeta o cinta decorativa (máx. 150 caracteres).',
+    'product.personalization.hint':        'Escribe el mensaje que deseas incluir en la tarjeta o cinta decorativa (máx. 250 caracteres).',
     'product.personalization.placeholder': 'Ej: Feliz aniversario, con todo mi amor...',
     'product.contact':                     'Contáctenos',
     'product.free_shipping':               'Envío gratis en pedidos superiores a $100',
     'product.related.title':               'Productos Relacionados',
     'product.related.see_all':             'Ver todo',
+    'product.ribbon.label':                'Color de la cinta decorativa',
+    'product.ribbon.none':                 'Sin cinta',
+    'product.ribbon.red':                  'Rojo',
+    'product.ribbon.gold':                 'Dorado',
+    'product.ribbon.silver':               'Plateado',
+    'product.ribbon.white':                'Blanco',
+    'product.added_cart':                  '✓ Añadido al carrito (funcionalidad en desarrollo)',
     'product.not_found':                   'Producto no encontrado.',
 
     // ── Portfolio ────────────────────────────────────────────────────────────
@@ -229,12 +236,19 @@ export const ui = {
 
     // ── Product Detail ────────────────────────────────────────────────────────
     'product.personalization.label':       'Personalization (Card or Ribbon)',
-    'product.personalization.hint':        'Write the message you want included on the card or decorative ribbon (max. 150 characters).',
+    'product.personalization.hint':        'Write the message you want included on the card or decorative ribbon (max. 250 characters).',
     'product.personalization.placeholder': 'E.g.: Happy anniversary, with all my love...',
     'product.contact':                     'Contact Us',
     'product.free_shipping':               'Free shipping on orders over $100',
     'product.related.title':               'Related Products',
     'product.related.see_all':             'See all',
+    'product.ribbon.label':                'Ribbon color',
+    'product.ribbon.none':                 'No ribbon',
+    'product.ribbon.red':                  'Red',
+    'product.ribbon.gold':                 'Gold',
+    'product.ribbon.silver':               'Silver',
+    'product.ribbon.white':                'White',
+    'product.added_cart':                  '✓ Added to cart (feature in development)',
     'product.not_found':                   'Product not found.',
 
     // ── Portfolio ────────────────────────────────────────────────────────────

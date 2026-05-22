@@ -15,6 +15,7 @@ export interface ProductDetailData {
   description: string;
   images: string[];
   badge: string | null;
+  tag: string | null;
   tipo: string | null;
   colorName: string | null;
   colorHex: string | null;
@@ -24,23 +25,34 @@ export interface ProductDetailData {
 interface Props {
   product: ProductDetailData;
   lang: Lang;
+  isLoggedIn: boolean;
 }
 
-export default function ProductDetail({ product, lang }: Props) {
+const RIBBON_COLORS = [
+  { key: 'red',   hex: '#c0392b' },
+  { key: 'gold',  hex: '#d4ac0d' },
+  { key: 'silver',hex: '#a8a9ad' },
+  { key: 'white', hex: '#ffffff' },
+] as const;
+
+export default function ProductDetail({ product, lang, isLoggedIn }: Props) {
   const [activeImg, setActiveImg] = useState(0);
   const [message, setMessage] = useState('');
   const [imgLoaded, setImgLoaded] = useState(false);
   const [isZooming, setIsZooming] = useState(false);
+  const [ribbonColor, setRibbonColor] = useState<string | null>(null);
+  const [addedToast, setAddedToast] = useState(false);
 
   const mainImgRef = useRef<HTMLImageElement>(null);
-  const MAX_CHARS = 150;
+  const MAX_CHARS = 250;
   const images = product.images;
   const hasImages = images.length > 0;
+
+  const prefix = `/${lang}`;
 
   useEffect(() => {
     setImgLoaded(false);
     setIsZooming(false);
-    // Reset origin so entering a new image always starts centered
     if (mainImgRef.current) {
       mainImgRef.current.style.transformOrigin = '50% 50%';
     }
@@ -50,7 +62,6 @@ export default function ProductDetail({ product, lang }: Props) {
     }
   }, [activeImg]);
 
-  // ─── Direct DOM mutation — bypasses React render cycle for zero-lag zoom ──
   const handleMouseMove = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
     const rect = e.currentTarget.getBoundingClientRect();
     const x = Math.max(0, Math.min(100, ((e.clientX - rect.left) / rect.width) * 100));
@@ -60,7 +71,6 @@ export default function ProductDetail({ product, lang }: Props) {
     }
   }, []);
 
-  // Set origin at the entry point so zoom "opens" exactly where cursor is
   const handleMouseEnter = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
     if (!hasImages || !imgLoaded) return;
     const rect = e.currentTarget.getBoundingClientRect();
@@ -72,10 +82,20 @@ export default function ProductDetail({ product, lang }: Props) {
     setIsZooming(true);
   }, [hasImages, imgLoaded]);
 
-  const contactHref = lang === 'en' ? '/en/contact' : '/contact';
+  const contactHref = `${prefix}/contact`;
+  const loginHref = `${prefix}/login?redirect=${encodeURIComponent(`${prefix}/${product.id}`)}`;
   const tipoLabel = product.tipo
     ? (ui[lang] as Record<string, string>)[`shop.filters.type.${product.tipo}`] ?? product.tipo
     : null;
+
+  const handleAddToCart = () => {
+    if (!isLoggedIn) {
+      window.location.href = loginHref;
+      return;
+    }
+    setAddedToast(true);
+    setTimeout(() => setAddedToast(false), 3000);
+  };
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-16 items-start">
@@ -100,9 +120,6 @@ export default function ProductDetail({ product, lang }: Props) {
               alt={product.title}
               className="w-full h-full object-cover select-none pointer-events-none"
               style={{
-                // Only transition scale (transform), NOT transform-origin.
-                // transform-origin is mutated directly on the DOM node so it
-                // follows the cursor with zero render-cycle delay.
                 transform: isZooming && imgLoaded ? 'scale(2.2)' : 'scale(1)',
                 transition: isZooming
                   ? 'transform 0.25s cubic-bezier(0.2, 0, 0, 1)'
@@ -121,13 +138,18 @@ export default function ProductDetail({ product, lang }: Props) {
             </div>
           )}
 
+          {product.tag && (
+            <span className="absolute top-4 left-4 bg-amber-200/92 backdrop-blur-md px-3.5 py-1.5 rounded-full font-body text-[11px] font-extrabold tracking-widest uppercase text-amber-900 z-10 pointer-events-none shadow-sm">
+              {product.tag}
+            </span>
+          )}
+
           {product.badge && (
             <span className="absolute top-4 right-4 bg-white/88 backdrop-blur-md px-3.5 py-1.5 rounded-full font-body text-[11px] font-extrabold tracking-widest uppercase text-primary z-10 pointer-events-none shadow-sm">
               {product.badge}
             </span>
           )}
 
-          {/* Indicador de zoom */}
           {hasImages && imgLoaded && !isZooming && (
             <span className="absolute bottom-3 right-3 flex items-center gap-1 px-2.5 py-1 bg-white/82 backdrop-blur-md rounded-full font-body text-[11px] font-semibold text-headline pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-200 z-10">
               <span className="material-symbols-outlined !text-base leading-none">zoom_in</span>
@@ -136,7 +158,6 @@ export default function ProductDetail({ product, lang }: Props) {
           )}
         </div>
 
-        {/* Miniaturas */}
         {hasImages && (
           <div className="grid grid-cols-4 gap-3">
             {images.map((img, i) => (
@@ -231,12 +252,45 @@ export default function ProductDetail({ product, lang }: Props) {
           </div>
         </div>
 
+        {/* Selector de moño */}
+        <div className="bg-[var(--primary-blush-tint)] border border-border rounded-2xl p-5">
+          <p className="block font-body text-sm font-bold text-headline mb-3">
+            {t(lang, 'product.ribbon.label')}
+          </p>
+          <div className="flex flex-wrap items-center gap-2.5">
+            {RIBBON_COLORS.map((c) => (
+              <button
+                key={c.key}
+                type="button"
+                onClick={() => setRibbonColor(ribbonColor === c.key ? null : c.key)}
+                className={`w-9 h-9 rounded-full border-2 transition-all duration-150 cursor-pointer shrink-0 ${
+                  ribbonColor === c.key
+                    ? 'border-primary scale-110 shadow-[0_0_0_2px_white,0_0_0_4px_var(--primary)]'
+                    : 'border-black/15 hover:scale-105'
+                }`}
+                style={{ background: c.hex }}
+                aria-label={t(lang, `product.ribbon.${c.key}` as UiKey)}
+                title={t(lang, `product.ribbon.${c.key}` as UiKey)}
+              />
+            ))}
+            {ribbonColor && (
+              <button
+                type="button"
+                onClick={() => setRibbonColor(null)}
+                className="font-body text-[12px] text-muted hover:text-primary underline underline-offset-2 cursor-pointer bg-transparent border-none p-0 transition-colors"
+              >
+                {t(lang, 'product.ribbon.none')}
+              </button>
+            )}
+          </div>
+        </div>
+
         {/* Botones de acción */}
         <div className="flex flex-col sm:flex-row gap-3">
           <button
-            className="flex-1 btn-primary h-13 shadow-[0_4px_16px_var(--primary-alpha-35)] opacity-85 cursor-not-allowed"
+            onClick={handleAddToCart}
+            className="flex-1 btn-primary h-13 shadow-[0_4px_16px_var(--primary-alpha-35)] cursor-pointer"
             type="button"
-            disabled
           >
             <span className="material-symbols-outlined !text-xl leading-none">shopping_cart</span>
             {t(lang, 'shop.add_to_cart')}
@@ -250,6 +304,14 @@ export default function ProductDetail({ product, lang }: Props) {
             {t(lang, 'product.contact')}
           </a>
         </div>
+
+        {addedToast && (
+          <div className="bg-sage-light border border-sage/30 rounded-xl px-4 py-3 text-center">
+            <p className="font-body text-sm font-semibold text-sage m-0">
+              {t(lang, 'product.added_cart')}
+            </p>
+          </div>
+        )}
 
         <p className="flex items-center justify-center gap-1.5 font-body text-[13px] text-muted">
           <span className="material-symbols-outlined !text-base leading-none">local_shipping</span>

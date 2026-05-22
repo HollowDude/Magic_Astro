@@ -17,7 +17,7 @@ import type { ShopCategory, SortKey, ShopFilterKey } from '@/components/shop/Sho
 const lang   = (Astro.currentLocale ?? getLangFromUrl(Astro.url)) as Lang;
 const t      = useTranslations(lang);
 const isEn   = lang === 'en';
-const prefix = lang === 'en' ? '/en' : '';
+const prefix = `/${lang}`;
 const DRUPAL_BASE_URL = import.meta.env.NODEHIVE_BASE_URL as string;
 
 const shopPage = await getShopPageData(lang);
@@ -138,6 +138,7 @@ const fallbackProducts: ProductCardData[] = isEn
         priceNumber: 85,
         thumbnail: null,
         badge: null,
+        tag: null,
         tipo: 'natural',
         colorName: 'Red',
         colorHex: '#d1495b',
@@ -151,6 +152,7 @@ const fallbackProducts: ProductCardData[] = isEn
         priceNumber: 95,
         thumbnail: null,
         badge: null,
+        tag: null,
         tipo: 'natural',
         colorName: 'Pink',
         colorHex: '#f2a0a0',
@@ -164,6 +166,7 @@ const fallbackProducts: ProductCardData[] = isEn
         priceNumber: 70,
         thumbnail: null,
         badge: null,
+        tag: null,
         tipo: 'natural',
         colorName: 'White',
         colorHex: '#f5f5f5',
@@ -177,6 +180,7 @@ const fallbackProducts: ProductCardData[] = isEn
         priceNumber: 120,
         thumbnail: null,
         badge: null,
+        tag: null,
         tipo: 'artificial',
         colorName: 'Ivory',
         colorHex: '#f3e7d3',
@@ -190,6 +194,7 @@ const fallbackProducts: ProductCardData[] = isEn
         priceNumber: 60,
         thumbnail: null,
         badge: null,
+        tag: null,
         tipo: 'seco',
         colorName: 'Beige',
         colorHex: '#d8c3a5',
@@ -203,6 +208,7 @@ const fallbackProducts: ProductCardData[] = isEn
         priceNumber: 110,
         thumbnail: null,
         badge: null,
+        tag: null,
         tipo: 'artificial',
         colorName: 'Yellow',
         colorHex: '#f2c94c',
@@ -218,6 +224,7 @@ const fallbackProducts: ProductCardData[] = isEn
         priceNumber: 85,
         thumbnail: null,
         badge: null,
+        tag: null,
         tipo: 'natural',
         colorName: 'Rojo',
         colorHex: '#d1495b',
@@ -231,6 +238,7 @@ const fallbackProducts: ProductCardData[] = isEn
         priceNumber: 95,
         thumbnail: null,
         badge: null,
+        tag: null,
         tipo: 'natural',
         colorName: 'Rosa',
         colorHex: '#f2a0a0',
@@ -244,6 +252,7 @@ const fallbackProducts: ProductCardData[] = isEn
         priceNumber: 70,
         thumbnail: null,
         badge: null,
+        tag: null,
         tipo: 'natural',
         colorName: 'Blanco',
         colorHex: '#f5f5f5',
@@ -257,6 +266,7 @@ const fallbackProducts: ProductCardData[] = isEn
         priceNumber: 120,
         thumbnail: null,
         badge: null,
+        tag: null,
         tipo: 'artificial',
         colorName: 'Marfil',
         colorHex: '#f3e7d3',
@@ -270,6 +280,7 @@ const fallbackProducts: ProductCardData[] = isEn
         priceNumber: 60,
         thumbnail: null,
         badge: null,
+        tag: null,
         tipo: 'seco',
         colorName: 'Beige',
         colorHex: '#d8c3a5',
@@ -283,6 +294,7 @@ const fallbackProducts: ProductCardData[] = isEn
         priceNumber: 110,
         thumbnail: null,
         badge: null,
+        tag: null,
         tipo: 'artificial',
         colorName: 'Amarillo',
         colorHex: '#f2c94c',
@@ -301,10 +313,16 @@ const products: ProductCardData[] = rawProducts.length > 0
         priceNumber: parseFloat(v?.price?.number       ?? '0'),
         thumbnail:   getProductThumbnail(p, DRUPAL_BASE_URL),
         badge:       null,
+        tag:         (() => {
+            const raw = p.field_tag;
+            if (Array.isArray(raw)) return raw.map((o: any) => o.name ?? '').filter(Boolean)[0] ?? null;
+            if (raw && typeof raw === 'object' && (raw as any).name) return (raw as any).name;
+            return null;
+          })(),
         tipo:        (v?.field_type ?? null)?.toLowerCase() ?? null,
         colorName:   v?.field_color?.name   ?? null,
         colorHex:    v?.field_color?.field_color_hex ?? null,
-        category:    p.field_categoria?.name           ?? null,
+        category:    p.field_category?.name           ?? null,
         ocasiones:   (() => {
             const raw = p.field_ocasion;
             if (Array.isArray(raw)) return raw.map((o: any) => o.name ?? '').filter(Boolean);
