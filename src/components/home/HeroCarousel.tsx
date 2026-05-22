@@ -121,7 +121,7 @@ export default function HeroCarousel({
 
       <div className="relative z-10 flex flex-col items-center text-center gap-5 max-w-[52rem] py-20 px-6">
         <h1 
-          className="text-[clamp(2.25rem,6vw,4rem)] font-black leading-[1.1] tracking-[-0.03em] text-white [text-shadow:0_2px_8px_rgba(0,0,0,0.6),0_4px_20px_rgba(0,0,0,0.4)] font-body m-0 [text-wrap:pretty]"
+          className="text-[clamp(2.25rem,6vw,4rem)] font-black leading-[1.1] tracking-[-0.03em] text-white [text-shadow:0_2px_8px_rgba(0,0,0,0.6),0_4px_20px_rgba(0,0,0,0.4)] font-body m-0 [text-wrap:balance]"
           data-nodehive-field="field_title"
         >
           {activeTitle}
@@ -129,7 +129,7 @@ export default function HeroCarousel({
         
         {activeSubtitle && (
           <h2 
-            className="text-[clamp(1.25rem,3vw,2rem)] font-bold leading-tight text-[#fbdadd] tracking-[-0.02em] font-body m-0 [text-shadow:0_2px_8px_rgba(0,0,0,0.6),0_4px_20px_rgba(0,0,0,0.4)] [text-wrap:pretty]"
+            className="text-[clamp(1.25rem,3vw,2rem)] font-bold leading-tight text-[#fbdadd] tracking-[-0.02em] font-body m-0 [text-shadow:0_2px_8px_rgba(0,0,0,0.6),0_4px_20px_rgba(0,0,0,0.4)] [text-wrap:balance]"
             data-nodehive-field="field_subtitle"
           >
             {activeSubtitle}
@@ -154,7 +154,7 @@ export default function HeroCarousel({
                 href={btn.url}
                 className={`inline-flex items-center justify-center h-12 min-w-[10rem] px-8 rounded-full text-base font-bold no-underline font-body transition-all duration-200 hover:scale-105 ${
                   btn.style === 'primary'
-                    ? 'bg-primary text-white shadow-[0_4px_18px_color-mix(in_srgb,var(--color-primary)_45%,transparent)] hover:bg-primary-dark'
+                    ? 'bg-primary text-white shadow-[0_4px_18px_var(--primary-alpha-45)] hover:bg-primary-dark'
                     : 'bg-white/90 text-[#181112] backdrop-blur-[4px] hover:bg-white'
                 }`}
               >
@@ -166,7 +166,7 @@ export default function HeroCarousel({
           <div className="mt-3 flex flex-wrap justify-center gap-4">
             <a
               href={`${getPrefix(lang)}/shop`}
-              className="inline-flex items-center justify-center h-12 min-w-[10rem] px-8 rounded-full bg-primary text-white text-base font-bold no-underline font-body shadow-[0_4px_18px_color-mix(in_srgb,var(--color-primary)_45%,transparent)] transition-all duration-200 hover:scale-105 hover:bg-primary-dark"
+              className="inline-flex items-center justify-center h-12 min-w-[10rem] px-8 rounded-full bg-primary text-white text-base font-bold no-underline font-body shadow-[0_4px_18px_var(--primary-alpha-45)] transition-all duration-200 hover:scale-105 hover:bg-primary-dark"
             >
               {t(lang, 'hero.cta.shop')}
             </a>

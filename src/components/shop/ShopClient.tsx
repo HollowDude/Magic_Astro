@@ -46,6 +46,7 @@ interface Props {
 
 const DEFAULT_FILTERS: ShopFilterKey[] = ['categories', 'price', 'colors', 'type'];
 const DEFAULT_SORTS: SortKey[] = ['featured', 'price_asc', 'price_desc', 'newest'];
+const DEFAULT_ITEMS_PER_PAGE = 9;
 const EMPTY_SET = new Set<string>();
 
 const COLOR_FALLBACK_MAP: Record<string, string> = {

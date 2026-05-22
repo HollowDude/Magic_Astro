@@ -145,7 +145,7 @@ export default function ProductDetail({ product, lang }: Props) {
                 onClick={() => i !== activeImg && setActiveImg(i)}
                 className={`aspect-square rounded-xl overflow-hidden border-[2.5px] p-0 cursor-pointer bg-blush transition-all duration-200 hover:-translate-y-0.5 ${
                   i === activeImg
-                    ? 'border-primary opacity-100 shadow-[0_0_0_3px_color-mix(in_srgb,var(--primary)_20%,transparent)]'
+                    ? 'border-primary opacity-100 shadow-[0_0_0_3px_var(--primary-alpha-20)]'
                     : 'border-transparent opacity-55 hover:opacity-85'
                 }`}
                 aria-label={`${product.title} — imagen ${i + 1}`}
@@ -190,7 +190,7 @@ export default function ProductDetail({ product, lang }: Props) {
               </span>
             )}
             {tipoLabel && (
-              <span className="inline-flex items-center px-3 py-1 rounded-full bg-sage-light border border-sage/25 text-[11px] font-bold uppercase tracking-wider text-[color-mix(in_srgb,var(--sage)_80%,var(--headline))]">
+              <span className="inline-flex items-center px-3 py-1 rounded-full bg-sage-light border border-sage/25 text-[11px] font-bold uppercase tracking-wider text-[var(--sage-headline-tint)]">
                 {tipoLabel}
               </span>
             )}
@@ -205,7 +205,7 @@ export default function ProductDetail({ product, lang }: Props) {
         )}
 
         {/* Personalización */}
-        <div className="bg-[color-mix(in_srgb,var(--blush)_60%,white)] border border-border rounded-2xl p-5">
+        <div className="bg-[var(--primary-blush-tint)] border border-border rounded-2xl p-5">
           <label htmlFor="pd-message" className="block font-body text-sm font-bold text-headline mb-1.5">
             {t(lang, 'product.personalization.label')}
           </label>
@@ -234,7 +234,7 @@ export default function ProductDetail({ product, lang }: Props) {
         {/* Botones de acción */}
         <div className="flex flex-col sm:flex-row gap-3">
           <button
-            className="flex-1 btn-primary h-13 shadow-[0_4px_16px_color-mix(in_srgb,var(--primary)_35%,transparent)] opacity-85 cursor-not-allowed"
+            className="flex-1 btn-primary h-13 shadow-[0_4px_16px_var(--primary-alpha-35)] opacity-85 cursor-not-allowed"
             type="button"
             disabled
           >

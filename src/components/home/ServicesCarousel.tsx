@@ -129,7 +129,7 @@ export default function ServicesCarousel({
                 onClick={() => !isCenter && setActive(i)}
                 aria-hidden={!show}
                 className={`absolute top-0 flex flex-col rounded-2xl overflow-hidden transition-all duration-[420ms] ease-out ${
-                  isCenter ? 'z-10 cursor-default shadow-[8px_12px_32px_color-mix(in_srgb,var(--color-headline)_15%,transparent)]' : 'z-5 cursor-pointer shadow-none'
+                  isCenter ? 'z-10 cursor-default shadow-[8px_12px_32px_var(--headline-alpha-15)]' : 'z-5 cursor-pointer shadow-none'
                 }`}
                 style={{
                   left: '50%',
@@ -152,7 +152,7 @@ export default function ServicesCarousel({
                       className="w-full h-full object-cover"
                     />
                   ) : (
-                    <div className="w-full h-full flex items-center justify-center bg-[color-mix(in_srgb,var(--color-primary)_8%,var(--color-blush))]">
+                    <div className="w-full h-full flex items-center justify-center bg-[var(--primary-blush-tint)]">
                       <span className="material-symbols-outlined text-[3rem] text-primary opacity-35 leading-none">
                         local_florist
                       </span>
@@ -213,7 +213,7 @@ export default function ServicesCarousel({
             aria-label={`Slide ${i + 1}`}
             onClick={() => setActive(i)}
             className={`h-[0.625rem] rounded-full border-none cursor-pointer p-0 transition-all duration-300 ease-out ${
-              i === active ? 'w-8 bg-primary' : 'w-2.5 bg-[color-mix(in_srgb,var(--color-primary)_28%,transparent)] hover:bg-[color-mix(in_srgb,var(--color-primary)_40%,transparent)]'
+              i === active ? 'w-8 bg-primary' : 'w-2.5 bg-[var(--primary-alpha-28)] hover:bg-[var(--primary-alpha-40)]'
             }`}
           />
         ))}

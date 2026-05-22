@@ -68,7 +68,7 @@ function SearchResultPanel({
   const prefix = getPrefix(lang);
 
   return (
-    <div className="absolute top-[calc(100%+0.5rem)] left-0 right-0 min-w-[18rem] bg-white rounded-[0.875rem] shadow-[0_8px_32px_rgba(0,0,0,0.1),0_0_0_1px_color-mix(in_srgb,var(--color-primary)_8%,transparent)] z-[100] overflow-hidden py-3">
+    <div className="absolute top-[calc(100%+0.5rem)] left-0 right-0 min-w-[18rem] bg-white rounded-[0.875rem] shadow-[0_8px_32px_rgba(0,0,0,0.1),0_0_0_1px_var(--primary-alpha-8)] z-[100] overflow-hidden py-3">
 
       {/* Loading skeletons */}
       {loading && (
@@ -105,7 +105,7 @@ function SearchResultPanel({
               <li key={r.id} className="list-none">
                 <a
                   href={`${prefix}/${r.id}`}
-                  className="flex items-center gap-3 py-2 px-4 no-underline text-inherit transition-colors duration-150 cursor-pointer hover:bg-[color-mix(in_srgb,var(--color-primary)_5%,transparent)]"
+                  className="flex items-center gap-3 py-2 px-4 no-underline text-inherit transition-colors duration-150 cursor-pointer hover:bg-[var(--primary-alpha-5)]"
                 >
                   {/* Thumbnail */}
                   <div className="w-11 h-11 rounded-lg overflow-hidden shrink-0 bg-blush">
@@ -145,7 +145,7 @@ function SearchResultPanel({
           {/* Mostrar más */}
           {hasMore && (
             <div className="border-t border-border mt-1.5 pt-1.5 px-4 pb-0.5">
-              <a href={shopHref} className="block font-body text-[0.8125rem] font-bold text-primary no-underline text-center py-1.5 rounded-lg transition-colors duration-150 hover:bg-[color-mix(in_srgb,var(--color-primary)_5%,transparent)]">
+              <a href={shopHref} className="block font-body text-[0.8125rem] font-bold text-primary no-underline text-center py-1.5 rounded-lg transition-colors duration-150 hover:bg-[var(--primary-alpha-5)]">
                 {ss.showMore}
               </a>
             </div>
@@ -258,7 +258,7 @@ export default function HeaderClient({ isLoggedIn, currentPath, lang, navLinks: 
 
   return (
     <>
-      <header className="sticky top-0 z-50 flex items-center justify-between gap-4 py-2.5 px-4 sm:px-10 bg-white/85 backdrop-blur-md border-b border-[color-mix(in_srgb,var(--color-primary)_10%,transparent)]">
+      <header className="sticky top-0 z-50 header-blur flex items-center justify-between gap-4 py-2.5 px-4 sm:px-10 border-b border-[var(--primary-alpha-10)]">
 
         {/* ── Left: logo + nav ── */}
         <div className="flex items-center gap-10 min-w-0">
@@ -308,7 +308,7 @@ export default function HeaderClient({ isLoggedIn, currentPath, lang, navLinks: 
           {/* ── Search pill ── */}
           <div ref={pillRef} className="relative">
             <div
-              className={`flex items-center h-[2.375rem] rounded-full overflow-hidden transition-all duration-300 ease-out border-[1.5px] ${searchOpen ? 'w-[13.5rem] border-[color-mix(in_srgb,var(--color-primary)_28%,transparent)] bg-white shadow-[0_4px_20px_color-mix(in_srgb,var(--color-primary)_10%,transparent)]' : 'w-[2.375rem] border-transparent bg-[color-mix(in_srgb,var(--color-primary)_7%,transparent)] shadow-none hover:bg-[color-mix(in_srgb,var(--color-primary)_12%,transparent)]'}`}
+              className={`flex items-center h-[2.375rem] rounded-full overflow-hidden transition-all duration-300 ease-out border-[1.5px] ${searchOpen ? 'w-[13.5rem] border-[var(--primary-alpha-28)] bg-white shadow-[0_4px_20px_var(--primary-alpha-10)]' : 'w-[2.375rem] border-transparent bg-[var(--primary-alpha-7)] shadow-none hover:bg-[var(--primary-alpha-12)]'}`}
             >
               <button
                 onClick={searchOpen ? closeSearch : openSearch}
@@ -335,7 +335,7 @@ export default function HeaderClient({ isLoggedIn, currentPath, lang, navLinks: 
 
               {/* Spinner */}
               {searchLoading && (
-                <div className="shrink-0 w-4 h-4 mr-3 rounded-full border-2 border-[color-mix(in_srgb,var(--color-primary)_20%,transparent)] border-t-primary animate-spin" />
+                <div className="shrink-0 w-4 h-4 mr-3 rounded-full border-2 border-[var(--primary-alpha-20)] border-t-primary animate-spin" />
               )}
             </div>
 
@@ -353,7 +353,7 @@ export default function HeaderClient({ isLoggedIn, currentPath, lang, navLinks: 
           </div>
 
           {/* ── Selector de idioma ── */}
-          <div className="hidden sm:flex items-center gap-1 py-1 px-2.5 rounded-full bg-[color-mix(in_srgb,var(--color-primary)_7%,transparent)] mx-1" role="group" aria-label={t(lang, 'lang.select')}>
+          <div className="hidden sm:flex items-center gap-1 py-1 px-2.5 rounded-full bg-[var(--primary-alpha-7)] mx-1" role="group" aria-label={t(lang, 'lang.select')}>
             {(Object.keys(languages) as Lang[]).map((l, i, arr) => (
               <Fragment key={l}>
                 <button
@@ -365,7 +365,7 @@ export default function HeaderClient({ isLoggedIn, currentPath, lang, navLinks: 
                   {l.toUpperCase()}
                 </button>
                 {i < arr.length - 1 && (
-                  <span key={`sep-${l}`} className="text-[color-mix(in_srgb,var(--color-muted)_40%,transparent)] text-[0.6875rem] select-none leading-none">|</span>
+                  <span key={`sep-${l}`} className="text-[var(--muted-alpha-40)] text-[0.6875rem] select-none leading-none">|</span>
                 )}
               </Fragment>
             ))}
@@ -374,10 +374,10 @@ export default function HeaderClient({ isLoggedIn, currentPath, lang, navLinks: 
           {/* ── Auth ── */}
           {isLoggedIn ? (
             <>
-              <a href={`${getPrefix(lang)}/dashboard`} className="flex items-center justify-center w-[2.375rem] h-[2.375rem] rounded-full bg-[color-mix(in_srgb,var(--color-primary)_7%,transparent)] text-text-main border-none cursor-pointer no-underline transition-all duration-200 shrink-0 hover:bg-[color-mix(in_srgb,var(--color-primary)_12%,transparent)]" aria-label={t(lang, 'header.profile')}>
+              <a href={`${getPrefix(lang)}/dashboard`} className="flex items-center justify-center w-[2.375rem] h-[2.375rem] rounded-full bg-[var(--primary-alpha-7)] text-text-main border-none cursor-pointer no-underline transition-all duration-200 shrink-0 hover:bg-[var(--primary-alpha-12)]" aria-label={t(lang, 'header.profile')}>
                 <span className="material-symbols-outlined text-[1.25rem] leading-none">account_circle</span>
               </a>
-              <button className="relative flex items-center justify-center w-[2.375rem] h-[2.375rem] rounded-full bg-[color-mix(in_srgb,var(--color-primary)_7%,transparent)] text-text-main border-none cursor-pointer transition-all duration-200 shrink-0 hover:bg-[color-mix(in_srgb,var(--color-primary)_12%,transparent)]" aria-label={t(lang, 'header.cart')} disabled>
+              <button className="relative flex items-center justify-center w-[2.375rem] h-[2.375rem] rounded-full bg-[var(--primary-alpha-7)] text-text-main border-none cursor-pointer transition-all duration-200 shrink-0 hover:bg-[var(--primary-alpha-12)]" aria-label={t(lang, 'header.cart')} disabled>
                 <span className="material-symbols-outlined text-[1.25rem] leading-none">shopping_bag</span>
                 <span className="absolute -top-1 -right-1 flex items-center justify-center w-4 h-4 rounded-full bg-primary text-white text-[0.5625rem] font-bold font-body">0</span>
               </button>
@@ -394,7 +394,7 @@ export default function HeaderClient({ isLoggedIn, currentPath, lang, navLinks: 
           {/* ── Hamburger (mobile) ── */}
           <button
             onClick={() => setMobileOpen((v) => !v)}
-            className="flex md:hidden items-center justify-center w-[2.375rem] h-[2.375rem] rounded-full bg-[color-mix(in_srgb,var(--color-primary)_7%,transparent)] text-text-main border-none cursor-pointer shrink-0 transition-colors hover:bg-[color-mix(in_srgb,var(--color-primary)_12%,transparent)]"
+            className="flex md:hidden items-center justify-center w-[2.375rem] h-[2.375rem] rounded-full bg-[var(--primary-alpha-7)] text-text-main border-none cursor-pointer shrink-0 transition-colors hover:bg-[var(--primary-alpha-12)]"
             aria-label={t(lang, 'header.menu')}
           >
             <span className="material-symbols-outlined text-[1.25rem] leading-none">
@@ -412,7 +412,7 @@ export default function HeaderClient({ isLoggedIn, currentPath, lang, navLinks: 
               <a
                 key={link.href}
                 href={link.href}
-                className={`py-4 px-6 text-base font-semibold no-underline border-b border-border font-body transition-colors duration-200 ${isActive(link.href) ? 'text-primary bg-[color-mix(in_srgb,var(--color-primary)_4%,transparent)]' : 'text-text-main hover:bg-black/5'}`}
+                className={`py-4 px-6 text-base font-semibold no-underline border-b border-border font-body transition-colors duration-200 ${isActive(link.href) ? 'text-primary bg-[var(--primary-alpha-4)]' : 'text-text-main hover:bg-black/5'}`}
               >
                 {'key' in link ? t(lang, link.key) : link.label}
               </a>

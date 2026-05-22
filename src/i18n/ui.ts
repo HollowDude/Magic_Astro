@@ -118,6 +118,19 @@ export const ui = {
 
     // ── Portfolio ────────────────────────────────────────────────────────────
     'portfolio.contact':                   'Contactar',
+
+    // ── Forgot Password ─────────────────────────────────────────────────────
+    'forgotpw.title':              '¿Olvidaste tu contraseña?',
+    'forgotpw.subtitle':           'Ingresa tu correo y te enviaremos un enlace para restablecerla.',
+    'forgotpw.email.label':        'Correo electrónico',
+    'forgotpw.email.placeholder':  'tu@correo.com',
+    'forgotpw.submit':             'Enviar enlace',
+    'forgotpw.back_to_login':      'Volver al inicio de sesión',
+    'forgotpw.error.empty':        'Ingresa tu correo electrónico para continuar.',
+    'forgotpw.error.invalid_email':'El correo electrónico no es válido.',
+    'forgotpw.error.server':       'No pudimos conectar con el servidor. Intenta otra vez.',
+    'forgotpw.success.title':      '¡Correo enviado!',
+    'forgotpw.success.description':'Revisa tu bandeja de entrada, te enviamos un enlace para restablecer tu contraseña.',
   },
   en: {
     // ── Navigation ──────────────────────────────────────────────────────────
@@ -226,6 +239,19 @@ export const ui = {
 
     // ── Portfolio ────────────────────────────────────────────────────────────
     'portfolio.contact':                   'Contact Us',
+
+    // ── Forgot Password ─────────────────────────────────────────────────────
+    'forgotpw.title':              'Forgot your password?',
+    'forgotpw.subtitle':           'Enter your email and we\'ll send you a link to reset it.',
+    'forgotpw.email.label':        'Email address',
+    'forgotpw.email.placeholder':  'you@example.com',
+    'forgotpw.submit':             'Send link',
+    'forgotpw.back_to_login':      'Back to sign in',
+    'forgotpw.error.empty':        'Please enter your email to continue.',
+    'forgotpw.error.invalid_email':'The email address is not valid.',
+    'forgotpw.error.server':       'Could not connect to server. Try again.',
+    'forgotpw.success.title':      'Email sent!',
+    'forgotpw.success.description':'Check your inbox, we sent you a link to reset your password.',
   },
 } as const;
 

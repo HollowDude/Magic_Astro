@@ -53,7 +53,7 @@ export default function ProductCard({ product, lang = 'es', href }: Props) {
   const dotBorder = resolvedHex || (product.colorName ? 'var(--muted)' : 'var(--border)');
 
   return (
-    <article className="group relative flex flex-col bg-white rounded-xl overflow-hidden border border-border transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_12px_36px_color-mix(in_srgb,var(--headline)_12%,transparent)]">
+    <article className="group relative flex flex-col bg-white rounded-xl overflow-hidden border border-border transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_12px_36px_var(--headline-alpha-12)]">
       
       {/* Overlay de enlace */}
       {href && (
@@ -74,7 +74,7 @@ export default function ProductCard({ product, lang = 'es', href }: Props) {
             loading="lazy"
           />
         ) : (
-          <div className="w-full h-full flex items-center justify-center bg-[color-mix(in_srgb,var(--primary)_8%,var(--blush))]">
+          <div className="w-full h-full flex items-center justify-center bg-[var(--primary-blush-tint)]">
             <span className="material-symbols-outlined text-[3rem] text-primary opacity-35">
               local_florist
             </span>

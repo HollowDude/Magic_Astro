@@ -82,6 +82,7 @@ const identitySubtitle = identity?.subtitle ?? (isEn ? 'Our DNA' : 'Nuestro ADN'
 
       <!-- SECTION 2: HISTORIA -->
       <section
+        id="about-story"
         class="bg-white py-0"
         data-nodehive-entity-type="paragraph"
         data-nodehive-entity-bundle="_component_about_story"
@@ -112,6 +113,7 @@ const identitySubtitle = identity?.subtitle ?? (isEn ? 'Our DNA' : 'Nuestro ADN'
 
       <!-- SECTION 3: LOGROS -->
       <section
+        id="about-achievements"
         class="relative py-[50px] sm:py-[70px] px-[6%] sm:px-[8%] text-center"
         data-nodehive-entity-type="paragraph"
         data-nodehive-entity-bundle="_component_about_archievements"
@@ -170,6 +172,7 @@ const identitySubtitle = identity?.subtitle ?? (isEn ? 'Our DNA' : 'Nuestro ADN'
 
       <!-- SECTION 4: CERTIFICACIONES -->
       <section
+        id="about-certifications"
         class="bg-sage px-[6%] sm:px-[8%] py-10 sm:py-11 flex flex-col md:flex-row items-center gap-4 md:gap-0 text-center md:text-left"
         data-nodehive-entity-type="paragraph"
         data-nodehive-entity-bundle="_component_about_certificaction"
@@ -192,6 +195,7 @@ const identitySubtitle = identity?.subtitle ?? (isEn ? 'Our DNA' : 'Nuestro ADN'
       <!-- SECTION 5: OBJETIVOS -->
       {objectifs && objectifs.items.length > 0 && (
         <section
+          id="about-goals"
           class="bg-white relative"
           data-nodehive-entity-type="paragraph"
           data-nodehive-entity-bundle="_component_about_objetives"
@@ -242,6 +246,7 @@ const identitySubtitle = identity?.subtitle ?? (isEn ? 'Our DNA' : 'Nuestro ADN'
       <!-- SECTION 5: IDENTIDAD Y VALORES -->
       {identity && (
         <section
+          id="about-identity"
           class="py-14 sm:py-20 px-[6%] sm:px-[8%] text-center bg-white"
           data-nodehive-entity-type="paragraph"
           data-nodehive-entity-bundle="_component_about_identity"
@@ -289,5 +294,8 @@ const identitySubtitle = identity?.subtitle ?? (isEn ? 'Our DNA' : 'Nuestro ADN'
 <style>
 .about-hero {
   font-family: var(--font-heading);
+}
+section[id^="about-"] {
+  scroll-margin-top: 80px;
 }
 </style>

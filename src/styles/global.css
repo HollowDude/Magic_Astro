@@ -146,6 +146,26 @@
   --radius-sm: 0.25rem;
   --radius:    0.5rem;
   --radius-lg: 0.75rem;
+
+  /* Pre-computed alpha variants (safe for Chrome <119 that can't resolve var() inside color-mix()) */
+  --primary-alpha-4:  rgba(235, 71, 99, 0.04);
+  --primary-alpha-5:  rgba(235, 71, 99, 0.05);
+  --primary-alpha-7:  rgba(235, 71, 99, 0.07);
+  --primary-alpha-8:  rgba(235, 71, 99, 0.08);
+  --primary-alpha-10: rgba(235, 71, 99, 0.10);
+  --primary-alpha-12: rgba(235, 71, 99, 0.12);
+  --primary-alpha-15: rgba(235, 71, 99, 0.15);
+  --primary-alpha-20: rgba(235, 71, 99, 0.20);
+  --primary-alpha-28: rgba(235, 71, 99, 0.28);
+  --primary-alpha-30: rgba(235, 71, 99, 0.30);
+  --primary-alpha-35: rgba(235, 71, 99, 0.35);
+  --primary-alpha-40: rgba(235, 71, 99, 0.40);
+  --primary-alpha-45: rgba(235, 71, 99, 0.45);
+  --primary-blush-tint: #fce2e6;
+  --muted-alpha-40:    rgba(173, 128, 138, 0.40);
+  --headline-alpha-12: rgba(109, 81, 87, 0.12);
+  --headline-alpha-15: rgba(109, 81, 87, 0.15);
+  --sage-headline-tint: #87938c;
 }
 
 /* ── Base ────────────────────────────────────────────────────────── */
@@ -238,6 +258,20 @@
   }
   .hide-scrollbar::-webkit-scrollbar {
     display: none;
+  }
+
+  /* Header blur with fallback for Chrome <119 & Intel GPU compositing bug */
+  .header-blur {
+    background-color: rgba(255, 255, 255, 0.85);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    isolation: isolate;
+    will-change: transform;
+  }
+  @supports not (backdrop-filter: blur(12px)) {
+    .header-blur {
+      background-color: #ffffff;
+    }
   }
 }
 

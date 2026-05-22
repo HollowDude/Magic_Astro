@@ -1280,7 +1280,7 @@ const AUTH_RIGHT_HINTS = [
 ];
 
 export async function getAuthPageData(
-  pageSlug: 'login' | 'register',
+  pageSlug: 'login' | 'register' | 'forgot-password',
   lang?: Lang,
 ): Promise<AuthPageData | null> {
   const defaultLang = (import.meta.env.NODEHIVE_DEFAULT_LANG as string) ?? 'es';
@@ -1307,7 +1307,9 @@ export async function getAuthPageData(
 
     const titles = pageSlug === 'login'
       ? ['login', 'iniciar sesión', 'iniciar sesion', 'sign in']
-      : ['register', 'registro', 'crear cuenta', 'create account'];
+      : pageSlug === 'register'
+        ? ['register', 'registro', 'crear cuenta', 'create account']
+        : ['forgot', 'recuperar', 'recuperación', 'contrasena', 'password reset'];
 
     const page = pages.find((p: any) => {
       const t = (p.title ?? '').toLowerCase();

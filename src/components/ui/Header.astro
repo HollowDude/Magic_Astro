@@ -1,5 +1,6 @@
 ---
 import HeaderClient from '@/components/ui/HeaderClient';
+import ClientErrorBoundary from '@/components/ui/ClientErrorBoundary';
 import { nodehiveFetch } from '@/services/nodehive/nodehive.client';
 import { getSession } from '@/services/session.service';
 import { getLangFromUrl, getPrefix } from '@/i18n/utils';
@@ -44,11 +45,13 @@ try {
 const headerLogo = await getHeaderLogoData(lang);
 ---
 
-<HeaderClient
-  isLoggedIn={isLoggedIn}
-  currentPath={currentPath}
-  lang={lang}
-  navLinks={navLinks}
-  headerLogoData={headerLogo}
-  client:load
-/>
+<ClientErrorBoundary client:load>
+  <HeaderClient
+    isLoggedIn={isLoggedIn}
+    currentPath={currentPath}
+    lang={lang}
+    navLinks={navLinks}
+    headerLogoData={headerLogo}
+    client:load
+  />
+</ClientErrorBoundary>
