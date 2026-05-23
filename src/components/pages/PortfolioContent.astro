@@ -79,12 +79,13 @@ const itemsPerLoad = data?.gallery?.itemsPerLoad ?? 6;
       </div>
 
       <div class="flex justify-end mt-12">
-        <a
-          href={`${prefix}/`}
-          class="inline-flex items-center justify-center h-14 px-10 rounded-full bg-primary text-white text-base font-bold no-underline transition-all duration-200 hover:scale-105 hover:bg-primary-dark shadow-[0_10px_20px_var(--primary-alpha-30)]"
+        <button
+          type="button"
+          onclick="window.dispatchEvent(new CustomEvent('open-contact-modal'))"
+          class="inline-flex items-center justify-center h-14 px-10 rounded-full bg-primary text-white text-base font-bold no-underline transition-all duration-200 hover:scale-105 hover:bg-primary-dark shadow-[0_10px_20px_var(--primary-alpha-30)] cursor-pointer"
         >
           {t('portfolio.contact')}
-        </a>
+        </button>
       </div>
 
     </main>

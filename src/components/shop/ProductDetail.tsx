@@ -82,7 +82,9 @@ export default function ProductDetail({ product, lang, isLoggedIn }: Props) {
     setIsZooming(true);
   }, [hasImages, imgLoaded]);
 
-  const contactHref = `${prefix}/contact`;
+  const handleContact = () => {
+    window.dispatchEvent(new CustomEvent('open-contact-modal'));
+  };
   const loginHref = `${prefix}/login?redirect=${encodeURIComponent(`${prefix}/${product.id}`)}`;
   const tipoLabel = product.tipo
     ? (ui[lang] as Record<string, string>)[`shop.filters.type.${product.tipo}`] ?? product.tipo
@@ -296,13 +298,14 @@ export default function ProductDetail({ product, lang, isLoggedIn }: Props) {
             {t(lang, 'shop.add_to_cart')}
           </button>
 
-          <a
-            href={contactHref}
-            className="flex-1 flex items-center justify-center gap-2 h-13 bg-white text-headline border-1.5 border-border rounded-xl font-body text-base font-bold no-underline transition-all duration-200 hover:border-primary hover:text-primary hover:bg-primary/[0.04]"
+          <button
+            type="button"
+            onClick={handleContact}
+            className="flex-1 flex items-center justify-center gap-2 h-13 bg-white text-headline border-1.5 border-border rounded-xl font-body text-base font-bold transition-all duration-200 hover:border-primary hover:text-primary hover:bg-primary/[0.04] cursor-pointer"
           >
             <span className="material-symbols-outlined !text-xl leading-none">chat</span>
             {t(lang, 'product.contact')}
-          </a>
+          </button>
         </div>
 
         {addedToast && (

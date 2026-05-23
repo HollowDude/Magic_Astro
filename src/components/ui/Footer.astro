@@ -273,9 +273,13 @@ function getSocialIcon(iconTitle: string | null, iconUrl: string | null): string
       </ul>
 
       <div class="footer-cta">
-        <a href={`${prefix}/`} class="footer-cta-btn">
+        <button
+          type="button"
+          onclick="window.dispatchEvent(new CustomEvent('open-contact-modal'))"
+          class="footer-cta-btn"
+        >
           {lang === 'en' ? 'Contact Us' : 'Contáctenos'}
-        </a>
+        </button>
       </div>
     </div>
 
