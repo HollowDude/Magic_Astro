@@ -13,7 +13,7 @@ export const GET: APIRoute = async ({ cookies, url }) => {
 
   const lang = url.searchParams.get('lang') ?? 'es';
 
-  const addresses = await getUserAddresses(session.uid, lang as any);
+  const addresses = await getUserAddresses(session.uid, lang as any, session.accessToken);
 
   return new Response(JSON.stringify(addresses), {
     status: 200,

@@ -82,6 +82,7 @@ export async function login(data: LoginData): Promise<LoginResult> {
         roles:       json.current_user?.roles ?? [],
         csrfToken:   json.csrf_token   ?? '',
         logoutToken: json.logout_token ?? '',
+        accessToken,
       },
     };
   } catch (err) {

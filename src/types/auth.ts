@@ -46,6 +46,7 @@ export interface SessionUser {
   roles: string[];
   csrfToken: string;
   logoutToken: string;
+  accessToken: string;
 }
 
 // ─── Resultado genérico de servicio ────────────────────────────────────────

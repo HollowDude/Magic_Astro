@@ -97,7 +97,7 @@ export async function getUserProfile(uid: string, lang?: Lang): Promise<UserProf
   }
 }
 
-export async function getUserAddresses(uid: string, lang?: Lang): Promise<UserAddress[]> {
+export async function getUserAddresses(uid: string, lang?: Lang, bearerToken?: string): Promise<UserAddress[]> {
   const bundlesToTry = ['customer'];
 
   for (const bundle of bundlesToTry) {
@@ -107,6 +107,7 @@ export async function getUserAddresses(uid: string, lang?: Lang): Promise<UserAd
         {
           headers: { 'Content-Type': 'application/vnd.api+json', Accept: 'application/vnd.api+json' },
           lang,
+          bearerToken,
         },
       );
 
@@ -115,21 +116,21 @@ export async function getUserAddresses(uid: string, lang?: Lang): Promise<UserAd
         const profiles = Array.isArray(result) ? result : [];
         if (profiles.length > 0 || bundle === bundlesToTry[bundlesToTry.length - 1]) {
           return profiles.map((p: any): UserAddress => {
-            const addr = p.field_address ?? {};
+            const addr = p.address ?? {};
             return {
               id: p.id ?? '',
               internalId: p.drupal_internal__profile_id ?? null,
               bundle,
-              label: p.field_address_label ?? addr.organization ?? null,
-              firstName: addr.given_name ?? p.field_first_name ?? null,
-              lastName: addr.family_name ?? p.field_last_name ?? null,
+              label: addr.organization ?? null,
+              firstName: addr.given_name ?? null,
+              lastName: addr.family_name ?? null,
               addressLine1: addr.address_line1 ?? null,
               addressLine2: addr.address_line2 ?? null,
               city: addr.locality ?? null,
               state: addr.administrative_area ?? null,
               postalCode: addr.postal_code ?? null,
               countryCode: addr.country_code ?? null,
-              phone: p.field_phone_number ?? null,
+              phone: null,
               isDefault: p.is_default ?? false,
             };
           });

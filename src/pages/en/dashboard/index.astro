@@ -13,7 +13,7 @@ const lang = 'en' as const;
 const [profile, orders, addresses] = await Promise.all([
   getUserProfile(session.uid, lang),
   getUserOrders(session.uid, lang, 3),
-  getUserAddresses(session.uid, lang),
+  getUserAddresses(session.uid, lang, session.accessToken),
 ]);
 
 const displayName = profile?.displayName || session.name;

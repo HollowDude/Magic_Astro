@@ -25,6 +25,7 @@ export async function setSession(cookies: AstroCookies, user: SessionUser): Prom
     roles:       user.roles,
     csrfToken:   user.csrfToken,
     logoutToken: user.logoutToken,
+    accessToken: user.accessToken,
   };
 
   const token = await new EncryptJWT(payload)
@@ -57,6 +58,7 @@ export async function getSession(cookies: AstroCookies): Promise<SessionUser | n
       roles:       payload['roles']       as string[],
       csrfToken:   payload['csrfToken']   as string,
       logoutToken: payload['logoutToken'] as string,
+      accessToken: payload['accessToken'] as string,
     };
   } catch {
     // Token expirado, inválido o manipulado

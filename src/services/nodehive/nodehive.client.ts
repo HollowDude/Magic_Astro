@@ -86,6 +86,11 @@ export interface RequestOptions {
    * Si true, no envía el header api-key (útil para login).
    */
   skipApiKey?: boolean;
+  /**
+   * Token Bearer para autenticación como usuario (para mutaciones que requieren
+   * sesión de usuario, no solo api-key).
+   */
+  bearerToken?: string;
 }
 
 export interface RawResponse<T> {
@@ -117,6 +122,7 @@ export async function nodehiveFetch<T = unknown>(
     cacheTtl,
     timeoutMs,
     skipApiKey,
+    bearerToken,
   } = options;
 
   const effectiveTtl = cacheTtl ?? DEFAULT_TTL_MS;
@@ -135,9 +141,10 @@ export async function nodehiveFetch<T = unknown>(
   const headers: Record<string, string> = {
     'Content-Type': isForm ? 'application/x-www-form-urlencoded' : 'application/json',
     Accept:         'application/json',
-    ...(!skipApiKey ? { 'api-key': NODEHIVE_API_KEY } : {}),
+    ...(!bearerToken && !skipApiKey ? { 'api-key': NODEHIVE_API_KEY } : {}),
     ...extraHeaders,
   };
+  if (bearerToken) headers['Authorization'] = `Bearer ${bearerToken}`;
   if (sessionCookie) headers['Cookie'] = sessionCookie;
 
   let serializedBody: string | undefined;
