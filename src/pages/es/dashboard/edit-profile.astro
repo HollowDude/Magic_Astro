@@ -1,0 +1,28 @@
+---
+export const prerender = false;
+
+import DashboardLayout from '@/layouts/DashboardLayout.astro';
+import { getSession } from '@/services/session.service';
+
+const session = await getSession(Astro.cookies);
+if (!session) return Astro.redirect('/es/login?redirect=/es/dashboard/edit-profile');
+
+const lang = 'es' as const;
+---
+
+<DashboardLayout title="Editar Perfil — Maggy Flowers" lang={lang} activeSection="account">
+  <div class="space-y-6">
+    <nav class="flex items-center gap-2 text-xs text-body-color mb-2">
+      <a href="/es/dashboard" class="hover:text-primary transition-colors">Mi Cuenta</a>
+      <span class="material-symbols-outlined text-[14px] leading-none">chevron_right</span>
+      <span class="text-headline font-semibold">Editar Perfil</span>
+    </nav>
+
+    <div class="bg-white rounded-xl border border-border shadow-sm p-8 text-center">
+      <span class="material-symbols-outlined text-5xl text-muted opacity-30 mb-3 block">construction</span>
+      <h1 class="font-heading text-xl text-headline mb-2">Funcionalidad en desarrollo</h1>
+      <p class="text-body-color mb-6">La edición de perfil estará disponible próximamente.</p>
+      <a href="/es/dashboard" class="btn-primary inline-flex">Volver a mi cuenta</a>
+    </div>
+  </div>
+</DashboardLayout>

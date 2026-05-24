@@ -1,0 +1,145 @@
+---
+export const prerender = false;
+
+import DashboardLayout from '@/layouts/DashboardLayout.astro';
+import { getSession } from '@/services/session.service';
+import { nodehiveFetch } from '@/services/nodehive/nodehive.client';
+import Jsona from 'jsona';
+
+const session = await getSession(Astro.cookies);
+if (!session) return Astro.redirect('/es/login');
+
+const { id } = Astro.params;
+if (!id) return Astro.redirect('/es/dashboard/orders');
+
+const dataFormatter = new Jsona();
+const lang = 'es' as const;
+
+let order: any = null;
+let fetchError = false;
+
+try {
+  const raw = await nodehiveFetch<Record<string, unknown>>(
+    `/jsonapi/commerce_order/default/${id}?include=order_items`,
+    {
+      headers: { 'Content-Type': 'application/vnd.api+json', Accept: 'application/vnd.api+json' },
+      lang,
+    },
+  );
+
+  if (raw.status === 200) {
+    order = dataFormatter.deserialize(raw.data);
+  } else if (raw.status === 403 || raw.status === 404) {
+    return Astro.redirect('/es/dashboard/orders');
+  } else {
+    fetchError = true;
+  }
+} catch {
+  fetchError = true;
+}
+
+const stateLabels: Record<string, string> = {
+  draft: 'Borrador', placed: 'En preparación',
+  fulfillment: 'En camino', completed: 'Entregado',
+  canceled: 'Cancelado', validation: 'Pendiente',
+};
+const stateStyles: Record<string, string> = {
+  placed: 'bg-amber-100 text-amber-700',
+  fulfillment: 'bg-blue-100 text-blue-700',
+  completed: 'bg-emerald-100 text-emerald-700',
+  canceled: 'bg-red-100 text-red-600',
+  draft: 'bg-gray-100 text-gray-600',
+};
+
+const stateKey = order?.state ?? 'placed';
+const stateLabel = stateLabels[stateKey] ?? stateKey;
+const stateStyle = stateStyles[stateKey] ?? stateStyles.placed;
+
+let placedDate = '—';
+if (order?.placed) {
+  const ts = typeof order.placed === 'number'
+    ? order.placed * 1000
+    : new Date(order.placed).getTime();
+  if (!isNaN(ts)) {
+    placedDate = new Date(ts).toLocaleDateString('es-MX', {
+      day: 'numeric', month: 'long', year: 'numeric',
+    });
+  }
+}
+
+const items = Array.isArray(order?.order_items) ? order.order_items : [];
+---
+
+<DashboardLayout title={`Pedido #${order?.order_number ?? id}`} lang="es" activeSection="orders">
+
+  <nav class="flex items-center gap-2 text-xs text-body-color mb-6">
+    <a href="/es/dashboard/orders" class="hover:text-primary transition-colors">Mis Órdenes</a>
+    <span class="material-symbols-outlined text-[14px] leading-none">chevron_right</span>
+    <span class="text-headline font-semibold">#{order?.order_number ?? id}</span>
+  </nav>
+
+  {fetchError || !order ? (
+    <div class="bg-white rounded-xl border border-border p-16 text-center">
+      <span class="material-symbols-outlined text-[2.5rem] text-muted opacity-30">error</span>
+      <p class="text-body-color mt-3">No se pudo cargar el pedido.</p>
+      <a href="/es/dashboard/orders" class="text-sm font-bold text-primary hover:underline mt-3 inline-block">Volver a mis pedidos</a>
+    </div>
+  ) : (
+    <div class="space-y-5">
+      <div class="bg-white rounded-xl border border-border shadow-sm p-6">
+        <div class="flex flex-col sm:flex-row sm:items-center gap-4 justify-between">
+          <div>
+            <h1 class="text-xl font-bold text-headline">Pedido #{order.order_number}</h1>
+            <p class="text-sm text-body-color mt-1">{placedDate}</p>
+          </div>
+          <span class={`inline-flex items-center px-3 py-1 rounded-full text-sm font-bold self-start sm:self-auto ${stateStyle}`}>{stateLabel}</span>
+        </div>
+      </div>
+
+      <div class="bg-white rounded-xl border border-border shadow-sm p-6">
+        <h2 class="text-base font-bold text-headline mb-4">Artículos ({items.length})</h2>
+
+        {items.length === 0 ? (
+          <p class="text-sm text-body-color italic">No hay artículos disponibles.</p>
+        ) : (
+          <div class="divide-y divide-border">
+            {items.map((item: any) => (
+              <div class="flex items-center justify-between gap-4 py-4">
+                <div class="flex-1 min-w-0">
+                  <p class="text-sm font-semibold text-headline truncate">{item.title}</p>
+                  <p class="text-xs text-body-color mt-0.5">Cantidad: {Math.round(parseFloat(item.quantity ?? '1'))} · {item.unit_price?.formatted ?? ''}</p>
+                </div>
+                <span class="font-bold text-sm text-headline shrink-0">{item.total_price?.formatted ?? ''}</span>
+              </div>
+            ))}
+          </div>
+        )}
+
+        <div class="border-t border-border mt-4 pt-4 flex justify-between items-center">
+          <span class="font-bold text-sm text-headline">Total</span>
+          <span class="font-bold text-lg text-primary">{order.total_price?.formatted ?? ''}</span>
+        </div>
+      </div>
+
+      <div class="flex justify-between items-center">
+        <a
+          href="/es/dashboard/orders"
+          class="inline-flex items-center gap-1.5 text-sm font-bold text-body-color hover:text-primary transition-colors"
+        >
+          <span class="material-symbols-outlined text-[18px] leading-none">arrow_back</span>
+          Volver a mis pedidos
+        </a>
+
+        {stateKey === 'placed' && (
+          <button
+            onclick="alert('Función de cancelación próximamente')"
+            class="text-sm font-bold text-red-500 hover:underline"
+          >
+            Cancelar pedido
+          </button>
+        )}
+      </div>
+    </div>
+  )}
+
+</DashboardLayout>

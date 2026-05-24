@@ -1,0 +1,53 @@
+---
+export const prerender = false;
+
+import DashboardLayout from '@/layouts/DashboardLayout.astro';
+import { getSession } from '@/services/session.service';
+import { getUserAddresses } from '@/services/nodehive/nodehive.user';
+
+const session = await getSession(Astro.cookies);
+if (!session) return Astro.redirect('/en/login?redirect=/en/dashboard/addresses');
+
+const lang = 'en' as const;
+const addresses = await getUserAddresses(session.uid, lang);
+---
+
+<DashboardLayout title="Address Book — Maggy Flowers" lang="en" activeSection="addresses">
+  <div class="space-y-6">
+    <div class="flex items-center justify-between">
+      <h1 class="font-heading text-2xl text-headline font-semibold">Address Book</h1>
+      {addresses.length > 0 && (
+        <span class="text-xs text-body-color bg-blush px-3 py-1 rounded-full font-medium">{addresses.length} address{addresses.length !== 1 ? 'es' : ''}</span>
+      )}
+    </div>
+
+    {addresses.length === 0 ? (
+      <div class="bg-white rounded-xl border border-border shadow-sm p-12 text-center">
+        <span class="material-symbols-outlined text-5xl text-muted opacity-30 mb-3 block">add_location</span>
+        <p class="font-semibold text-headline mb-1">No addresses saved yet</p>
+        <p class="text-sm text-body-color mb-6">Add an address to speed up your checkout.</p>
+        <button class="btn-primary inline-flex" disabled>Add address</button>
+        <p class="text-xs text-body-color mt-2">Feature in development</p>
+      </div>
+    ) : (
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        {addresses.map((a) => (
+          <div class="bg-white rounded-xl border border-border shadow-sm p-5 relative">
+            {a.isDefault && <span class="absolute top-3 right-3 tag-green text-xs">Default</span>}
+            <div class="space-y-1.5">
+              {a.label && <p class="text-[11px] font-bold text-body-color uppercase tracking-widest">{a.label}</p>}
+              {(a.firstName || a.lastName) && <p class="font-semibold text-text-main">{a.firstName} {a.lastName}</p>}
+              {a.addressLine1 && <p class="text-sm text-body-color">{a.addressLine1}</p>}
+              {a.addressLine2 && <p class="text-sm text-body-color">{a.addressLine2}</p>}
+              {[a.city, a.state, a.postalCode].filter(Boolean).length > 0 && (
+                <p class="text-sm text-body-color">{[a.city, a.state, a.postalCode].filter(Boolean).join(', ')}</p>
+              )}
+              {a.countryCode && <p class="text-xs text-body-color">{a.countryCode}</p>}
+              {a.phone && <p class="text-sm text-body-color mt-1">{a.phone}</p>}
+            </div>
+          </div>
+        ))}
+      </div>
+    )}
+  </div>
+</DashboardLayout>

@@ -1,0 +1,96 @@
+---
+import { getPrefix } from '@/i18n/utils';
+import type { Lang } from '@/i18n/ui';
+
+interface Props {
+  lang: Lang;
+  activeSection: 'account' | 'orders' | 'addresses' | 'cart';
+}
+
+const { lang, activeSection } = Astro.props;
+const prefix = getPrefix(lang);
+
+const navItems = lang === 'es'
+  ? [
+      { key: 'account',   label: 'Mi Cuenta',             icon: 'person',        href: `${prefix}/dashboard` },
+      { key: 'orders',    label: 'Mis Órdenes',           icon: 'shopping_bag',  href: `${prefix}/dashboard/orders` },
+      { key: 'addresses', label: 'Libreta de Direcciones', icon: 'location_on',  href: `${prefix}/dashboard/addresses` },
+      { key: 'cart',      label: 'Carro de Compras',       icon: 'shopping_cart', href: `${prefix}/dashboard/cart` },
+    ]
+  : [
+      { key: 'account',   label: 'My Account',    icon: 'person',        href: `${prefix}/dashboard` },
+      { key: 'orders',    label: 'My Orders',     icon: 'shopping_bag',  href: `${prefix}/dashboard/orders` },
+      { key: 'addresses', label: 'Address Book',  icon: 'location_on',   href: `${prefix}/dashboard/addresses` },
+      { key: 'cart',      label: 'Shopping Cart', icon: 'shopping_cart', href: `${prefix}/dashboard/cart` },
+    ];
+---
+
+<aside class="w-56 shrink-0 hidden md:block">
+  <nav class="bg-white rounded-xl border border-border overflow-hidden shadow-sm">
+    <ul class="py-2">
+      {navItems.map((item) => {
+        const isActive = item.key === activeSection;
+        return (
+          <li>
+            <a
+              href={item.href}
+              class={`flex items-center gap-3 px-4 py-3 text-sm font-medium transition-colors duration-150 border-r-4 ${
+                isActive
+                  ? 'bg-[var(--primary-alpha-7)] text-primary border-primary font-bold'
+                  : 'text-body-color border-transparent hover:bg-[var(--primary-alpha-4)] hover:text-primary'
+              }`}
+            >
+              <span
+                class="material-symbols-outlined text-[20px] leading-none"
+                style={isActive ? "font-variation-settings: 'FILL' 1" : ''}
+              >
+                {item.icon}
+              </span>
+              {item.label}
+            </a>
+          </li>
+        );
+      })}
+    </ul>
+    <div class="border-t border-border py-2">
+      <button
+        id="sidebar-logout-btn"
+        class="flex items-center gap-3 px-4 py-3 w-full text-sm font-medium text-body-color hover:text-red-500 hover:bg-red-50 transition-colors bg-transparent border-none cursor-pointer text-left"
+      >
+        <span class="material-symbols-outlined text-[20px] leading-none">logout</span>
+        {lang === 'es' ? 'Cerrar Sesión' : 'Sign Out'}
+      </button>
+    </div>
+  </nav>
+</aside>
+
+<nav class="md:hidden w-full mb-6 flex gap-2 overflow-x-auto pb-1">
+  {navItems.map((item) => {
+    const isActive = item.key === activeSection;
+    return (
+      <a
+        href={item.href}
+        class={`flex items-center gap-1.5 px-3 py-2 rounded-full text-xs font-bold whitespace-nowrap transition-all ${
+          isActive
+            ? 'bg-primary text-white'
+            : 'bg-white border border-border text-body-color hover:border-primary hover:text-primary'
+        }`}
+      >
+        <span class="material-symbols-outlined text-[14px] leading-none">{item.icon}</span>
+        {item.label}
+      </a>
+    );
+  })}
+</nav>
+
+<script>
+  document.getElementById('sidebar-logout-btn')?.addEventListener('click', async () => {
+    await fetch('/api/auth/logout', {
+      method: 'POST',
+      credentials: 'same-origin',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({}),
+    });
+    window.location.href = '/';
+  });
+</script>

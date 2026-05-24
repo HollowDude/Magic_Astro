@@ -21,6 +21,7 @@ export async function setSession(cookies: AstroCookies, user: SessionUser): Prom
   const payload: JWTPayload = {
     uid:         user.uid,
     name:        user.name,
+    mail:        user.mail,
     roles:       user.roles,
     csrfToken:   user.csrfToken,
     logoutToken: user.logoutToken,
@@ -52,6 +53,7 @@ export async function getSession(cookies: AstroCookies): Promise<SessionUser | n
     return {
       uid:         payload['uid']         as string,
       name:        payload['name']        as string,
+      mail:        payload['mail']        as string,
       roles:       payload['roles']       as string[],
       csrfToken:   payload['csrfToken']   as string,
       logoutToken: payload['logoutToken'] as string,

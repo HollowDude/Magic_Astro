@@ -1,0 +1,168 @@
+---
+export const prerender = false;
+
+import DashboardLayout from '@/layouts/DashboardLayout.astro';
+import { getSession } from '@/services/session.service';
+import { getUserProfile, getUserOrders, getUserAddresses } from '@/services/nodehive/nodehive.user';
+
+const session = await getSession(Astro.cookies);
+if (!session) return Astro.redirect('/en/login?redirect=/en/dashboard');
+
+const lang = 'en' as const;
+
+const [profile, orders, addresses] = await Promise.all([
+  getUserProfile(session.uid, lang),
+  getUserOrders(session.uid, lang, 3),
+  getUserAddresses(session.uid, lang),
+]);
+
+const displayName = profile?.displayName || session.name;
+const mail = profile?.mail || session.mail || '';
+const phone = profile?.phone || null;
+
+const defaultAddress = addresses.find(a => a.isDefault) ?? addresses[0] ?? null;
+
+const stateStyles: Record<string, { bg: string; text: string }> = {
+  placed:      { bg: 'bg-amber-100',   text: 'text-amber-700'  },
+  fulfillment: { bg: 'bg-blue-100',    text: 'text-blue-700'   },
+  completed:   { bg: 'bg-emerald-100', text: 'text-emerald-700'},
+  canceled:    { bg: 'bg-red-100',     text: 'text-red-600'    },
+  draft:       { bg: 'bg-gray-100',    text: 'text-gray-600'   },
+  validation:  { bg: 'bg-yellow-100',  text: 'text-yellow-700' },
+};
+---
+
+<DashboardLayout title="My Account" lang="en" activeSection="account">
+
+  <div class="mb-8">
+    <h1 class="text-2xl font-heading font-semibold text-headline tracking-tight">My Profile</h1>
+    <p class="text-sm text-body-color mt-1">Manage your personal information and view your activity.</p>
+  </div>
+
+  <section class="bg-white rounded-xl border border-border shadow-sm p-6 mb-5">
+    <div class="flex items-center justify-between mb-5">
+      <h2 class="text-base font-bold text-headline">Personal Information</h2>
+      <a
+        href="/en/dashboard/edit-profile"
+        class="inline-flex items-center gap-1.5 text-xs font-bold text-primary bg-[var(--primary-alpha-7)] hover:bg-[var(--primary-alpha-12)] px-3 py-1.5 rounded-lg transition-colors"
+      >
+        <span class="material-symbols-outlined text-[15px] leading-none">edit</span>
+        Edit Profile
+      </a>
+    </div>
+
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-y-5 gap-x-8">
+      <div>
+        <p class="text-[11px] font-bold text-body-color uppercase tracking-widest mb-1">Full Name</p>
+        <p class="text-sm font-semibold text-headline">
+          {displayName || <span class="text-body-color italic">Not registered</span>}
+        </p>
+      </div>
+      <div>
+        <p class="text-[11px] font-bold text-body-color uppercase tracking-widest mb-1">Email</p>
+        <p class="text-sm font-semibold text-headline break-all">
+          {mail || <span class="text-body-color italic">Not available</span>}
+        </p>
+      </div>
+      {phone && (
+        <div>
+          <p class="text-[11px] font-bold text-body-color uppercase tracking-widest mb-1">Phone</p>
+          <p class="text-sm font-semibold text-headline">{phone}</p>
+        </div>
+      )}
+    </div>
+  </section>
+
+  <section class="bg-white rounded-xl border border-border shadow-sm p-6 mb-5">
+    <div class="flex items-center justify-between mb-5">
+      <h2 class="text-base font-bold text-headline">Primary Address</h2>
+      <a
+        href="/en/dashboard/addresses"
+        class="inline-flex items-center gap-1.5 text-xs font-bold text-primary hover:underline"
+      >
+        Manage addresses
+        <span class="material-symbols-outlined text-[15px] leading-none">arrow_forward</span>
+      </a>
+    </div>
+
+    {defaultAddress ? (
+      <div class="flex flex-col sm:flex-row gap-6">
+        <div class="flex-1">
+          <p class="text-[11px] font-bold text-body-color uppercase tracking-widest mb-2">
+            <span class="material-symbols-outlined text-[13px] text-primary leading-none align-middle mr-0.5">location_on</span>
+            Shipping Address
+          </p>
+          <div class="text-sm text-headline leading-relaxed">
+            {(defaultAddress.firstName || defaultAddress.lastName) && (
+              <p class="font-semibold">{defaultAddress.firstName} {defaultAddress.lastName}</p>
+            )}
+            {defaultAddress.addressLine1 && <p>{defaultAddress.addressLine1}</p>}
+            {defaultAddress.addressLine2 && <p>{defaultAddress.addressLine2}</p>}
+            {(defaultAddress.city || defaultAddress.state) && (
+              <p>{defaultAddress.city}{defaultAddress.state ? `, ${defaultAddress.state}` : ''}{defaultAddress.postalCode ? ` ${defaultAddress.postalCode}` : ''}</p>
+            )}
+            {defaultAddress.countryCode && <p>{defaultAddress.countryCode}</p>}
+          </div>
+        </div>
+        <div class="sm:text-right">
+          <a href="/en/dashboard/addresses" class="text-xs font-bold text-primary hover:underline">Edit address</a>
+        </div>
+      </div>
+    ) : (
+      <div class="text-center py-6">
+        <span class="material-symbols-outlined text-[2rem] text-muted opacity-30">location_off</span>
+        <p class="text-sm text-body-color mt-2 mb-4">No addresses saved yet.</p>
+        <a href="/en/dashboard/addresses" class="text-sm font-bold text-primary hover:underline">Add address</a>
+      </div>
+    )}
+  </section>
+
+  <section class="bg-white rounded-xl border border-border shadow-sm p-6">
+    <div class="flex items-center justify-between mb-5">
+      <h2 class="text-base font-bold text-headline">Recent Orders</h2>
+      <a
+        href="/en/dashboard/orders"
+        class="inline-flex items-center gap-1.5 text-xs font-bold text-primary hover:underline"
+      >
+        View all
+        <span class="material-symbols-outlined text-[15px] leading-none">arrow_forward</span>
+      </a>
+    </div>
+
+    {orders.length === 0 ? (
+      <div class="text-center py-10">
+        <span class="material-symbols-outlined text-[2.5rem] text-muted opacity-30">shopping_bag</span>
+        <p class="text-sm text-body-color mt-2 mb-4">You have no orders yet.</p>
+        <a href="/en/shop" class="text-sm font-bold text-primary hover:underline">Browse the shop</a>
+      </div>
+    ) : (
+      <div class="divide-y divide-border">
+        {orders.map((order) => {
+          const style = stateStyles[order.state] ?? stateStyles.placed;
+          return (
+            <a
+              href={`/en/dashboard/orders/${order.id}`}
+              class="flex items-center justify-between gap-4 py-4 hover:bg-[var(--primary-alpha-4)] -mx-2 px-2 rounded-lg transition-colors group"
+            >
+              <div class="flex-1 min-w-0">
+                <div class="flex items-center gap-3 flex-wrap">
+                  <span class="font-bold text-sm text-headline">#{order.orderNumber}</span>
+                  <span class={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold ${style.bg} ${style.text}`}>{order.stateLabel}</span>
+                </div>
+                <p class="text-xs text-body-color mt-0.5">
+                  {order.placedDateFormatted}
+                  {order.itemCount > 0 && ` · ${order.itemCount} item${order.itemCount !== 1 ? 's' : ''}`}
+                </p>
+              </div>
+              <div class="flex items-center gap-3 shrink-0">
+                <span class="font-bold text-sm text-headline">{order.totalFormatted}</span>
+                <span class="material-symbols-outlined text-[18px] text-body-color group-hover:text-primary transition-colors leading-none">chevron_right</span>
+              </div>
+            </a>
+          );
+        })}
+      </div>
+    )}
+  </section>
+
+</DashboardLayout>

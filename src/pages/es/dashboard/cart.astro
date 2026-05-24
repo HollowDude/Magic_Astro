@@ -1,0 +1,21 @@
+---
+export const prerender = false;
+
+import DashboardLayout from '@/layouts/DashboardLayout.astro';
+import { getLangFromUrl } from '@/i18n/utils';
+
+const lang = getLangFromUrl(Astro.url);
+---
+
+<DashboardLayout title="Carro de Compras — Maggy Flowers" lang={lang} activeSection="cart">
+  <div class="space-y-6">
+    <h1 class="font-heading text-2xl text-headline font-semibold">Carro de Compras</h1>
+
+    <div class="bg-white rounded-xl border border-border shadow-sm p-8 text-center">
+      <span class="material-symbols-outlined text-5xl text-muted opacity-30 mb-3 block">shopping_cart</span>
+      <h2 class="font-heading text-xl text-headline mb-2">Tu carrito está vacío</h2>
+      <p class="text-body-color mb-6">Agrega productos desde nuestra tienda para empezar.</p>
+      <a href="/es/shop" class="btn-primary inline-flex">Explorar tienda</a>
+    </div>
+  </div>
+</DashboardLayout>

@@ -1,0 +1,45 @@
+---
+import Header from '@/components/ui/Header.astro';
+import Footer from '@/components/ui/Footer.astro';
+import DashboardSidebar from '@/components/dashboard/DashboardSidebar.astro';
+import ContactModalWrapper from '@/components/ui/ContactModalWrapper.astro';
+import NodeHiveConnector from '@/components/nodehive/NodeHiveConnector.astro';
+import '@/styles/global.css';
+
+interface Props {
+  title?: string;
+  lang?: string;
+  activeSection?: 'account' | 'orders' | 'addresses' | 'cart';
+}
+
+const { title = 'Mi Cuenta', lang = 'es', activeSection = 'account' } = Astro.props;
+---
+
+<!doctype html>
+<html lang={lang}>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="robots" content="noindex" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <title>{title} — Maggy Flowers</title>
+    <script define:vars={{ nodehiveBaseUrl: import.meta.env.NODEHIVE_BASE_URL, nodehiveLang: lang }}>
+      window.__NODEHIVE_BASE_URL__ = nodehiveBaseUrl;
+      window.__NODEHIVE_LANG__ = nodehiveLang;
+    </script>
+  </head>
+  <body class="bg-background text-text-main font-body antialiased flex flex-col min-h-screen">
+    <Header />
+
+    <div class="flex flex-1 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 gap-8">
+      <DashboardSidebar lang={lang} activeSection={activeSection} />
+      <main class="flex-1 min-w-0">
+        <slot />
+      </main>
+    </div>
+
+    <Footer lang={lang} />
+    <ContactModalWrapper lang={lang} />
+    <NodeHiveConnector />
+  </body>
+</html>
