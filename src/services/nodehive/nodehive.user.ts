@@ -66,7 +66,11 @@ function formatOrderDate(timestamp: number | null, lang: Lang): string {
   });
 }
 
-export async function getUserProfile(uid: string, lang?: Lang): Promise<UserProfile | null> {
+export async function getUserProfile(
+  uid: string,
+  lang?: Lang,
+  accessToken?: string,
+): Promise<UserProfile | null> {
   try {
     const raw = await nodehiveFetch<Record<string, unknown>>(
       `/jsonapi/user/user?filter[drupal_internal__uid]=${uid}&page[limit]=1`,
@@ -84,11 +88,39 @@ export async function getUserProfile(uid: string, lang?: Lang): Promise<UserProf
     const user = Array.isArray(result) ? result[0] : result;
     if (!user) return null;
 
+    let username = '';
+    let mail = '';
+    let displayName = user.display_name ?? '';
+
+    const uidFromJson = user.drupal_internal__uid;
+    const numericUid = String(uidFromJson ?? uid);
+
+    // JSON:API solo expone display_name, intentar con REST para name y mail
+    if (accessToken) {
+      try {
+        const restRes = await nodehiveFetch<Record<string, unknown>>(
+          `/user/${numericUid}?_format=json`,
+          {
+            headers: { Accept: 'application/json' },
+            lang,
+            bearerToken: accessToken,
+          },
+        );
+        if (restRes.status === 200) {
+          const restData = restRes.data as Record<string, any>;
+          username = restData?.name?.[0]?.value ?? displayName;
+          mail = restData?.mail?.[0]?.value ?? '';
+        }
+      } catch {
+        // fallback si falla REST
+      }
+    }
+
     return {
       uid,
-      username: user.name ?? '',
-      mail: user.mail ?? '',
-      displayName: user.display_name ?? user.name ?? '',
+      username: username || displayName,
+      mail,
+      displayName,
       phone: user.field_phone_number ?? user.field_phone ?? null,
     };
   } catch (err) {

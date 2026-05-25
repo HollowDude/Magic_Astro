@@ -40,11 +40,11 @@ const stateStyles: Record<string, { bg: string; text: string }> = {
   </div>
 
   <section class="bg-white rounded-xl border border-border shadow-sm p-6 mb-5">
-    <div class="flex items-center justify-between mb-5">
+    <div class="flex items-start sm:items-center justify-between gap-3 mb-5">
       <h2 class="text-base font-bold text-headline">Personal Information</h2>
       <a
         href="/en/dashboard/edit-profile"
-        class="inline-flex items-center gap-1.5 text-xs font-bold text-primary bg-[var(--primary-alpha-7)] hover:bg-[var(--primary-alpha-12)] px-3 py-1.5 rounded-lg transition-colors"
+        class="inline-flex items-center gap-1.5 text-xs font-bold text-primary bg-[var(--primary-alpha-7)] hover:bg-[var(--primary-alpha-12)] px-3 py-1.5 rounded-lg transition-colors shrink-0"
       >
         <span class="material-symbols-outlined text-[15px] leading-none">edit</span>
         Edit Profile
@@ -74,11 +74,11 @@ const stateStyles: Record<string, { bg: string; text: string }> = {
   </section>
 
   <section class="bg-white rounded-xl border border-border shadow-sm p-6 mb-5">
-    <div class="flex items-center justify-between mb-5">
+    <div class="flex items-start sm:items-center justify-between gap-3 mb-5">
       <h2 class="text-base font-bold text-headline">Primary Address</h2>
       <a
         href="/en/dashboard/addresses"
-        class="inline-flex items-center gap-1.5 text-xs font-bold text-primary hover:underline"
+        class="inline-flex items-center gap-1.5 text-xs font-bold text-primary hover:underline shrink-0"
       >
         Manage addresses
         <span class="material-symbols-outlined text-[15px] leading-none">arrow_forward</span>
@@ -118,11 +118,11 @@ const stateStyles: Record<string, { bg: string; text: string }> = {
   </section>
 
   <section class="bg-white rounded-xl border border-border shadow-sm p-6">
-    <div class="flex items-center justify-between mb-5">
+    <div class="flex items-start sm:items-center justify-between gap-3 mb-5">
       <h2 class="text-base font-bold text-headline">Recent Orders</h2>
       <a
         href="/en/dashboard/orders"
-        class="inline-flex items-center gap-1.5 text-xs font-bold text-primary hover:underline"
+        class="inline-flex items-center gap-1.5 text-xs font-bold text-primary hover:underline shrink-0"
       >
         View all
         <span class="material-symbols-outlined text-[15px] leading-none">arrow_forward</span>

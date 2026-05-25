@@ -399,7 +399,7 @@ export default function AddressManager({ lang }: Props) {
                 )}
                 {a.countryCode && <p class="text-xs text-body-color">{countries.find(c => c.code === a.countryCode)?.name || a.countryCode}</p>}
               </div>
-              <div class="flex gap-2 mt-3 pt-3 border-t border-border opacity-0 group-hover:opacity-100 transition-opacity">
+              <div class="flex gap-2 mt-3 pt-3 border-t border-border">
                 <button onClick={() => openEditForm(a)} class="text-xs font-bold text-primary hover:underline">
                   {t.edit}
                 </button>
@@ -414,8 +414,8 @@ export default function AddressManager({ lang }: Props) {
 
       {/* Form Modal */}
       {showForm && (
-        <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4" onClick={closeForm}>
-          <div class="bg-white rounded-2xl shadow-xl w-full max-w-lg max-h-[90vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
+        <div class="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/40 p-0 sm:p-4" onClick={closeForm}>
+          <div class="bg-white rounded-t-2xl sm:rounded-2xl shadow-xl w-full sm:max-w-lg overflow-y-auto" style={{ maxHeight: '92dvh' }} onClick={e => e.stopPropagation()}>
             <div class="flex items-center justify-between p-5 border-b border-border">
               <h2 class="text-lg font-bold text-headline">{editingId ? t.editTitle : t.addTitle}</h2>
               <button onClick={closeForm} class="text-body-color hover:text-headline">
@@ -424,7 +424,7 @@ export default function AddressManager({ lang }: Props) {
             </div>
 
             <form onSubmit={handleSubmit} class="p-5 space-y-4">
-              <div class="grid grid-cols-2 gap-4">
+              <div class="grid gap-3" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))' }}>
                 <div>
                   <label class="field-label">{t.name}</label>
                   <input name="givenName" value={formData.givenName} onChange={handleInputChange} class="field-input !pl-3 mt-1" placeholder="John" />
@@ -473,7 +473,7 @@ export default function AddressManager({ lang }: Props) {
                 <input name="addressLine2" value={formData.addressLine2} onChange={handleInputChange} class="field-input !pl-3 mt-1" placeholder="Apt 4B" />
               </div>
 
-              <div class="grid grid-cols-2 gap-4">
+              <div class="grid gap-3" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))' }}>
                 <div>
                   <label class="field-label">{t.city} *</label>
                   <input name="locality" value={formData.locality} onChange={handleInputChange} class={`field-input !pl-3 mt-1 ${fieldErrors.locality ? '!border-red-400' : ''}`} placeholder="Miami" />
@@ -503,7 +503,7 @@ export default function AddressManager({ lang }: Props) {
                 </div>
               </div>
 
-              <div class="grid grid-cols-2 gap-4">
+              <div class="grid gap-3" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))' }}>
                 <div>
                   <label class="field-label">{t.postalCode} {formData.countryCode === 'US' ? '*' : ''}</label>
                   <input name="postalCode" value={formData.postalCode} onChange={handleInputChange} class={`field-input !pl-3 mt-1 ${fieldErrors.postalCode ? '!border-red-400' : ''}`} placeholder="33101" />

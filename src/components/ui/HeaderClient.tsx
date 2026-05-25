@@ -21,6 +21,7 @@ interface Props {
   lang:          Lang;
   navLinks?:     { label: string; href: string }[];
   headerLogoData?: HeaderLogoData | null;
+  userPicture?:  string | null;
 }
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -159,7 +160,7 @@ function SearchResultPanel({
 
 // ── HeaderClient ──────────────────────────────────────────────────────────────
 
-export default function HeaderClient({ isLoggedIn, currentPath, lang, navLinks: navLinksProp, headerLogoData }: Props) {
+export default function HeaderClient({ isLoggedIn, currentPath, lang, navLinks: navLinksProp, headerLogoData, userPicture }: Props) {
   const [mobileOpen,    setMobileOpen]    = useState(false);
   const [searchOpen,    setSearchOpen]    = useState(false);
   const [searchValue,   setSearchValue]   = useState('');
@@ -374,8 +375,12 @@ export default function HeaderClient({ isLoggedIn, currentPath, lang, navLinks: 
           {/* ── Auth ── */}
           {isLoggedIn ? (
             <>
-              <a href={`${getPrefix(lang)}/dashboard`} className="flex items-center justify-center w-[2.375rem] h-[2.375rem] rounded-full bg-[var(--primary-alpha-7)] text-text-main border-none cursor-pointer no-underline transition-all duration-200 shrink-0 hover:bg-[var(--primary-alpha-12)]" aria-label={t(lang, 'header.profile')}>
-                <span className="material-symbols-outlined text-[1.25rem] leading-none">account_circle</span>
+              <a href={`${getPrefix(lang)}/dashboard`} className="flex items-center justify-center w-[2.375rem] h-[2.375rem] rounded-full overflow-hidden bg-[var(--primary-alpha-7)] text-text-main border-none cursor-pointer no-underline transition-all duration-200 shrink-0 hover:bg-[var(--primary-alpha-12)]" aria-label={t(lang, 'header.profile')}>
+                {userPicture ? (
+                  <img src={userPicture} alt="" className="w-full h-full object-cover" />
+                ) : (
+                  <span className="material-symbols-outlined text-[1.25rem] leading-none">account_circle</span>
+                )}
               </a>
               <button className="relative flex items-center justify-center w-[2.375rem] h-[2.375rem] rounded-full bg-[var(--primary-alpha-7)] text-text-main border-none cursor-pointer transition-all duration-200 shrink-0 hover:bg-[var(--primary-alpha-12)]" aria-label={t(lang, 'header.cart')} disabled>
                 <span className="material-symbols-outlined text-[1.25rem] leading-none">shopping_bag</span>

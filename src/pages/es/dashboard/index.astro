@@ -40,11 +40,11 @@ const stateStyles: Record<string, { bg: string; text: string }> = {
   </div>
 
   <section class="bg-white rounded-xl border border-border shadow-sm p-6 mb-5">
-    <div class="flex items-center justify-between mb-5">
+    <div class="flex items-start sm:items-center justify-between gap-3 mb-5">
       <h2 class="text-base font-bold text-headline">Información Personal</h2>
       <a
         href="/es/dashboard/edit-profile"
-        class="inline-flex items-center gap-1.5 text-xs font-bold text-primary bg-[var(--primary-alpha-7)] hover:bg-[var(--primary-alpha-12)] px-3 py-1.5 rounded-lg transition-colors"
+        class="inline-flex items-center gap-1.5 text-xs font-bold text-primary bg-[var(--primary-alpha-7)] hover:bg-[var(--primary-alpha-12)] px-3 py-1.5 rounded-lg transition-colors shrink-0"
       >
         <span class="material-symbols-outlined text-[15px] leading-none">edit</span>
         Editar Perfil
@@ -74,11 +74,11 @@ const stateStyles: Record<string, { bg: string; text: string }> = {
   </section>
 
   <section class="bg-white rounded-xl border border-border shadow-sm p-6 mb-5">
-    <div class="flex items-center justify-between mb-5">
+    <div class="flex items-start sm:items-center justify-between gap-3 mb-5">
       <h2 class="text-base font-bold text-headline">Dirección Principal</h2>
       <a
         href="/es/dashboard/addresses"
-        class="inline-flex items-center gap-1.5 text-xs font-bold text-primary hover:underline"
+        class="inline-flex items-center gap-1.5 text-xs font-bold text-primary hover:underline shrink-0"
       >
         Gestionar direcciones
         <span class="material-symbols-outlined text-[15px] leading-none">arrow_forward</span>
@@ -118,11 +118,11 @@ const stateStyles: Record<string, { bg: string; text: string }> = {
   </section>
 
   <section class="bg-white rounded-xl border border-border shadow-sm p-6">
-    <div class="flex items-center justify-between mb-5">
+    <div class="flex items-start sm:items-center justify-between gap-3 mb-5">
       <h2 class="text-base font-bold text-headline">Pedidos Recientes</h2>
       <a
         href="/es/dashboard/orders"
-        class="inline-flex items-center gap-1.5 text-xs font-bold text-primary hover:underline"
+        class="inline-flex items-center gap-1.5 text-xs font-bold text-primary hover:underline shrink-0"
       >
         Ver todos
         <span class="material-symbols-outlined text-[15px] leading-none">arrow_forward</span>
@@ -142,20 +142,19 @@ const stateStyles: Record<string, { bg: string; text: string }> = {
           return (
             <a
               href={`/es/dashboard/orders/${order.id}`}
-              class="flex items-center justify-between gap-4 py-4 hover:bg-[var(--primary-alpha-4)] -mx-2 px-2 rounded-lg transition-colors group"
+              class="flex items-center justify-between gap-3 py-4 hover:bg-[var(--primary-alpha-4)] -mx-2 px-2 rounded-lg transition-colors group"
             >
               <div class="flex-1 min-w-0">
-                <div class="flex items-center gap-3 flex-wrap">
-                  <span class="font-bold text-sm text-headline">#{order.orderNumber}</span>
-                  <span class={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold ${style.bg} ${style.text}`}>{order.stateLabel}</span>
+                <div class="flex items-center gap-2 flex-wrap">
+                  <span class="font-bold text-sm text-headline whitespace-nowrap">#{order.orderNumber}</span>
+                  <span class={`inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-bold ${style.bg} ${style.text}`}>{order.stateLabel}</span>
                 </div>
-                <p class="text-xs text-body-color mt-0.5">
-                  {order.placedDateFormatted}
-                  {order.itemCount > 0 && ` · ${order.itemCount} artículo${order.itemCount !== 1 ? 's' : ''}`}
+                <p class="text-xs text-body-color mt-0.5 truncate">
+                  {order.placedDateFormatted}{order.itemCount > 0 ? ` · ${order.itemCount} art.` : ''}
                 </p>
               </div>
-              <div class="flex items-center gap-3 shrink-0">
-                <span class="font-bold text-sm text-headline">{order.totalFormatted}</span>
+              <div class="flex items-center gap-1.5 shrink-0">
+                <span class="font-bold text-sm text-headline whitespace-nowrap">{order.totalFormatted}</span>
                 <span class="material-symbols-outlined text-[18px] text-body-color group-hover:text-primary transition-colors leading-none">chevron_right</span>
               </div>
             </a>

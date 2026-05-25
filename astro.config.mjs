@@ -18,6 +18,11 @@ export default defineConfig({
     ssr: {
       external: ['nodemailer'],
     },
+    build: {
+      rollupOptions: {
+        external: ['nodemailer'],
+      },
+    },
     server: {
       headers: {
         'X-Frame-Options': 'ALLOWALL',

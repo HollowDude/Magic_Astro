@@ -64,13 +64,13 @@ const navItems = lang === 'es'
   </nav>
 </aside>
 
-<nav class="md:hidden w-full mb-6 flex gap-2 overflow-x-auto pb-1">
+<nav class="md:hidden w-full mb-6 flex gap-2 overflow-x-auto pb-2 -mx-4 px-4" style="scrollbar-width: none; -ms-overflow-style: none;">
   {navItems.map((item) => {
     const isActive = item.key === activeSection;
     return (
       <a
         href={item.href}
-        class={`flex items-center gap-1.5 px-3 py-2 rounded-full text-xs font-bold whitespace-nowrap transition-all ${
+        class={`flex items-center gap-1.5 px-3 py-2 rounded-full text-xs font-bold whitespace-nowrap transition-all shrink-0 ${
           isActive
             ? 'bg-primary text-white'
             : 'bg-white border border-border text-body-color hover:border-primary hover:text-primary'

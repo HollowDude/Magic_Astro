@@ -6,11 +6,26 @@ import { getSession } from '@/services/session.service';
 import { getLangFromUrl, getPrefix } from '@/i18n/utils';
 import { getHeaderLogoData } from '@/services/nodehive/nodehive.header';
 import type { Lang } from '@/i18n/ui';
+import { existsSync, readdirSync } from 'node:fs';
+import path from 'node:path';
 
 const session     = await getSession(Astro.cookies);
 const isLoggedIn  = !!session;
 const currentPath = Astro.url.pathname;
 const lang = (Astro.currentLocale ?? getLangFromUrl(Astro.url)) as 'es' | 'en';
+
+// Check for uploaded profile picture
+let userPicture: string | null = null;
+if (session) {
+  const uploadsDir = path.resolve(process.cwd(), 'data/uploads/profiles');
+  try {
+    if (existsSync(uploadsDir)) {
+      const files = readdirSync(uploadsDir);
+      const match = files.find(f => f.startsWith(`${session.uid}.`));
+      if (match) userPicture = `/api/files/profiles/${match}`;
+    }
+  } catch { /* ignore */ }
+}
 
 interface MenuLink {
   title: string;
@@ -52,6 +67,7 @@ const headerLogo = await getHeaderLogoData(lang);
     lang={lang}
     navLinks={navLinks}
     headerLogoData={headerLogo}
+    userPicture={userPicture}
     client:load
   />
 </ClientErrorBoundary>
