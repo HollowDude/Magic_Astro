@@ -64,33 +64,44 @@ const navItems = lang === 'es'
   </nav>
 </aside>
 
-<nav class="md:hidden w-full mb-6 flex gap-2 overflow-x-auto pb-2 -mx-4 px-4" style="scrollbar-width: none; -ms-overflow-style: none;">
-  {navItems.map((item) => {
-    const isActive = item.key === activeSection;
-    return (
-      <a
-        href={item.href}
-        class={`flex items-center gap-1.5 px-3 py-2 rounded-full text-xs font-bold whitespace-nowrap transition-all shrink-0 ${
-          isActive
-            ? 'bg-primary text-white'
-            : 'bg-white border border-border text-body-color hover:border-primary hover:text-primary'
-        }`}
-      >
-        <span class="material-symbols-outlined text-[14px] leading-none">{item.icon}</span>
-        {item.label}
-      </a>
-    );
-  })}
+<nav class="md:hidden w-full mb-6">
+  <div class="flex gap-2 overflow-x-auto pb-1 -mx-4 px-4" style="scrollbar-width: none; -ms-overflow-style: none;">
+    {navItems.map((item) => {
+      const isActive = item.key === activeSection;
+      return (
+        <a
+          href={item.href}
+          class={`flex items-center gap-1.5 px-4 py-2.5 rounded-full text-sm font-bold whitespace-nowrap transition-all shrink-0 ${
+            isActive
+              ? 'bg-primary text-white shadow-sm'
+              : 'bg-white border border-border text-body-color hover:border-primary hover:text-primary'
+          }`}
+        >
+          <span class="material-symbols-outlined text-[16px] leading-none" style={isActive ? "font-variation-settings: 'FILL' 1" : ''}>{item.icon}</span>
+          {item.label}
+        </a>
+      );
+    })}
+    <button
+      id="sidebar-logout-btn-mobile"
+      class="flex items-center gap-1.5 px-4 py-2.5 rounded-full text-sm font-bold whitespace-nowrap shrink-0 bg-white border border-border text-red-400 hover:bg-red-50 hover:border-red-300 transition-all"
+    >
+      <span class="material-symbols-outlined text-[16px] leading-none">logout</span>
+      {lang === 'es' ? 'Salir' : 'Sign Out'}
+    </button>
+  </div>
 </nav>
 
 <script>
-  document.getElementById('sidebar-logout-btn')?.addEventListener('click', async () => {
-    await fetch('/api/auth/logout', {
-      method: 'POST',
-      credentials: 'same-origin',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({}),
+  ['sidebar-logout-btn', 'sidebar-logout-btn-mobile'].forEach(id => {
+    document.getElementById(id)?.addEventListener('click', async () => {
+      await fetch('/api/auth/logout', {
+        method: 'POST',
+        credentials: 'same-origin',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({}),
+      });
+      window.location.href = '/';
     });
-    window.location.href = '/';
   });
 </script>

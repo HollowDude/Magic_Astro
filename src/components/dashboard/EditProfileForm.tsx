@@ -139,9 +139,9 @@ export default function EditProfileForm({ lang, initialName, initialMail, initia
         <span class="text-headline font-semibold">{t.title}</span>
       </nav>
 
-      <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div class="grid grid-cols-1 sm:grid-cols-[auto_1fr] lg:grid-cols-3 gap-6">
         {/* Profile picture */}
-        <div class="bg-white rounded-xl border border-border shadow-sm p-6 flex flex-col items-center gap-4">
+        <div class="bg-white rounded-xl border border-border shadow-sm p-6 flex flex-col items-center gap-4 sm:w-48 sm:shrink-0">
           <div class="w-28 h-28 rounded-full overflow-hidden bg-background-muted border-2 border-border flex items-center justify-center">
             {picture ? (
               <img src={picture} alt="" class="w-full h-full object-cover" />

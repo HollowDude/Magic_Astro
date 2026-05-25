@@ -415,7 +415,7 @@ export default function AddressManager({ lang }: Props) {
       {/* Form Modal */}
       {showForm && (
         <div class="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/40 p-0 sm:p-4" onClick={closeForm}>
-          <div class="bg-white rounded-t-2xl sm:rounded-2xl shadow-xl w-full sm:max-w-lg overflow-y-auto" style={{ maxHeight: '92dvh' }} onClick={e => e.stopPropagation()}>
+          <div class="bg-white rounded-t-2xl sm:rounded-2xl shadow-xl w-full sm:max-w-lg overflow-y-auto" style={{ maxHeight: 'min(92dvh, 90vh)' }} onClick={e => e.stopPropagation()}>
             <div class="flex items-center justify-between p-5 border-b border-border">
               <h2 class="text-lg font-bold text-headline">{editingId ? t.editTitle : t.addTitle}</h2>
               <button onClick={closeForm} class="text-body-color hover:text-headline">
@@ -424,7 +424,7 @@ export default function AddressManager({ lang }: Props) {
             </div>
 
             <form onSubmit={handleSubmit} class="p-5 space-y-4">
-              <div class="grid gap-3" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))' }}>
+              <div class="grid grid-cols-2 gap-3">
                 <div>
                   <label class="field-label">{t.name}</label>
                   <input name="givenName" value={formData.givenName} onChange={handleInputChange} class="field-input !pl-3 mt-1" placeholder="John" />
