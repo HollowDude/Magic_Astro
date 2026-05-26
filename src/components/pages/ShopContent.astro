@@ -13,11 +13,13 @@ import { useTranslations, getLangFromUrl } from '@/i18n/utils';
 import type { Lang } from '@/i18n/ui';
 import type { ProductCardData } from '@/components/shop/ProductCard';
 import type { ShopCategory, SortKey, ShopFilterKey } from '@/components/shop/ShopClient';
+import { getSession } from '@/services/session.service';
 
 const lang   = (Astro.currentLocale ?? getLangFromUrl(Astro.url)) as Lang;
 const t      = useTranslations(lang);
 const isEn   = lang === 'en';
 const prefix = `/${lang}`;
+const isLoggedIn = !!(await getSession(Astro.cookies));
 const DRUPAL_BASE_URL = import.meta.env.NODEHIVE_BASE_URL as string;
 
 const shopPage = await getShopPageData(lang);
@@ -144,6 +146,7 @@ const fallbackProducts: ProductCardData[] = isEn
         colorHex: '#d1495b',
         category: 'Roses',
         ocasiones: ['Aniversary', 'Wedding'],
+        variationId: null,
       },
       {
         id: 'fallback-pastel-bouquet',
@@ -158,6 +161,7 @@ const fallbackProducts: ProductCardData[] = isEn
         colorHex: '#f2a0a0',
         category: 'Mixed',
         ocasiones: ['Birthday'],
+        variationId: null,
       },
       {
         id: 'fallback-tulip-white',
@@ -172,6 +176,7 @@ const fallbackProducts: ProductCardData[] = isEn
         colorHex: '#f5f5f5',
         category: 'Tulips',
         ocasiones: ['Condolence'],
+        variationId: null,
       },
       {
         id: 'fallback-box-deluxe',
@@ -186,6 +191,7 @@ const fallbackProducts: ProductCardData[] = isEn
         colorHex: '#f3e7d3',
         category: 'Events',
         ocasiones: ['Wedding', 'Aniversary'],
+        variationId: null,
       },
       {
         id: 'fallback-dry-center',
@@ -200,6 +206,7 @@ const fallbackProducts: ProductCardData[] = isEn
         colorHex: '#d8c3a5',
         category: 'Events',
         ocasiones: [],
+        variationId: null,
       },
       {
         id: 'fallback-spring-set',
@@ -214,6 +221,7 @@ const fallbackProducts: ProductCardData[] = isEn
         colorHex: '#f2c94c',
         category: 'Mixed',
         ocasiones: ['Birthday'],
+        variationId: null,
       },
     ]
   : [
@@ -230,6 +238,7 @@ const fallbackProducts: ProductCardData[] = isEn
         colorHex: '#d1495b',
         category: 'Rosas',
         ocasiones: ['Aniversario', 'Bodas'],
+        variationId: null,
       },
       {
         id: 'fallback-bouquet-pastel',
@@ -244,6 +253,7 @@ const fallbackProducts: ProductCardData[] = isEn
         colorHex: '#f2a0a0',
         category: 'Mixtos',
         ocasiones: ['Cumpleaños'],
+        variationId: null,
       },
       {
         id: 'fallback-tulipanes-blancos',
@@ -258,6 +268,7 @@ const fallbackProducts: ProductCardData[] = isEn
         colorHex: '#f5f5f5',
         category: 'Tulipanes',
         ocasiones: ['Condolencias'],
+        variationId: null,
       },
       {
         id: 'fallback-box-deluxe',
@@ -272,6 +283,7 @@ const fallbackProducts: ProductCardData[] = isEn
         colorHex: '#f3e7d3',
         category: 'Eventos',
         ocasiones: ['Bodas', 'Aniversario'],
+        variationId: null,
       },
       {
         id: 'fallback-centro-seco',
@@ -286,6 +298,7 @@ const fallbackProducts: ProductCardData[] = isEn
         colorHex: '#d8c3a5',
         category: 'Eventos',
         ocasiones: [],
+        variationId: null,
       },
       {
         id: 'fallback-set-primaveral',
@@ -300,6 +313,7 @@ const fallbackProducts: ProductCardData[] = isEn
         colorHex: '#f2c94c',
         category: 'Mixtos',
         ocasiones: ['Cumpleaños'],
+        variationId: null,
       },
     ];
 
@@ -322,6 +336,7 @@ const products: ProductCardData[] = rawProducts.length > 0
         tipo:        (v?.field_type ?? null)?.toLowerCase() ?? null,
         colorName:   v?.field_color?.name   ?? null,
         colorHex:    v?.field_color?.field_color_hex ?? null,
+        variationId: v?.drupal_internal__variation_id ?? null,
         category:    p.field_category?.name           ?? null,
         ocasiones:   (() => {
             const raw = p.field_ocasion;
@@ -386,6 +401,7 @@ const categories: ShopCategory[] = rawCategories.length > 0
           products={products}
           categories={categories}
           lang={lang}
+          isLoggedIn={isLoggedIn}
           initialCat={initialCat}
           initialPrice={initialPrice}
           initialColors={initialColors}

@@ -21,6 +21,7 @@ export interface ProductCardData {
   colorHex: string | null;
   category: string | null;
   ocasiones: string[];
+  variationId: number | null;
 }
 
 const COLOR_FALLBACK_MAP: Record<string, string> = {
@@ -46,12 +47,35 @@ interface Props {
   product: ProductCardData;
   lang?: Lang;
   href?: string;
+  isLoggedIn?: boolean;
 }
 
-export default function ProductCard({ product, lang = 'es', href }: Props) {
+export default function ProductCard({ product, lang = 'es', href, isLoggedIn = false }: Props) {
   const resolvedHex = resolveColorHex(product.colorName, product.colorHex);
   const dotFill = resolvedHex || (product.colorName ? 'var(--muted)' : 'transparent');
   const dotBorder = resolvedHex || (product.colorName ? 'var(--muted)' : 'var(--border)');
+
+  const handleAddToCart = async () => {
+    if (!isLoggedIn) {
+      window.location.href = `/${lang}/login?redirect=${encodeURIComponent(window.location.pathname)}`;
+      return;
+    }
+    if (!product.variationId) return;
+    try {
+      const res = await fetch('/api/cart/add', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify([{
+          purchased_entity_type: 'commerce_product_variation',
+          purchased_entity_id: product.variationId,
+          quantity: 1,
+          combine: true,
+        }]),
+      });
+      if (!res.ok) throw new Error('Cart API error');
+      window.dispatchEvent(new CustomEvent('cart:updated'));
+    } catch {}
+  };
 
   return (
     <article className="group relative flex flex-col bg-white rounded-xl overflow-hidden border border-border transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_12px_36px_var(--headline-alpha-12)]">
@@ -126,10 +150,9 @@ export default function ProductCard({ product, lang = 'es', href }: Props) {
         </div>
 
         <button
-          className="relative z-20 w-full h-10.5 bg-muted text-white rounded-lg font-body text-sm font-bold flex items-center justify-center gap-2 opacity-88 transition-all duration-200 cursor-not-allowed group-hover:bg-primary group-hover:opacity-100"
+          onClick={handleAddToCart}
+          className="relative z-20 w-full h-10.5 bg-primary text-white rounded-lg font-body text-sm font-bold flex items-center justify-center gap-2 transition-all duration-200 hover:brightness-110 cursor-pointer"
           type="button"
-          disabled
-          title={lang === 'es' ? 'Próximamente' : 'Coming soon'}
         >
           <span className="material-symbols-outlined !text-[1.125rem] leading-none">
             shopping_bag

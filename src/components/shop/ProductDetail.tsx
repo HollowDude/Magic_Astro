@@ -20,6 +20,7 @@ export interface ProductDetailData {
   colorName: string | null;
   colorHex: string | null;
   category: string | null;
+  variationId: number | null;
 }
 
 interface Props {
@@ -28,23 +29,31 @@ interface Props {
   isLoggedIn: boolean;
 }
 
-const RIBBON_COLORS = [
-  { key: 'red',   hex: '#c0392b' },
-  { key: 'gold',  hex: '#d4ac0d' },
-  { key: 'silver',hex: '#a8a9ad' },
-  { key: 'white', hex: '#ffffff' },
+interface RibbonColorDef {
+  uuid: string;
+  name: string;
+  hex: string;
+}
+
+const RIBBON_COLORS: RibbonColorDef[] = [
+  { uuid: 'd8987a10-0db1-42bf-aa13-1da1c14b1870', name: 'Red',   hex: '#c0392b' },
+  { uuid: 'e615fc4b-9caf-4b4d-9d3c-5f31d2a55a44', name: 'Yellow',hex: '#d4ac0d' },
+  { uuid: '504b04ad-e74c-4f03-ade1-c5d4ce0af999', name: 'Gray',  hex: '#a8a9ad' },
+  { uuid: 'afe8e4c1-d329-4cb2-807e-78e2065ec451', name: 'White', hex: '#ffffff' },
 ] as const;
+
+const MAX_CHARS = 250;
 
 export default function ProductDetail({ product, lang, isLoggedIn }: Props) {
   const [activeImg, setActiveImg] = useState(0);
   const [message, setMessage] = useState('');
   const [imgLoaded, setImgLoaded] = useState(false);
   const [isZooming, setIsZooming] = useState(false);
-  const [ribbonColor, setRibbonColor] = useState<string | null>(null);
+  const [ribbonColorUuid, setRibbonColorUuid] = useState<string | null>(null);
+  const [hasCard, setHasCard] = useState(false);
   const [addedToast, setAddedToast] = useState(false);
 
   const mainImgRef = useRef<HTMLImageElement>(null);
-  const MAX_CHARS = 250;
   const images = product.images;
   const hasImages = images.length > 0;
 
@@ -82,6 +91,8 @@ export default function ProductDetail({ product, lang, isLoggedIn }: Props) {
     setIsZooming(true);
   }, [hasImages, imgLoaded]);
 
+  const handleMouseLeave = useCallback(() => setIsZooming(false), []);
+
   const handleContact = () => {
     window.dispatchEvent(new CustomEvent('open-contact-modal'));
   };
@@ -90,13 +101,48 @@ export default function ProductDetail({ product, lang, isLoggedIn }: Props) {
     ? (ui[lang] as Record<string, string>)[`shop.filters.type.${product.tipo}`] ?? product.tipo
     : null;
 
-  const handleAddToCart = () => {
+  const ribbonColorDef = ribbonColorUuid
+    ? RIBBON_COLORS.find(c => c.uuid === ribbonColorUuid) ?? null
+    : null;
+
+  const handleAddToCart = async () => {
     if (!isLoggedIn) {
       window.location.href = loginHref;
       return;
     }
-    setAddedToast(true);
-    setTimeout(() => setAddedToast(false), 3000);
+    if (!product.variationId) {
+      setAddedToast(true);
+      setTimeout(() => setAddedToast(false), 3000);
+      return;
+    }
+    try {
+      const body = [{
+        purchased_entity_type: 'commerce_product_variation',
+        purchased_entity_id: product.variationId,
+        quantity: 1,
+        combine: true,
+      }] as any[];
+
+      if (hasCard && message.trim()) {
+        body[0].cardMessage = message.trim();
+      }
+      if (ribbonColorUuid) {
+        body[0].ribbonColor = ribbonColorUuid;
+      }
+
+      const res = await fetch('/api/cart/add', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
+      });
+      if (!res.ok) throw new Error('Cart API error');
+      window.dispatchEvent(new CustomEvent('cart:updated'));
+      setAddedToast(true);
+      setTimeout(() => setAddedToast(false), 3000);
+    } catch {
+      setAddedToast(true);
+      setTimeout(() => setAddedToast(false), 3000);
+    }
   };
 
   return (
@@ -105,13 +151,12 @@ export default function ProductDetail({ product, lang, isLoggedIn }: Props) {
       {/* ═══════════════ GALERÍA ═══════════════ */}
       <div className="flex flex-col gap-4 lg:sticky lg:top-24">
 
-        {/* Contenedor Imagen Principal */}
         <div
           className={`group relative aspect-[4/5] rounded-2xl overflow-hidden bg-blush isolation-auto ${
             isZooming && imgLoaded ? 'cursor-crosshair' : 'cursor-default'
           }`}
           onMouseEnter={handleMouseEnter}
-          onMouseLeave={() => setIsZooming(false)}
+          onMouseLeave={handleMouseLeave}
           onMouseMove={handleMouseMove}
         >
           {hasImages ? (
@@ -227,65 +272,92 @@ export default function ProductDetail({ product, lang, isLoggedIn }: Props) {
           />
         )}
 
-        {/* Personalización */}
-        <div className="bg-[var(--primary-blush-tint)] border border-border rounded-2xl p-5">
-          <label htmlFor="pd-message" className="block font-body text-sm font-bold text-headline mb-1.5">
-            {t(lang, 'product.personalization.label')}
-          </label>
-          <p className="font-body text-xs text-muted leading-relaxed mb-3">
-            {t(lang, 'product.personalization.hint')}
-          </p>
-          <div className="relative">
-            <textarea
-              id="pd-message"
-              value={message}
-              onChange={e => setMessage(e.target.value.slice(0, MAX_CHARS))}
-              placeholder={t(lang, 'product.personalization.placeholder')}
-              rows={3}
-              className={`w-full rounded-lg border-1.5 bg-white p-3.5 pb-7 font-body text-sm text-headline outline-none transition-all duration-200 focus:border-primary focus:ring-3 focus:ring-primary/12 ${
-                message.length >= MAX_CHARS ? 'border-primary/70' : 'border-border'
-              }`}
-            />
-            <span className={`absolute bottom-2 right-3.5 font-body text-[11px] font-medium pointer-events-none transition-colors ${
-              message.length >= MAX_CHARS ? 'text-primary font-bold' : 'text-muted'
-            }`}>
-              {message.length}/{MAX_CHARS}
-            </span>
-          </div>
-        </div>
-
-        {/* Selector de moño */}
-        <div className="bg-[var(--primary-blush-tint)] border border-border rounded-2xl p-5">
-          <p className="block font-body text-sm font-bold text-headline mb-3">
-            {t(lang, 'product.ribbon.label')}
-          </p>
-          <div className="flex flex-wrap items-center gap-2.5">
-            {RIBBON_COLORS.map((c) => (
-              <button
-                key={c.key}
-                type="button"
-                onClick={() => setRibbonColor(ribbonColor === c.key ? null : c.key)}
-                className={`w-9 h-9 rounded-full border-2 transition-all duration-150 cursor-pointer shrink-0 ${
-                  ribbonColor === c.key
-                    ? 'border-primary scale-110 shadow-[0_0_0_2px_white,0_0_0_4px_var(--primary)]'
-                    : 'border-black/15 hover:scale-105'
-                }`}
-                style={{ background: c.hex }}
-                aria-label={t(lang, `product.ribbon.${c.key}` as UiKey)}
-                title={t(lang, `product.ribbon.${c.key}` as UiKey)}
-              />
-            ))}
-            {ribbonColor && (
+        {/* ═══ Tarjeta personalizada ═══ */}
+        {hasCard ? (
+          <div className="bg-[var(--primary-blush-tint)] border border-border rounded-2xl p-5">
+            <div className="flex items-center justify-between mb-3">
+              <p className="font-body text-sm font-bold text-headline">
+                {t(lang, 'product.card.label')}
+              </p>
               <button
                 type="button"
-                onClick={() => setRibbonColor(null)}
-                className="font-body text-[12px] text-muted hover:text-primary underline underline-offset-2 cursor-pointer bg-transparent border-none p-0 transition-colors"
+                onClick={() => { setHasCard(false); setMessage(''); }}
+                className="font-body text-xs text-muted hover:text-red-500 underline underline-offset-2 cursor-pointer bg-transparent border-none p-0 transition-colors"
               >
-                {t(lang, 'product.ribbon.none')}
+                {t(lang, 'product.card.remove')}
               </button>
-            )}
+            </div>
+            <div className="relative">
+              <textarea
+                value={message}
+                onChange={e => setMessage(e.target.value.slice(0, MAX_CHARS))}
+                placeholder={t(lang, 'product.card.placeholder')}
+                rows={3}
+                className={`w-full rounded-lg border-1.5 bg-white p-3.5 pb-7 font-body text-sm text-headline outline-none transition-all duration-200 focus:border-primary focus:ring-3 focus:ring-primary/12 ${
+                  message.length >= MAX_CHARS ? 'border-primary/70' : 'border-border'
+                }`}
+              />
+              <span className={`absolute bottom-2 right-3.5 font-body text-[11px] font-medium pointer-events-none transition-colors ${
+                message.length >= MAX_CHARS ? 'text-primary font-bold' : 'text-muted'
+              }`}>
+                {message.length}/{MAX_CHARS}
+              </span>
+            </div>
           </div>
-        </div>
+        ) : (
+          <button
+            type="button"
+            onClick={() => setHasCard(true)}
+            className="flex items-center justify-center gap-2 w-full h-12 bg-[var(--primary-blush-tint)] border border-dashed border-border rounded-2xl font-body text-sm font-bold text-headline hover:border-primary hover:text-primary transition-all duration-200 cursor-pointer"
+          >
+            <span className="material-symbols-outlined !text-lg leading-none">add</span>
+            {t(lang, 'product.card.add')}
+          </button>
+        )}
+
+        {/* ═══ Selector de cinta ═══ */}
+        {ribbonColorUuid ? (
+          <div className="bg-[var(--primary-blush-tint)] border border-border rounded-2xl p-5">
+            <div className="flex items-center justify-between mb-3">
+              <p className="font-body text-sm font-bold text-headline">
+                {t(lang, 'product.ribbon.label')}
+              </p>
+              <button
+                type="button"
+                onClick={() => setRibbonColorUuid(null)}
+                className="font-body text-xs text-muted hover:text-red-500 underline underline-offset-2 cursor-pointer bg-transparent border-none p-0 transition-colors"
+              >
+                {t(lang, 'product.ribbon.remove')}
+              </button>
+            </div>
+            <div className="flex flex-wrap items-center gap-2.5">
+              {RIBBON_COLORS.map((c) => (
+                <button
+                  key={c.uuid}
+                  type="button"
+                  onClick={() => setRibbonColorUuid(c.uuid)}
+                  className={`w-9 h-9 rounded-full border-2 transition-all duration-150 cursor-pointer shrink-0 ${
+                    ribbonColorUuid === c.uuid
+                      ? 'border-primary scale-110 shadow-[0_0_0_2px_white,0_0_0_4px_var(--primary)]'
+                      : 'border-black/15 hover:scale-105'
+                  }`}
+                  style={{ background: c.hex }}
+                  aria-label={c.name}
+                  title={c.name}
+                />
+              ))}
+            </div>
+          </div>
+        ) : (
+          <button
+            type="button"
+            onClick={() => setRibbonColorUuid(RIBBON_COLORS[0].uuid)}
+            className="flex items-center justify-center gap-2 w-full h-12 bg-[var(--primary-blush-tint)] border border-dashed border-border rounded-2xl font-body text-sm font-bold text-headline hover:border-primary hover:text-primary transition-all duration-200 cursor-pointer"
+          >
+            <span className="material-symbols-outlined !text-lg leading-none">add</span>
+            {t(lang, 'product.ribbon.add')}
+          </button>
+        )}
 
         {/* Botones de acción */}
         <div className="flex flex-col sm:flex-row gap-3">

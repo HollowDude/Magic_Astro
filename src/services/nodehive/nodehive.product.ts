@@ -32,12 +32,13 @@ function buildBaseParams(p: DrupalJsonApiParams): void {
      'title', 'body', 'field_description', 'field_category',
      'field_ocasion', 'field_tag', 'variations',
    ])
-   .addFields('commerce_product_variation--flower', [
-     'sku', 'price', 'title',
-     'field_color',
-     'field_gallery_of_photos',
-     'field_type',
-   ])
+    .addFields('commerce_product_variation--flower', [
+      'drupal_internal__variation_id',
+      'sku', 'price', 'title',
+      'field_color',
+      'field_gallery_of_photos',
+      'field_type',
+    ])
    .addFields('file--file',                      ['filename', 'uri', 'filemime'])
    .addFields('media--image',                    ['name', 'field_media_image'])
    .addFields('taxonomy_term--colors',           ['name', 'field_color_hex'])
@@ -103,6 +104,7 @@ export async function getProductDetailPageData(
     id: string; title: string; price: string; description: string;
     images: string[]; badge: null; tag: string | null; tipo: string | null;
     colorName: string | null; colorHex: string | null; category: string | null;
+    variationId: number | null;
   };
   relatedProducts: Array<{
     id: string; title: string; price: string; priceNumber: number;
@@ -135,6 +137,7 @@ export async function getProductDetailPageData(
     colorName:   variation?.field_color?.name                  ?? null,
     colorHex:    variation?.field_color?.field_color_hex       ?? null,
     category:    product.field_category?.name                  ?? null,
+    variationId: variation?.drupal_internal__variation_id      ?? null,
   };
 
   const rawRelated = await getRelatedProducts(product, lang, 4);

@@ -14,9 +14,10 @@ const isLoggedIn  = !!session;
 const currentPath = Astro.url.pathname;
 const lang = (Astro.currentLocale ?? getLangFromUrl(Astro.url)) as 'es' | 'en';
 
-// Check for uploaded profile picture
+// Check for profile picture: local upload first, then Drupal user_picture
 let userPicture: string | null = null;
 if (session) {
+  // Local upload takes priority (user's most recent action)
   const uploadsDir = path.resolve(process.cwd(), 'data/uploads/profiles');
   try {
     if (existsSync(uploadsDir)) {
@@ -25,6 +26,27 @@ if (session) {
       if (match) userPicture = `/api/files/profiles/${match}`;
     }
   } catch { /* ignore */ }
+
+  // Fall back to Drupal user_picture
+  if (!userPicture && session.accessToken) {
+    try {
+      const restRes = await nodehiveFetch<Record<string, unknown>>(
+        `/user/${session.uid}?_format=json`,
+        {
+          headers: { Accept: 'application/json' },
+          lang,
+          bearerToken: session.accessToken,
+        },
+      );
+      if (restRes.status === 200) {
+        const restData = restRes.data as Record<string, any>;
+        const pictureUrl = restData?.user_picture?.[0]?.url;
+        if (pictureUrl) {
+          userPicture = `/api/files/drupal-proxy?url=${encodeURIComponent(pictureUrl)}`;
+        }
+      }
+    } catch { /* ignore */ }
+  }
 }
 
 interface MenuLink {

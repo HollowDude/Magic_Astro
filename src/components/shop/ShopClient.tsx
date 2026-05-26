@@ -31,6 +31,7 @@ interface Props {
   products:      ProductCardData[];
   categories:    ShopCategory[];
   lang:          Lang;
+  isLoggedIn?:   boolean;
   initialCat?:    string;
   initialPrice?:  string;
   initialColors?: string;
@@ -231,7 +232,7 @@ function SidebarContent({
 // ── ShopClient ────────────────────────────────────────────────────────────────
 
 export default function ShopClient({
-  products, categories, lang,
+  products, categories, lang, isLoggedIn = false,
   initialCat    = '',
   initialPrice  = '',
   initialColors = '',
@@ -538,6 +539,7 @@ export default function ShopClient({
                 product={product}
                 lang={lang}
                 href={`/${lang}/${product.id}`}
+                isLoggedIn={isLoggedIn}
               />
             ))}
           </div>

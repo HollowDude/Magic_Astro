@@ -10,6 +10,7 @@ export interface UserProfile {
   mail: string;
   displayName: string;
   phone: string | null;
+  userPicture: string | null;
 }
 
 export interface UserAddress {
@@ -91,6 +92,7 @@ export async function getUserProfile(
     let username = '';
     let mail = '';
     let displayName = user.display_name ?? '';
+    let userPictureUrl: string | null = null;
 
     const uidFromJson = user.drupal_internal__uid;
     const numericUid = String(uidFromJson ?? uid);
@@ -110,6 +112,10 @@ export async function getUserProfile(
           const restData = restRes.data as Record<string, any>;
           username = restData?.name?.[0]?.value ?? displayName;
           mail = restData?.mail?.[0]?.value ?? '';
+          const pictureData = restData?.user_picture?.[0];
+          if (pictureData?.url) {
+            userPictureUrl = pictureData.url;
+          }
         }
       } catch {
         // fallback si falla REST
@@ -122,6 +128,7 @@ export async function getUserProfile(
       mail,
       displayName,
       phone: user.field_phone_number ?? user.field_phone ?? null,
+      userPicture: userPictureUrl,
     };
   } catch (err) {
     console.error('[User] getUserProfile error:', err);

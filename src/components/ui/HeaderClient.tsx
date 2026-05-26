@@ -167,6 +167,46 @@ export default function HeaderClient({ isLoggedIn, currentPath, lang, navLinks: 
   const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
   const [searchLoading, setSearchLoading] = useState(false);
   const [hasMore,       setHasMore]       = useState(false);
+  const [cartCount, setCartCount] = useState(0);
+  const [cartOpen, setCartOpen] = useState(false);
+  const [cartData, setCartData] = useState<{
+    items: Array<{
+      itemId: number; variationId: number | null; title: string; sku: string;
+      price: string; quantity: number; totalPrice: string; thumbnailUrl: string | null;
+      hasCard: boolean; cardMessage: string | null;
+      ribbonColor: { name: string; hex: string } | null;
+    }>;
+    totalItems: number; totalPrice: string;
+  }>({ items: [], totalItems: 0, totalPrice: '' });
+
+  const cartBtnRef = useRef<HTMLDivElement>(null);
+
+  const fetchCartData = useCallback(async () => {
+    try {
+      const res = await fetch('/api/cart/');
+      if (!res.ok) return;
+      const json = await res.json();
+      setCartData(json);
+      setCartCount(json.totalItems ?? 0);
+    } catch {}
+  }, []);
+
+  useEffect(() => {
+    if (!isLoggedIn) return;
+    fetchCartData();
+    const handler = () => fetchCartData();
+    window.addEventListener('cart:updated', handler);
+    return () => window.removeEventListener('cart:updated', handler);
+  }, [isLoggedIn, fetchCartData]);
+
+  useEffect(() => {
+    if (!cartOpen) return;
+    const handler = (e: MouseEvent) => {
+      if (!cartBtnRef.current?.contains(e.target as Node)) setCartOpen(false);
+    };
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, [cartOpen]);
 
   const inputRef    = useRef<HTMLInputElement>(null);
   const pillRef     = useRef<HTMLDivElement>(null);
@@ -382,10 +422,108 @@ export default function HeaderClient({ isLoggedIn, currentPath, lang, navLinks: 
                   <span className="material-symbols-outlined text-[1.25rem] leading-none">account_circle</span>
                 )}
               </a>
-              <button className="relative flex items-center justify-center w-[2.375rem] h-[2.375rem] rounded-full bg-[var(--primary-alpha-7)] text-text-main border-none cursor-pointer transition-all duration-200 shrink-0 hover:bg-[var(--primary-alpha-12)]" aria-label={t(lang, 'header.cart')} disabled>
-                <span className="material-symbols-outlined text-[1.25rem] leading-none">shopping_bag</span>
-                <span className="absolute -top-1 -right-1 flex items-center justify-center w-4 h-4 rounded-full bg-primary text-white text-[0.5625rem] font-bold font-body">0</span>
-              </button>
+              <div ref={cartBtnRef} className="relative">
+                <button
+                  onClick={() => setCartOpen(v => !v)}
+                  className="relative flex items-center justify-center w-[2.375rem] h-[2.375rem] rounded-full bg-[var(--primary-alpha-7)] text-text-main border-none cursor-pointer transition-all duration-200 shrink-0 hover:bg-[var(--primary-alpha-12)]"
+                  aria-label={t(lang, 'header.cart')}
+                >
+                  <span className="material-symbols-outlined text-[1.25rem] leading-none">shopping_bag</span>
+                  {cartCount > 0 && (
+                    <span className="absolute -top-1 -right-1 flex items-center justify-center min-w-[1rem] h-4 px-[0.3125rem] rounded-full bg-primary text-white text-[0.5625rem] font-bold font-body">{cartCount}</span>
+                  )}
+                </button>
+
+                {/* ═══ Mini cart dropdown ═══ */}
+                {cartOpen && (
+                  <div className="absolute top-[calc(100%+0.5rem)] right-0 w-[22rem] max-sm:fixed max-sm:inset-x-4 max-sm:w-auto bg-white rounded-2xl border border-border shadow-xl z-[100] overflow-hidden">
+                    <div className="flex items-center justify-between px-5 py-4 border-b border-border">
+                      <span className="font-body text-sm font-bold text-headline">{t(lang, 'header.cart')}</span>
+                      <button
+                        onClick={() => setCartOpen(false)}
+                        className="flex items-center justify-center w-6 h-6 rounded-full bg-transparent text-muted hover:text-headline hover:bg-blush border-none cursor-pointer transition-colors"
+                        aria-label="Close"
+                      >
+                        <span className="material-symbols-outlined !text-base leading-none">close</span>
+                      </button>
+                    </div>
+
+                    {cartData.items.length === 0 ? (
+                      <div className="flex flex-col items-center gap-2 py-8 px-5 text-center">
+                        <span className="material-symbols-outlined text-3xl text-muted opacity-30 leading-none">shopping_cart</span>
+                        <p className="font-body text-sm text-muted m-0">{t(lang, 'header.cart_empty')}</p>
+                        <a
+                          href={shopHref}
+                          onClick={() => setCartOpen(false)}
+                          className="btn-primary text-xs h-9 mt-1"
+                        >
+                          {t(lang, 'nav.shop')}
+                        </a>
+                      </div>
+                    ) : (
+                      <>
+                        <div className="max-h-[18rem] overflow-y-auto divide-y divide-border">
+                          {cartData.items.slice(0, 8).map(item => (
+                            <div key={item.itemId} className="flex items-center gap-3 px-5 py-3">
+                              <div className="w-10 h-10 rounded-lg overflow-hidden bg-blush shrink-0">
+                                {item.thumbnailUrl ? (
+                                  <img src={item.thumbnailUrl} alt={item.title} className="w-full h-full object-cover" loading="lazy" />
+                                ) : (
+                                  <div className="w-full h-full flex items-center justify-center">
+                                    <span className="material-symbols-outlined text-lg text-primary opacity-40 leading-none">local_florist</span>
+                                  </div>
+                                )}
+                              </div>
+                              <div className="flex-1 min-w-0">
+                                <p className="font-body text-sm font-semibold text-headline truncate">{item.title}</p>
+                                <p className="font-body text-xs text-muted mt-px">{item.price}</p>
+                                {(item.hasCard || item.ribbonColor) && (
+                                  <div className="flex items-center gap-2 mt-0.5">
+                                    {item.hasCard && (
+                                      <span className="inline-flex items-center font-body text-muted/70" title={item.cardMessage ?? 'Con tarjeta'}>
+                                        <span className="material-symbols-outlined !text-xs leading-none">mail</span>
+                                      </span>
+                                    )}
+                                    {item.ribbonColor && (
+                                      <span className="inline-flex items-center gap-0.5 font-body text-[10px] text-muted/70" title={t(lang, 'cart.with_ribbon')}>
+                                        <span className="w-2 h-2 rounded-full shrink-0" style={{ background: item.ribbonColor.hex, border: '1px solid rgba(0,0,0,0.12)' }} />
+                                      </span>
+                                    )}
+                                  </div>
+                                )}
+                              </div>
+                              <div className="text-right shrink-0">
+                                <span className="font-body text-xs text-muted block">x{item.quantity}</span>
+                                <span className="font-body text-xs font-bold text-headline">{item.totalPrice}</span>
+                              </div>
+                            </div>
+                          ))}
+                          {cartData.items.length > 8 && (
+                            <div className="px-5 py-2 text-center">
+                              <span className="font-body text-xs text-muted">+{cartData.items.length - 8} más</span>
+                            </div>
+                          )}
+                        </div>
+
+                        <div className="flex items-center justify-between px-5 py-4 border-t border-border bg-blush/30">
+                          <span className="font-body text-sm font-semibold text-headline">{t(lang, 'header.cart_total')}</span>
+                          <span className="font-heading text-lg font-bold text-headline">{cartData.totalPrice}</span>
+                        </div>
+
+                        <div className="flex items-center gap-2 px-5 py-4 border-t border-border">
+                          <a
+                            href={`${getPrefix(lang)}/dashboard/cart`}
+                            onClick={() => setCartOpen(false)}
+                            className="flex-1 flex items-center justify-center h-10 rounded-xl bg-primary text-white font-body text-sm font-bold no-underline cursor-pointer transition-colors hover:bg-primary-dark"
+                          >
+                            {t(lang, 'header.cart_view')}
+                          </a>
+                        </div>
+                      </>
+                    )}
+                  </div>
+                )}
+              </div>
             </>
           ) : (
             <a

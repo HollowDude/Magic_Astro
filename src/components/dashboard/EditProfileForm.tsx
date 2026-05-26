@@ -166,7 +166,14 @@ export default function EditProfileForm({ lang, initialName, initialMail, initia
               </button>
               {picture && (
                 <button type="button" onClick={async () => {
-                  // TODO: implement remove picture via API
+                  try {
+                    const res = await fetch('/api/user/delete-picture', { method: 'POST' });
+                    const data = await res.json();
+                    if (data.ok) {
+                      setPicture(null);
+                      setSuccessMsg(lang === 'es' ? 'Foto eliminada.' : 'Photo removed.');
+                    }
+                  } catch { /* ignore */ }
                 }} class="text-xs text-red-500 hover:underline">
                   {t.removePhoto}
                 </button>

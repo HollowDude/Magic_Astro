@@ -115,8 +115,9 @@ export default function CoursesHero({
             className="w-full h-full object-cover"
           />
           <div className="absolute inset-0 bg-gradient-to-r from-black/70 via-black/35 to-transparent" />
-          <div className="absolute inset-0 flex items-center px-4 sm:px-8 md:px-20">
-            <div className="max-w-full sm:max-w-xl text-white">
+          <div className="absolute inset-0 flex items-center">
+            <div className="w-full max-w-[1200px] mx-auto px-4 md:px-10">
+              <div className="max-w-xl text-white">
               {slide.badgeText && (
                 <span
                   className={`inline-block ${BADGE_COLORS[slide.badgeColor ?? 'primary'] ?? 'bg-primary'} text-white text-xs font-black uppercase tracking-widest px-3 py-1 rounded-full mb-4`}
@@ -166,6 +167,7 @@ export default function CoursesHero({
               )}
             </div>
           </div>
+        </div>
         </div>
       ))}
 

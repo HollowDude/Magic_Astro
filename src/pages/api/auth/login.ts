@@ -25,10 +25,24 @@ export const POST: APIRoute = async ({ request, cookies }) => {
     return json({ ok: false, error: result.error }, status);
   }
 
-  await setSession(cookies, result.data); // ← await
+  await setSession(cookies, result.data);
 
-  const { csrfToken: _c, logoutToken: _l, ...publicUser } = result.data;
-  return json({ ok: true, user: publicUser }, 200);
+  const { csrfToken: _c, logoutToken: _l, sessionCookie: _s, accessToken: _a, ...publicUser } = result.data;
+
+  const responseHeaders: Record<string, string> = { 'Content-Type': 'application/json' };
+
+  if (result.data.sessionCookie) {
+    const cookieMatch = result.data.sessionCookie.match(/^([^=]+=[^;]+)/);
+    if (cookieMatch) {
+      const encoded = encodeURIComponent(cookieMatch[1]);
+      responseHeaders['Set-Cookie'] = `drupal_s=${encoded}; Path=/api/cart; HttpOnly; SameSite=Lax; Max-Age=2000000`;
+    }
+  }
+
+  return new Response(JSON.stringify({ ok: true, user: publicUser }), {
+    status: 200,
+    headers: responseHeaders,
+  });
 };
 
 function json(data: unknown, status: number): Response {

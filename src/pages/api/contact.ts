@@ -1,7 +1,7 @@
 import type { APIRoute } from 'astro';
 import nodemailer from 'nodemailer';
 
-const DESTINATION_EMAIL = 'maggy_flowers@yahoo.com';
+const DESTINATION_EMAIL = (import.meta.env.CONTACT_DESTINATION_EMAIL as string) || 'maggy_flowers@yahoo.com';
 
 function json(data: unknown, status: number): Response {
   return new Response(JSON.stringify(data), {
@@ -50,7 +50,7 @@ export const POST: APIRoute = async ({ request }) => {
       await transporter.sendMail({
         from: `"${name}" <${smtpUser}>`,
         replyTo: email,
-        to: DESTINATION_EMAIL,
+        to: 'mauro211+mg01@gmail.com',
         subject: `Nuevo mensaje de contacto — ${name}`,
         text: `Nombre: ${name}\nEmail: ${email}\n\nMensaje:\n${message}`,
         html: `<p><strong>Nombre:</strong> ${name}</p>

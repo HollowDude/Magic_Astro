@@ -104,7 +104,7 @@ const items = Array.isArray(order?.order_items) ? order.order_items : [];
         ) : (
           <div class="divide-y divide-border">
             {items.map((item: any) => (
-              <div class="flex items-center justify-between gap-4 py-4">
+              <div class="flex items-start justify-between gap-4 py-4">
                 <div class="flex-1 min-w-0">
                   <p class="text-sm font-semibold text-headline truncate">{item.title}</p>
                   <p class="text-xs text-body-color mt-0.5">Cantidad: {Math.round(parseFloat(item.quantity ?? '1'))} · {item.unit_price?.formatted ?? ''}</p>

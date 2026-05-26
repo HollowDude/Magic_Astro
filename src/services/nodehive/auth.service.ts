@@ -20,6 +20,8 @@ export interface SessionUser {
   roles: string[];
   csrfToken: string;
   logoutToken: string;
+  accessToken?: string;
+  sessionCookie?: string;
 }
 
 export interface LoginResult {
@@ -73,6 +75,9 @@ export async function login(data: LoginData): Promise<LoginResult> {
       }
     }
 
+    const setCookie = res.headers.get('set-cookie') ?? '';
+    const sessionCookie = setCookie;
+
     return {
       ok: true,
       data: {
@@ -83,6 +88,7 @@ export async function login(data: LoginData): Promise<LoginResult> {
         csrfToken:   json.csrf_token   ?? '',
         logoutToken: json.logout_token ?? '',
         accessToken,
+        sessionCookie,
       },
     };
   } catch (err) {

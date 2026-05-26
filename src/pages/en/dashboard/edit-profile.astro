@@ -24,7 +24,7 @@ const userRes = await nodehiveFetch<Record<string, unknown>>(
 );
 const userUuid = (userRes.data as any)?.data?.[0]?.id ?? '';
 
-// Check for existing profile picture
+// Check for profile picture: local upload first, then Drupal user_picture
 let userPicture: string | null = null;
 const uploadsDir = path.resolve(process.cwd(), 'data/uploads/profiles');
 try {
@@ -34,6 +34,26 @@ try {
     if (match) userPicture = `/api/files/profiles/${match}`;
   }
 } catch { /* ignore */ }
+
+if (!userPicture && session.accessToken) {
+  try {
+    const restRes = await nodehiveFetch<Record<string, unknown>>(
+      `/user/${session.uid}?_format=json`,
+      {
+        headers: { Accept: 'application/json' },
+        lang,
+        bearerToken: session.accessToken,
+      },
+    );
+    if (restRes.status === 200) {
+      const restData = restRes.data as Record<string, any>;
+      const pictureUrl = restData?.user_picture?.[0]?.url;
+      if (pictureUrl) {
+        userPicture = `/api/files/drupal-proxy?url=${encodeURIComponent(pictureUrl)}`;
+      }
+    }
+  } catch { /* ignore */ }
+}
 ---
 
 <DashboardLayout title="Edit Profile — Maggy Flowers" lang={lang} activeSection="account">
