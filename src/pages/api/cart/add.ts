@@ -1,5 +1,5 @@
 import type { APIRoute } from 'astro';
-import { addToCart, RIBBON_COLOR_MAP } from '@/services/nodehive/nodehive.cart';
+import { addToCart, getCart, updateCartItem, RIBBON_COLOR_MAP } from '@/services/nodehive/nodehive.cart';
 import { nodehiveFetch } from '@/services/nodehive/nodehive.client';
 import { relayCartCookie } from './cookie-helper';
 
@@ -12,21 +12,164 @@ interface CartItemInput {
   ribbonColor?: string;
 }
 
+interface MatchKey {
+  variationId: number;
+  ribbonColorUuid: string | null;
+  cardMessage: string | null;
+}
+
+interface ExistingItemInfo {
+  orderItemId: number;
+  uuid: string;
+  orderId: number;
+  quantity: number;
+}
+
+async function fetchExistingCustomizations(
+  itemUuids: string[],
+): Promise<Map<number, { cardMessage: string | null; ribbonColorUuid: string | null }>> {
+  const map = new Map<number, { cardMessage: string | null; ribbonColorUuid: string | null }>();
+  if (itemUuids.length === 0) return map;
+
+  try {
+    const valueParams = itemUuids
+      .map(u => `filter[id][condition][value][]=${encodeURIComponent(u)}`)
+      .join('&');
+    const path = `/jsonapi/commerce_order_item/default?filter[id][condition][path]=id&filter[id][condition][operator]=IN&${valueParams}`;
+    const result = await nodehiveFetch<{ data: Array<Record<string, any>> }>(path, {
+      headers: { 'Content-Type': 'application/vnd.api+json', Accept: 'application/vnd.api+json' },
+      skipApiKey: false,
+      cacheTtl: 0,
+    });
+
+    if (result.status !== 200) return map;
+
+    for (const entry of result.data?.data ?? []) {
+      const internalId = entry?.attributes?.drupal_internal__order_item_id;
+      if (!internalId) continue;
+      const attrs = entry?.attributes ?? {};
+      const relData = entry?.relationships?.field_ribbon_color?.data;
+      map.set(internalId, {
+        cardMessage: attrs.field_card_message ?? null,
+        ribbonColorUuid: relData?.id ?? null,
+      });
+    }
+  } catch (e) {
+    console.error('[cart/add] fetchExistingCustomizations error:', e);
+  }
+
+  return map;
+}
+
+function findMatchingItem(
+  currentCart: any[],
+  customizationsMap: Map<number, { cardMessage: string | null; ribbonColorUuid: string | null }>,
+  target: MatchKey,
+): ExistingItemInfo | null {
+  for (const order of currentCart) {
+    for (const item of order.order_items ?? []) {
+      if (item.purchased_entity?.variation_id !== target.variationId) continue;
+
+      const cust = customizationsMap.get(item.order_item_id) ?? {
+        cardMessage: null,
+        ribbonColorUuid: null,
+      };
+
+      const ribbonMatch = (cust.ribbonColorUuid ?? null) === (target.ribbonColorUuid ?? null);
+      if (!ribbonMatch) continue;
+
+      const cardMatch = (cust.cardMessage ?? null) === (target.cardMessage ?? null);
+      if (!cardMatch) continue;
+
+      return {
+        orderItemId: item.order_item_id,
+        uuid: item.uuid,
+        orderId: order.order_id,
+        quantity: parseFloat(item.quantity) || 1,
+      };
+    }
+  }
+  return null;
+}
+
+async function patchOrderItemCustomizations(
+  itemUuid: string,
+  cardMessage: string | undefined,
+  ribbonColorUuid: string | undefined,
+  sessionCookie: string | undefined,
+): Promise<void> {
+  const baseUrl = (import.meta.env.NODEHIVE_BASE_URL as string).replace(/\/+$/, '');
+
+  let csrfToken: string | null = null;
+  try {
+    const csrfRes = await fetch(`${baseUrl}/session/token`, {
+      headers: { Cookie: sessionCookie ?? '' },
+    });
+    if (csrfRes.ok) csrfToken = await csrfRes.text();
+  } catch {
+    return;
+  }
+
+  if (!csrfToken) {
+    console.error('[cart/add] patchOrderItemCustomizations: no CSRF token');
+    return;
+  }
+
+  const patchBody: Record<string, unknown> = {
+    data: {
+      type: 'commerce_order_item--default',
+      id: itemUuid,
+      attributes: {
+        field_has_card: !!cardMessage,
+        ...(cardMessage ? { field_card_message: cardMessage } : {}),
+      },
+      ...(ribbonColorUuid ? {
+        relationships: {
+          field_ribbon_color: {
+            data: { type: 'taxonomy_term--ribbon_color', id: ribbonColorUuid },
+          },
+        },
+      } : {}),
+    },
+  };
+
+  try {
+    const patchRes = await nodehiveFetch(
+      `/jsonapi/commerce_order_item/default/${itemUuid}`,
+      {
+        method: 'PATCH',
+        body: patchBody,
+        headers: {
+          'Content-Type': 'application/vnd.api+json',
+          Accept: 'application/vnd.api+json',
+          'X-CSRF-Token': csrfToken,
+        },
+        sessionCookie,
+        skipApiKey: true,
+      },
+    );
+    if (patchRes.status !== 200) {
+      console.error(`[cart/add] PATCH customizations on ${itemUuid} returned ${patchRes.status}`);
+    }
+  } catch (e) {
+    console.error('[cart/add] PATCH customizations error:', e);
+  }
+}
+
 export const POST: APIRoute = async ({ request, cookies }) => {
   let body: unknown;
   try {
     body = await request.json();
   } catch {
-    return new Response(JSON.stringify({ ok: false, error: 'El cuerpo de la petición debe ser JSON.' }), {
+    return new Response(JSON.stringify({ ok: false, error: 'Invalid JSON body' }), {
       status: 400,
       headers: { 'Content-Type': 'application/json' },
     });
   }
 
   const items = body as CartItemInput[];
-
   if (!Array.isArray(items) || items.length === 0) {
-    return new Response(JSON.stringify({ ok: false, error: 'Debes enviar un array con al menos un producto.' }), {
+    return new Response(JSON.stringify({ ok: false, error: 'Array requerido con al menos un item' }), {
       status: 400,
       headers: { 'Content-Type': 'application/json' },
     });
@@ -35,95 +178,97 @@ export const POST: APIRoute = async ({ request, cookies }) => {
   const drupalSession = cookies.get('drupal_s')?.value;
   const decoded = drupalSession ? decodeURIComponent(drupalSession) : undefined;
 
-  const cartItems = items.map(({ cardMessage, ribbonColor, ...rest }) => rest);
-  const customizations = items.map(({ cardMessage, ribbonColor }) => ({ cardMessage, ribbonColor }));
+  const cartResult = await getCart(decoded);
+  const currentCart = (cartResult.data ?? []) as any[];
 
-  const result = await addToCart(cartItems, decoded);
+  const existingUuids = currentCart
+    .flatMap((o: any) => o.order_items ?? [])
+    .map((i: any) => i.uuid as string)
+    .filter(Boolean);
+  const customizationsMap = await fetchExistingCustomizations(existingUuids);
 
-  const createdItems = (result.data ?? []) as Array<{ uuid: string; order_item_id: number }>;
+  let latestSetCookie: Headers = cartResult.headers;
 
-  const setCookie = result.headers.get('set-cookie');
-  let sessionToUse = decoded;
-  if (setCookie) {
-    const rawSession = setCookie.match(/^([^=]+=[^;]+)/)?.[1];
-    if (rawSession) sessionToUse = rawSession;
-  }
+  const resultItems: Array<{
+    uuid: string;
+    order_item_id: number;
+    hasCard: boolean;
+    cardMessage: string | null;
+    ribbonColor: { name: string; hex: string } | null;
+  }> = [];
 
-  const hasCustomizations = customizations.some(c => c && (c.cardMessage || c.ribbonColor));
-  if (hasCustomizations && sessionToUse) {
-    const baseUrl = (import.meta.env.NODEHIVE_BASE_URL as string).replace(/\/+$/, '');
-    let csrfToken: string | null = null;
-    try {
-      const csrfRes = await fetch(`${baseUrl}/session/token`, {
-        headers: { Cookie: sessionToUse },
+  for (const item of items) {
+    const { cardMessage, ribbonColor: ribbonColorUuid, ...cartItemBase } = item;
+    const inputQty = cartItemBase.quantity ?? 1;
+
+    const normalizedCard = cardMessage?.trim() || null;
+    const normalizedRibbon = ribbonColorUuid?.trim() || null;
+
+    const target: MatchKey = {
+      variationId: cartItemBase.purchased_entity_id,
+      ribbonColorUuid: normalizedRibbon,
+      cardMessage: normalizedCard,
+    };
+
+    const existing = findMatchingItem(currentCart, customizationsMap, target);
+
+    if (existing) {
+      const newQty = existing.quantity + inputQty;
+      const updateRes = await updateCartItem(
+        existing.orderId,
+        existing.orderItemId,
+        newQty,
+        decoded,
+      );
+      latestSetCookie = updateRes.headers;
+
+      resultItems.push({
+        uuid: existing.uuid,
+        order_item_id: existing.orderItemId,
+        hasCard: !!normalizedCard,
+        cardMessage: normalizedCard,
+        ribbonColor: normalizedRibbon ? (RIBBON_COLOR_MAP[normalizedRibbon] ?? null) : null,
       });
-      if (csrfRes.ok) csrfToken = await csrfRes.text();
-    } catch { /* ignore */ }
-
-    if (csrfToken) {
-      for (let i = 0; i < createdItems.length; i++) {
-        const item = createdItems[i];
-        const cust = customizations[i] ?? customizations[0];
-        if (cust && (cust.cardMessage || cust.ribbonColor)) {
-          const patchBody: Record<string, unknown> = {
-            data: {
-              type: 'commerce_order_item--default',
-              id: item.uuid,
-              attributes: { field_has_card: !!cust.cardMessage },
-            },
-          };
-          if (cust.cardMessage) {
-            (patchBody.data as Record<string, any>).attributes.field_card_message = cust.cardMessage;
-          }
-          if (cust.ribbonColor) {
-            (patchBody.data as Record<string, any>).relationships = {
-              field_ribbon_color: {
-                data: { type: 'taxonomy_term--ribbon_color', id: cust.ribbonColor },
-              },
-            };
-          }
-          try {
-            const patchRes = await nodehiveFetch(`/jsonapi/commerce_order_item/default/${item.uuid}`, {
-              method: 'PATCH',
-              body: patchBody,
-              headers: {
-                'Content-Type': 'application/vnd.api+json',
-                Accept: 'application/vnd.api+json',
-                'X-CSRF-Token': csrfToken,
-              },
-              sessionCookie: sessionToUse,
-              skipApiKey: true,
-            });
-            if (patchRes.status !== 200) {
-              console.error(`[cart/add] PATCH ${item.uuid} returned ${patchRes.status}`, patchRes.data);
-            }
-          } catch (e) {
-            console.error(`[cart/add] PATCH ${item.uuid} failed:`, e);
-          }
-        }
-      }
     } else {
-      console.error('[cart/add] Could not get CSRF token — customization not saved');
+      const addRes = await addToCart([{
+        ...cartItemBase,
+        combine: false,
+      }], decoded);
+      latestSetCookie = addRes.headers;
+
+      const newItem = (addRes.data ?? [])[0] as any;
+      if (!newItem) continue;
+
+      const setCookieHeader = addRes.headers.get('set-cookie');
+      let sessionForPatch = decoded;
+      if (setCookieHeader) {
+        const rawSession = setCookieHeader.match(/^([^=]+=[^;]+)/)?.[1];
+        if (rawSession) sessionForPatch = rawSession;
+      }
+
+      if (normalizedCard || normalizedRibbon) {
+        await patchOrderItemCustomizations(
+          newItem.uuid,
+          normalizedCard ?? undefined,
+          normalizedRibbon ?? undefined,
+          sessionForPatch,
+        );
+      }
+
+      resultItems.push({
+        uuid: newItem.uuid,
+        order_item_id: newItem.order_item_id,
+        hasCard: !!normalizedCard,
+        cardMessage: normalizedCard,
+        ribbonColor: normalizedRibbon ? (RIBBON_COLOR_MAP[normalizedRibbon] ?? null) : null,
+      });
     }
   }
 
-  const enrichedItems = createdItems.map((item, i) => {
-    const ribbonUuid = customizations[i]?.ribbonColor;
-    return {
-      ...item,
-      hasCard: !!(customizations[i]?.cardMessage),
-      cardMessage: customizations[i]?.cardMessage ?? null,
-      ribbonColor: ribbonUuid ? (RIBBON_COLOR_MAP[ribbonUuid] ?? null) : null,
-    };
-  });
-
   const headers: Record<string, string> = {
     'Content-Type': 'application/json',
-    ...relayCartCookie(result.headers, '/api/cart'),
+    ...relayCartCookie(latestSetCookie, '/api/cart'),
   };
 
-  return new Response(JSON.stringify(enrichedItems), {
-    status: 200,
-    headers,
-  });
+  return new Response(JSON.stringify(resultItems), { status: 200, headers });
 };

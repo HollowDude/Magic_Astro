@@ -105,11 +105,30 @@ export async function getProductDetailPageData(
     images: string[]; badge: null; tag: string | null; tipo: string | null;
     colorName: string | null; colorHex: string | null; category: string | null;
     variationId: number | null;
+    allVariations: Array<{
+      variationId: number | null;
+      drupalUuid: string | null;
+      colorName: string | null;
+      colorHex: string | null;
+      tipo: string | null;
+      images: string[];
+      price: string;
+    }>;
   };
   relatedProducts: Array<{
     id: string; title: string; price: string; priceNumber: number;
     thumbnail: string | null; badge: null; tag: string | null; tipo: string | null;
     colorName: string | null; colorHex: string | null; category: string | null;
+    ocasiones: string[];
+    variationId: number | null;
+    variations: Array<{
+      variationId: number | null;
+      drupalUuid: string | null;
+      colorName: string | null;
+      colorHex: string | null;
+      tipo: string | null;
+      thumbnail: string | null;
+    }>;
   }>;
 } | null> {
   const NODEHIVE_BASE_URL = import.meta.env.NODEHIVE_BASE_URL as string;
@@ -133,11 +152,20 @@ export async function getProductDetailPageData(
         if (raw && typeof raw === 'object' && (raw as any).name) return (raw as any).name;
         return null;
       })(),
-    tipo:        variation?.field_type                         ?? null,
+      tipo:        (variation?.field_type ?? null)?.toLowerCase() ?? null,
     colorName:   variation?.field_color?.name                  ?? null,
     colorHex:    variation?.field_color?.field_color_hex       ?? null,
     category:    product.field_category?.name                  ?? null,
     variationId: variation?.drupal_internal__variation_id      ?? null,
+      allVariations: (Array.isArray(product.variations) ? product.variations : []).map(v => ({
+        variationId: v?.drupal_internal__variation_id ?? null,
+        drupalUuid: v?.id ?? null,
+        colorName: v?.field_color?.name ?? null,
+        colorHex: v?.field_color?.field_color_hex ?? null,
+        tipo: (v?.field_type ?? null)?.toLowerCase() ?? null,
+        images: v ? getVariationGallery(v, NODEHIVE_BASE_URL) : [],
+        price: v?.price?.formatted ?? '',
+      })),
   };
 
   const rawRelated = await getRelatedProducts(product, lang, 4);
@@ -157,10 +185,28 @@ export async function getProductDetailPageData(
           if (raw && typeof raw === 'object' && (raw as any).name) return (raw as any).name;
           return null;
         })(),
-      tipo:        v?.field_type                         ?? null,
+      tipo:        (v?.field_type ?? null)?.toLowerCase() ?? null,
       colorName:   v?.field_color?.name                  ?? null,
       colorHex:    v?.field_color?.field_color_hex       ?? null,
       category:    p.field_category?.name                ?? null,
+      ocasiones:   (() => {
+          const raw = p.field_ocasion;
+          if (Array.isArray(raw)) return raw.map((o: any) => o.name ?? '').filter(Boolean);
+          if (raw && typeof raw === 'object' && raw.name) return [raw.name];
+          return [];
+        })(),
+      variationId: v?.drupal_internal__variation_id      ?? null,
+      variations: (Array.isArray(p.variations) ? p.variations : []).map(variation => ({
+        variationId: variation?.drupal_internal__variation_id ?? null,
+        drupalUuid: variation?.id ?? null,
+        colorName: variation?.field_color?.name ?? null,
+        colorHex: variation?.field_color?.field_color_hex ?? null,
+        tipo: (variation?.field_type ?? null)?.toLowerCase() ?? null,
+        thumbnail: (() => {
+          const gallery = variation ? getVariationGallery(variation, NODEHIVE_BASE_URL) : [];
+          return gallery[0] ?? null;
+        })(),
+      })),
     };
   });
 

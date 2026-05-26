@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { ui, defaultLang } from '@/i18n/ui';
 import type { Lang, UiKey } from '@/i18n/ui';
 
@@ -21,12 +21,43 @@ export interface ProductDetailData {
   colorHex: string | null;
   category: string | null;
   variationId: number | null;
+  allVariations: VariationDetailData[];
+}
+
+export interface VariationDetailData {
+  variationId: number | null;
+  drupalUuid: string | null;
+  colorName: string | null;
+  colorHex: string | null;
+  tipo: string | null;
+  images: string[];
+  price: string;
 }
 
 interface Props {
   product: ProductDetailData;
   lang: Lang;
   isLoggedIn: boolean;
+  selectedVariationId?: string | null;
+}
+
+const COLOR_FALLBACK_MAP: Record<string, string> = {
+  orange: '#f97316', naranja: '#f97316',
+  pink: '#f9a8d4', rosa: '#f9a8d4',
+  purple: '#a855f7', morado: '#a855f7', lila: '#a855f7',
+  red: '#ef4444', rojo: '#ef4444',
+  white: '#f5f5f5', blanco: '#f5f5f5',
+  yellow: '#fde047', amarillo: '#fde047',
+  blue: '#3b82f6', azul: '#3b82f6',
+  green: '#22c55e', verde: '#22c55e',
+  ivory: '#f3e7d3', marfil: '#f3e7d3',
+  beige: '#d8c3a5',
+};
+
+function resolveColorHex(name: string | null, hex: string | null): string {
+  if (hex) return hex.startsWith('#') ? hex : `#${hex}`;
+  if (!name) return '';
+  return COLOR_FALLBACK_MAP[name.toLowerCase()] ?? '';
 }
 
 interface RibbonColorDef {
@@ -44,7 +75,15 @@ const RIBBON_COLORS: RibbonColorDef[] = [
 
 const MAX_CHARS = 250;
 
-export default function ProductDetail({ product, lang, isLoggedIn }: Props) {
+export default function ProductDetail({ product, lang, isLoggedIn, selectedVariationId }: Props) {
+  const initialVarIndex = useMemo(() => {
+    if (!selectedVariationId || !product.allVariations?.length) return 0;
+    const parsed = parseInt(selectedVariationId, 10);
+    const idx = product.allVariations.findIndex(v => v.variationId === parsed);
+    return idx >= 0 ? idx : 0;
+  }, [selectedVariationId, product.allVariations]);
+
+  const [activeVarIndex, setActiveVarIndex] = useState(initialVarIndex);
   const [activeImg, setActiveImg] = useState(0);
   const [message, setMessage] = useState('');
   const [imgLoaded, setImgLoaded] = useState(false);
@@ -53,8 +92,24 @@ export default function ProductDetail({ product, lang, isLoggedIn }: Props) {
   const [hasCard, setHasCard] = useState(false);
   const [addedToast, setAddedToast] = useState(false);
 
+  const allVariations = useMemo<VariationDetailData[]>(() => {
+    if (product.allVariations?.length) return product.allVariations;
+    return [{
+      variationId: product.variationId,
+      drupalUuid: null,
+      colorName: product.colorName,
+      colorHex: product.colorHex,
+      tipo: product.tipo,
+      images: product.images,
+      price: product.price,
+    }];
+  }, [product]);
+
+  const activeVar = allVariations[activeVarIndex] ?? allVariations[0];
+  const hasColorVariants = allVariations.some(v => v.colorName || v.colorHex);
+
   const mainImgRef = useRef<HTMLImageElement>(null);
-  const images = product.images;
+  const images = activeVar?.images ?? [];
   const hasImages = images.length > 0;
 
   const prefix = `/${lang}`;
@@ -70,6 +125,24 @@ export default function ProductDetail({ product, lang, isLoggedIn }: Props) {
       setImgLoaded(true);
     }
   }, [activeImg]);
+
+  useEffect(() => {
+    setActiveImg(0);
+    setImgLoaded(false);
+    const img = mainImgRef.current;
+    if (img && img.complete && img.naturalWidth > 0) {
+      setImgLoaded(true);
+    }
+  }, [activeVarIndex]);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const currentVar = allVariations[activeVarIndex];
+    if (!currentVar?.variationId) return;
+    const url = new URL(window.location.href);
+    url.searchParams.set('var', String(currentVar.variationId));
+    window.history.replaceState(null, '', url.toString());
+  }, [activeVarIndex, allVariations]);
 
   const handleMouseMove = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
     const rect = e.currentTarget.getBoundingClientRect();
@@ -97,9 +170,6 @@ export default function ProductDetail({ product, lang, isLoggedIn }: Props) {
     window.dispatchEvent(new CustomEvent('open-contact-modal'));
   };
   const loginHref = `${prefix}/login?redirect=${encodeURIComponent(`${prefix}/${product.id}`)}`;
-  const tipoLabel = product.tipo
-    ? (ui[lang] as Record<string, string>)[`shop.filters.type.${product.tipo}`] ?? product.tipo
-    : null;
 
   const ribbonColorDef = ribbonColorUuid
     ? RIBBON_COLORS.find(c => c.uuid === ribbonColorUuid) ?? null
@@ -110,7 +180,7 @@ export default function ProductDetail({ product, lang, isLoggedIn }: Props) {
       window.location.href = loginHref;
       return;
     }
-    if (!product.variationId) {
+    if (!activeVar?.variationId) {
       setAddedToast(true);
       setTimeout(() => setAddedToast(false), 3000);
       return;
@@ -118,7 +188,7 @@ export default function ProductDetail({ product, lang, isLoggedIn }: Props) {
     try {
       const body = [{
         purchased_entity_type: 'commerce_product_variation',
-        purchased_entity_id: product.variationId,
+        purchased_entity_id: activeVar.variationId,
         quantity: 1,
         combine: true,
       }] as any[];
@@ -191,12 +261,6 @@ export default function ProductDetail({ product, lang, isLoggedIn }: Props) {
             </span>
           )}
 
-          {product.badge && (
-            <span className="absolute top-4 right-4 bg-white/88 backdrop-blur-md px-3.5 py-1.5 rounded-full font-body text-[11px] font-extrabold tracking-widest uppercase text-primary z-10 pointer-events-none shadow-sm">
-              {product.badge}
-            </span>
-          )}
-
           {hasImages && imgLoaded && !isZooming && (
             <span className="absolute bottom-3 right-3 flex items-center gap-1 px-2.5 py-1 bg-white/82 backdrop-blur-md rounded-full font-body text-[11px] font-semibold text-headline pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-200 z-10">
               <span className="material-symbols-outlined !text-base leading-none">zoom_in</span>
@@ -241,29 +305,74 @@ export default function ProductDetail({ product, lang, isLoggedIn }: Props) {
 
         <div className="flex flex-wrap items-center gap-3.5">
           <span className="font-body text-3xl font-extrabold text-primary tracking-tight leading-none">
-            {product.price || t(lang, 'shop.price_on_request')}
+            {activeVar?.price || t(lang, 'shop.price_on_request')}
           </span>
-
-          <div className="flex flex-wrap items-center gap-2">
-            {product.colorName && (
-              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-blush border border-border font-body text-[13px] font-medium text-body-color">
-                <span
-                  className="w-3 h-3 rounded-full shrink-0"
-                  style={{
-                    background: product.colorHex || 'var(--muted)',
-                    border: `1.5px solid ${product.colorHex ? 'rgba(0,0,0,0.12)' : 'var(--border)'}`,
-                  }}
-                />
-                {product.colorName}
-              </span>
-            )}
-            {tipoLabel && (
-              <span className="inline-flex items-center px-3 py-1 rounded-full bg-sage-light border border-sage/25 text-[11px] font-bold uppercase tracking-wider text-[var(--sage-headline-tint)]">
-                {tipoLabel}
-              </span>
-            )}
-          </div>
         </div>
+
+        {hasColorVariants && (
+          <div className="flex flex-col gap-2">
+            <p className="font-body text-sm font-semibold text-headline">
+              {lang === 'es' ? 'Color:' : 'Color:'}{' '}
+              <span className="font-normal text-body-color">{activeVar?.colorName ?? ''}</span>
+            </p>
+            <div className="flex flex-wrap gap-2.5">
+              {allVariations.map((v, idx) => {
+                const hex = resolveColorHex(v.colorName, v.colorHex);
+                if (!hex && !v.colorName) return null;
+                const isActive = idx === activeVarIndex;
+                return (
+                  <button
+                    key={idx}
+                    type="button"
+                    title={v.colorName ?? undefined}
+                    onClick={() => setActiveVarIndex(idx)}
+                    className={`w-8 h-8 rounded-full border-2 transition-all duration-150 cursor-pointer ${
+                      isActive
+                        ? 'border-primary scale-110 shadow-[0_0_0_2px_white,0_0_0_4px_var(--primary)]'
+                        : 'border-black/15 hover:scale-105'
+                    }`}
+                    style={{ background: hex || 'var(--muted)' }}
+                    aria-label={v.colorName ?? (lang === 'es' ? `Variacion ${idx + 1}` : `Variation ${idx + 1}`)}
+                    aria-pressed={isActive}
+                  />
+                );
+              })}
+            </div>
+          </div>
+        )}
+
+        {(() => {
+          const uniqueTypes = [...new Set(allVariations.map(v => v.tipo).filter(Boolean))];
+          if (uniqueTypes.length === 0) return null;
+          const hasMultipleTypes = uniqueTypes.length > 1;
+          return (
+            <div className="flex flex-wrap gap-2">
+              {uniqueTypes.map(tipo => {
+                const tipoKey = `shop.filters.type.${tipo}` as UiKey;
+                const label = (ui[lang] as Record<string, string>)[tipoKey] ?? tipo;
+                const isActive = activeVar?.tipo === tipo;
+                return (
+                  <button
+                    key={tipo}
+                    type="button"
+                    onClick={() => {
+                      if (!hasMultipleTypes) return;
+                      const idx = allVariations.findIndex(v => v.tipo === tipo);
+                      if (idx !== -1) setActiveVarIndex(idx);
+                    }}
+                    className={`px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wide border transition-all ${
+                      isActive
+                        ? 'bg-sage-light border-sage/40 text-[var(--sage-headline-tint)]'
+                        : 'bg-white border-border text-body-color'
+                    } ${hasMultipleTypes ? 'cursor-pointer hover:border-sage hover:text-[var(--sage-headline-tint)]' : 'cursor-default'}`}
+                  >
+                    {label}
+                  </button>
+                );
+              })}
+            </div>
+          );
+        })()}
 
         {product.description && (
           <div

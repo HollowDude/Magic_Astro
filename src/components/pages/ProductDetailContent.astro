@@ -15,9 +15,10 @@ interface Props {
   productTitle:     string;
   productData:      Omit<ProductDetailData, 'badge'> & { badge: null };
   relatedProducts:  ProductCardData[];
+  selectedVariationId?: string | null;
 }
 
-const { lang, productTitle, productData, relatedProducts } = Astro.props;
+const { lang, productTitle, productData, relatedProducts, selectedVariationId } = Astro.props;
 const t      = useTranslations(lang);
 const prefix = `/${lang}`;
 const session = await getSession(Astro.cookies);
@@ -40,7 +41,13 @@ const fullProductData: ProductDetailData = { ...productData, badge };
       ]} />
 
       <div class="mt-8">
-        <ProductDetail product={fullProductData} lang={lang} isLoggedIn={isLoggedIn} client:load />
+        <ProductDetail
+          product={fullProductData}
+          lang={lang}
+          isLoggedIn={isLoggedIn}
+          selectedVariationId={selectedVariationId ?? null}
+          client:load
+        />
       </div>
 
       <hr class="section-divider" />

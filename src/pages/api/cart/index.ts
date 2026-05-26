@@ -117,6 +117,7 @@ async function fetchCustomizations(
         hasCard: attrs.field_has_card ?? false,
         cardMessage: attrs.field_card_message ?? null,
         ribbonColor,
+        ribbonColorUuid: relData?.id ?? null,
       };
     }
     return map;

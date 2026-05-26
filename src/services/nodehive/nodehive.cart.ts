@@ -144,6 +144,7 @@ export interface CustomizationEntry {
   hasCard: boolean;
   cardMessage: string | null;
   ribbonColor: { name: string; hex: string } | null;
+  ribbonColorUuid: string | null;
 }
 
 export async function clearCart(

@@ -252,21 +252,14 @@ export default function ShopClient({
     { key: 'over200',  label: t(lang, 'shop.filters.price.over200'),  min: 200, max: Infinity },
   ], [lang]);
 
-  const availableColors = useMemo(() => {
-    const map = new Map<string, string>();
-    products.forEach(p => {
-      if (p.colorName) {
-        map.set(p.colorName, resolveColorHex(p.colorName, p.colorHex));
-      }
-    });
-    return Array.from(map.entries()).map(([name, hex]) => ({ name, hex }));
-  }, [products]);
-
-  const availableTipos = useMemo(() => {
-    const set = new Set<string>();
-    products.forEach(p => { if (p.tipo) set.add(p.tipo); });
-    return Array.from(set);
-  }, [products]);
+   const availableTipos = useMemo(() => {
+     const set = new Set<string>();
+     products.forEach(p => {
+       const vars = p.variations?.length ? p.variations : [{ tipo: p.tipo }];
+       vars.forEach(v => { if (v.tipo) set.add(v.tipo); });
+     });
+     return Array.from(set);
+   }, [products]);
 
   const availableOcasiones = useMemo(() => {
     const set = new Set<string>();
@@ -324,6 +317,22 @@ export default function ShopClient({
   const activeSelectedTipos = showTipos ? selectedTipos : EMPTY_SET;
   const activeSelectedOcasiones = showOcasion ? selectedOcasiones : EMPTY_SET;
 
+  const availableColors = useMemo(() => {
+    const map = new Map<string, string>();
+    const typeFilter = activeSelectedTipos.size > 0 ? activeSelectedTipos : null;
+    products.forEach(p => {
+      const vars = p.variations?.length
+        ? p.variations
+        : [{ colorName: p.colorName, colorHex: p.colorHex, tipo: p.tipo }];
+      vars.forEach(v => {
+        if (!v.colorName) return;
+        if (typeFilter && (!v.tipo || !typeFilter.has(v.tipo))) return;
+        map.set(v.colorName, resolveColorHex(v.colorName, v.colorHex ?? null));
+      });
+    });
+    return Array.from(map.entries()).map(([name, hex]) => ({ name, hex }));
+  }, [products, activeSelectedTipos]);
+
   useEffect(() => {
     if (!showCategories && selectedCat) setSelectedCat('');
     if (!showPrice && selectedPrice) setSelectedPrice('');
@@ -331,6 +340,21 @@ export default function ShopClient({
     if (!showTipos && selectedTipos.size > 0) setSelectedTipos(new Set());
     if (!showOcasion && selectedOcasiones.size > 0) setSelectedOcasiones(new Set());
   }, [showCategories, showPrice, showColors, showTipos, showOcasion, selectedCat, selectedPrice, selectedColors, selectedTipos, selectedOcasiones]);
+
+  useEffect(() => {
+    if (!showColors || activeSelectedColors.size === 0) return;
+    const availableSet = new Set(availableColors.map(c => c.name));
+    let changed = false;
+    const next = new Set<string>();
+    activeSelectedColors.forEach(color => {
+      if (availableSet.has(color)) {
+        next.add(color);
+      } else {
+        changed = true;
+      }
+    });
+    if (changed) setSelectedColors(next);
+  }, [showColors, availableColors, activeSelectedColors]);
 
   useEffect(() => {
     if (!sortOptions.includes(sortBy)) {
@@ -416,29 +440,41 @@ export default function ShopClient({
     setPage(1);
   }
 
-  const filtered = useMemo(() => {
-    let result = [...products];
-    if (activeSelectedCat) {
-      result = result.filter(p => p.category && toSlug(p.category) === activeSelectedCat);
-    }
-    if (activeSelectedPrice) {
-      const range = priceRanges.find(r => r.key === activeSelectedPrice);
-      if (range) result = result.filter(p => p.priceNumber >= range.min && p.priceNumber < range.max);
-    }
-    if (activeSelectedColors.size > 0) {
-      result = result.filter(p => p.colorName && activeSelectedColors.has(p.colorName));
-    }
-    if (activeSelectedTipos.size > 0) {
-      result = result.filter(p => p.tipo && activeSelectedTipos.has(p.tipo));
-    }
-    if (activeSelectedOcasiones.size > 0) {
-      result = result.filter(p => Array.isArray(p.ocasiones) && p.ocasiones.some(o => activeSelectedOcasiones.has(o)));
-    }
-    if (sortBy === 'price_asc')  result.sort((a, b) => a.priceNumber - b.priceNumber);
-    if (sortBy === 'price_desc') result.sort((a, b) => b.priceNumber - a.priceNumber);
-    if (sortBy === 'newest')    result.reverse();
-    return result;
-  }, [products, activeSelectedCat, activeSelectedPrice, activeSelectedColors, activeSelectedTipos, activeSelectedOcasiones, sortBy, priceRanges]);
+   const filtered = useMemo(() => {
+     let result = [...products];
+     if (activeSelectedCat) {
+       result = result.filter(p => p.category && toSlug(p.category) === activeSelectedCat);
+     }
+     if (activeSelectedPrice) {
+       const range = priceRanges.find(r => r.key === activeSelectedPrice);
+       if (range) result = result.filter(p => p.priceNumber >= range.min && p.priceNumber < range.max);
+     }
+     if (activeSelectedColors.size > 0) {
+       result = result.filter(p => {
+         const vars = p.variations?.length
+           ? p.variations
+           : [{ colorName: p.colorName, tipo: p.tipo }];
+         return vars.some(v => {
+           if (!v.colorName || !activeSelectedColors.has(v.colorName)) return false;
+           if (activeSelectedTipos.size === 0) return true;
+           return !!(v.tipo && activeSelectedTipos.has(v.tipo));
+         });
+       });
+     }
+     if (activeSelectedTipos.size > 0) {
+       result = result.filter(p => {
+         const vars = p.variations?.length ? p.variations : [{ tipo: p.tipo }];
+         return vars.some(v => v.tipo && activeSelectedTipos.has(v.tipo));
+       });
+     }
+     if (activeSelectedOcasiones.size > 0) {
+       result = result.filter(p => Array.isArray(p.ocasiones) && p.ocasiones.some(o => activeSelectedOcasiones.has(o)));
+     }
+     if (sortBy === 'price_asc')  result.sort((a, b) => a.priceNumber - b.priceNumber);
+     if (sortBy === 'price_desc') result.sort((a, b) => b.priceNumber - a.priceNumber);
+     if (sortBy === 'newest')    result.reverse();
+     return result;
+   }, [products, activeSelectedCat, activeSelectedPrice, activeSelectedColors, activeSelectedTipos, activeSelectedOcasiones, sortBy, priceRanges]);
 
   const totalPages = Math.max(1, Math.ceil(filtered.length / perPage));
   const paginated  = filtered.slice((page - 1) * perPage, page * perPage);
@@ -540,6 +576,7 @@ export default function ShopClient({
                 lang={lang}
                 href={`/${lang}/${product.id}`}
                 isLoggedIn={isLoggedIn}
+                allowedTipos={activeSelectedTipos.size > 0 ? activeSelectedTipos : undefined}
               />
             ))}
           </div>
