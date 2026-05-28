@@ -34,6 +34,10 @@ const FRIENDLY_MESSAGES: Record<string, Record<string, string>> = {
     'Last name field is required': 'El apellido es obligatorio.',
     'This value should not be null': 'Este campo es obligatorio.',
     'The address is incomplete': 'La dirección está incompleta o contiene datos inválidos.',
+    'Your current password is missing or incorrect': 'La contraseña actual no es correcta.',
+    'The password is invalid': 'La contraseña no es válida.',
+    'The password does not match': 'La contraseña no coincide.',
+    'Password is required': 'La contraseña es obligatoria.',
   },
   en: {
     'State field is required': 'State is required for US addresses.',
@@ -43,6 +47,10 @@ const FRIENDLY_MESSAGES: Record<string, Record<string, string>> = {
     'Last name field is required': 'Last name is required.',
     'This value should not be null': 'This field is required.',
     'The address is incomplete': 'The address is incomplete or contains invalid data.',
+    'Your current password is missing or incorrect': 'Your current password is incorrect.',
+    'The password is invalid': 'The password is invalid.',
+    'The password does not match': 'The password does not match.',
+    'Password is required': 'Password is required.',
   },
 };
 

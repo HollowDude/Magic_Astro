@@ -15,14 +15,7 @@ export default defineConfig({
   }),
   vite: {
     plugins: [tailwindcss()],
-    ssr: {
-      external: ['nodemailer'],
-    },
-    build: {
-      rollupOptions: {
-        external: ['nodemailer'],
-      },
-    },
+    ssr: {},
     server: {
       headers: {
         'X-Frame-Options': 'ALLOWALL',

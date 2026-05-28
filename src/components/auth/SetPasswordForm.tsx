@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react';
 import InputField from '@/components/ui/InputField';
 import Alert from '@/components/ui/Alert';
+import PasswordStrengthBar from '@/components/ui/PasswordStrengthBar';
+import { isValidPassword } from '@/utils/passwordValidation';
 import type { Lang } from '@/i18n/ui';
 
 type AlertType = 'error' | 'success';
@@ -101,13 +103,6 @@ export default function SetPasswordForm({
         setErrorMsg('');
       });
   }, [uid, timestamp, hash]);
-
-  function isValidPassword(value: string): boolean {
-    if (value.length < 8) return false;
-    if (!/[a-zA-Z]/.test(value)) return false;
-    if (!/\d/.test(value)) return false;
-    return true;
-  }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -268,6 +263,8 @@ export default function SetPasswordForm({
           value={password}
           onChange={setPassword}
         />
+
+        <PasswordStrengthBar value={password} lang={lang} />
 
         <InputField
           id="confirm"

@@ -26,10 +26,16 @@ export const POST: APIRoute = async ({ cookies, request }) => {
     return json({ ok: false, error: 'Invalid JSON body' }, 400);
   }
 
-  const { displayName, mail, currentPassword, newPassword } = body;
+  const { displayName, mail, currentPassword, newPassword, lang: bodyLang } = body;
+  const lang = bodyLang === 'es' ? 'es' : 'en';
 
   if (!currentPassword) {
-    return json({ ok: false, error: 'Your current password is required to update your profile.' }, 400);
+    return json({
+      ok: false,
+      error: lang === 'es'
+        ? 'La contraseña actual es obligatoria para actualizar tu perfil.'
+        : 'Your current password is required to update your profile.',
+    }, 400);
   }
 
   let userUuid: string | null = null;
@@ -100,7 +106,7 @@ export const POST: APIRoute = async ({ cookies, request }) => {
     }
 
     const errors = (res.data as any)?.errors;
-    const normalized = processDrupalErrors(errors, 'en');
+    const normalized = processDrupalErrors(errors, lang);
     return json({ ok: false, error: normalized.error }, 422);
   } catch (err) {
     return json({ ok: false, error: String(err) }, 500);

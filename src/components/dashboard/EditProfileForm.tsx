@@ -1,4 +1,7 @@
 import { useState, useRef } from 'react';
+import EditableField from '@/components/ui/EditableField';
+import PasswordStrengthBar from '@/components/ui/PasswordStrengthBar';
+import { isValidPassword } from '@/utils/passwordValidation';
 
 interface Props {
   lang: 'es' | 'en';
@@ -11,106 +14,157 @@ interface Props {
 const T = {
   es: {
     title: 'Editar Perfil',
-    name: 'Nombre de usuario',
-    namePlaceholder: 'Tu nombre',
-    mail: 'Correo electrónico',
-    mailPlaceholder: 'tu@email.com',
-    password: 'Contraseña actual',
-    passwordPlaceholder: 'Tu contraseña actual',
-    passwordHint: 'Necesaria para guardar los cambios',
+    nameLabel: 'Nombre de usuario',
+    mailLabel: 'Correo electrónico',
+    passwordTitle: 'Contraseña',
+    passwordDesc: 'Protegida',
     changePassword: 'Cambiar contraseña',
-    cancelPassword: 'Cancelar cambio',
+    cancelPassword: 'Cancelar',
     newPassword: 'Nueva contraseña',
-    newPasswordPlaceholder: 'Nueva contraseña',
-    newPasswordHint: 'Se aplicará al guardar los cambios',
-    save: 'Guardar cambios',
+    newPasswordPlaceholder: 'Mínimo 8 caracteres',
+    confirmPassword: 'Confirmar contraseña',
+    confirmPasswordPlaceholder: 'Repite la contraseña',
+    currentPassword: 'Contraseña actual',
+    currentPasswordPlaceholder: 'Tu contraseña actual',
+    currentPasswordHint: 'Necesaria para guardar el cambio',
+    save: 'Guardar',
     saving: 'Guardando...',
+    edit: 'Editar',
     cancel: 'Cancelar',
-    success: 'Perfil actualizado correctamente.',
-    errorServer: 'No se pudo actualizar el perfil.',
+    success: 'Perfil actualizado.',
+    errorServer: 'No se pudo actualizar.',
     changePhoto: 'Cambiar foto',
     removePhoto: 'Eliminar foto',
     uploadPhoto: 'Subir foto',
     photoSaving: 'Subiendo...',
     photoError: 'Error al subir la foto.',
     photoUpdating: 'Cambiando foto...',
-    backToAccount: 'Volver a mi cuenta',
+    passwordMatch: 'Las contraseñas coinciden',
+    passwordMismatch: 'Las contraseñas no coinciden',
+    backToAccount: 'Mi Cuenta',
   },
   en: {
     title: 'Edit Profile',
-    name: 'Username',
-    namePlaceholder: 'Your name',
-    mail: 'Email address',
-    mailPlaceholder: 'you@email.com',
-    password: 'Current password',
-    passwordPlaceholder: 'Your current password',
-    passwordHint: 'Required to save changes',
+    nameLabel: 'Username',
+    mailLabel: 'Email address',
+    passwordTitle: 'Password',
+    passwordDesc: 'Protected',
     changePassword: 'Change password',
-    cancelPassword: 'Cancel change',
+    cancelPassword: 'Cancel',
     newPassword: 'New password',
-    newPasswordPlaceholder: 'New password',
-    newPasswordHint: 'It will apply when you save changes',
-    save: 'Save changes',
+    newPasswordPlaceholder: 'At least 8 characters',
+    confirmPassword: 'Confirm password',
+    confirmPasswordPlaceholder: 'Repeat password',
+    currentPassword: 'Current password',
+    currentPasswordPlaceholder: 'Your current password',
+    currentPasswordHint: 'Required to save the change',
+    save: 'Save',
     saving: 'Saving...',
+    edit: 'Edit',
     cancel: 'Cancel',
-    success: 'Profile updated successfully.',
-    errorServer: 'Could not update profile.',
+    success: 'Profile updated.',
+    errorServer: 'Could not update.',
     changePhoto: 'Change photo',
     removePhoto: 'Remove photo',
     uploadPhoto: 'Upload photo',
     photoSaving: 'Uploading...',
     photoError: 'Error uploading photo.',
     photoUpdating: 'Updating photo...',
-    backToAccount: 'Back to my account',
+    passwordMatch: 'Passwords match',
+    passwordMismatch: 'Passwords do not match',
+    backToAccount: 'My Account',
   },
 };
 
 export default function EditProfileForm({ lang, initialName, initialMail, initialPicture, userUuid }: Props) {
   const t = T[lang];
-  const [name, setName] = useState(initialName);
-  const [mail, setMail] = useState(initialMail);
-  const [password, setPassword] = useState('');
+
+  // Name / mail
+  const [nameSaving, setNameSaving] = useState(false);
+
+  // Password section
+  const [showPasswordSection, setShowPasswordSection] = useState(false);
   const [newPassword, setNewPassword] = useState('');
-  const [showNewPassword, setShowNewPassword] = useState(false);
-  const [saving, setSaving] = useState(false);
-  const [successMsg, setSuccessMsg] = useState<string | null>(null);
-  const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const [confirmPw, setConfirmPw] = useState('');
+  const [currentPassword, setCurrentPassword] = useState('');
+  const [passwordSaving, setPasswordSaving] = useState(false);
+
+  // Photo
   const [picture, setPicture] = useState<string | null>(initialPicture);
   const [uploading, setUploading] = useState(false);
   const [uploadError, setUploadError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault();
-    setSaving(true);
-    setSuccessMsg(null);
-    setErrorMsg(null);
+  // Global feedback
+  const [globalSuccess, setGlobalSuccess] = useState<string | null>(null);
 
+  async function saveName(newValue: string, password: string) {
+    setNameSaving(true);
     try {
       const res = await fetch('/api/user/update-profile', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          displayName: name.trim(),
-          mail: mail.trim(),
+          displayName: newValue.trim(),
           userUuid,
           currentPassword: password,
-          newPassword: newPassword ? newPassword : undefined,
+          lang,
         }),
       });
       const data = await res.json();
-      if (data.ok) {
-        setSuccessMsg(t.success);
-        setPassword('');
-        setNewPassword('');
-        setShowNewPassword(false);
-      } else {
-        setErrorMsg(data.error ?? t.errorServer);
-      }
-    } catch {
-      setErrorMsg(t.errorServer);
+      if (!data.ok) throw new Error(data.error ?? t.errorServer);
     } finally {
-      setSaving(false);
+      setNameSaving(false);
+    }
+  }
+
+  async function saveMail(newValue: string, password: string) {
+    setNameSaving(true);
+    try {
+      const res = await fetch('/api/user/update-profile', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          mail: newValue.trim(),
+          userUuid,
+          currentPassword: password,
+          lang,
+        }),
+      });
+      const data = await res.json();
+      if (!data.ok) throw new Error(data.error ?? t.errorServer);
+    } finally {
+      setNameSaving(false);
+    }
+  }
+
+  async function handlePasswordSave() {
+    if (!newPassword || !confirmPw || !currentPassword) return;
+    if (newPassword !== confirmPw) return;
+    if (!isValidPassword(newPassword)) return;
+
+    setPasswordSaving(true);
+    setGlobalSuccess(null);
+    try {
+      const res = await fetch('/api/user/update-profile', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          userUuid,
+          currentPassword,
+          newPassword,
+          lang,
+        }),
+      });
+      const data = await res.json();
+      if (!data.ok) throw new Error(data.error ?? t.errorServer);
+      setGlobalSuccess(t.success);
+      setShowPasswordSection(false);
+      setNewPassword('');
+      setConfirmPw('');
+      setCurrentPassword('');
+    } finally {
+      setPasswordSaving(false);
     }
   }
 
@@ -141,7 +195,7 @@ export default function EditProfileForm({ lang, initialName, initialMail, initia
       const data = await res.json();
       if (data.ok) {
         setPicture(data.url);
-        setSuccessMsg(t.success);
+        setGlobalSuccess(t.success);
       } else {
         setUploadError(data.error ?? t.photoError);
       }
@@ -152,190 +206,360 @@ export default function EditProfileForm({ lang, initialName, initialMail, initia
     }
   }
 
+  const passwordsMatch = newPassword && confirmPw && newPassword === confirmPw;
+
   return (
-    <div class="space-y-6">
-      <nav class="flex items-center gap-2 text-xs text-body-color mb-2">
-        <a href={`/${lang}/dashboard`} class="hover:text-primary transition-colors">
-          {lang === 'es' ? 'Mi Cuenta' : 'My Account'}
-        </a>
-        <span class="material-symbols-outlined text-[14px] leading-none">chevron_right</span>
-        <span class="text-headline font-semibold">{t.title}</span>
+    <div className="ep-page">
+      {/* Breadcrumb */}
+      <nav className="ep-breadcrumb">
+        <a href={`/${lang}/dashboard`}>{t.backToAccount}</a>
+        <span className="material-symbols-outlined ep-chevron">chevron_right</span>
+        <span>{t.title}</span>
       </nav>
 
-      <div class="grid grid-cols-1 sm:grid-cols-[auto_1fr] lg:grid-cols-3 gap-6">
-        {/* Profile picture */}
-        <div class="bg-white rounded-xl border border-border shadow-sm p-6 flex flex-col items-center gap-4 sm:w-48 sm:shrink-0">
-          <div class="relative w-28 h-28 rounded-full overflow-hidden bg-background-muted border-2 border-border flex items-center justify-center">
+      {globalSuccess && <div className="ep-global-success">{globalSuccess}</div>}
+
+      <div className="ep-grid">
+        {/* ─── Photo card ─────────────────────────────────────────── */}
+        <div className="ep-card ep-photo-card">
+          <div className="ep-photo-avatar">
             {picture ? (
-              <img src={picture} alt="" class="w-full h-full object-cover" />
+              <img src={picture} alt="" className="ep-photo-img" />
             ) : (
-              <span class="material-symbols-outlined text-5xl text-muted">person</span>
+              <span className="material-symbols-outlined ep-photo-placeholder">person</span>
             )}
             {uploading && (
-              <div class="absolute inset-0 bg-white/80 backdrop-blur-sm flex flex-col items-center justify-center gap-1 text-xs text-headline font-semibold">
-                <span class="inline-block w-4 h-4 border-2 border-primary border-t-transparent rounded-full animate-spin"></span>
+              <div className="ep-photo-overlay">
+                <span className="ep-photo-spinner" />
                 {t.photoUpdating}
               </div>
             )}
           </div>
 
-          {uploading ? (
-            <div class="text-sm text-body-color flex items-center gap-2">
-              <span class="inline-block w-3 h-3 border-2 border-muted border-t-transparent rounded-full animate-spin"></span>
-              {t.photoSaving}
-            </div>
-          ) : (
-            <div class="flex flex-col items-center gap-2">
-              <button
-                type="button"
-                onClick={() => fileInputRef.current?.click()}
-                class="text-sm font-semibold text-primary hover:underline disabled:opacity-60 disabled:cursor-not-allowed"
-                disabled={uploading}
-              >
-                {picture ? t.changePhoto : t.uploadPhoto}
-              </button>
-              {picture && (
-                <button type="button" onClick={async () => {
-                  try {
-                    const res = await fetch('/api/user/delete-picture', { method: 'POST' });
-                    const data = await res.json();
-                    if (data.ok) {
-                      setPicture(null);
-                      setSuccessMsg(lang === 'es' ? 'Foto eliminada.' : 'Photo removed.');
-                    }
-                  } catch { /* ignore */ }
-                }} class="text-xs text-red-500 hover:underline">
-                  {t.removePhoto}
-                </button>
-              )}
-              <input
-                ref={fileInputRef}
-                type="file"
-                accept="image/jpeg,image/png,image/webp"
-                class="hidden"
-                onChange={handleFileChange}
-              />
-            </div>
-          )}
-
-          {uploadError && (
-            <p class="text-xs text-red-500 text-center">{uploadError}</p>
-          )}
-        </div>
-
-        {/* Profile form */}
-        <div class="lg:col-span-2 bg-white rounded-xl border border-border shadow-sm p-6">
-          <h1 class="text-xl font-bold text-headline mb-6">{t.title}</h1>
-
-          {successMsg && (
-            <div class="bg-emerald-50 border border-emerald-200 text-emerald-700 px-4 py-3 rounded-lg mb-4 text-sm font-medium">
-              {successMsg}
-            </div>
-          )}
-          {errorMsg && (
-            <div class="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-lg mb-4 text-sm font-medium">
-              {errorMsg}
-            </div>
-          )}
-
-          <form onSubmit={handleSubmit} class="space-y-5">
-            <div class="field-wrapper">
-              <label class="field-label">{t.name}</label>
-              <div class="field-inner">
-                <span class="material-symbols-outlined field-icon">person</span>
-                <input
-                  type="text"
-                  value={name}
-                  onChange={e => setName(e.target.value)}
-                  class="field-input"
-                  required
-                  minLength={3}
-                  placeholder={t.namePlaceholder}
-                />
-              </div>
-            </div>
-
-            <div class="field-wrapper">
-              <label class="field-label">{t.mail}</label>
-              <div class="field-inner">
-                <span class="material-symbols-outlined field-icon">mail</span>
-                <input
-                  type="email"
-                  value={mail}
-                  onChange={e => setMail(e.target.value)}
-                  class="field-input"
-                  required
-                  placeholder={t.mailPlaceholder}
-                />
-              </div>
-            </div>
-
-            {showNewPassword ? (
-              <div class="field-wrapper">
-                <label class="field-label">{t.newPassword}</label>
-                <div class="field-inner">
-                  <span class="material-symbols-outlined field-icon">lock_reset</span>
-                  <input
-                    type="password"
-                    value={newPassword}
-                    onChange={e => setNewPassword(e.target.value)}
-                    class="field-input"
-                    placeholder={t.newPasswordPlaceholder}
-                  />
-                </div>
-                <p class="text-xs text-body-color mt-1">{t.newPasswordHint}</p>
-              </div>
-            ) : (
-              <button
-                type="button"
-                onClick={() => setShowNewPassword(true)}
-                class="inline-flex items-center gap-2 text-sm font-semibold text-primary hover:underline"
-              >
-                <span class="material-symbols-outlined !text-base">lock_reset</span>
-                {t.changePassword}
+          <div className="ep-photo-actions">
+            <button
+              type="button"
+              onClick={() => fileInputRef.current?.click()}
+              className="ep-photo-btn"
+              disabled={uploading}
+            >
+              {picture ? t.changePhoto : t.uploadPhoto}
+            </button>
+            {picture && (
+              <button type="button" className="ep-photo-remove" onClick={async () => {
+                try {
+                  const res = await fetch('/api/user/delete-picture', { method: 'POST' });
+                  const data = await res.json();
+                  if (data.ok) {
+                    setPicture(null);
+                    setGlobalSuccess(lang === 'es' ? 'Foto eliminada.' : 'Photo removed.');
+                  }
+                } catch { /* ignore */ }
+              }}>
+                {t.removePhoto}
               </button>
             )}
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/jpeg,image/png,image/webp"
+              className="ep-hidden-input"
+              onChange={handleFileChange}
+            />
+          </div>
+          {uploadError && <p className="ep-photo-error">{uploadError}</p>}
+        </div>
 
-            <div class="field-wrapper">
-              <label class="field-label">{t.password} *</label>
-              <div class="field-inner">
-                <span class="material-symbols-outlined field-icon">lock</span>
-                <input
-                  type="password"
-                  value={password}
-                  onChange={e => setPassword(e.target.value)}
-                  class="field-input"
-                  required
-                  minLength={1}
-                  placeholder={t.passwordPlaceholder}
-                />
-              </div>
-              <p class="text-xs text-body-color mt-1">{t.passwordHint}</p>
-              {showNewPassword && (
+        {/* ─── Fields card (name + email + password) ──────────────── */}
+        <div className="ep-card ep-fields-card">
+          <h2 className="ep-card-title">{t.title}</h2>
+
+          <div className="ep-divider" />
+
+          {/* Name */}
+          <EditableField
+            label={t.nameLabel}
+            currentValue={initialName}
+            icon="person"
+            type="text"
+            saving={nameSaving}
+            editLabel={t.edit}
+            cancelLabel={t.cancel}
+            passwordLabel={lang === 'es' ? 'Confirma tu contraseña para guardar este cambio' : 'Confirm your password to save this change'}
+            onSave={saveName}
+          />
+
+          <div className="ep-divider" />
+
+          {/* Email */}
+          <EditableField
+            label={t.mailLabel}
+            currentValue={initialMail}
+            icon="mail"
+            type="email"
+            saving={nameSaving}
+            editLabel={t.edit}
+            cancelLabel={t.cancel}
+            passwordLabel={lang === 'es' ? 'Confirma tu contraseña para guardar este cambio' : 'Confirm your password to save this change'}
+            onSave={saveMail}
+          />
+
+          <div className="ep-divider" />
+
+          {/* Password */}
+          <div className="ep-pw-section">
+            {!showPasswordSection ? (
+              <div className="ep-pw-readonly">
+                <div className="ep-pw-read-left">
+                  <span className="material-symbols-outlined ep-pw-icon">lock_reset</span>
+                  <div>
+                    <p className="ep-pw-read-label">{t.passwordTitle}</p>
+                    <p className="ep-pw-read-value">{'\u2022'.repeat(10)}</p>
+                  </div>
+                </div>
                 <button
                   type="button"
-                  onClick={() => { setShowNewPassword(false); setNewPassword(''); }}
-                  class="mt-2 text-xs text-muted hover:text-primary hover:underline"
+                  className="ep-pw-edit-btn"
+                  onClick={() => setShowPasswordSection(true)}
                 >
-                  {t.cancelPassword}
+                  {t.changePassword}
                 </button>
-              )}
-            </div>
+              </div>
+            ) : (
+              <div className="ep-pw-editing">
+                <div className="ep-pw-edit-header">
+                  <span className="material-symbols-outlined ep-pw-icon">lock_reset</span>
+                  <span className="ep-pw-edit-title">{t.changePassword}</span>
+                </div>
 
-            <div class="flex gap-3 pt-2">
-              <button type="submit" disabled={saving || !password} class="btn-primary text-sm !h-10 !px-6 !text-base">
-                {saving ? t.saving : t.save}
-              </button>
-              <a
-                href={`/${lang}/dashboard`}
-                class="inline-flex items-center justify-center h-10 px-6 rounded-lg border border-border text-body-color font-semibold text-sm hover:border-primary hover:text-primary transition-colors"
-              >
-                {t.cancel}
-              </a>
-            </div>
-          </form>
+                {/* New password */}
+                <div className="field-wrapper">
+                  <label className="field-label">{t.newPassword}</label>
+                  <div className="field-inner">
+                    <span className="material-symbols-outlined field-icon">lock</span>
+                    <input
+                      type="password"
+                      value={newPassword}
+                      onChange={e => setNewPassword(e.target.value)}
+                      className="field-input"
+                      required
+                      minLength={8}
+                      placeholder={t.newPasswordPlaceholder}
+                    />
+                  </div>
+                  <PasswordStrengthBar value={newPassword} lang={lang} />
+                </div>
+
+                {/* Confirm password */}
+                <div className="field-wrapper">
+                  <label className="field-label">{t.confirmPassword}</label>
+                  <div className="field-inner">
+                    <span className="material-symbols-outlined field-icon">check</span>
+                    <input
+                      type="password"
+                      value={confirmPw}
+                      onChange={e => setConfirmPw(e.target.value)}
+                      className="field-input"
+                      required
+                      placeholder={t.confirmPasswordPlaceholder}
+                    />
+                  </div>
+                  {confirmPw && (
+                    <p className={`ep-pw-match ${passwordsMatch ? 'match' : 'no-match'}`}>
+                      <span className="material-symbols-outlined ep-pw-match-icon">
+                        {passwordsMatch ? 'check_circle' : 'cancel'}
+                      </span>
+                      {passwordsMatch ? t.passwordMatch : t.passwordMismatch}
+                    </p>
+                  )}
+                </div>
+
+                {/* Current password */}
+                <div className="field-wrapper">
+                  <label className="field-label">{t.currentPassword}</label>
+                  <div className="field-inner">
+                    <span className="material-symbols-outlined field-icon">verified_user</span>
+                    <input
+                      type="password"
+                      value={currentPassword}
+                      onChange={e => setCurrentPassword(e.target.value)}
+                      className="field-input"
+                      required
+                      placeholder={t.currentPasswordPlaceholder}
+                    />
+                  </div>
+                  <p className="ep-pw-hint">{t.currentPasswordHint}</p>
+                </div>
+
+                <div className="ep-pw-actions">
+                  <button
+                    type="button"
+                    className="btn-primary ep-pw-save-btn"
+                    disabled={
+                      passwordSaving ||
+                      !newPassword ||
+                      !confirmPw ||
+                      !currentPassword ||
+                      newPassword !== confirmPw ||
+                      !isValidPassword(newPassword)
+                    }
+                    onClick={handlePasswordSave}
+                  >
+                    {passwordSaving ? <span className="ep-pw-spinner" /> : t.save}
+                  </button>
+                  <button
+                    type="button"
+                    className="ep-pw-cancel-btn"
+                    onClick={() => {
+                      setShowPasswordSection(false);
+                      setNewPassword('');
+                      setConfirmPw('');
+                      setCurrentPassword('');
+                    }}
+                  >
+                    {t.cancelPassword}
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
         </div>
       </div>
+
+      <style>{`
+        .ep-page { width: 100%; }
+
+        .ep-breadcrumb {
+          display: flex; align-items: center; gap: 0.375rem;
+          font-size: 0.8125rem; color: var(--text-muted); margin-bottom: 1.5rem;
+        }
+        .ep-breadcrumb a { color: var(--text-muted); text-decoration: none; transition: color 0.2s; }
+        .ep-breadcrumb a:hover { color: var(--primary); }
+        .ep-breadcrumb span:last-child { color: var(--text-main); font-weight: 600; }
+        .ep-chevron { font-size: 1rem; }
+
+        .ep-global-success {
+          background: #ecfdf5; border: 1px solid #a7f3d0;
+          color: #047857; padding: 0.75rem 1rem; border-radius: 0.5rem;
+          font-size: 0.875rem; font-weight: 500; margin-bottom: 1.5rem;
+        }
+
+        .ep-grid {
+          display: grid; grid-template-columns: 1fr;
+          gap: 1.5rem; align-items: start;
+        }
+        @media (min-width: 768px) {
+          .ep-grid { grid-template-columns: auto 1fr; }
+        }
+
+        .ep-card {
+          background: white; border-radius: 0.75rem;
+          border: 1px solid var(--border); box-shadow: 0 1px 4px rgba(0 0 0 / 0.04);
+          overflow: hidden;
+        }
+
+        .ep-card-title {
+          font-size: 1.125rem; font-weight: 700; color: var(--text-main);
+        }
+
+        .ep-divider { height: 1px; background: var(--border); margin: 0; }
+
+        .ep-fields-card { padding: 1.5rem; display: flex; flex-direction: column; gap: 0; }
+        .ep-fields-card .ep-card-title { margin-bottom: 1rem; }
+
+        /* ── Photo card ── */
+        .ep-photo-card {
+          padding: 1.5rem; display: flex; flex-direction: column;
+          align-items: center; gap: 1rem;
+        }
+        @media (min-width: 768px) { .ep-photo-card { width: 200px; } }
+        .ep-photo-avatar {
+          position: relative; width: 7rem; height: 7rem;
+          border-radius: 9999px; overflow: hidden;
+          background: var(--blush); border: 2px solid var(--border);
+          display: flex; align-items: center; justify-content: center;
+        }
+        .ep-photo-img { width: 100%; height: 100%; object-fit: cover; }
+        .ep-photo-placeholder { font-size: 3rem; color: var(--text-muted); }
+        .ep-photo-overlay {
+          position: absolute; inset: 0;
+          background: rgba(255 255 255 / 0.8); backdrop-filter: blur(4px);
+          display: flex; flex-direction: column; align-items: center;
+          justify-content: center; gap: 0.25rem;
+          font-size: 0.75rem; font-weight: 600; color: var(--text-main);
+        }
+        .ep-photo-spinner {
+          width: 1rem; height: 1rem;
+          border: 2px solid var(--border); border-top-color: var(--primary);
+          border-radius: 50%; animation: ep-spin 0.7s linear infinite;
+        }
+        .ep-photo-actions { display: flex; flex-direction: column; align-items: center; gap: 0.25rem; }
+        .ep-photo-btn {
+          font-size: 0.8125rem; font-weight: 700; color: var(--primary);
+          background: none; border: none; cursor: pointer;
+          transition: color 0.2s;
+        }
+        .ep-photo-btn:hover { text-decoration: underline; }
+        .ep-photo-btn:disabled { opacity: 0.6; cursor: not-allowed; }
+        .ep-photo-remove {
+          font-size: 0.75rem; color: #ef4444;
+          background: none; border: none; cursor: pointer;
+        }
+        .ep-photo-remove:hover { text-decoration: underline; }
+        .ep-hidden-input { display: none; }
+        .ep-photo-error { font-size: 0.75rem; color: #dc2626; text-align: center; }
+
+        /* ── Password section ── */
+        .ep-pw-section { padding: 1rem 0; }
+
+        .ep-pw-readonly {
+          display: flex; align-items: center; justify-content: space-between; gap: 1rem;
+        }
+        .ep-pw-read-left { display: flex; align-items: center; gap: 0.75rem; min-width: 0; }
+        .ep-pw-icon { font-size: 1.5rem; color: var(--primary); opacity: 0.6; flex-shrink: 0; }
+        .ep-pw-read-label { font-size: 0.75rem; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.04em; }
+        .ep-pw-read-value { font-size: 0.9375rem; font-weight: 600; color: var(--text-main); letter-spacing: 0.15em; }
+        .ep-pw-edit-btn {
+          flex-shrink: 0; font-size: 0.8125rem; font-weight: 700; color: var(--primary);
+          background: none; border: none; cursor: pointer; white-space: nowrap;
+          padding: 0.375rem 0.75rem; border-radius: 0.375rem;
+          transition: background 0.15s;
+        }
+        .ep-pw-edit-btn:hover { background: var(--blush); }
+
+        .ep-pw-editing { display: flex; flex-direction: column; gap: 1rem; }
+        .ep-pw-edit-header { display: flex; align-items: center; gap: 0.5rem; }
+        .ep-pw-edit-title {
+          font-size: 0.875rem; font-weight: 700; color: var(--text-main);
+        }
+        .ep-pw-hint { font-size: 0.75rem; color: var(--text-muted); margin-top: 0.25rem; }
+
+        .ep-pw-match {
+          display: flex; align-items: center; gap: 0.25rem;
+          margin-top: 0.25rem; font-size: 0.8125rem; font-weight: 500;
+        }
+        .ep-pw-match.match { color: #16a34a; }
+        .ep-pw-match.no-match { color: #dc2626; }
+        .ep-pw-match-icon { font-size: 1rem; }
+
+        .ep-pw-actions { display: flex; align-items: center; gap: 0.75rem; margin-top: 0.25rem; }
+        .ep-pw-save-btn { height: 2.5rem !important; padding-inline: 1.25rem !important; font-size: 0.875rem !important; }
+        .ep-pw-cancel-btn {
+          font-size: 0.8125rem; font-weight: 600; color: var(--text-muted);
+          background: none; border: none; cursor: pointer;
+          padding: 0.375rem 0.75rem; border-radius: 0.375rem;
+          transition: background 0.15s;
+        }
+        .ep-pw-cancel-btn:hover { background: var(--blush); color: var(--primary); }
+        .ep-pw-spinner {
+          width: 1rem; height: 1rem;
+          border: 2px solid rgba(255 255 255 / 0.35);
+          border-top-color: white; border-radius: 50%;
+          animation: ep-spin 0.7s linear infinite;
+        }
+
+        @keyframes ep-spin { to { transform: rotate(360deg); } }
+      `}</style>
     </div>
   );
 }
