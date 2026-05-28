@@ -141,7 +141,7 @@ export async function nodehiveFetch<T = unknown>(
   const headers: Record<string, string> = {
     'Content-Type': isForm ? 'application/x-www-form-urlencoded' : 'application/json',
     Accept:         'application/json',
-    ...(!bearerToken && !skipApiKey ? { 'api-key': NODEHIVE_API_KEY } : {}),
+    ...(!skipApiKey ? { 'api-key': NODEHIVE_API_KEY } : {}),
     ...extraHeaders,
   };
   if (bearerToken) headers['Authorization'] = `Bearer ${bearerToken}`;

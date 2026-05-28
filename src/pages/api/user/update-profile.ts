@@ -26,26 +26,47 @@ export const POST: APIRoute = async ({ cookies, request }) => {
     return json({ ok: false, error: 'Invalid JSON body' }, 400);
   }
 
-  const { displayName, mail, userUuid, currentPassword } = body;
-
-  if (!userUuid) {
-    return json({ ok: false, error: 'User UUID is required' }, 400);
-  }
+  const { displayName, mail, currentPassword, newPassword } = body;
 
   if (!currentPassword) {
     return json({ ok: false, error: 'Your current password is required to update your profile.' }, 400);
+  }
+
+  let userUuid: string | null = null;
+  try {
+    const userRes = await nodehiveFetch<Record<string, unknown>>(
+      `/jsonapi/user/user?filter[drupal_internal__uid]=${session.uid}&page[limit]=1`,
+      {
+        headers: { 'Content-Type': 'application/vnd.api+json', Accept: 'application/vnd.api+json' },
+        bearerToken: session.accessToken,
+      },
+    );
+    if (userRes.status === 200) {
+      const userList = (userRes.data as any)?.data ?? [];
+      userUuid = Array.isArray(userList) ? userList[0]?.id : null;
+    }
+  } catch {
+    userUuid = null;
+  }
+
+  if (!userUuid) {
+    return json({ ok: false, error: 'User not found' }, 404);
   }
 
   const attributes: Record<string, unknown> = {};
   if (body.displayName !== undefined) attributes.name = displayName;
   if (body.mail !== undefined) attributes.mail = mail;
 
-  // Drupal requires current password verification for name/mail changes
-  attributes.pass = { value: currentPassword, existing: currentPassword };
+  const hasNewPassword = typeof newPassword === 'string' && newPassword.length > 0;
+  const hasProfileChanges = body.displayName !== undefined || body.mail !== undefined;
 
-  if (Object.keys(attributes).length <= 1) {
+  if (!hasProfileChanges && !hasNewPassword) {
     return json({ ok: false, error: 'No fields to update' }, 400);
   }
+
+  attributes.pass = hasNewPassword
+    ? { value: newPassword, existing: currentPassword }
+    : { value: currentPassword, existing: currentPassword };
 
   try {
     const res = await nodehiveFetch<Record<string, unknown>>(

@@ -66,13 +66,6 @@ interface RibbonColorDef {
   hex: string;
 }
 
-const RIBBON_COLORS: RibbonColorDef[] = [
-  { uuid: 'd8987a10-0db1-42bf-aa13-1da1c14b1870', name: 'Red',   hex: '#c0392b' },
-  { uuid: 'e615fc4b-9caf-4b4d-9d3c-5f31d2a55a44', name: 'Yellow',hex: '#d4ac0d' },
-  { uuid: '504b04ad-e74c-4f03-ade1-c5d4ce0af999', name: 'Gray',  hex: '#a8a9ad' },
-  { uuid: 'afe8e4c1-d329-4cb2-807e-78e2065ec451', name: 'White', hex: '#ffffff' },
-] as const;
-
 const MAX_CHARS = 250;
 
 export default function ProductDetail({ product, lang, isLoggedIn, selectedVariationId }: Props) {
@@ -88,9 +81,22 @@ export default function ProductDetail({ product, lang, isLoggedIn, selectedVaria
   const [message, setMessage] = useState('');
   const [imgLoaded, setImgLoaded] = useState(false);
   const [isZooming, setIsZooming] = useState(false);
-  const [ribbonColorUuid, setRibbonColorUuid] = useState<string | null>(null);
+  const [ribbonColorName, setRibbonColorName] = useState<string | null>(null);
   const [hasCard, setHasCard] = useState(false);
   const [addedToast, setAddedToast] = useState(false);
+  const [isAdding, setIsAdding] = useState(false);
+  const [ribbonColors, setRibbonColors] = useState<RibbonColorDef[]>([]);
+
+  useEffect(() => {
+    fetch('/api/ribbon-colors')
+      .then(r => r.json())
+      .then(data => {
+        if (Array.isArray(data) && data.length > 0) {
+          setRibbonColors(data);
+        }
+      })
+      .catch(() => {});
+  }, []);
 
   const allVariations = useMemo<VariationDetailData[]>(() => {
     if (product.allVariations?.length) return product.allVariations;
@@ -171,11 +177,16 @@ export default function ProductDetail({ product, lang, isLoggedIn, selectedVaria
   };
   const loginHref = `${prefix}/login?redirect=${encodeURIComponent(`${prefix}/${product.id}`)}`;
 
-  const ribbonColorDef = ribbonColorUuid
-    ? RIBBON_COLORS.find(c => c.uuid === ribbonColorUuid) ?? null
+  const ribbonColorDef = ribbonColorName
+    ? ribbonColors.find(c => c.name.toLowerCase() === ribbonColorName.toLowerCase()) ?? {
+        name: ribbonColorName,
+        hex: '#cccccc',
+        uuid: '',
+      }
     : null;
 
   const handleAddToCart = async () => {
+    if (isAdding) return;
     if (!isLoggedIn) {
       window.location.href = loginHref;
       return;
@@ -185,6 +196,8 @@ export default function ProductDetail({ product, lang, isLoggedIn, selectedVaria
       setTimeout(() => setAddedToast(false), 3000);
       return;
     }
+    setIsAdding(true);
+    window.dispatchEvent(new CustomEvent('cart:loading', { detail: { active: true, source: 'add' } }));
     try {
       const body = [{
         purchased_entity_type: 'commerce_product_variation',
@@ -196,8 +209,8 @@ export default function ProductDetail({ product, lang, isLoggedIn, selectedVaria
       if (hasCard && message.trim()) {
         body[0].cardMessage = message.trim();
       }
-      if (ribbonColorUuid) {
-        body[0].ribbonColor = ribbonColorUuid;
+      if (ribbonColorName) {
+        body[0].ribbonColor = ribbonColorName;
       }
 
       const res = await fetch('/api/cart/add', {
@@ -206,12 +219,15 @@ export default function ProductDetail({ product, lang, isLoggedIn, selectedVaria
         body: JSON.stringify(body),
       });
       if (!res.ok) throw new Error('Cart API error');
-      window.dispatchEvent(new CustomEvent('cart:updated'));
+      window.dispatchEvent(new CustomEvent('cart:updated', { detail: { delta: 1 } }));
       setAddedToast(true);
       setTimeout(() => setAddedToast(false), 3000);
     } catch {
       setAddedToast(true);
       setTimeout(() => setAddedToast(false), 3000);
+    } finally {
+      setIsAdding(false);
+      window.dispatchEvent(new CustomEvent('cart:loading', { detail: { active: false, source: 'add' } }));
     }
   };
 
@@ -425,7 +441,7 @@ export default function ProductDetail({ product, lang, isLoggedIn, selectedVaria
         )}
 
         {/* ═══ Selector de cinta ═══ */}
-        {ribbonColorUuid ? (
+        {ribbonColorName && ribbonColors.length > 0 ? (
           <div className="bg-[var(--primary-blush-tint)] border border-border rounded-2xl p-5">
             <div className="flex items-center justify-between mb-3">
               <p className="font-body text-sm font-bold text-headline">
@@ -433,20 +449,20 @@ export default function ProductDetail({ product, lang, isLoggedIn, selectedVaria
               </p>
               <button
                 type="button"
-                onClick={() => setRibbonColorUuid(null)}
+                onClick={() => setRibbonColorName(null)}
                 className="font-body text-xs text-muted hover:text-red-500 underline underline-offset-2 cursor-pointer bg-transparent border-none p-0 transition-colors"
               >
                 {t(lang, 'product.ribbon.remove')}
               </button>
             </div>
             <div className="flex flex-wrap items-center gap-2.5">
-              {RIBBON_COLORS.map((c) => (
+              {ribbonColors.map((c) => (
                 <button
-                  key={c.uuid}
+                  key={c.name}
                   type="button"
-                  onClick={() => setRibbonColorUuid(c.uuid)}
+                  onClick={() => setRibbonColorName(c.name)}
                   className={`w-9 h-9 rounded-full border-2 transition-all duration-150 cursor-pointer shrink-0 ${
-                    ribbonColorUuid === c.uuid
+                    ribbonColorName.toLowerCase() === c.name.toLowerCase()
                       ? 'border-primary scale-110 shadow-[0_0_0_2px_white,0_0_0_4px_var(--primary)]'
                       : 'border-black/15 hover:scale-105'
                   }`}
@@ -457,26 +473,36 @@ export default function ProductDetail({ product, lang, isLoggedIn, selectedVaria
               ))}
             </div>
           </div>
-        ) : (
+        ) : ribbonColors.length > 0 ? (
           <button
             type="button"
-            onClick={() => setRibbonColorUuid(RIBBON_COLORS[0].uuid)}
+            onClick={() => setRibbonColorName(ribbonColors[0].name)}
             className="flex items-center justify-center gap-2 w-full h-12 bg-[var(--primary-blush-tint)] border border-dashed border-border rounded-2xl font-body text-sm font-bold text-headline hover:border-primary hover:text-primary transition-all duration-200 cursor-pointer"
           >
             <span className="material-symbols-outlined !text-lg leading-none">add</span>
             {t(lang, 'product.ribbon.add')}
           </button>
-        )}
+        ) : null}
 
         {/* Botones de acción */}
         <div className="flex flex-col sm:flex-row gap-3">
           <button
             onClick={handleAddToCart}
-            className="flex-1 btn-primary h-13 shadow-[0_4px_16px_var(--primary-alpha-35)] cursor-pointer"
+            className="flex-1 btn-primary h-13 shadow-[0_4px_16px_var(--primary-alpha-35)] cursor-pointer disabled:opacity-70 disabled:cursor-not-allowed"
             type="button"
+            disabled={isAdding}
           >
-            <span className="material-symbols-outlined !text-xl leading-none">shopping_cart</span>
-            {t(lang, 'shop.add_to_cart')}
+            {isAdding ? (
+              <>
+                <span className="w-4 h-4 rounded-full border-2 border-white/40 border-t-white animate-spin" />
+                {lang === 'es' ? 'Agregando...' : 'Adding...'}
+              </>
+            ) : (
+              <>
+                <span className="material-symbols-outlined !text-xl leading-none">shopping_cart</span>
+                {t(lang, 'shop.add_to_cart')}
+              </>
+            )}
           </button>
 
           <button

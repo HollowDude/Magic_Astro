@@ -33,6 +33,9 @@ export const DELETE: APIRoute = async ({ params, request, cookies }) => {
 
   const headers: Record<string, string> = {
     'Content-Type': 'application/json',
+    'Cache-Control': 'no-store, no-cache, must-revalidate, max-age=0',
+    'Pragma': 'no-cache',
+    'Expires': '0',
     ...relayCartCookie(result.headers, '/api/cart'),
   };
 
@@ -56,6 +59,9 @@ export const PATCH: APIRoute = async ({ params, request, cookies }) => {
 
   const headers: Record<string, string> = {
     'Content-Type': 'application/json',
+    'Cache-Control': 'no-store, no-cache, must-revalidate, max-age=0',
+    'Pragma': 'no-cache',
+    'Expires': '0',
     ...relayCartCookie(result.headers, '/api/cart'),
   };
 

@@ -2,6 +2,74 @@ import { nodehiveFetch } from './nodehive.client';
 
 const NODEHIVE_BASE_URL = import.meta.env.NODEHIVE_BASE_URL as string;
 
+export interface RibbonColorDef {
+  uuid: string;
+  name: string;
+  hex: string;
+}
+
+const RIBBON_COLOR_HEX_BY_NAME: Record<string, string> = {
+  red: '#c0392b',
+  yellow: '#d4ac0d',
+  gray: '#a8a9ad',
+  grey: '#a8a9ad',
+  white: '#ffffff',
+};
+
+let _ribbonColorsCache: { data: RibbonColorDef[]; expiresAt: number } | null = null;
+const RIBBON_CACHE_TTL = 300_000;
+
+export async function fetchRibbonColors(): Promise<RibbonColorDef[]> {
+  if (_ribbonColorsCache && Date.now() < _ribbonColorsCache.expiresAt) {
+    return _ribbonColorsCache.data;
+  }
+
+  try {
+    const result = await nodehiveFetch<{ data: Array<Record<string, any>> }>(
+      '/jsonapi/taxonomy_term/ribbon_color',
+      {
+        headers: { 'Content-Type': 'application/vnd.api+json', Accept: 'application/vnd.api+json' },
+        cacheTtl: 0,
+      },
+    );
+
+    if (result.status !== 200) throw new Error(`HTTP ${result.status}`);
+
+    const colors: RibbonColorDef[] = (result.data?.data ?? []).map((entry: any) => {
+      const name = entry?.attributes?.name ?? 'Unknown';
+      const nameLower = name.toLowerCase();
+      return {
+        uuid: entry.id,
+        name,
+        hex: RIBBON_COLOR_HEX_BY_NAME[nameLower] ?? '#cccccc',
+      };
+    });
+
+    _ribbonColorsCache = { data: colors, expiresAt: Date.now() + RIBBON_CACHE_TTL };
+    return colors;
+  } catch (e) {
+    if (_ribbonColorsCache) return _ribbonColorsCache.data;
+    return [];
+  }
+}
+
+export function clearRibbonColorsCache(): void {
+  _ribbonColorsCache = null;
+}
+
+export async function resolveRibbonColorUuid(name: string | null | undefined): Promise<string | null> {
+  if (!name) return null;
+  const colors = await fetchRibbonColors();
+  const found = colors.find(c => c.name.toLowerCase() === name.toLowerCase());
+  return found?.uuid ?? null;
+}
+
+export function ribbonColorDefFromUuid(uuid: string | null | undefined, colors: RibbonColorDef[]): { name: string; hex: string } | null {
+  if (!uuid) return null;
+  const found = colors.find(c => c.uuid === uuid);
+  return found ? { name: found.name, hex: found.hex } : null;
+}
+
 export interface PurchasedEntity {
   variation_id: number;
   uuid: string;
@@ -80,6 +148,7 @@ export async function getCart(cookie?: string): Promise<CartResult> {
     headers: cartHeaders(),
     sessionCookie: cookie,
     skipApiKey: true,
+    cacheTtl: 0,
   });
   return { data: result.data, headers: result.headers };
 }
@@ -132,13 +201,6 @@ export async function removeCartItem(
   });
   return { success: result.status === 200 || result.status === 204, headers: result.headers };
 }
-
-export const RIBBON_COLOR_MAP: Record<string, { name: string; hex: string }> = {
-  'd8987a10-0db1-42bf-aa13-1da1c14b1870': { name: 'Red', hex: '#c0392b' },
-  'e615fc4b-9caf-4b4d-9d3c-5f31d2a55a44': { name: 'Yellow', hex: '#d4ac0d' },
-  '504b04ad-e74c-4f03-ade1-c5d4ce0af999': { name: 'Gray', hex: '#a8a9ad' },
-  'afe8e4c1-d329-4cb2-807e-78e2065ec451': { name: 'White', hex: '#ffffff' },
-};
 
 export interface CustomizationEntry {
   hasCard: boolean;

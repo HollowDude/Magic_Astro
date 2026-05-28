@@ -1,7 +1,5 @@
 import type { APIRoute } from 'astro';
-import nodemailer from 'nodemailer';
-
-const DESTINATION_EMAIL = (import.meta.env.CONTACT_DESTINATION_EMAIL as string) || 'maggy_flowers@yahoo.com';
+import { nodehiveFetch } from '@/services/nodehive/nodehive.client';
 
 function json(data: unknown, status: number): Response {
   return new Response(JSON.stringify(data), {
@@ -33,39 +31,51 @@ export const POST: APIRoute = async ({ request }) => {
     return json({ ok: false, field: 'message', error: 'El mensaje no puede superar los 500 caracteres.' }, 400);
   }
 
-  const smtpHost = import.meta.env.SMTP_HOST as string;
-  const smtpPort = parseInt(import.meta.env.SMTP_PORT ?? '587', 10);
-  const smtpUser = import.meta.env.SMTP_USER as string;
-  const smtpPass = import.meta.env.SMTP_PASS as string;
+  try {
+    const cookie = request.headers.get('cookie') ?? '';
+    const match = cookie.match(/drupal_s=([^;]+)/);
+    const drupalSession = match ? decodeURIComponent(match[1]) : undefined;
 
-  if (smtpHost && smtpUser && smtpPass) {
-    try {
-      const transporter = nodemailer.createTransport({
-        host: smtpHost,
-        port: smtpPort,
-        secure: smtpPort === 465,
-        auth: { user: smtpUser, pass: smtpPass },
-      });
+    const basicUser = import.meta.env.NODEHIVE_BASIC_AUTH_USER as string | undefined;
+    const basicPass = import.meta.env.NODEHIVE_BASIC_AUTH_PASS as string | undefined;
+    const hasBasic = !!(basicUser && basicPass);
+    const authHeaders: Record<string, string> = hasBasic
+      ? { Authorization: `Basic ${Buffer.from(`${basicUser}:${basicPass}`).toString('base64')}` }
+      : {};
 
-      await transporter.sendMail({
-        from: `"${name}" <${smtpUser}>`,
-        replyTo: email,
-        to: 'mauro211+mg01@gmail.com',
-        subject: `Nuevo mensaje de contacto — ${name}`,
-        text: `Nombre: ${name}\nEmail: ${email}\n\nMensaje:\n${message}`,
-        html: `<p><strong>Nombre:</strong> ${name}</p>
-               <p><strong>Email:</strong> ${email}</p>
-               <hr/>
-               <p><strong>Mensaje:</strong></p>
-               <p>${message.replace(/\n/g, '<br/>')}</p>`,
-      });
-    } catch (err) {
-      console.error('[Contact] Error al enviar email:', err);
-      return json({ ok: false, error: 'No se pudo enviar el mensaje. Intenta de nuevo.' }, 500);
+    const res = await nodehiveFetch<Record<string, any>>('/webform_rest/submit', {
+      method: 'POST',
+      body: {
+        webform_id: 'contacto_frontend',
+        name,
+        mail: email,
+        message,
+      },
+      headers: { 'Content-Type': 'application/json', Accept: 'application/json', ...authHeaders },
+      sessionCookie: drupalSession,
+      skipApiKey: hasBasic || !!drupalSession,
+      cacheTtl: 0,
+    });
+
+    if (res.status === 200 || res.status === 201) {
+      return json({ ok: true }, 200);
     }
-  } else {
-    console.log('[Contact] SMTP no configurado. Mensaje recibido:', { name, email, message });
-  }
 
-  return json({ ok: true }, 200);
+    const data = res.data as any;
+    let errorMessage = 'No se pudo enviar el mensaje. Intenta de nuevo.';
+    if (typeof data === 'string') {
+      errorMessage = data;
+    } else if (data) {
+      errorMessage =
+        data?.message
+        ?? data?.error
+        ?? data?.errors?.[0]?.detail
+        ?? errorMessage;
+    }
+
+    return json({ ok: false, error: errorMessage }, res.status || 500);
+  } catch (err) {
+    console.error('[Contact] Error al enviar webform:', err);
+    return json({ ok: false, error: 'No se pudo enviar el mensaje. Intenta de nuevo.' }, 500);
+  }
 };

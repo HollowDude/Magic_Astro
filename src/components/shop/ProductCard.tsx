@@ -65,6 +65,7 @@ interface Props {
 export default function ProductCard({ product, lang = 'es', href, isLoggedIn = false, allowedTipos }: Props) {
   // Índice de la variación seleccionada
   const [activeVarIndex, setActiveVarIndex] = useState(0);
+  const [isAdding, setIsAdding] = useState(false);
 
   // Variación activa: si hay variaciones propias usarlas,
   // si no, construir una con los datos de primer nivel para compatibilidad
@@ -108,11 +109,14 @@ export default function ProductCard({ product, lang = 'es', href, isLoggedIn = f
   const hasActiveColor = !!(activeVar.colorName || resolvedHex);
 
   const handleAddToCart = async () => {
+    if (isAdding) return;
     if (!isLoggedIn) {
       window.location.href = `/${lang}/login?redirect=${encodeURIComponent(window.location.pathname)}`;
       return;
     }
     if (!activeVar.variationId) return;
+    setIsAdding(true);
+    window.dispatchEvent(new CustomEvent('cart:loading', { detail: { active: true, source: 'add' } }));
     try {
       const res = await fetch('/api/cart/add', {
         method: 'POST',
@@ -125,8 +129,12 @@ export default function ProductCard({ product, lang = 'es', href, isLoggedIn = f
         }]),
       });
       if (!res.ok) throw new Error('Cart API error');
-      window.dispatchEvent(new CustomEvent('cart:updated'));
+      window.dispatchEvent(new CustomEvent('cart:updated', { detail: { delta: 1 } }));
     } catch {}
+    finally {
+      setIsAdding(false);
+      window.dispatchEvent(new CustomEvent('cart:loading', { detail: { active: false, source: 'add' } }));
+    }
   };
 
   return (
@@ -271,13 +279,23 @@ export default function ProductCard({ product, lang = 'es', href, isLoggedIn = f
 
         <button
           onClick={handleAddToCart}
-          className="relative z-20 w-full h-10.5 bg-primary text-white rounded-lg font-body text-sm font-bold flex items-center justify-center gap-2 transition-all duration-200 hover:brightness-110 cursor-pointer"
+          className="relative z-20 w-full h-10.5 bg-primary text-white rounded-lg font-body text-sm font-bold flex items-center justify-center gap-2 transition-all duration-200 hover:brightness-110 cursor-pointer disabled:opacity-70 disabled:cursor-not-allowed"
           type="button"
+          disabled={isAdding}
         >
-          <span className="material-symbols-outlined !text-[1.125rem] leading-none">
-            shopping_bag
-          </span>
-          {t(lang, 'shop.add_to_cart')}
+          {isAdding ? (
+            <>
+              <span className="w-4 h-4 rounded-full border-2 border-white/40 border-t-white animate-spin" />
+              {lang === 'es' ? 'Agregando...' : 'Adding...'}
+            </>
+          ) : (
+            <>
+              <span className="material-symbols-outlined !text-[1.125rem] leading-none">
+                shopping_bag
+              </span>
+              {t(lang, 'shop.add_to_cart')}
+            </>
+          )}
         </button>
       </div>
     </article>

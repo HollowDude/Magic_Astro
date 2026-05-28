@@ -142,11 +142,12 @@ export async function getUserAddresses(uid: string, lang?: Lang, bearerToken?: s
   for (const bundle of bundlesToTry) {
     try {
       const raw = await nodehiveFetch<Record<string, unknown>>(
-        `/jsonapi/profile/${bundle}?filter[uid.drupal_internal__uid]=${uid}&page[limit]=10`,
+        `/jsonapi/profile/${bundle}?page[limit]=10`,
         {
           headers: { 'Content-Type': 'application/vnd.api+json', Accept: 'application/vnd.api+json' },
           lang,
           bearerToken,
+          cacheTtl: 0,
         },
       );
 

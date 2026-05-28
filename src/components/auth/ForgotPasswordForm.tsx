@@ -31,6 +31,7 @@ const TRANSLATIONS = {
     submitButton: 'Enviar enlace',
     backToLogin: 'Volver al inicio de sesión',
     errorEmpty: 'Ingresa tu correo electrónico para continuar.',
+    errorNotFound: 'No encontramos una cuenta con este correo electrónico.',
     errorServer: 'No pudimos conectar con el servidor. Intenta otra vez.',
     successTitle: '¡Correo enviado!',
     successDesc: 'Revisa tu bandeja de entrada, te enviamos un enlace para restablecer tu contraseña.',
@@ -45,6 +46,7 @@ const TRANSLATIONS = {
     submitButton: 'Send link',
     backToLogin: 'Back to sign in',
     errorEmpty: 'Please enter your email to continue.',
+    errorNotFound: 'No account found with this email address.',
     errorServer: 'Could not connect to server. Try again.',
     successTitle: 'Email sent!',
     successDesc: 'Check your inbox, we sent you a link to reset your password.',
@@ -78,6 +80,15 @@ export default function ForgotPasswordForm({
 
     setLoading(true);
     try {
+      const checkRes = await fetch(`/api/auth/check-email?mail=${encodeURIComponent(email.trim())}`);
+      const checkData = await checkRes.json().catch(() => ({}));
+
+      if (!checkData.exists) {
+        setAlert({ type: 'error', message: t.errorNotFound });
+        setLoading(false);
+        return;
+      }
+
       const res = await fetch('/api/auth/forgot-password', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },

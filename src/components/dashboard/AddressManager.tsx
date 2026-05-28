@@ -141,12 +141,10 @@ export default function AddressManager({ lang }: Props) {
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
-  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [countries, setCountries] = useState<CountryOption[]>([]);
   const [states, setStates] = useState<StateOption[]>([]);
   const [countriesLoading, setCountriesLoading] = useState(true);
   const [statesLoading, setStatesLoading] = useState(false);
-  const [countrySearch, setCountrySearch] = useState('');
 
   const fetchAddresses = useCallback(async () => {
     setLoading(true);
@@ -209,8 +207,6 @@ export default function AddressManager({ lang }: Props) {
     setFormData(EMPTY_FORM);
     setEditingId(null);
     setSaveError(null);
-    setFieldErrors({});
-    setCountrySearch('');
     setShowForm(true);
   };
 
@@ -229,8 +225,6 @@ export default function AddressManager({ lang }: Props) {
     });
     setEditingId(addr.id);
     setSaveError(null);
-    setFieldErrors({});
-    setCountrySearch('');
     setShowForm(true);
   };
 
@@ -238,8 +232,6 @@ export default function AddressManager({ lang }: Props) {
     setShowForm(false);
     setEditingId(null);
     setSaveError(null);
-    setFieldErrors({});
-    setCountrySearch('');
   };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
@@ -253,38 +245,35 @@ export default function AddressManager({ lang }: Props) {
       }
       return next;
     });
-    if (fieldErrors[name]) {
-      setFieldErrors(prev => {
-        const next = { ...prev };
-        delete next[name];
-        return next;
-      });
-    }
+    if (saveError) setSaveError(null);
   };
 
   const validate = (): boolean => {
-    const errors: Record<string, string> = {};
-    if (!formData.countryCode) errors.countryCode = lang === 'es' ? 'Selecciona un país' : 'Select a country';
-    if (!formData.addressLine1.trim()) errors.addressLine1 = lang === 'es' ? 'La dirección es requerida' : 'Address is required';
-    if (!formData.locality.trim()) errors.locality = lang === 'es' ? 'La ciudad es requerida' : 'City is required';
+    const errors: string[] = [];
+    if (!formData.countryCode) errors.push(lang === 'es' ? 'Selecciona un país' : 'Select a country');
+    if (!formData.addressLine1.trim()) errors.push(lang === 'es' ? 'La dirección es requerida' : 'Address is required');
+    if (!formData.locality.trim()) errors.push(lang === 'es' ? 'La ciudad es requerida' : 'City is required');
     if (formData.countryCode === 'US') {
       if (!formData.administrativeArea.trim()) {
-        errors.administrativeArea = lang === 'es' ? 'El estado es requerido para Estados Unidos' : 'State is required for US addresses';
+        errors.push(lang === 'es' ? 'El estado es requerido para Estados Unidos' : 'State is required for US addresses');
       }
       if (!formData.postalCode.trim()) {
-        errors.postalCode = lang === 'es' ? 'El código postal es requerido para Estados Unidos' : 'ZIP code is required for US addresses';
+        errors.push(lang === 'es' ? 'El código postal es requerido para Estados Unidos' : 'ZIP code is required for US addresses');
       }
     }
-    setFieldErrors(errors);
-    return Object.keys(errors).length === 0;
+    if (errors.length > 0) {
+      setSaveError(errors[0]);
+      return false;
+    }
+    return true;
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!validate()) return;
-    setSaving(true);
     setSaveError(null);
     setSuccessMsg(null);
+    if (!validate()) return;
+    setSaving(true);
 
     try {
       const isEdit = !!editingId;
@@ -301,10 +290,6 @@ export default function AddressManager({ lang }: Props) {
 
       const data = await res.json();
       if (!data.ok) {
-        // If server returned a specific field error, show it inline
-        if (data.field) {
-          setFieldErrors(prev => ({ ...prev, [data.field]: data.error }));
-        }
         throw new Error(data.error || t.errorSave);
       }
 
@@ -444,28 +429,21 @@ export default function AddressManager({ lang }: Props) {
                   </div>
                 ) : (
                   <>
-                    <input type="text" value={countrySearch} onChange={e => setCountrySearch(e.target.value)}
-                      placeholder={lang === 'es' ? 'Buscar país...' : 'Search country...'}
-                      className="field-input !pl-3 mt-1 mb-1.5 text-sm" />
                     <select name="countryCode" value={formData.countryCode}
-                      onChange={e => { handleInputChange(e); setCountrySearch(''); }}
-                      className={`field-input !pl-3 mt-1 ${fieldErrors.countryCode ? '!border-red-400' : ''}`}>
+                      onChange={handleInputChange}
+                      className="field-input !pl-3 mt-1">
                       <option value="">{lang === 'es' ? '— Seleccionar —' : '— Select —'}</option>
-                      {countries
-                        .filter(c => c.name.toLowerCase().includes(countrySearch.toLowerCase()))
-                        .map(c => (
-                          <option key={c.code} value={c.code}>{c.name}</option>
-                        ))}
+                      {countries.map(c => (
+                        <option key={c.code} value={c.code}>{c.name}</option>
+                      ))}
                     </select>
                   </>
                 )}
-                {fieldErrors.countryCode && <p className="text-xs text-red-500 mt-1">{fieldErrors.countryCode}</p>}
               </div>
 
               <div>
                 <label className="field-label">{t.addressLine1} *</label>
-                <input name="addressLine1" value={formData.addressLine1} onChange={handleInputChange} className={`field-input !pl-3 mt-1 ${fieldErrors.addressLine1 ? '!border-red-400' : ''}`} placeholder="123 Main St" />
-                {fieldErrors.addressLine1 && <p className="text-xs text-red-500 mt-1">{fieldErrors.addressLine1}</p>}
+                <input name="addressLine1" value={formData.addressLine1} onChange={handleInputChange} className="field-input !pl-3 mt-1" placeholder="123 Main St" />
               </div>
 
               <div>
@@ -476,8 +454,7 @@ export default function AddressManager({ lang }: Props) {
               <div className="grid gap-3" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))' }}>
                 <div>
                   <label className="field-label">{t.city} *</label>
-                  <input name="locality" value={formData.locality} onChange={handleInputChange} className={`field-input !pl-3 mt-1 ${fieldErrors.locality ? '!border-red-400' : ''}`} placeholder="Miami" />
-                  {fieldErrors.locality && <p className="text-xs text-red-500 mt-1">{fieldErrors.locality}</p>}
+                  <input name="locality" value={formData.locality} onChange={handleInputChange} className="field-input !pl-3 mt-1" placeholder="Miami" />
                 </div>
                 <div>
                   <label className="field-label">{t.state} {formData.countryCode === 'US' ? '*' : ''}</label>
@@ -488,7 +465,7 @@ export default function AddressManager({ lang }: Props) {
                     </div>
                   ) : states.length > 0 ? (
                     <select name="administrativeArea" value={formData.administrativeArea} onChange={handleInputChange}
-                      className={`field-input !pl-3 mt-1 ${fieldErrors.administrativeArea ? '!border-red-400' : ''}`}>
+                      className="field-input !pl-3 mt-1">
                       <option value="">{lang === 'es' ? '— Seleccionar —' : '— Select —'}</option>
                       {states.map(s => (
                         <option key={s.code} value={s.code}>{s.name}</option>
@@ -496,18 +473,16 @@ export default function AddressManager({ lang }: Props) {
                     </select>
                   ) : (
                     <input name="administrativeArea" value={formData.administrativeArea} onChange={handleInputChange}
-                      className={`field-input !pl-3 mt-1 ${fieldErrors.administrativeArea ? '!border-red-400' : ''}`}
+                      className="field-input !pl-3 mt-1"
                       placeholder={formData.countryCode === 'US' ? 'FL' : ''} />
                   )}
-                  {fieldErrors.administrativeArea && <p className="text-xs text-red-500 mt-1">{fieldErrors.administrativeArea}</p>}
                 </div>
               </div>
 
               <div className="grid gap-3" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))' }}>
                 <div>
                   <label className="field-label">{t.postalCode} {formData.countryCode === 'US' ? '*' : ''}</label>
-                  <input name="postalCode" value={formData.postalCode} onChange={handleInputChange} className={`field-input !pl-3 mt-1 ${fieldErrors.postalCode ? '!border-red-400' : ''}`} placeholder="33101" />
-                  {fieldErrors.postalCode && <p className="text-xs text-red-500 mt-1">{fieldErrors.postalCode}</p>}
+                  <input name="postalCode" value={formData.postalCode} onChange={handleInputChange} className="field-input !pl-3 mt-1" placeholder="33101" />
                 </div>
                 <div>
                   <label className="field-label">{t.label}</label>

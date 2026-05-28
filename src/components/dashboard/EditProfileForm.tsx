@@ -12,9 +12,17 @@ const T = {
   es: {
     title: 'Editar Perfil',
     name: 'Nombre de usuario',
+    namePlaceholder: 'Tu nombre',
     mail: 'Correo electrónico',
+    mailPlaceholder: 'tu@email.com',
     password: 'Contraseña actual',
+    passwordPlaceholder: 'Tu contraseña actual',
     passwordHint: 'Necesaria para guardar los cambios',
+    changePassword: 'Cambiar contraseña',
+    cancelPassword: 'Cancelar cambio',
+    newPassword: 'Nueva contraseña',
+    newPasswordPlaceholder: 'Nueva contraseña',
+    newPasswordHint: 'Se aplicará al guardar los cambios',
     save: 'Guardar cambios',
     saving: 'Guardando...',
     cancel: 'Cancelar',
@@ -25,14 +33,23 @@ const T = {
     uploadPhoto: 'Subir foto',
     photoSaving: 'Subiendo...',
     photoError: 'Error al subir la foto.',
+    photoUpdating: 'Cambiando foto...',
     backToAccount: 'Volver a mi cuenta',
   },
   en: {
     title: 'Edit Profile',
     name: 'Username',
+    namePlaceholder: 'Your name',
     mail: 'Email address',
+    mailPlaceholder: 'you@email.com',
     password: 'Current password',
+    passwordPlaceholder: 'Your current password',
     passwordHint: 'Required to save changes',
+    changePassword: 'Change password',
+    cancelPassword: 'Cancel change',
+    newPassword: 'New password',
+    newPasswordPlaceholder: 'New password',
+    newPasswordHint: 'It will apply when you save changes',
     save: 'Save changes',
     saving: 'Saving...',
     cancel: 'Cancel',
@@ -43,6 +60,7 @@ const T = {
     uploadPhoto: 'Upload photo',
     photoSaving: 'Uploading...',
     photoError: 'Error uploading photo.',
+    photoUpdating: 'Updating photo...',
     backToAccount: 'Back to my account',
   },
 };
@@ -52,6 +70,8 @@ export default function EditProfileForm({ lang, initialName, initialMail, initia
   const [name, setName] = useState(initialName);
   const [mail, setMail] = useState(initialMail);
   const [password, setPassword] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [showNewPassword, setShowNewPassword] = useState(false);
   const [saving, setSaving] = useState(false);
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
@@ -75,12 +95,15 @@ export default function EditProfileForm({ lang, initialName, initialMail, initia
           mail: mail.trim(),
           userUuid,
           currentPassword: password,
+          newPassword: newPassword ? newPassword : undefined,
         }),
       });
       const data = await res.json();
       if (data.ok) {
         setSuccessMsg(t.success);
         setPassword('');
+        setNewPassword('');
+        setShowNewPassword(false);
       } else {
         setErrorMsg(data.error ?? t.errorServer);
       }
@@ -142,11 +165,17 @@ export default function EditProfileForm({ lang, initialName, initialMail, initia
       <div class="grid grid-cols-1 sm:grid-cols-[auto_1fr] lg:grid-cols-3 gap-6">
         {/* Profile picture */}
         <div class="bg-white rounded-xl border border-border shadow-sm p-6 flex flex-col items-center gap-4 sm:w-48 sm:shrink-0">
-          <div class="w-28 h-28 rounded-full overflow-hidden bg-background-muted border-2 border-border flex items-center justify-center">
+          <div class="relative w-28 h-28 rounded-full overflow-hidden bg-background-muted border-2 border-border flex items-center justify-center">
             {picture ? (
               <img src={picture} alt="" class="w-full h-full object-cover" />
             ) : (
               <span class="material-symbols-outlined text-5xl text-muted">person</span>
+            )}
+            {uploading && (
+              <div class="absolute inset-0 bg-white/80 backdrop-blur-sm flex flex-col items-center justify-center gap-1 text-xs text-headline font-semibold">
+                <span class="inline-block w-4 h-4 border-2 border-primary border-t-transparent rounded-full animate-spin"></span>
+                {t.photoUpdating}
+              </div>
             )}
           </div>
 
@@ -160,7 +189,8 @@ export default function EditProfileForm({ lang, initialName, initialMail, initia
               <button
                 type="button"
                 onClick={() => fileInputRef.current?.click()}
-                class="text-sm font-semibold text-primary hover:underline"
+                class="text-sm font-semibold text-primary hover:underline disabled:opacity-60 disabled:cursor-not-allowed"
+                disabled={uploading}
               >
                 {picture ? t.changePhoto : t.uploadPhoto}
               </button>
@@ -213,7 +243,15 @@ export default function EditProfileForm({ lang, initialName, initialMail, initia
               <label class="field-label">{t.name}</label>
               <div class="field-inner">
                 <span class="material-symbols-outlined field-icon">person</span>
-                <input type="text" value={name} onChange={e => setName(e.target.value)} class="field-input" required minLength={3} />
+                <input
+                  type="text"
+                  value={name}
+                  onChange={e => setName(e.target.value)}
+                  class="field-input"
+                  required
+                  minLength={3}
+                  placeholder={t.namePlaceholder}
+                />
               </div>
             </div>
 
@@ -221,17 +259,67 @@ export default function EditProfileForm({ lang, initialName, initialMail, initia
               <label class="field-label">{t.mail}</label>
               <div class="field-inner">
                 <span class="material-symbols-outlined field-icon">mail</span>
-                <input type="email" value={mail} onChange={e => setMail(e.target.value)} class="field-input" required />
+                <input
+                  type="email"
+                  value={mail}
+                  onChange={e => setMail(e.target.value)}
+                  class="field-input"
+                  required
+                  placeholder={t.mailPlaceholder}
+                />
               </div>
             </div>
+
+            {showNewPassword ? (
+              <div class="field-wrapper">
+                <label class="field-label">{t.newPassword}</label>
+                <div class="field-inner">
+                  <span class="material-symbols-outlined field-icon">lock_reset</span>
+                  <input
+                    type="password"
+                    value={newPassword}
+                    onChange={e => setNewPassword(e.target.value)}
+                    class="field-input"
+                    placeholder={t.newPasswordPlaceholder}
+                  />
+                </div>
+                <p class="text-xs text-body-color mt-1">{t.newPasswordHint}</p>
+              </div>
+            ) : (
+              <button
+                type="button"
+                onClick={() => setShowNewPassword(true)}
+                class="inline-flex items-center gap-2 text-sm font-semibold text-primary hover:underline"
+              >
+                <span class="material-symbols-outlined !text-base">lock_reset</span>
+                {t.changePassword}
+              </button>
+            )}
 
             <div class="field-wrapper">
               <label class="field-label">{t.password} *</label>
               <div class="field-inner">
                 <span class="material-symbols-outlined field-icon">lock</span>
-                <input type="password" value={password} onChange={e => setPassword(e.target.value)} class="field-input" required minLength={1} />
+                <input
+                  type="password"
+                  value={password}
+                  onChange={e => setPassword(e.target.value)}
+                  class="field-input"
+                  required
+                  minLength={1}
+                  placeholder={t.passwordPlaceholder}
+                />
               </div>
               <p class="text-xs text-body-color mt-1">{t.passwordHint}</p>
+              {showNewPassword && (
+                <button
+                  type="button"
+                  onClick={() => { setShowNewPassword(false); setNewPassword(''); }}
+                  class="mt-2 text-xs text-muted hover:text-primary hover:underline"
+                >
+                  {t.cancelPassword}
+                </button>
+              )}
             </div>
 
             <div class="flex gap-3 pt-2">

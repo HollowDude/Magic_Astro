@@ -92,6 +92,31 @@ function t(lang: string, key: string): string {
   return T[lang]?.[key] ?? T.en[key] ?? key;
 }
 
+function parseMoney(value: string): number {
+  if (!value) return 0;
+  const cleaned = value.replace(/[^0-9.,-]/g, '').replace(',', '.');
+  const parsed = parseFloat(cleaned);
+  return Number.isFinite(parsed) ? parsed : 0;
+}
+
+function formatMoney(amount: number, sample: string): string {
+  const trimmed = (sample ?? '').trim();
+  const symbol = trimmed.replace(/[0-9.,\s-]/g, '');
+  const formatted = amount.toFixed(2);
+  if (!symbol) return formatted;
+  return trimmed.startsWith(symbol) ? `${symbol}${formatted}` : `${formatted}${symbol}`;
+}
+
+function computeTotals(items: CartItem[], sampleTotal: string): { totalItems: number; totalPrice: string } {
+  const totalItems = items.reduce((sum, i) => sum + i.quantity, 0);
+  const totalNumber = items.reduce((sum, i) => {
+    const unit = parseMoney(i.unitPrice ?? '0');
+    return sum + (unit * i.quantity);
+  }, 0);
+  const totalPrice = formatMoney(totalNumber, sampleTotal);
+  return { totalItems, totalPrice };
+}
+
 export default function CartManager({ lang }: Props) {
   const [data, setData] = useState<CartData | null>(null);
   const [loading, setLoading] = useState(true);
@@ -99,11 +124,23 @@ export default function CartManager({ lang }: Props) {
   const [updatingIds, setUpdatingIds] = useState<Set<number>>(new Set());
   const [clearing, setClearing] = useState(false);
 
+  const emitCartUpdated = useCallback((next: CartData | null) => {
+    if (!next) return;
+    window.dispatchEvent(new CustomEvent('cart:updated', { detail: next }));
+  }, []);
+
+  const emitCartLoading = useCallback((active: boolean, source: string) => {
+    window.dispatchEvent(new CustomEvent('cart:loading', { detail: { active, source } }));
+  }, []);
+
   const fetchCart = useCallback(async () => {
     setLoading(true);
     setError(false);
     try {
-      const res = await fetch('/api/cart/');
+      const res = await fetch('/api/cart/', {
+        cache: 'no-store',
+        headers: { 'Cache-Control': 'no-store' },
+      });
       if (!res.ok) throw new Error('Failed');
       const json: CartData = await res.json();
       setData(json);
@@ -118,7 +155,22 @@ export default function CartManager({ lang }: Props) {
 
   const updateQuantity = async (item: CartItem, newQty: number) => {
     if (newQty < 1) return;
+    const snapshot = data;
+    if (!snapshot) return;
+
+    const sampleTotal = snapshot.totalPrice || snapshot.items[0]?.price || '';
+    const nextItems = snapshot.items.map(i => {
+      if (i.itemId !== item.itemId) return i;
+      const nextTotal = formatMoney(parseMoney(i.unitPrice ?? '0') * newQty, i.totalPrice || i.price);
+      return { ...i, quantity: newQty, totalPrice: nextTotal };
+    });
+    const totals = computeTotals(nextItems, sampleTotal);
+    const nextData = { ...snapshot, items: nextItems, ...totals };
+    setData(nextData);
+    emitCartUpdated(nextData);
+
     setUpdatingIds(prev => new Set(prev).add(item.itemId));
+    emitCartLoading(true, 'update');
     try {
       const res = await fetch(`/api/cart/items/${item.itemId}`, {
         method: 'PATCH',
@@ -126,18 +178,29 @@ export default function CartManager({ lang }: Props) {
         body: JSON.stringify({ order_id: item.orderId, quantity: newQty }),
       });
       if (!res.ok) throw new Error('Failed');
-      window.dispatchEvent(new CustomEvent('cart:updated'));
-      await fetchCart();
     } catch {
-      // silent
+      setData(snapshot);
+      emitCartUpdated(snapshot);
     } finally {
       setUpdatingIds(prev => { const s = new Set(prev); s.delete(item.itemId); return s; });
+      emitCartLoading(false, 'update');
     }
   };
 
   const removeItem = async (item: CartItem) => {
     if (!window.confirm(t(lang, 'remove_confirm'))) return;
+    const snapshot = data;
+    if (!snapshot) return;
+
+    const sampleTotal = snapshot.totalPrice || snapshot.items[0]?.price || '';
+    const nextItems = snapshot.items.filter(i => i.itemId !== item.itemId);
+    const totals = computeTotals(nextItems, sampleTotal);
+    const nextData = { ...snapshot, items: nextItems, ...totals };
+    setData(nextData);
+    emitCartUpdated(nextData);
+
     setUpdatingIds(prev => new Set(prev).add(item.itemId));
+    emitCartLoading(true, 'remove');
     try {
       const res = await fetch(`/api/cart/items/${item.itemId}`, {
         method: 'DELETE',
@@ -145,19 +208,21 @@ export default function CartManager({ lang }: Props) {
         body: JSON.stringify({ order_id: item.orderId }),
       });
       if (!res.ok) throw new Error('Failed');
-      window.dispatchEvent(new CustomEvent('cart:updated'));
-      await fetchCart();
     } catch {
-      // silent
+      setData(snapshot);
+      emitCartUpdated(snapshot);
     } finally {
       setUpdatingIds(prev => { const s = new Set(prev); s.delete(item.itemId); return s; });
+      emitCartLoading(false, 'remove');
     }
   };
 
   const handleClear = async () => {
     if (!data?.items.length) return;
     if (!window.confirm(t(lang, 'clear_confirm'))) return;
+    const snapshot = data;
     setClearing(true);
+    emitCartLoading(true, 'clear');
     try {
       const orderId = data.items[0].orderId;
       const res = await fetch('/api/cart/clear', {
@@ -166,12 +231,18 @@ export default function CartManager({ lang }: Props) {
         body: JSON.stringify({ order_id: orderId }),
       });
       if (!res.ok) throw new Error('Failed');
-      window.dispatchEvent(new CustomEvent('cart:updated'));
-      await fetchCart();
+      const sampleTotal = snapshot?.totalPrice || snapshot?.items[0]?.price || '';
+      const nextData = { items: [], totalItems: 0, totalPrice: formatMoney(0, sampleTotal) };
+      setData(nextData);
+      emitCartUpdated(nextData);
     } catch {
-      // silent
+      if (snapshot) {
+        setData(snapshot);
+        emitCartUpdated(snapshot);
+      }
     } finally {
       setClearing(false);
+      emitCartLoading(false, 'clear');
     }
   };
 
@@ -240,7 +311,7 @@ export default function CartManager({ lang }: Props) {
               {data.items.map((item) => {
                 const isUpdating = updatingIds.has(item.itemId);
                 return (
-                  <tr key={item.itemId} className="border-b border-border last:border-b-0">
+                  <tr key={item.itemId} className={`border-b border-border last:border-b-0 ${isUpdating ? 'opacity-60' : ''}`}>
                     <td className="px-5 py-4">
                       <div className="flex items-center gap-3">
                         <div className="w-14 h-14 rounded-lg overflow-hidden bg-blush shrink-0">

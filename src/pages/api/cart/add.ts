@@ -1,5 +1,6 @@
 import type { APIRoute } from 'astro';
-import { addToCart, getCart, updateCartItem, RIBBON_COLOR_MAP } from '@/services/nodehive/nodehive.cart';
+import { addToCart, getCart, updateCartItem, fetchRibbonColors, resolveRibbonColorUuid, ribbonColorDefFromUuid } from '@/services/nodehive/nodehive.cart';
+import type { RibbonColorDef } from '@/services/nodehive/nodehive.cart';
 import { nodehiveFetch } from '@/services/nodehive/nodehive.client';
 import { relayCartCookie } from './cookie-helper';
 
@@ -145,7 +146,6 @@ async function patchOrderItemCustomizations(
           'X-CSRF-Token': csrfToken,
         },
         sessionCookie,
-        skipApiKey: true,
       },
     );
     if (patchRes.status !== 200) {
@@ -178,6 +178,8 @@ export const POST: APIRoute = async ({ request, cookies }) => {
   const drupalSession = cookies.get('drupal_s')?.value;
   const decoded = drupalSession ? decodeURIComponent(drupalSession) : undefined;
 
+  const ribbonColors = await fetchRibbonColors();
+
   const cartResult = await getCart(decoded);
   const currentCart = (cartResult.data ?? []) as any[];
 
@@ -198,19 +200,25 @@ export const POST: APIRoute = async ({ request, cookies }) => {
   }> = [];
 
   for (const item of items) {
-    const { cardMessage, ribbonColor: ribbonColorUuid, ...cartItemBase } = item;
+    const { cardMessage, ribbonColor: ribbonColorName, ...cartItemBase } = item;
     const inputQty = cartItemBase.quantity ?? 1;
 
     const normalizedCard = cardMessage?.trim() || null;
-    const normalizedRibbon = ribbonColorUuid?.trim() || null;
+    const normalizedRibbonName = ribbonColorName?.trim() || null;
+
+    // Resolve UUID from color name dynamically
+    const ribbonColorUuid = await resolveRibbonColorUuid(normalizedRibbonName);
 
     const target: MatchKey = {
       variationId: cartItemBase.purchased_entity_id,
-      ribbonColorUuid: normalizedRibbon,
+      ribbonColorUuid,
       cardMessage: normalizedCard,
     };
 
     const existing = findMatchingItem(currentCart, customizationsMap, target);
+
+    // Resolve display name/hex from the fetched ribbon colors
+    const ribbonColorDisplay = ribbonColorDefFromUuid(ribbonColorUuid, ribbonColors);
 
     if (existing) {
       const newQty = existing.quantity + inputQty;
@@ -227,7 +235,7 @@ export const POST: APIRoute = async ({ request, cookies }) => {
         order_item_id: existing.orderItemId,
         hasCard: !!normalizedCard,
         cardMessage: normalizedCard,
-        ribbonColor: normalizedRibbon ? (RIBBON_COLOR_MAP[normalizedRibbon] ?? null) : null,
+        ribbonColor: ribbonColorDisplay,
       });
     } else {
       const addRes = await addToCart([{
@@ -246,11 +254,11 @@ export const POST: APIRoute = async ({ request, cookies }) => {
         if (rawSession) sessionForPatch = rawSession;
       }
 
-      if (normalizedCard || normalizedRibbon) {
+      if (normalizedCard || ribbonColorUuid) {
         await patchOrderItemCustomizations(
           newItem.uuid,
           normalizedCard ?? undefined,
-          normalizedRibbon ?? undefined,
+          ribbonColorUuid ?? undefined,
           sessionForPatch,
         );
       }
@@ -260,13 +268,16 @@ export const POST: APIRoute = async ({ request, cookies }) => {
         order_item_id: newItem.order_item_id,
         hasCard: !!normalizedCard,
         cardMessage: normalizedCard,
-        ribbonColor: normalizedRibbon ? (RIBBON_COLOR_MAP[normalizedRibbon] ?? null) : null,
+        ribbonColor: ribbonColorDisplay,
       });
     }
   }
 
   const headers: Record<string, string> = {
     'Content-Type': 'application/json',
+    'Cache-Control': 'no-store, no-cache, must-revalidate, max-age=0',
+    'Pragma': 'no-cache',
+    'Expires': '0',
     ...relayCartCookie(latestSetCookie, '/api/cart'),
   };
 

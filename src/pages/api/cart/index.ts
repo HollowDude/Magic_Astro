@@ -1,5 +1,6 @@
 import type { APIRoute } from 'astro';
-import { getCart, RIBBON_COLOR_MAP, type CartOrder, type CustomizationEntry } from '@/services/nodehive/nodehive.cart';
+import { getCart, fetchRibbonColors, ribbonColorDefFromUuid, type CartOrder, type CustomizationEntry } from '@/services/nodehive/nodehive.cart';
+import type { RibbonColorDef } from '@/services/nodehive/nodehive.cart';
 import { nodehiveFetch } from '@/services/nodehive/nodehive.client';
 import { relayCartCookie } from './cookie-helper';
 
@@ -83,6 +84,7 @@ async function getVariationThumbnailMap(uuids: string[]): Promise<Map<string, st
 
 async function fetchCustomizations(
   itemUuids: string[],
+  ribbonColors: RibbonColorDef[],
 ): Promise<Record<number, CustomizationEntry>> {
   if (itemUuids.length === 0) return {};
 
@@ -111,7 +113,7 @@ async function fetchCustomizations(
       const relData = entry?.relationships?.field_ribbon_color?.data;
       let ribbonColor = null;
       if (relData?.id) {
-        ribbonColor = RIBBON_COLOR_MAP[relData.id] ?? null;
+        ribbonColor = ribbonColorDefFromUuid(relData.id, ribbonColors);
       }
       map[internalId] = {
         hasCard: attrs.field_has_card ?? false,
@@ -144,9 +146,11 @@ export const GET: APIRoute = async ({ cookies }) => {
     }
   }
 
+  const ribbonColors = await fetchRibbonColors();
+
   const [thumbnailMap, customizationMap] = await Promise.all([
     getVariationThumbnailMap(Array.from(variationUuids)),
-    fetchCustomizations(itemUuids),
+    fetchCustomizations(itemUuids, ribbonColors),
   ]);
 
   const items: CartItemDisplay[] = rawCarts.flatMap(cart =>
@@ -177,6 +181,9 @@ export const GET: APIRoute = async ({ cookies }) => {
 
   const headers: Record<string, string> = {
     'Content-Type': 'application/json',
+    'Cache-Control': 'no-store, no-cache, must-revalidate, max-age=0',
+    'Pragma': 'no-cache',
+    'Expires': '0',
     ...relayCartCookie(result.headers, '/api/cart'),
   };
 

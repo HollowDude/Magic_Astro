@@ -23,7 +23,6 @@
     "jose": "^6.2.2",
     "jsona": "^1.14.0",
     "nodehive-js": "^1.0.73",
-    "nodemailer": "^8.0.7",
     "react": "^19.2.5",
     "react-dom": "^19.2.5",
     "tailwindcss": "^4.2.4"

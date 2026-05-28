@@ -169,6 +169,9 @@ export default function HeaderClient({ isLoggedIn, currentPath, lang, navLinks: 
   const [hasMore,       setHasMore]       = useState(false);
   const [cartCount, setCartCount] = useState(0);
   const [cartOpen, setCartOpen] = useState(false);
+  const [cartLoading, setCartLoading] = useState(false);
+  const [cartLoaded, setCartLoaded] = useState(false);
+  const [cartBusyCount, setCartBusyCount] = useState(0);
   const [cartData, setCartData] = useState<{
     items: Array<{
       itemId: number; variationId: number | null; title: string; sku: string;
@@ -180,24 +183,90 @@ export default function HeaderClient({ isLoggedIn, currentPath, lang, navLinks: 
   }>({ items: [], totalItems: 0, totalPrice: '' });
 
   const cartBtnRef = useRef<HTMLDivElement>(null);
+  const cartFetchRef = useRef<Promise<void> | null>(null);
+  const cartDirtyRef = useRef(false);
+  const cartRefreshTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  const fetchCartData = useCallback(async () => {
-    try {
-      const res = await fetch('/api/cart/');
-      if (!res.ok) return;
-      const json = await res.json();
-      setCartData(json);
-      setCartCount(json.totalItems ?? 0);
-    } catch {}
-  }, []);
+  const fetchCartData = useCallback(async (force = false) => {
+    if (!isLoggedIn) return;
+    if (cartFetchRef.current) return cartFetchRef.current;
+    if (!force && cartLoaded && !cartDirtyRef.current) return;
+
+    setCartLoading(true);
+    const task = (async () => {
+      try {
+        const res = await fetch('/api/cart/', {
+          cache: 'no-store',
+          headers: { 'Cache-Control': 'no-store' },
+        });
+        if (!res.ok) return;
+        const json = await res.json();
+        setCartData(json);
+        setCartCount(json.totalItems ?? 0);
+        setCartLoaded(true);
+        cartDirtyRef.current = false;
+      } catch {
+        // silent
+      } finally {
+        setCartLoading(false);
+        cartFetchRef.current = null;
+      }
+    })();
+
+    cartFetchRef.current = task;
+    return task;
+  }, [isLoggedIn, cartLoaded]);
 
   useEffect(() => {
     if (!isLoggedIn) return;
-    fetchCartData();
-    const handler = () => fetchCartData();
-    window.addEventListener('cart:updated', handler);
-    return () => window.removeEventListener('cart:updated', handler);
-  }, [isLoggedIn, fetchCartData]);
+    fetchCartData(true);
+
+    const updatedHandler = (event: Event) => {
+      const detail = (event as CustomEvent).detail as any;
+      if (detail?.items && typeof detail.totalItems === 'number') {
+        setCartData(detail);
+        setCartCount(detail.totalItems ?? 0);
+        setCartLoaded(true);
+        cartDirtyRef.current = false;
+        return;
+      }
+
+      if (typeof detail?.delta === 'number') {
+        setCartCount(prev => Math.max(0, prev + detail.delta));
+      }
+
+      cartDirtyRef.current = true;
+      if (cartOpen) {
+        fetchCartData(true);
+      } else {
+        if (cartRefreshTimerRef.current) clearTimeout(cartRefreshTimerRef.current);
+        cartRefreshTimerRef.current = setTimeout(() => fetchCartData(true), 800);
+      }
+    };
+
+    window.addEventListener('cart:updated', updatedHandler);
+    return () => {
+      window.removeEventListener('cart:updated', updatedHandler);
+      if (cartRefreshTimerRef.current) clearTimeout(cartRefreshTimerRef.current);
+    };
+  }, [isLoggedIn, fetchCartData, cartOpen]);
+
+  useEffect(() => {
+    const loadingHandler = (event: Event) => {
+      const detail = (event as CustomEvent).detail as any;
+      const active = !!detail?.active;
+      setCartBusyCount(prev => Math.max(0, prev + (active ? 1 : -1)));
+    };
+    window.addEventListener('cart:loading', loadingHandler);
+    return () => window.removeEventListener('cart:loading', loadingHandler);
+  }, []);
+
+  useEffect(() => {
+    if (!cartOpen) return;
+    if (!cartLoaded || cartDirtyRef.current) {
+      fetchCartData(true);
+    }
+  }, [cartOpen, cartLoaded, fetchCartData]);
 
   useEffect(() => {
     if (!cartOpen) return;
@@ -296,9 +365,16 @@ export default function HeaderClient({ isLoggedIn, currentPath, lang, navLinks: 
   };
 
   const showPanel = searchOpen && searchValue.length >= 1;
+  const cartBusyLabel = lang === 'es' ? 'Actualizando carrito...' : 'Updating cart...';
 
   return (
     <>
+      {cartBusyCount > 0 && (
+        <div className="fixed bottom-5 right-5 z-[120] rounded-full bg-white/90 backdrop-blur-md border border-border px-4 py-2 shadow-lg flex items-center gap-2 text-xs font-body text-headline">
+          <span className="w-3 h-3 rounded-full border-2 border-border border-t-primary animate-spin" />
+          {cartBusyLabel}
+        </div>
+      )}
       <header className="sticky top-0 z-50 header-blur flex items-center justify-between gap-4 py-2.5 px-4 sm:px-10 border-b border-[var(--primary-alpha-10)]">
 
         {/* ── Left: logo + nav ── */}
@@ -448,7 +524,19 @@ export default function HeaderClient({ isLoggedIn, currentPath, lang, navLinks: 
                       </button>
                     </div>
 
-                    {cartData.items.length === 0 ? (
+                    {cartLoading && !cartLoaded ? (
+                      <div className="px-5 py-5 space-y-3">
+                        {[0, 1, 2].map((i) => (
+                          <div key={i} className="flex items-center gap-3">
+                            <div className="w-10 h-10 rounded-lg bg-border animate-pulse" />
+                            <div className="flex-1 space-y-2">
+                              <div className="h-2.5 rounded-full bg-border animate-pulse w-3/4" />
+                              <div className="h-2 rounded-full bg-border/70 animate-pulse w-1/3" />
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    ) : cartData.items.length === 0 ? (
                       <div className="flex flex-col items-center gap-2 py-8 px-5 text-center">
                         <span className="material-symbols-outlined text-3xl text-muted opacity-30 leading-none">shopping_cart</span>
                         <p className="font-body text-sm text-muted m-0">{t(lang, 'header.cart_empty')}</p>
