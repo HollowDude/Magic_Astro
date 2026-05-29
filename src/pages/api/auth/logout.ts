@@ -12,7 +12,7 @@ export const POST: APIRoute = async ({ cookies, request }) => {
   }
 
   const headers: Record<string, string> = { 'Content-Type': 'application/json' };
-  headers['Set-Cookie'] = 'drupal_s=; Path=/api/cart; HttpOnly; SameSite=Lax; Max-Age=0';
+  headers['Set-Cookie'] = 'drupal_s=; Path=/; HttpOnly; SameSite=Lax; Max-Age=0';
 
   return new Response(JSON.stringify({ ok: true }), {
     status: 200,

@@ -78,6 +78,7 @@ export async function getUserProfile(
       {
         headers: { 'Content-Type': 'application/vnd.api+json', Accept: 'application/vnd.api+json' },
         lang,
+        cacheTtl: 0,
       },
     );
     if (raw.status !== 200) {
@@ -106,6 +107,7 @@ export async function getUserProfile(
             headers: { Accept: 'application/json' },
             lang,
             bearerToken: accessToken,
+            cacheTtl: 0,
           },
         );
         if (restRes.status === 200) {

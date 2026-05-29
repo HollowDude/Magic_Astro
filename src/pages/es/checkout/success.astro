@@ -1,0 +1,164 @@
+---
+export const prerender = false;
+
+import HomeLayout from '@/layouts/HomeLayout.astro';
+import { getSession } from '@/services/session.service';
+import { getLangFromUrl } from '@/i18n/utils';
+
+const lang = getLangFromUrl(Astro.url);
+const session = await getSession(Astro.cookies);
+
+if (!session) {
+  return Astro.redirect(`/es/login?redirect=/es/checkout/success`);
+}
+
+const orderNumber = Astro.url.searchParams.get('order') ?? '';
+const drupalOrderId = Astro.url.searchParams.get('orderId') ?? '';
+const paypalToken = Astro.url.searchParams.get('token') ?? '';
+---
+
+<HomeLayout title="Pedido confirmado — Maggy Flowers" lang={lang}>
+  <div class="success-page">
+    <div class="success-card">
+      <div class="success-icon-wrap">
+        <span class="success-icon material-symbols-outlined">check_circle</span>
+      </div>
+      <h1 class="success-title">¡Pedido confirmado!</h1>
+      <p class="success-subtitle">Recibirás un correo con la confirmación de tu pedido.</p>
+
+      {orderNumber && (
+        <div class="success-order-number">
+          <span class="success-order-label">Número de pedido</span>
+          <span class="success-order-value">{orderNumber}</span>
+        </div>
+      )}
+
+      <div class="success-actions">
+        <a href="/es/shop" class="btn-primary success-btn">
+          <span class="material-symbols-outlined" style="font-size:1.25rem">shopping_bag</span>
+          Seguir comprando
+        </a>
+        <a href="/es/dashboard" class="success-link">
+          <span class="material-symbols-outlined" style="font-size:1rem">person</span>
+          Ir a mi perfil
+        </a>
+      </div>
+    </div>
+  </div>
+</HomeLayout>
+
+<script>
+  const paypalToken = new URLSearchParams(window.location.search).get('token');
+  const drupalOrderId = new URLSearchParams(window.location.search).get('orderId');
+
+  if (paypalToken) {
+    fetch('/api/checkout/paypal-capture', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        paypalOrderId: paypalToken,
+        drupalOrderId: drupalOrderId ? Number(drupalOrderId) : null,
+      }),
+    }).catch(() => {});
+  }
+</script>
+
+<style>
+  .success-page {
+    min-height: 70vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 3rem 1rem;
+  }
+  .success-card {
+    background: white;
+    border: 1.5px solid var(--border);
+    border-radius: 1.5rem;
+    padding: 3rem 2rem;
+    max-width: 28rem;
+    width: 100%;
+    text-align: center;
+    box-shadow: 0 8px 32px rgba(109,81,87,0.08);
+  }
+  .success-icon-wrap {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 4.5rem;
+    height: 4.5rem;
+    border-radius: 50%;
+    background: color-mix(in srgb, var(--primary) 10%, transparent);
+    margin-bottom: 1.25rem;
+  }
+  .success-icon {
+    font-size: 2.5rem;
+    color: var(--primary);
+  }
+  .success-title {
+    font-size: 1.5rem;
+    font-weight: 800;
+    font-family: var(--font-heading);
+    color: var(--headline);
+    margin-bottom: 0.5rem;
+  }
+  .success-subtitle {
+    font-size: 0.9375rem;
+    color: var(--text-muted);
+    margin-bottom: 1.5rem;
+    line-height: 1.5;
+  }
+  .success-order-number {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    background: var(--blush);
+    border: 1px solid color-mix(in srgb, var(--primary) 15%, transparent);
+    border-radius: 0.875rem;
+    padding: 1rem 1.25rem;
+    margin-bottom: 1.5rem;
+  }
+  .success-order-label {
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--text-muted);
+  }
+  .success-order-value {
+    font-size: 1.25rem;
+    font-weight: 800;
+    color: var(--headline);
+    font-family: var(--font-heading);
+  }
+  .success-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+  .success-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    height: 3.25rem;
+    font-size: 1rem;
+    font-weight: 700;
+    border-radius: 0.875rem;
+    text-decoration: none;
+  }
+  .success-link {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.375rem;
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: var(--text-muted);
+    text-decoration: none;
+    transition: color 0.15s;
+  }
+  .success-link:hover {
+    color: var(--primary);
+  }
+</style>

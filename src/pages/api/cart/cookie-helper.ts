@@ -2,7 +2,7 @@ const DRUPAL_S_COOKIE = 'drupal_s';
 
 export function relayCartCookie(
   drupalHeaders: Headers,
-  path: string,
+  _path?: string,
 ): Record<string, string> {
   const setCookie = drupalHeaders.get('set-cookie');
   if (!setCookie) return {};
@@ -14,6 +14,6 @@ export function relayCartCookie(
   const maxAge = 2000000;
 
   return {
-    'Set-Cookie': `${DRUPAL_S_COOKIE}=${encoded}; Path=${path}; HttpOnly; SameSite=Lax; Max-Age=${maxAge}`,
+    'Set-Cookie': `${DRUPAL_S_COOKIE}=${encoded}; Path=/; HttpOnly; SameSite=Lax; Max-Age=${maxAge}`,
   };
 }

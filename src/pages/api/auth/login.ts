@@ -35,7 +35,7 @@ export const POST: APIRoute = async ({ request, cookies }) => {
     const cookieMatch = result.data.sessionCookie.match(/^([^=]+=[^;]+)/);
     if (cookieMatch) {
       const encoded = encodeURIComponent(cookieMatch[1]);
-      responseHeaders['Set-Cookie'] = `drupal_s=${encoded}; Path=/api/cart; HttpOnly; SameSite=Lax; Max-Age=2000000`;
+      responseHeaders['Set-Cookie'] = `drupal_s=${encoded}; Path=/; HttpOnly; SameSite=Lax; Max-Age=2000000`;
     }
   }
 

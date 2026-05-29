@@ -16,8 +16,8 @@ const [profile, orders, addresses] = await Promise.all([
   getUserAddresses(session.uid, lang, session.accessToken),
 ]);
 
-const displayName = profile?.displayName || session.name;
-const mail = profile?.mail || session.mail || '';
+const displayName = session.name || profile?.displayName;
+const mail = session.mail || profile?.mail || '';
 const phone = profile?.phone || null;
 
 const defaultAddress = addresses.find(a => a.isDefault) ?? addresses[0] ?? null;
