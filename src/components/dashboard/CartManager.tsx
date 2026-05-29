@@ -450,12 +450,11 @@ export default function CartManager({ lang }: Props) {
           </div>
 
           <button
-            disabled
-            className="btn-primary w-full mt-6 h-12 opacity-60 cursor-not-allowed"
+            onClick={() => { window.location.href = `/${lang}/checkout`; }}
+            className="btn-primary w-full mt-6 h-12 cursor-pointer"
           >
             {t(lang, 'checkout')}
           </button>
-          <p className="font-body text-xs text-muted text-center mt-2">(Próximamente)</p>
         </div>
       </div>
     </div>

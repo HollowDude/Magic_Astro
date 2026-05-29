@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import EditableField from '@/components/ui/EditableField';
 import PasswordStrengthBar from '@/components/ui/PasswordStrengthBar';
 import { isValidPassword } from '@/utils/passwordValidation';
@@ -79,6 +79,11 @@ const T = {
 export default function EditProfileForm({ lang, initialName, initialMail, initialPicture, userUuid }: Props) {
   const t = T[lang];
 
+  const draftKey = `mf-profile-last-saved:${userUuid}`;
+
+  const [cachedName, setCachedName] = useState(initialName);
+  const [cachedMail, setCachedMail] = useState(initialMail);
+
   // Name / mail
   const [nameSaving, setNameSaving] = useState(false);
 
@@ -98,14 +103,40 @@ export default function EditProfileForm({ lang, initialName, initialMail, initia
   // Global feedback
   const [globalSuccess, setGlobalSuccess] = useState<string | null>(null);
 
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const raw = window.localStorage.getItem(draftKey);
+    if (!raw) return;
+    try {
+      const parsed = JSON.parse(raw) as { name?: string; mail?: string };
+      const draftName = parsed?.name ?? initialName;
+      const draftMail = parsed?.mail ?? initialMail;
+      if (draftName === initialName && draftMail === initialMail) {
+        window.localStorage.removeItem(draftKey);
+        return;
+      }
+      setCachedName(draftName);
+      setCachedMail(draftMail);
+    } catch {
+      window.localStorage.removeItem(draftKey);
+    }
+  }, [draftKey, initialName, initialMail]);
+
+  const persistDraft = (nextName: string, nextMail: string) => {
+    if (typeof window === 'undefined') return;
+    const payload = { name: nextName, mail: nextMail, updatedAt: Date.now() };
+    window.localStorage.setItem(draftKey, JSON.stringify(payload));
+  };
+
   async function saveName(newValue: string, password: string) {
+    const trimmed = newValue.trim();
     setNameSaving(true);
     try {
       const res = await fetch('/api/user/update-profile', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          displayName: newValue.trim(),
+          displayName: trimmed,
           userUuid,
           currentPassword: password,
           lang,
@@ -113,19 +144,22 @@ export default function EditProfileForm({ lang, initialName, initialMail, initia
       });
       const data = await res.json();
       if (!data.ok) throw new Error(data.error ?? t.errorServer);
+      setCachedName(trimmed);
+      persistDraft(trimmed, cachedMail);
     } finally {
       setNameSaving(false);
     }
   }
 
   async function saveMail(newValue: string, password: string) {
+    const trimmed = newValue.trim();
     setNameSaving(true);
     try {
       const res = await fetch('/api/user/update-profile', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          mail: newValue.trim(),
+          mail: trimmed,
           userUuid,
           currentPassword: password,
           lang,
@@ -133,6 +167,8 @@ export default function EditProfileForm({ lang, initialName, initialMail, initia
       });
       const data = await res.json();
       if (!data.ok) throw new Error(data.error ?? t.errorServer);
+      setCachedMail(trimmed);
+      persistDraft(cachedName, trimmed);
     } finally {
       setNameSaving(false);
     }
@@ -279,7 +315,7 @@ export default function EditProfileForm({ lang, initialName, initialMail, initia
           {/* Name */}
           <EditableField
             label={t.nameLabel}
-            currentValue={initialName}
+            currentValue={cachedName}
             icon="person"
             type="text"
             saving={nameSaving}
@@ -294,7 +330,7 @@ export default function EditProfileForm({ lang, initialName, initialMail, initia
           {/* Email */}
           <EditableField
             label={t.mailLabel}
-            currentValue={initialMail}
+            currentValue={cachedMail}
             icon="mail"
             type="email"
             saving={nameSaving}

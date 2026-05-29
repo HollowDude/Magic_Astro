@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import InputField from '@/components/ui/InputField';
 import Alert from '@/components/ui/Alert';
 import type { Lang } from '@/i18n/ui';
@@ -34,6 +34,7 @@ const TRANSLATIONS = {
     submitButton: 'Iniciar Sesión',
     noAccount: '¿Aún no tienes una cuenta?',
     registerHere: 'Regístrate aquí',
+    errorExpired: 'Tu sesión expiró. Inicia sesión de nuevo.',
     errorEmpty: 'Completa usuario y contraseña para continuar.',
     errorServer: 'No pudimos conectar con el servidor. Intenta otra vez.',
     success: (name: string) => `¡Bienvenido, ${name}!`,
@@ -52,6 +53,7 @@ const TRANSLATIONS = {
     submitButton: 'Sign In',
     noAccount: "Don't have an account?",
     registerHere: 'Register here',
+    errorExpired: 'Your session expired. Please sign in again.',
     errorEmpty: 'Please enter username and password to continue.',
     errorServer: 'Could not connect to server. Try again.',
     success: (name: string) => `Welcome, ${name}!`,
@@ -78,6 +80,13 @@ export default function LoginForm({
   const redirectUrl = typeof window !== 'undefined'
     ? new URLSearchParams(window.location.search).get('redirect')
     : null;
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    if (new URLSearchParams(window.location.search).has('expired')) {
+      setAlert({ type: 'error', message: t.errorExpired });
+    }
+  }, [t.errorExpired]);
 
   function friendlyLoginError(status: number, message?: string): string {
     const msg = (message ?? '').toLowerCase();

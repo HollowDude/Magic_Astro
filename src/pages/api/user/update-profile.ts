@@ -1,5 +1,5 @@
 import type { APIRoute } from 'astro';
-import { getSession } from '@/services/session.service';
+import { getSession, setSession } from '@/services/session.service';
 import { nodehiveFetch } from '@/services/nodehive/nodehive.client';
 import { processDrupalErrors } from '@/services/nodehive/error-parser';
 
@@ -96,12 +96,22 @@ export const POST: APIRoute = async ({ cookies, request }) => {
 
     if (res.status >= 200 && res.status < 300) {
       const data = (res.data as any)?.data;
+      const requestedName = typeof displayName === 'string' ? displayName : undefined;
+      const requestedMail = typeof mail === 'string' ? mail : undefined;
+      const newName = requestedName ?? data?.attributes?.name ?? session.name;
+      const newMail = requestedMail ?? data?.attributes?.mail ?? session.mail;
+
+      if (session && (newName !== session.name || newMail !== session.mail)) {
+        await setSession(cookies, {
+          ...session,
+          name: newName,
+          mail: newMail,
+        });
+      }
+
       return json({
         ok: true,
-        user: {
-          name: data?.attributes?.name ?? displayName,
-          mail: data?.attributes?.mail ?? mail,
-        },
+        user: { name: newName, mail: newMail },
       }, 200);
     }
 

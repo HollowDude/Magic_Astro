@@ -1,0 +1,54 @@
+---
+export const prerender = false;
+
+import HomeLayout from '@/layouts/HomeLayout.astro';
+import CheckoutClient from '@/components/checkout/CheckoutClient';
+import { getSession } from '@/services/session.service';
+import { getCart } from '@/services/nodehive/nodehive.cart';
+import { getUserAddresses } from '@/services/nodehive/nodehive.user';
+import { getLangFromUrl } from '@/i18n/utils';
+
+const lang = getLangFromUrl(Astro.url);
+const session = await getSession(Astro.cookies);
+
+if (!session) {
+  return Astro.redirect(`/en/login?redirect=/en/checkout`);
+}
+
+const drupalCookie = Astro.cookies.get('drupal_s')?.value;
+const decodedSession = drupalCookie ? decodeURIComponent(drupalCookie) : undefined;
+const cartResult = await getCart(decodedSession);
+const rawCarts = cartResult.data as any[];
+
+const isEmpty = !rawCarts || rawCarts.length === 0 || !rawCarts[0]?.order_items?.length;
+if (isEmpty) {
+  return Astro.redirect(`/en/shop`);
+}
+
+const cartData = {
+  orderId: rawCarts[0].order_id,
+  totalPrice: rawCarts[0].total_price?.formatted ?? '$0.00',
+  items: rawCarts[0].order_items?.map((item: any) => ({
+    itemId: item.order_item_id,
+    title: item.title,
+    quantity: parseFloat(item.quantity) || 0,
+    unitPrice: item.unit_price?.formatted ?? '',
+    totalPrice: item.total_price?.formatted ?? '',
+    variationId: item.purchased_entity?.variation_id ?? null,
+    thumbnailUrl: null,
+    hasCard: false,
+    ribbonColor: null,
+  })) ?? [],
+};
+
+const userAddresses = await getUserAddresses(session.uid, 'en', session.accessToken);
+---
+
+<HomeLayout title="Checkout — Maggy Flowers" lang={lang}>
+  <CheckoutClient
+    lang="en"
+    cartData={JSON.stringify(cartData)}
+    userAddresses={JSON.stringify(userAddresses)}
+    client:load
+  />
+</HomeLayout>

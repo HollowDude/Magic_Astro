@@ -134,6 +134,11 @@ export const ui = {
     'product.not_found':                   'Producto no encontrado.',
     'cart.with_card':                      'Con tarjeta',
     'cart.with_ribbon':                    'Con cinta',
+    'checkout.title':                      'Checkout',
+    'checkout.breadcrumb.shipping':        'Envío',
+    'checkout.breadcrumb.method':          'Método de envío',
+    'checkout.breadcrumb.payment':         'Pago',
+    'checkout.breadcrumb.confirm':         'Confirmación',
 
     // ── Portfolio ────────────────────────────────────────────────────────────
     'portfolio.contact':                   'Contactar',
@@ -274,6 +279,11 @@ export const ui = {
     'product.not_found':                   'Product not found.',
     'cart.with_card':                      'With card',
     'cart.with_ribbon':                    'With ribbon',
+    'checkout.title':                      'Checkout',
+    'checkout.breadcrumb.shipping':        'Shipping',
+    'checkout.breadcrumb.method':          'Shipping method',
+    'checkout.breadcrumb.payment':         'Payment',
+    'checkout.breadcrumb.confirm':         'Confirmation',
 
     // ── Portfolio ────────────────────────────────────────────────────────────
     'portfolio.contact':                   'Contact Us',

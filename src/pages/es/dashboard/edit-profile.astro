@@ -15,8 +15,8 @@ if (!session) return Astro.redirect('/es/login?redirect=/es/dashboard/edit-profi
 
 const lang = 'es' as const;
 const profile = await getUserProfile(session.uid, lang, session.accessToken);
-const userName = profile?.username ?? session.name ?? '';
-const userMail = profile?.mail ?? session.mail ?? '';
+const userName = session.name ?? profile?.username ?? '';
+const userMail = session.mail ?? profile?.mail ?? '';
 
 const userRes = await nodehiveFetch<Record<string, unknown>>(
   `/jsonapi/user/user?filter[drupal_internal__uid]=${session.uid}&page[limit]=1`,

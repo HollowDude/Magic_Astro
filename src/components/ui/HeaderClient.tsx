@@ -218,6 +218,14 @@ export default function HeaderClient({ isLoggedIn, currentPath, lang, navLinks: 
   }, [isLoggedIn, cartLoaded]);
 
   useEffect(() => {
+    const handler = () => {
+      window.location.href = `/${lang}/login?expired=1`;
+    };
+    window.addEventListener('session:expired', handler);
+    return () => window.removeEventListener('session:expired', handler);
+  }, [lang]);
+
+  useEffect(() => {
     if (!isLoggedIn) return;
     fetchCartData(true);
 
