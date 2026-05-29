@@ -85,6 +85,7 @@ export default function ProductDetail({ product, lang, isLoggedIn, selectedVaria
   const [hasCard, setHasCard] = useState(false);
   const [addedToast, setAddedToast] = useState(false);
   const [isAdding, setIsAdding] = useState(false);
+  const [cardError, setCardError] = useState(false);
   const [ribbonColors, setRibbonColors] = useState<RibbonColorDef[]>([]);
 
   useEffect(() => {
@@ -196,6 +197,11 @@ export default function ProductDetail({ product, lang, isLoggedIn, selectedVaria
       setTimeout(() => setAddedToast(false), 3000);
       return;
     }
+    if (hasCard && !message.trim()) {
+      setCardError(true);
+      return;
+    }
+    setCardError(false);
     setIsAdding(true);
     window.dispatchEvent(new CustomEvent('cart:loading', { detail: { active: true, source: 'add' } }));
     try {
@@ -406,7 +412,7 @@ export default function ProductDetail({ product, lang, isLoggedIn, selectedVaria
               </p>
               <button
                 type="button"
-                onClick={() => { setHasCard(false); setMessage(''); }}
+                onClick={() => { setHasCard(false); setMessage(''); setCardError(false); }}
                 className="font-body text-xs text-muted hover:text-red-500 underline underline-offset-2 cursor-pointer bg-transparent border-none p-0 transition-colors"
               >
                 {t(lang, 'product.card.remove')}
@@ -415,7 +421,7 @@ export default function ProductDetail({ product, lang, isLoggedIn, selectedVaria
             <div className="relative">
               <textarea
                 value={message}
-                onChange={e => setMessage(e.target.value.slice(0, MAX_CHARS))}
+                onChange={e => { setMessage(e.target.value.slice(0, MAX_CHARS)); setCardError(false); }}
                 placeholder={t(lang, 'product.card.placeholder')}
                 rows={3}
                 className={`w-full rounded-lg border-1.5 bg-white p-3.5 pb-7 font-body text-sm text-headline outline-none transition-all duration-200 focus:border-primary focus:ring-3 focus:ring-primary/12 ${
@@ -428,6 +434,12 @@ export default function ProductDetail({ product, lang, isLoggedIn, selectedVaria
                 {message.length}/{MAX_CHARS}
               </span>
             </div>
+            {cardError && (
+              <p className="mt-2.5 flex items-center gap-1.5 font-body text-sm font-semibold text-red-500">
+                <span className="material-symbols-outlined !text-base leading-none">error</span>
+                {t(lang, 'product.card.required')}
+              </p>
+            )}
           </div>
         ) : (
           <button

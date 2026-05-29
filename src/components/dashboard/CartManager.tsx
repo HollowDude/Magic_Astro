@@ -56,6 +56,8 @@ const T: Record<string, Record<string, string>> = {
     retry: 'Reintentar',
     updating: 'Actualizando...',
     summary: 'Resumen',
+    refresh: 'Actualizar carrito',
+    refreshing: 'Actualizando...',
     'cart.with_card': 'Con tarjeta',
     'cart.with_ribbon': 'Con cinta',
   },
@@ -83,6 +85,8 @@ const T: Record<string, Record<string, string>> = {
     retry: 'Retry',
     updating: 'Updating...',
     summary: 'Summary',
+    refresh: 'Refresh cart',
+    refreshing: 'Refreshing...',
     'cart.with_card': 'With card',
     'cart.with_ribbon': 'With ribbon',
   },
@@ -123,6 +127,7 @@ export default function CartManager({ lang }: Props) {
   const [error, setError] = useState(false);
   const [updatingIds, setUpdatingIds] = useState<Set<number>>(new Set());
   const [clearing, setClearing] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
 
   const emitCartUpdated = useCallback((next: CartData | null) => {
     if (!next) return;
@@ -133,8 +138,8 @@ export default function CartManager({ lang }: Props) {
     window.dispatchEvent(new CustomEvent('cart:loading', { detail: { active, source } }));
   }, []);
 
-  const fetchCart = useCallback(async () => {
-    setLoading(true);
+  const fetchCart = useCallback(async ({ silent }: { silent?: boolean } = {}) => {
+    if (!silent) setLoading(true);
     setError(false);
     try {
       const res = await fetch('/api/cart/', {
@@ -144,14 +149,21 @@ export default function CartManager({ lang }: Props) {
       if (!res.ok) throw new Error('Failed');
       const json: CartData = await res.json();
       setData(json);
+      emitCartUpdated(json);
     } catch {
-      setError(true);
+      if (!silent) setError(true);
     } finally {
-      setLoading(false);
+      if (!silent) setLoading(false);
     }
-  }, []);
+  }, [emitCartUpdated]);
 
   useEffect(() => { fetchCart(); }, [fetchCart]);
+
+  const refreshCart = useCallback(async () => {
+    setRefreshing(true);
+    await fetchCart({ silent: true });
+    setTimeout(() => setRefreshing(false), 300);
+  }, [fetchCart]);
 
   const updateQuantity = async (item: CartItem, newQty: number) => {
     if (newQty < 1) return;
@@ -288,10 +300,22 @@ export default function CartManager({ lang }: Props) {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between gap-3 flex-wrap">
         <h1 className="font-heading text-2xl text-headline font-semibold">
           {t(lang, 'title')} ({data.totalItems} {data.totalItems === 1 ? 'artículo' : 'artículos'})
         </h1>
+        <button
+          onClick={refreshCart}
+          disabled={refreshing}
+          className="inline-flex items-center gap-1.5 font-body text-sm font-bold text-primary bg-transparent border-none cursor-pointer hover:underline disabled:opacity-60 disabled:cursor-not-allowed transition-opacity"
+        >
+          {refreshing ? (
+            <span className="w-3.5 h-3.5 rounded-full border-2 border-primary/30 border-t-primary animate-spin" />
+          ) : (
+            <span className="material-symbols-outlined !text-lg leading-none">refresh</span>
+          )}
+          {refreshing ? t(lang, 'refreshing') : t(lang, 'refresh')}
+        </button>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-[1fr_320px] gap-8 items-start">
