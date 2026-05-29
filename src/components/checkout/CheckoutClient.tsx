@@ -16,6 +16,7 @@ interface CheckoutCartItem {
 
 interface CheckoutCartData {
   orderId: number;
+  orderUuid: string;
   totalPrice: string;
   items: CheckoutCartItem[];
 }
@@ -283,6 +284,12 @@ export default function CheckoutClient({ lang, cartData: cartJson, userAddresses
   const [submitting, setSubmitting] = useState(false);
   const [orderNumber, setOrderNumber] = useState('');
 
+  // ── Derived values ──────────────────────────────────────────────────────
+
+  const selectedAddress = selectedAddressId
+    ? initialAddresses.find(a => a.id === selectedAddressId) ?? null
+    : null;
+
   // Enriched cart data
   const [enrichedCart, setEnrichedCart] = useState<CheckoutCartData | null>(null);
 
@@ -293,6 +300,7 @@ export default function CheckoutClient({ lang, cartData: cartJson, userAddresses
         if (data?.items) {
           setEnrichedCart({
             orderId: cartData.orderId,
+            orderUuid: cartData.orderUuid,
             totalPrice: data.totalPrice,
             items: data.items.map((i: any) => ({
               itemId: i.itemId, title: i.title, quantity: i.quantity,
@@ -305,6 +313,40 @@ export default function CheckoutClient({ lang, cartData: cartJson, userAddresses
       })
       .catch(() => {});
   }, []);
+
+  // Restore checkout step from sessionStorage on mount
+  useEffect(() => {
+    try {
+      const saved = sessionStorage.getItem(`checkout_state_${cartData.orderId}`);
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (typeof parsed.step === 'number') {
+          setCurrentStep(parsed.step);
+        }
+        if (parsed.shippingMethod) {
+          setShippingMethod(parsed.shippingMethod);
+        }
+        if (parsed.billingSameAsShipping !== undefined) {
+          setBillingSameAsShipping(parsed.billingSameAsShipping);
+        }
+        if (parsed.shippingForm) {
+          setShippingForm(prev => ({ ...prev, ...parsed.shippingForm }));
+        }
+      }
+    } catch {}
+  }, [cartData.orderId]);
+
+  // Save checkout state to sessionStorage on step/method/billing changes
+  useEffect(() => {
+    try {
+      sessionStorage.setItem(`checkout_state_${cartData.orderId}`, JSON.stringify({
+        step: currentStep,
+        shippingMethod,
+        billingSameAsShipping,
+        shippingForm: selectedAddress ? null : shippingForm,
+      }));
+    } catch {}
+  }, [currentStep, shippingMethod, billingSameAsShipping, shippingForm, selectedAddress, cartData.orderId]);
 
   const displayCart = enrichedCart ?? cartData;
 
@@ -322,10 +364,6 @@ export default function CheckoutClient({ lang, cartData: cartJson, userAddresses
       .then(data => { if (Array.isArray(data)) setStates(data); })
       .catch(() => {});
   }, [shippingForm.countryCode]);
-
-  const selectedAddress = selectedAddressId
-    ? initialAddresses.find(a => a.id === selectedAddressId) ?? null
-    : null;
 
   const shippingCost = shippingMethod === 'delivery' ? 24.00 : 0;
   const subtotalAmount = parseMoney(displayCart.totalPrice);
@@ -382,35 +420,35 @@ export default function CheckoutClient({ lang, cartData: cartJson, userAddresses
         : shippingForm;
       const billing = billingSameAsShipping ? address : billingForm;
 
-      const res = await fetch('/api/checkout/create-order', {
+      const placeRes = await fetch('/api/checkout/place-order', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          cartItems: cartData.items,
+          orderUuid: cartData.orderUuid,
           shippingAddress: address,
           shippingMethod,
           billingAddress: billing,
-          paymentMethod: 'paypal',
           recipientContact: recipient.fullName ? recipient : null,
           lang,
         }),
       });
-      const data = await res.json();
-      if (!data.ok) throw new Error(data.error ?? 'Order creation failed');
+      const placeData = await placeRes.json();
+      if (!placeData.ok) throw new Error(placeData.error ?? 'Order placement failed');
 
       const paypalRes = await fetch('/api/checkout/paypal-create', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          orderId: data.orderId,
+          orderId: placeData.orderId,
           amount: totalAmount,
           currency: 'USD',
-          returnUrl: `${window.location.origin}/${lang}/checkout/success?order=${data.orderNumber}&orderId=${data.orderId}`,
+          returnUrl: `${window.location.origin}/${lang}/checkout/success?order=${placeData.orderNumber}&orderId=${placeData.orderId}`,
           cancelUrl: `${window.location.origin}/${lang}/checkout`,
         }),
       });
       const paypalData = await paypalRes.json();
       if (paypalData.approvalUrl) {
+        sessionStorage.removeItem(`checkout_state_${cartData.orderId}`);
         window.location.href = paypalData.approvalUrl;
       } else {
         throw new Error('PayPal URL not received');

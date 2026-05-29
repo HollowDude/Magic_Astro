@@ -27,6 +27,7 @@ if (isEmpty) {
 
 const cartData = {
   orderId: rawCarts[0].order_id,
+  orderUuid: rawCarts[0].uuid ?? '',
   totalPrice: rawCarts[0].total_price?.formatted ?? '$0.00',
   items: rawCarts[0].order_items?.map((item: any) => ({
     itemId: item.order_item_id,

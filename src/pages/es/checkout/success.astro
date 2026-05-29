@@ -57,7 +57,8 @@ const paypalToken = Astro.url.searchParams.get('token') ?? '';
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         paypalOrderId: paypalToken,
-        drupalOrderId: drupalOrderId ? Number(drupalOrderId) : null,
+        drupalOrderUuid: drupalOrderId || null,
+        drupalOrderId: drupalOrderId || null,
       }),
     }).catch(() => {});
   }

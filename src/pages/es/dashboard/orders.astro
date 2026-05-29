@@ -68,7 +68,12 @@ const stateStyles: Record<string, string> = {
                 ))}
                 <div class="flex items-center justify-between pt-3 mt-2 border-t border-border">
                   <span class="text-xs text-muted">{order.placedDateFormatted}</span>
-                  <span class="font-bold text-headline">{order.totalFormatted}</span>
+                  <div class="flex items-center gap-2">
+                    {order.state === 'draft' && (
+                      <a href={`/es/checkout`} class="text-xs font-bold text-primary hover:underline">Continuar</a>
+                    )}
+                    <span class="font-bold text-headline">{order.totalFormatted}</span>
+                  </div>
                 </div>
               </div>
             </a>

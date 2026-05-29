@@ -14,7 +14,7 @@ export const POST: APIRoute = async ({ request, cookies }) => {
     return new Response(JSON.stringify({ ok: false, error: 'Invalid JSON' }), { status: 400 });
   }
 
-  const { orderUuid } = body;
+  const { orderUuid, shippingAddress, billingAddress, shippingMethod, recipientContact, lang } = body;
 
   if (!orderUuid) {
     return new Response(JSON.stringify({ ok: false, error: 'Missing orderUuid' }), { status: 400 });
@@ -37,10 +37,10 @@ export const POST: APIRoute = async ({ request, cookies }) => {
           placed: new Date().toISOString(),
           data: {
             paid_event_dispatched: false,
-            shipping_address: body.shippingAddress ?? null,
-            billing_address: body.billingAddress ?? null,
-            shipping_method: body.shippingMethod ?? null,
-            recipient_contact: body.recipientContact ?? null,
+            shipping_address: shippingAddress ?? null,
+            billing_address: billingAddress ?? null,
+            shipping_method: shippingMethod ?? null,
+            recipient_contact: recipientContact ?? null,
           },
         },
       },

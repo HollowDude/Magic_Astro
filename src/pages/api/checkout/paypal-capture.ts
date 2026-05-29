@@ -41,7 +41,7 @@ export const POST: APIRoute = async ({ request, cookies }) => {
     return new Response(JSON.stringify({ ok: false, error: 'Invalid JSON' }), { status: 400 });
   }
 
-  const { paypalOrderId, drupalOrderId } = body;
+  const { paypalOrderId, drupalOrderId, drupalOrderUuid } = body;
 
   if (!paypalOrderId) {
     return new Response(JSON.stringify({ ok: false, error: 'Missing PayPal order ID' }), { status: 400 });
@@ -68,23 +68,58 @@ export const POST: APIRoute = async ({ request, cookies }) => {
     const isCompleted = captureStatus === 'COMPLETED';
 
     let drupalUpdateResult: any = null;
-    if (drupalOrderId && isCompleted) {
-      const drupalCookie = cookies.get('drupal_s')?.value;
-      const decodedSession = drupalCookie ? decodeURIComponent(drupalCookie) : undefined;
+    const orderUuid = drupalOrderUuid || drupalOrderId;
+
+    if (orderUuid && isCompleted) {
+      const csrfToken = session.csrfToken ?? '';
+      const userAccessToken = session.accessToken ?? '';
+      const baseUrl = (import.meta.env.NODEHIVE_BASE_URL as string).replace(/\/+$/, '');
 
       try {
-        const drupalRes = await fetch(`${import.meta.env.NODEHIVE_BASE_URL}/cart/${drupalOrderId}`, {
+        const patchBody: Record<string, any> = {
+          data: {
+            type: 'commerce_order--default',
+            id: orderUuid,
+            attributes: {
+              state: 'fulfillment',
+              cart: false,
+            },
+          },
+        };
+
+        const drupalRes = await fetch(`${baseUrl}/en/jsonapi/commerce_order/default/${orderUuid}`, {
           method: 'PATCH',
           headers: {
-            'Content-Type': 'application/json',
-            Accept: 'application/json',
-            Cookie: `drupal_s=${encodeURIComponent(decodedSession ?? '')}`,
+            'Content-Type': 'application/vnd.api+json',
+            Accept: 'application/vnd.api+json',
+            'X-CSRF-Token': csrfToken,
+            ...(userAccessToken ? { Authorization: `Bearer ${userAccessToken}` } : {}),
           },
-          body: JSON.stringify({
-            status: 'completed',
-          }),
+          body: JSON.stringify(patchBody),
         });
-        drupalUpdateResult = await drupalRes.json();
+
+        const responseText = await drupalRes.text();
+        try { drupalUpdateResult = JSON.parse(responseText); } catch { drupalUpdateResult = responseText; }
+
+        if (drupalRes.ok) {
+          const drupalCookie = cookies.get('drupal_s')?.value;
+          const decodedSession = drupalCookie ? decodeURIComponent(drupalCookie) : undefined;
+          const internalId = drupalUpdateResult?.data?.attributes?.drupal_internal__order_id;
+
+          if (internalId && decodedSession) {
+            try {
+              await fetch(`${baseUrl}/cart/${internalId}/items?_format=json`, {
+                method: 'DELETE',
+                headers: {
+                  Accept: 'application/json',
+                  Cookie: `drupal_s=${encodeURIComponent(decodedSession)}`,
+                },
+              });
+            } catch {
+              // non-blocking
+            }
+          }
+        }
       } catch {
         // non-blocking
       }

@@ -130,9 +130,14 @@ const items = Array.isArray(order?.order_items) ? order.order_items : [];
           Back to my orders
         </a>
 
+        {stateKey === 'draft' && (
+          <a href="/en/checkout" class="text-sm font-bold text-primary hover:underline">
+            Continue order
+          </a>
+        )}
         {stateKey === 'placed' && (
           <button
-            onclick="alert('Cancel functionality coming soon')"
+            id="cancel-order-btn"
             class="text-sm font-bold text-red-500 hover:underline"
           >
             Cancel order
@@ -143,3 +148,33 @@ const items = Array.isArray(order?.order_items) ? order.order_items : [];
   )}
 
 </DashboardLayout>
+
+<script define:vars={{ orderId: id }}>
+  const cancelBtn = document.getElementById('cancel-order-btn');
+  if (cancelBtn) {
+    cancelBtn.addEventListener('click', async () => {
+      if (!confirm('Are you sure you want to cancel this order?')) return;
+      cancelBtn.disabled = true;
+      cancelBtn.textContent = 'Canceling...';
+      try {
+        const res = await fetch(`/api/orders/${orderId}/transition`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ state: 'canceled' }),
+        });
+        const data = await res.json();
+        if (data.ok) {
+          window.location.reload();
+        } else {
+          alert('Error: ' + (data.error ?? 'Could not cancel'));
+          cancelBtn.disabled = false;
+          cancelBtn.textContent = 'Cancel order';
+        }
+      } catch {
+        alert('Connection error');
+        cancelBtn.disabled = false;
+        cancelBtn.textContent = 'Cancel order';
+      }
+    });
+  }
+</script>

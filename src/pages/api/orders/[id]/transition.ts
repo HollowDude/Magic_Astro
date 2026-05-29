@@ -1,10 +1,17 @@
 import type { APIRoute } from 'astro';
 import { getSession } from '@/services/session.service';
 
-export const POST: APIRoute = async ({ request, cookies }) => {
+const VALID_TRANSITIONS = ['placed', 'fulfillment', 'completed', 'canceled'] as const;
+
+export const POST: APIRoute = async ({ params, request, cookies }) => {
   const session = await getSession(cookies);
   if (!session) {
     return new Response(JSON.stringify({ ok: false, error: 'Unauthorized' }), { status: 401 });
+  }
+
+  const { id } = params;
+  if (!id) {
+    return new Response(JSON.stringify({ ok: false, error: 'Missing order ID' }), { status: 400 });
   }
 
   let body: any;
@@ -14,13 +21,13 @@ export const POST: APIRoute = async ({ request, cookies }) => {
     return new Response(JSON.stringify({ ok: false, error: 'Invalid JSON' }), { status: 400 });
   }
 
-  const { orderUuid } = body;
-
-  if (!orderUuid) {
-    return new Response(JSON.stringify({ ok: false, error: 'Missing orderUuid' }), { status: 400 });
+  const newState = body.state;
+  if (!newState || !VALID_TRANSITIONS.includes(newState)) {
+    return new Response(JSON.stringify({
+      ok: false,
+      error: `Invalid state "${newState}". Must be one of: ${VALID_TRANSITIONS.join(', ')}`,
+    }), { status: 400 });
   }
-
-  const orderNumber = `MF-${new Date().getFullYear()}-${String(Math.floor(10000 + Math.random() * 90000))}`;
 
   try {
     const csrfToken = session.csrfToken ?? '';
@@ -30,23 +37,18 @@ export const POST: APIRoute = async ({ request, cookies }) => {
     const patchBody: Record<string, any> = {
       data: {
         type: 'commerce_order--default',
-        id: orderUuid,
+        id,
         attributes: {
-          order_number: orderNumber,
-          state: 'placed',
-          placed: new Date().toISOString(),
-          data: {
-            paid_event_dispatched: false,
-            shipping_address: body.shippingAddress ?? null,
-            billing_address: body.billingAddress ?? null,
-            shipping_method: body.shippingMethod ?? null,
-            recipient_contact: body.recipientContact ?? null,
-          },
+          state: newState,
         },
       },
     };
 
-    const res = await fetch(`${baseUrl}/en/jsonapi/commerce_order/default/${orderUuid}`, {
+    if (newState === 'completed') {
+      patchBody.data.attributes.completed = new Date().toISOString();
+    }
+
+    const res = await fetch(`${baseUrl}/en/jsonapi/commerce_order/default/${id}`, {
       method: 'PATCH',
       headers: {
         'Content-Type': 'application/vnd.api+json',
@@ -62,10 +64,12 @@ export const POST: APIRoute = async ({ request, cookies }) => {
       throw new Error(`Drupal PATCH failed (${res.status}): ${errText}`);
     }
 
+    const updated = await res.json();
+
     return new Response(JSON.stringify({
       ok: true,
-      orderId: orderUuid,
-      orderNumber,
+      state: newState,
+      data: updated,
     }), {
       status: 200,
       headers: { 'Content-Type': 'application/json' },

@@ -130,9 +130,14 @@ const items = Array.isArray(order?.order_items) ? order.order_items : [];
           Volver a mis pedidos
         </a>
 
+        {stateKey === 'draft' && (
+          <a href="/es/checkout" class="text-sm font-bold text-primary hover:underline">
+            Continuar pedido
+          </a>
+        )}
         {stateKey === 'placed' && (
           <button
-            onclick="alert('Función de cancelación próximamente')"
+            id="cancel-order-btn"
             class="text-sm font-bold text-red-500 hover:underline"
           >
             Cancelar pedido
@@ -143,3 +148,33 @@ const items = Array.isArray(order?.order_items) ? order.order_items : [];
   )}
 
 </DashboardLayout>
+
+<script define:vars={{ orderId: id }}>
+  const cancelBtn = document.getElementById('cancel-order-btn');
+  if (cancelBtn) {
+    cancelBtn.addEventListener('click', async () => {
+      if (!confirm('¿Estás seguro de cancelar este pedido?')) return;
+      cancelBtn.disabled = true;
+      cancelBtn.textContent = 'Cancelando...';
+      try {
+        const res = await fetch(`/api/orders/${orderId}/transition`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ state: 'canceled' }),
+        });
+        const data = await res.json();
+        if (data.ok) {
+          window.location.reload();
+        } else {
+          alert('Error: ' + (data.error ?? 'No se pudo cancelar'));
+          cancelBtn.disabled = false;
+          cancelBtn.textContent = 'Cancelar pedido';
+        }
+      } catch {
+        alert('Error de conexión');
+        cancelBtn.disabled = false;
+        cancelBtn.textContent = 'Cancelar pedido';
+      }
+    });
+  }
+</script>
