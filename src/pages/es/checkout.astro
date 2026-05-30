@@ -7,7 +7,6 @@ import { getSession } from '@/services/session.service';
 import { getCart } from '@/services/nodehive/nodehive.cart';
 import { getUserAddresses } from '@/services/nodehive/nodehive.user';
 import { getLangFromUrl } from '@/i18n/utils';
-import { nodehiveFetch } from '@/services/nodehive/nodehive.client';
 
 const lang = getLangFromUrl(Astro.url);
 const session = await getSession(Astro.cookies);
@@ -16,99 +15,117 @@ if (!session) {
   return Astro.redirect(`/es/login?redirect=/es/checkout`);
 }
 
-const drupalCookie = Astro.cookies.get('drupal_s')?.value;
-const decodedSession = drupalCookie ? decodeURIComponent(drupalCookie) : undefined;
-const cartResult = await getCart(decodedSession);
-const rawCarts = cartResult.data as any[];
+const resumeUuid = Astro.url.searchParams.get('resume');
+const baseUrl = (import.meta.env.NODEHIVE_BASE_URL as string).replace(/\/+$/, '');
 
-const isEmpty = !rawCarts || rawCarts.length === 0 || !rawCarts[0]?.order_items?.length;
-if (isEmpty) {
-  return Astro.redirect(`/es/shop`);
-}
+let cartData: any;
+let savedCheckoutData: Record<string, any> | null = null;
+let existingOrderNumber: string | undefined;
 
-let orderUuid: string = rawCarts[0].uuid ?? '';
-if (!orderUuid) {
-  const baseUrl = (import.meta.env.NODEHIVE_BASE_URL as string).replace(/\/+$/, '');
-  const res = await fetch(`${baseUrl}/en/jsonapi/commerce_order/default?filter[drupal_internal__order_id]=${rawCarts[0].order_id}`, {
-    headers: { Accept: 'application/vnd.api+json' },
+if (resumeUuid && session.accessToken) {
+  // ── Resume mode: load placed order from JSON:API ──
+  const res = await fetch(
+    `${baseUrl}/en/jsonapi/commerce_order/default/${resumeUuid}` +
+    `?include=order_items` +
+    `&fields[commerce_order--default]=drupal_internal__order_id,order_number,total_price,order_items,field_checkout_data` +
+    `&fields[commerce_order_item--default]=drupal_internal__order_item_id,title,quantity,unit_price,total_price`,
+    {
+      headers: { Accept: 'application/vnd.api+json', Authorization: `Bearer ${session.accessToken}` },
+    },
+  );
+
+  if (!res.ok) {
+    console.warn('[checkout] Resume fetch failed:', res.status);
+    return Astro.redirect('/es/shop');
+  }
+
+  const json = await res.json();
+  const attrs = json?.data?.attributes ?? {};
+  const included = Array.isArray(json?.included) ? json.included : [];
+  const rels = json?.data?.relationships?.order_items?.data ?? [];
+
+  const items = rels.map((rel: any) => {
+    const inc = included.find((i: any) => i.type === rel.type && i.id === rel.id);
+    const a = inc?.attributes ?? {};
+    return {
+      itemId: a.drupal_internal__order_item_id ?? 0,
+      title: a.title ?? '',
+      quantity: parseFloat(a.quantity ?? '1') || 0,
+      unitPrice: a.unit_price?.formatted ?? '',
+      totalPrice: a.total_price?.formatted ?? '',
+      variationId: null,
+      thumbnailUrl: null,
+      hasCard: false,
+      ribbonColor: null,
+    };
   });
-  const json = await res.json().catch(() => ({}));
-  orderUuid = json?.data?.[0]?.id ?? '';
-  console.warn('[checkout] UUID not in cart response, fetched from JSONAPI:', orderUuid || 'NOT FOUND');
-}
 
-const cartData = {
-  orderId: rawCarts[0].order_id,
-  orderUuid,
-  totalPrice: rawCarts[0].total_price?.formatted ?? '$0.00',
-  items: rawCarts[0].order_items?.map((item: any) => ({
-    itemId: item.order_item_id,
-    title: item.title,
-    quantity: parseFloat(item.quantity) || 0,
-    unitPrice: item.unit_price?.formatted ?? '',
-    totalPrice: item.total_price?.formatted ?? '',
-    variationId: item.purchased_entity?.variation_id ?? null,
-    thumbnailUrl: null,
-    hasCard: false,
-    ribbonColor: null,
-  })) ?? [],
-};
+  const raw = attrs.field_checkout_data;
+  if (raw) {
+    try { savedCheckoutData = JSON.parse(raw); } catch { savedCheckoutData = null; }
+  }
+
+  existingOrderNumber = attrs.order_number ?? undefined;
+
+  cartData = {
+    orderId: attrs.drupal_internal__order_id ?? 0,
+    orderUuid: resumeUuid,
+    totalPrice: attrs.total_price?.formatted ?? '$0.00',
+    items,
+  };
+} else {
+  // ── Normal mode: load from cart ──
+  const drupalCookie = Astro.cookies.get('drupal_s')?.value;
+  const decodedSession = drupalCookie ? decodeURIComponent(drupalCookie) : undefined;
+  const cartResult = await getCart(decodedSession);
+  const rawCarts = Array.isArray(cartResult.data) ? (cartResult.data as any[]) : [];
+
+  const isEmpty = rawCarts.length === 0 || !rawCarts[0]?.order_items?.length;
+  if (isEmpty) {
+    return Astro.redirect(`/es/shop`);
+  }
+
+  let orderUuid: string = rawCarts[0].uuid ?? '';
+  if (!orderUuid) {
+    const res = await fetch(`${baseUrl}/en/jsonapi/commerce_order/default?filter[drupal_internal__order_id]=${rawCarts[0].order_id}`, {
+      headers: { Accept: 'application/vnd.api+json' },
+    });
+    const json = await res.json().catch(() => ({}));
+    orderUuid = json?.data?.[0]?.id ?? '';
+    console.warn('[checkout] UUID not in cart response, fetched from JSONAPI:', orderUuid || 'NOT FOUND');
+  }
+
+  cartData = {
+    orderId: rawCarts[0].order_id,
+    orderUuid,
+    totalPrice: rawCarts[0].total_price?.formatted ?? '$0.00',
+    items: rawCarts[0].order_items?.map((item: any) => ({
+      itemId: item.order_item_id,
+      title: item.title,
+      quantity: parseFloat(item.quantity) || 0,
+      unitPrice: item.unit_price?.formatted ?? '',
+      totalPrice: item.total_price?.formatted ?? '',
+      variationId: item.purchased_entity?.variation_id ?? null,
+      thumbnailUrl: null,
+      hasCard: false,
+      ribbonColor: null,
+    })) ?? [],
+  };
+
+  if (orderUuid && session.accessToken) {
+    try {
+      const stateRes = await fetch(
+        `${baseUrl}/en/jsonapi/commerce_order/default/${orderUuid}?fields[commerce_order--default]=field_checkout_data,checkout_step`,
+        { headers: { Accept: 'application/vnd.api+json', Authorization: `Bearer ${session.accessToken}` } },
+      );
+      const stateData = await stateRes.json();
+      const raw = stateData?.data?.attributes?.field_checkout_data;
+      if (raw) savedCheckoutData = JSON.parse(raw);
+    } catch {}
+  }
+}
 
 const userAddresses = await getUserAddresses(session.uid, 'es', session.accessToken);
-
-let savedCheckoutData: Record<string, any> | null = null;
-if (orderUuid && session.accessToken) {
-  try {
-    const baseUrl = (import.meta.env.NODEHIVE_BASE_URL as string).replace(/\/+$/, '');
-    const stateRes = await fetch(
-      `${baseUrl}/en/jsonapi/commerce_order/default/${orderUuid}?fields[commerce_order--default]=field_checkout_data,checkout_step`,
-      { headers: { Accept: 'application/vnd.api+json', Authorization: `Bearer ${session.accessToken}` } },
-    );
-    const stateData = await stateRes.json();
-    const raw = stateData?.data?.attributes?.field_checkout_data;
-    if (raw) savedCheckoutData = JSON.parse(raw);
-  } catch { /* ignorar, el checkout empieza desde cero */ }
-}
-
-if (orderUuid && session.accessToken && session.csrfToken) {
-  try {
-    const baseUrl = (import.meta.env.NODEHIVE_BASE_URL as string).replace(/\/+$/, '');
-    let csrfToken = session.csrfToken;
-    try {
-      const csrfRes = await fetch(`${baseUrl}/session/token`);
-      if (csrfRes.ok) csrfToken = await csrfRes.text();
-    } catch {}
-
-    const res = await fetch(`${baseUrl}/en/jsonapi/commerce_order/default/${orderUuid}`, {
-      method: 'PATCH',
-      headers: {
-        'Content-Type': 'application/vnd.api+json',
-        Accept: 'application/vnd.api+json',
-        'X-CSRF-Token': csrfToken,
-        Authorization: `Bearer ${session.accessToken}`,
-      },
-      body: JSON.stringify({
-        data: {
-          type: 'commerce_order--default',
-          id: orderUuid,
-          attributes: { field_checkout_started: true },
-        },
-      }),
-    });
-    if (!res.ok) {
-      const text = await res.text().catch(() => '');
-      console.warn(`[checkout] field_checkout_started PATCH returned ${res.status}:`, text.slice(0, 200));
-    }
-  } catch (e) {
-    console.warn('[checkout] Could not mark order as checkout_started:', e);
-  }
-} else {
-  console.warn('[checkout] Cannot mark checkout_started — missing orderUuid, accessToken, or csrfToken', {
-    hasUuid: !!orderUuid,
-    hasToken: !!session.accessToken,
-    hasCsrf: !!session.csrfToken,
-  });
-}
 ---
 
 <HomeLayout title="Checkout — Maggy Flowers" lang={lang}>
@@ -117,6 +134,8 @@ if (orderUuid && session.accessToken && session.csrfToken) {
     cartData={JSON.stringify(cartData)}
     userAddresses={JSON.stringify(userAddresses)}
     savedCheckoutData={JSON.stringify(savedCheckoutData)}
+    orderNumber={existingOrderNumber}
+    resume={!!resumeUuid}
     client:load
   />
 </HomeLayout>

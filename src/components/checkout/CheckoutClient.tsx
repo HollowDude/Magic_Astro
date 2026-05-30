@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 
 // ─── Types ──────────────────────────────────────────────────────────────────
 
@@ -72,6 +72,8 @@ interface Props {
   cartData: string;
   userAddresses: string;
   savedCheckoutData?: string;
+  orderNumber?: string;
+  resume?: boolean;
 }
 
 // ─── Translation helper ─────────────────────────────────────────────────────
@@ -239,12 +241,6 @@ function formatAddress(addr: ShippingAddress): string {
   return [parts, line1, line2, [cityState, zip].filter(Boolean).join(' ')].filter(Boolean).join(', ');
 }
 
-function generateOrderNumber(): string {
-  const year = new Date().getFullYear();
-  const rand = String(Math.floor(10000 + Math.random() * 90000));
-  return `#MF-${year}-${rand}`;
-}
-
 // ─── NextButton component ───────────────────────────────────────────────────
 
 function NextButton({ label, onClick, loading }: { label: string; onClick: () => void; loading?: boolean }) {
@@ -265,10 +261,10 @@ function NextButton({ label, onClick, loading }: { label: string; onClick: () =>
 
 // ─── Component ──────────────────────────────────────────────────────────────
 
-export default function CheckoutClient({ lang, cartData: cartJson, userAddresses: addrJson, savedCheckoutData: savedJson }: Props) {
-  const cartData: CheckoutCartData = JSON.parse(cartJson);
-  const initialAddresses: UserAddress[] = JSON.parse(addrJson);
-  const savedFromServer: CheckoutSavedData | null = savedJson ? JSON.parse(savedJson) : null;
+export default function CheckoutClient({ lang, cartData: cartJson, userAddresses: addrJson, savedCheckoutData: savedJson, orderNumber: orderNumberProp, resume }: Props) {
+  const cartData = useMemo<CheckoutCartData>(() => JSON.parse(cartJson), [cartJson]);
+  const initialAddresses = useMemo<UserAddress[]>(() => JSON.parse(addrJson), [addrJson]);
+  const savedFromServer = useMemo<CheckoutSavedData | null>(() => savedJson ? JSON.parse(savedJson) : null, [savedJson]);
 
   const [currentStep, setCurrentStep] = useState<number>(0);
   const [mobileSummaryOpen, setMobileSummaryOpen] = useState(false);
@@ -301,7 +297,7 @@ export default function CheckoutClient({ lang, cartData: cartJson, userAddresses
 
   // Step 4
   const [submitting, setSubmitting] = useState(false);
-  const [orderNumber, setOrderNumber] = useState('');
+  const [orderNumber, setOrderNumber] = useState(orderNumberProp ?? '');
 
   // ── Derived values ──────────────────────────────────────────────────────
 
@@ -389,6 +385,20 @@ export default function CheckoutClient({ lang, cartData: cartJson, userAddresses
       loadFromDrupal();
     }
   }, [cartData.orderUuid, savedFromServer]);
+
+  // Mark checkout as started on Drupal so order leaves the cart
+  // Skip if resuming an already-placed order
+  useEffect(() => {
+    if (resume) return;
+    fetch('/api/checkout/start', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ orderUuid: cartData.orderUuid }),
+    })
+      .then(r => r.json())
+      .then(data => { if (data?.orderNumber) setOrderNumber(data.orderNumber); })
+      .catch(() => {});
+  }, [cartData.orderUuid, resume]);
 
   // Restore checkout step from sessionStorage on mount (fallback)
   useEffect(() => {
@@ -511,7 +521,7 @@ export default function CheckoutClient({ lang, cartData: cartJson, userAddresses
       return;
     }
     if (currentStep === 1) { setCurrentStep(2); saveStep(2); return; }
-    if (currentStep === 2) { setCurrentStep(3); setOrderNumber(generateOrderNumber()); saveStep(3); return; }
+    if (currentStep === 2) { setCurrentStep(3); saveStep(3); return; }
   };
 
   const handlePlaceOrder = useCallback(async () => {

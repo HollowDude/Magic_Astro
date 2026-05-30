@@ -17,8 +17,8 @@ export const POST: APIRoute = async ({ request, cookies }) => {
     });
   }
 
-  const drupalSession = cookies.get('drupal_s')?.value;
-  const decoded = drupalSession ? decodeURIComponent(drupalSession) : undefined;
+  const drupalSessionRaw = cookies.get('drupal_s')?.value;
+  const decoded = drupalSessionRaw ? decodeURIComponent(drupalSessionRaw) : undefined;
   const result = await clearCart(body.order_id, decoded);
 
   const headers: Record<string, string> = {
@@ -26,7 +26,7 @@ export const POST: APIRoute = async ({ request, cookies }) => {
     'Cache-Control': 'no-store, no-cache, must-revalidate, max-age=0',
     'Pragma': 'no-cache',
     'Expires': '0',
-    ...relayCartCookie(result.headers, '/api/cart'),
+    ...relayCartCookie(result.headers, drupalSessionRaw),
   };
 
   return new Response(JSON.stringify({ ok: result.success }), {

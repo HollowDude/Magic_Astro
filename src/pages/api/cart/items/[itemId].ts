@@ -2,6 +2,12 @@ import type { APIRoute } from 'astro';
 import { removeCartItem, updateCartItem } from '@/services/nodehive/nodehive.cart';
 import { relayCartCookie } from '../cookie-helper';
 
+const NO_CACHE = {
+  'Cache-Control': 'no-store, no-cache, must-revalidate, max-age=0',
+  'Pragma': 'no-cache',
+  'Expires': '0',
+} as const;
+
 function parseItemId(params: Record<string, string | undefined>): number | null {
   const raw = params.itemId;
   if (!raw || !/^\d+$/.test(raw)) return null;
@@ -21,6 +27,7 @@ async function getSessionCookie(cookies: any): Promise<string | undefined> {
 }
 
 export const DELETE: APIRoute = async ({ params, request, cookies }) => {
+  const drupalSessionRaw = cookies.get('drupal_s')?.value;
   const itemId = parseItemId(params);
   if (!itemId) return errorResponse('Invalid item ID', 400);
 
@@ -33,10 +40,8 @@ export const DELETE: APIRoute = async ({ params, request, cookies }) => {
 
   const headers: Record<string, string> = {
     'Content-Type': 'application/json',
-    'Cache-Control': 'no-store, no-cache, must-revalidate, max-age=0',
-    'Pragma': 'no-cache',
-    'Expires': '0',
-    ...relayCartCookie(result.headers, '/api/cart'),
+    ...NO_CACHE,
+    ...relayCartCookie(result.headers, drupalSessionRaw),
   };
 
   return new Response(JSON.stringify({ ok: result.success }), {
@@ -46,6 +51,7 @@ export const DELETE: APIRoute = async ({ params, request, cookies }) => {
 };
 
 export const PATCH: APIRoute = async ({ params, request, cookies }) => {
+  const drupalSessionRaw = cookies.get('drupal_s')?.value;
   const itemId = parseItemId(params);
   if (!itemId) return errorResponse('Invalid item ID', 400);
 
@@ -59,10 +65,8 @@ export const PATCH: APIRoute = async ({ params, request, cookies }) => {
 
   const headers: Record<string, string> = {
     'Content-Type': 'application/json',
-    'Cache-Control': 'no-store, no-cache, must-revalidate, max-age=0',
-    'Pragma': 'no-cache',
-    'Expires': '0',
-    ...relayCartCookie(result.headers, '/api/cart'),
+    ...NO_CACHE,
+    ...relayCartCookie(result.headers, drupalSessionRaw),
   };
 
   return new Response(JSON.stringify({ ok: true, item: result.data }), {

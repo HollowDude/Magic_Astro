@@ -85,30 +85,35 @@ async function getVariationThumbnailMap(uuids: string[]): Promise<Map<string, st
 }
 
 async function fetchCustomizations(
-  itemUuids: string[],
+  orderUuids: string[],
   ribbonColors: RibbonColorDef[],
+  drupalSession?: string,
 ): Promise<Record<number, CustomizationEntry>> {
-  if (itemUuids.length === 0) return {};
+  if (orderUuids.length === 0) return {};
 
   try {
-    const valueParams = itemUuids.map(u => `filter[id][condition][value][]=${encodeURIComponent(u)}`).join('&');
-    const path = `/jsonapi/commerce_order_item/default?filter[id][condition][path]=id&filter[id][condition][operator]=IN&${valueParams}`;
-    const result = await nodehiveFetch<{ data: Array<Record<string, any>> }>(path, {
+    const baseUrl = NODEHIVE_BASE_URL.replace(/\/+$/, '');
+    const valueParams = orderUuids.map(u => `filter[id][condition][value][]=${encodeURIComponent(u)}`).join('&');
+    const url = `${baseUrl}/en/jsonapi/commerce_order/default?include=order_items&fields[commerce_order--default]=drupal_internal__order_id&filter[id][condition][path]=id&filter[id][condition][operator]=IN&${valueParams}`;
+
+    const res = await fetch(url, {
       headers: {
-        'Content-Type': 'application/vnd.api+json',
         Accept: 'application/vnd.api+json',
+        ...(drupalSession ? { Cookie: `drupal_s=${drupalSession}` } : {}),
       },
-      skipApiKey: false,
-      cacheTtl: 0,
     });
 
-    if (result.status !== 200) {
-      console.error(`[cart] fetchCustomizations returned ${result.status}`, result.data);
+    if (!res.ok) {
+      console.error(`[cart] fetchCustomizations via order returned ${res.status}`);
       return {};
     }
 
+    const json = await res.json();
+    const included = json?.included ?? [];
+
     const map: Record<number, CustomizationEntry> = {};
-    for (const entry of result.data?.data ?? []) {
+    for (const entry of included) {
+      if (entry?.type !== 'commerce_order_item--default') continue;
       const internalId = entry?.attributes?.drupal_internal__order_item_id;
       if (!internalId) continue;
       const attrs = entry?.attributes ?? {};
@@ -136,20 +141,55 @@ export const GET: APIRoute = async ({ cookies }) => {
   const decoded = drupalSession ? decodeURIComponent(drupalSession) : undefined;
   const result = await getCart(decoded);
 
-  const rawCarts = result.data as CartOrder[];
+  const rawCarts = Array.isArray(result.data) ? (result.data as CartOrder[]) : [];
 
-  const hasCheckoutStarted = rawCarts.length > 0 && rawCarts.some(
-    c => (c as any).field_checkout_started === true,
-  );
+  const baseUrl = (import.meta.env.NODEHIVE_BASE_URL as string).replace(/\/+$/, '');
 
-  if (hasCheckoutStarted) {
-    const checkoutOrder = rawCarts.find(c => (c as any).field_checkout_started === true);
+  async function hasCheckoutStartedOnDrupal(): Promise<{
+    started: boolean;
+    orderUuid: string | null;
+  }> {
+    if (rawCarts.length === 0) return { started: false, orderUuid: null };
+
+    const orderIds = rawCarts.map(c => c.order_id);
+    const valueParams = orderIds.map(id =>
+      `filter[drupal_internal__order_id][condition][value][]=${encodeURIComponent(String(id))}`,
+    ).join('&');
+    const qs = `fields[commerce_order--default]=drupal_internal__order_id,field_checkout_started&filter[drupal_internal__order_id][condition][path]=drupal_internal__order_id&filter[drupal_internal__order_id][condition][operator]=IN&${valueParams}`;
+
+    try {
+      const res = await fetch(
+        `${baseUrl}/en/jsonapi/commerce_order/default?${qs}`,
+        {
+          headers: {
+            Accept: 'application/vnd.api+json',
+            ...(drupalSession
+              ? { Cookie: `drupal_s=${drupalSession}` }
+              : {}),
+          },
+        },
+      );
+      if (!res.ok) return { started: false, orderUuid: null };
+      const json = await res.json();
+      const orders = Array.isArray(json?.data) ? json.data : [];
+      for (const order of orders) {
+        if (order?.attributes?.field_checkout_started === true) {
+          return { started: true, orderUuid: order.id };
+        }
+      }
+    } catch {}
+    return { started: false, orderUuid: null };
+  }
+
+  const checkoutInfo = await hasCheckoutStartedOnDrupal();
+
+  if (checkoutInfo.started) {
     const response: CartApiResponse = {
       items: [],
       totalItems: 0,
       totalPrice: '',
       hasActiveCheckout: true,
-      activeCheckoutOrderUuid: checkoutOrder?.uuid ?? '',
+      activeCheckoutOrderUuid: checkoutInfo.orderUuid ?? '',
     };
     const headers: Record<string, string> = {
       'Content-Type': 'application/json',
@@ -161,25 +201,23 @@ export const GET: APIRoute = async ({ cookies }) => {
     return new Response(JSON.stringify(response), { status: 200, headers });
   }
 
-  const activeCarts = rawCarts.filter(
-    c => (c as any).field_checkout_started !== true,
-  );
+  const activeCarts = rawCarts;
 
   const variationUuids = new Set<string>();
-  const itemUuids: string[] = [];
+  const orderUuids: string[] = [];
   for (const cart of activeCarts) {
     for (const item of cart.order_items ?? []) {
       const vuuid = item.purchased_entity?.uuid;
       if (vuuid) variationUuids.add(vuuid);
-      if (item.uuid) itemUuids.push(item.uuid);
     }
+    if (cart.uuid) orderUuids.push(cart.uuid);
   }
 
   const ribbonColors = await fetchRibbonColors();
 
   const [thumbnailMap, customizationMap] = await Promise.all([
     getVariationThumbnailMap(Array.from(variationUuids)),
-    fetchCustomizations(itemUuids, ribbonColors),
+    fetchCustomizations(orderUuids, ribbonColors, drupalSession),
   ]);
 
   const items: CartItemDisplay[] = activeCarts.flatMap(cart =>

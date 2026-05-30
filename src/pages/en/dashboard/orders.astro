@@ -9,7 +9,7 @@ const session = await getSession(Astro.cookies);
 if (!session) return Astro.redirect('/en/login?redirect=/en/dashboard/orders');
 
 const lang = 'en' as const;
-const orders = await getUserOrders(session.uid, lang, 20);
+const orders = await getUserOrders(session.uid, lang, 20, session.accessToken);
 
 interface CheckoutData {
   currentStep?: number;
@@ -79,11 +79,14 @@ const stateStyles: Record<string, string> = {
                     {order.state === 'draft' && order.checkoutStarted && (
                       <a href={`/en/checkout`} class="text-xs font-bold text-primary hover:underline">Continue</a>
                     )}
+                    {order.state === 'placed' && order.currentCheckoutStep !== null && (
+                      <a href={`/en/checkout?resume=${order.id}`} class="text-xs font-bold text-primary hover:underline">Continue Checkout</a>
+                    )}
                     <span class="font-bold text-headline">{order.totalFormatted}</span>
                   </div>
                 </div>
 
-                {order.checkoutStarted && order.state === 'draft' && (
+                {(order.checkoutStarted && order.state === 'draft') || (order.state === 'placed' && order.currentCheckoutStep !== null) ? (
                   <div class="mt-3">
                     <div class="text-xs text-muted mb-1">
                       Step {(order.currentCheckoutStep ?? 0) + 1} of 4
@@ -94,7 +97,7 @@ const stateStyles: Record<string, string> = {
                       ))}
                     </div>
                   </div>
-                )}
+                ) : null}
 
                 {order.state === 'canceled' && order.cancelledAtStep !== null && order.cancelledAtStep !== undefined && (
                   <div class="mt-2 text-xs text-muted">

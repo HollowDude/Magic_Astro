@@ -227,6 +227,7 @@ export async function getUserOrders(
   uid: string,
   lang: Lang = 'es',
   limit = 5,
+  accessToken?: string,
 ): Promise<UserOrder[]> {
   try {
     const raw = await nodehiveFetch<Record<string, unknown>>(
@@ -239,6 +240,7 @@ export async function getUserOrders(
       {
         headers: { 'Content-Type': 'application/vnd.api+json', Accept: 'application/vnd.api+json' },
         lang,
+        bearerToken: accessToken,
         cacheTtl: 0,
       },
     );
@@ -251,10 +253,13 @@ export async function getUserOrders(
     const result = dataFormatter.deserialize(raw.data) as any[];
     let orders = Array.isArray(result) ? result : [];
 
+    // Filtrar solo carritos vacíos en draft, conservar drafts con checkout_started
     orders = orders.filter((o: any) => {
       const state = o.state ?? 'draft';
       const checkoutStarted = o.field_checkout_started ?? false;
-      return state !== 'draft' || checkoutStarted;
+      const items = Array.isArray(o.order_items) ? o.order_items : [];
+      if (state === 'draft' && !checkoutStarted && items.length === 0) return false;
+      return true;
     });
 
     return orders.map((o: any): UserOrder => {

@@ -278,7 +278,7 @@ export const POST: APIRoute = async ({ request, cookies }) => {
     'Cache-Control': 'no-store, no-cache, must-revalidate, max-age=0',
     'Pragma': 'no-cache',
     'Expires': '0',
-    ...relayCartCookie(latestSetCookie, '/api/cart'),
+    ...relayCartCookie(latestSetCookie, drupalSession),
   };
 
   return new Response(JSON.stringify(resultItems), { status: 200, headers });

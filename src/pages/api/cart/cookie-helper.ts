@@ -25,3 +25,16 @@ export function relayCartCookie(
     'Set-Cookie': `${DRUPAL_S_COOKIE}=${encoded}; Path=/; HttpOnly; SameSite=Lax; Max-Age=${MAX_AGE}`,
   };
 }
+
+/**
+ * Convierte el valor crudo de la cookie drupal_s a un Cookie header apto para
+ * enviar a Drupal. El valor crudo trae la cookie URL-encoded (SESS...%3Dvalor);
+ * la decode para obtener el formato real que Drupal espera (SESS...=valor).
+ *
+ * Uso correcto:
+ *   fetch(url, { headers: { Cookie: drupalCookieHeader(rawValue) } })
+ */
+export function drupalCookieHeader(drupalRawValue: string | undefined): string | undefined {
+  if (!drupalRawValue) return undefined;
+  return decodeURIComponent(drupalRawValue);
+}

@@ -150,7 +150,8 @@ export async function getCart(cookie?: string): Promise<CartResult> {
     skipApiKey: true,
     cacheTtl: 0,
   });
-  return { data: result.data, headers: result.headers };
+  const data = Array.isArray(result.data) ? result.data : [];
+  return { data, headers: result.headers };
 }
 
 export async function addToCart(
@@ -169,7 +170,8 @@ export async function addToCart(
     sessionCookie: cookie,
     skipApiKey: true,
   });
-  return { data: result.data, headers: result.headers };
+  const data = Array.isArray(result.data) ? result.data : [];
+  return { data, headers: result.headers };
 }
 
 export async function updateCartItem(

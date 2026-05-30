@@ -17,7 +17,7 @@ export const GET: APIRoute = async ({ url, cookies }) => {
     const accessToken = session.accessToken ?? '';
 
     const res = await fetch(
-      `${baseUrl}/en/jsonapi/commerce_order/default/${orderUuid}?fields[commerce_order--default]=field_checkout_data,checkout_step,state,order_items`,
+      `${baseUrl}/en/jsonapi/commerce_order/default/${orderUuid}?fields[commerce_order--default]=field_checkout_data,checkout_step,state`,
       {
         headers: {
           Accept: 'application/vnd.api+json',
@@ -35,9 +35,10 @@ export const GET: APIRoute = async ({ url, cookies }) => {
 
     const data = await res.json();
     const attrs = data?.data?.attributes ?? {};
-    const checkoutData = attrs.field_checkout_data
-      ? JSON.parse(attrs.field_checkout_data)
-      : null;
+    let checkoutData = null;
+    if (attrs.field_checkout_data) {
+      try { checkoutData = JSON.parse(attrs.field_checkout_data); } catch { checkoutData = null; }
+    }
 
     return new Response(
       JSON.stringify({

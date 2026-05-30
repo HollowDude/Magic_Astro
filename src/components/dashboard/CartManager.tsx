@@ -292,20 +292,6 @@ export default function CartManager({ lang }: Props) {
     );
   }
 
-  if (isCartEmpty && data?.hasActiveCheckout) {
-    return (
-      <div className="space-y-6">
-        <h1 className="font-heading text-2xl text-headline font-semibold">{t(lang, 'title')}</h1>
-        <div className="bg-white rounded-xl border border-border shadow-sm p-8 text-center">
-          <span className="material-symbols-outlined text-5xl text-muted opacity-30 mb-3 block">shopping_cart</span>
-          <h2 className="font-heading text-xl text-headline mb-2">{t(lang, 'checkout_in_progress')}</h2>
-          <p className="text-body-color mb-6">{t(lang, 'checkout_in_progress_desc')}</p>
-          <a href={`/${lang}/checkout`} className="btn-primary inline-flex">{t(lang, 'continue_checkout')}</a>
-        </div>
-      </div>
-    );
-  }
-
   if (isCartEmpty) {
     return (
       <div className="space-y-6">

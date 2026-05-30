@@ -1,13 +1,6 @@
 import type { APIRoute } from 'astro';
 import { getSession } from '@/services/session.service';
 
-const STEP_NAMES: Record<number, string> = {
-  0: 'shipping_information',
-  1: 'shipping_method',
-  2: 'payment_information',
-  3: 'review',
-};
-
 export const POST: APIRoute = async ({ request, cookies }) => {
   const session = await getSession(cookies);
   if (!session) {
@@ -95,7 +88,6 @@ export const POST: APIRoute = async ({ request, cookies }) => {
             id: orderUuid,
             attributes: {
               field_checkout_data: JSON.stringify(mergedData),
-              checkout_step: STEP_NAMES[step],
             },
           },
         }),

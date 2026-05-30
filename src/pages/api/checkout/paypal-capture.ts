@@ -1,5 +1,6 @@
 import type { APIRoute } from 'astro';
 import { getSession } from '@/services/session.service';
+import { drupalCookieHeader } from '../cart/cookie-helper';
 
 const PAYPAL_API = import.meta.env.PAYPAL_MODE === 'live'
   ? 'https://api-m.paypal.com'
@@ -107,17 +108,17 @@ export const POST: APIRoute = async ({ request, cookies }) => {
         try { drupalUpdateResult = JSON.parse(responseText); } catch { drupalUpdateResult = responseText; }
 
         if (drupalRes.ok) {
-          const drupalCookie = cookies.get('drupal_s')?.value;
-          const decodedSession = drupalCookie ? decodeURIComponent(drupalCookie) : undefined;
+          const drupalCookieRaw = cookies.get('drupal_s')?.value;
+          const drupalCookieValue = drupalCookieHeader(drupalCookieRaw);
           const internalId = drupalUpdateResult?.data?.attributes?.drupal_internal__order_id;
 
-          if (internalId && decodedSession) {
+          if (internalId && drupalCookieValue) {
             try {
               await fetch(`${baseUrl}/cart/${internalId}/items?_format=json`, {
                 method: 'DELETE',
                 headers: {
                   Accept: 'application/json',
-                  Cookie: `drupal_s=${encodeURIComponent(decodedSession)}`,
+                  Cookie: drupalCookieValue,
                 },
               });
             } catch {
