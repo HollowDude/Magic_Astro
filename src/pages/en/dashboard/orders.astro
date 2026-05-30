@@ -11,6 +11,13 @@ if (!session) return Astro.redirect('/en/login?redirect=/en/dashboard/orders');
 const lang = 'en' as const;
 const orders = await getUserOrders(session.uid, lang, 20);
 
+interface CheckoutData {
+  currentStep?: number;
+  stepsCompleted?: number[];
+  cancelledAtStep?: number;
+  [key: string]: any;
+}
+
 const stateStyles: Record<string, string> = {
   placed:      'bg-amber-100 text-amber-700',
   fulfillment: 'bg-blue-100 text-blue-700',
@@ -49,7 +56,7 @@ const stateStyles: Record<string, string> = {
               <div class="flex items-center justify-between px-5 py-3 bg-blush/50 border-b border-border">
                 <div>
                   <span class="text-xs text-muted font-medium uppercase tracking-wider">Order</span>
-                  <p class="font-semibold text-text-main">#{order.orderNumber}</p>
+                  <p class="font-semibold text-text-main">{order.state === 'draft' && order.orderNumber === '—' ? 'No number' : `#${order.orderNumber}`}</p>
                 </div>
                 <div class="text-right flex items-center gap-3">
                   <span class={`inline-flex items-center px-3 py-1 rounded-full text-xs font-bold ${style}`}>{order.stateLabel}</span>
@@ -69,12 +76,31 @@ const stateStyles: Record<string, string> = {
                 <div class="flex items-center justify-between pt-3 mt-2 border-t border-border">
                   <span class="text-xs text-muted">{order.placedDateFormatted}</span>
                   <div class="flex items-center gap-2">
-                    {order.state === 'draft' && (
+                    {order.state === 'draft' && order.checkoutStarted && (
                       <a href={`/en/checkout`} class="text-xs font-bold text-primary hover:underline">Continue</a>
                     )}
                     <span class="font-bold text-headline">{order.totalFormatted}</span>
                   </div>
                 </div>
+
+                {order.checkoutStarted && order.state === 'draft' && (
+                  <div class="mt-3">
+                    <div class="text-xs text-muted mb-1">
+                      Step {(order.currentCheckoutStep ?? 0) + 1} of 4
+                    </div>
+                    <div class="flex gap-1">
+                      {[0,1,2,3].map(i => (
+                        <div class={`h-1 flex-1 rounded-full ${i <= (order.currentCheckoutStep ?? 0) ? 'bg-primary' : 'bg-border'}`} />
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {order.state === 'canceled' && order.cancelledAtStep !== null && order.cancelledAtStep !== undefined && (
+                  <div class="mt-2 text-xs text-muted">
+                    Canceled at step {order.cancelledAtStep + 1}
+                  </div>
+                )}
               </div>
             </a>
           );

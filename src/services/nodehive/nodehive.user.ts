@@ -38,6 +38,37 @@ export interface OrderItem {
   thumbnailUrl: string | null;
 }
 
+export interface CheckoutSavedData {
+  currentStep: number;
+  stepsCompleted: number[];
+  shippingAddress: ShippingAddressData | null;
+  billingAddress: ShippingAddressData | null;
+  billingsSameAsShipping: boolean;
+  shippingMethod: 'delivery' | 'pickup' | null;
+  recipientContact: RecipientContactData | null;
+  paymentMethod: string | null;
+  cancelledAtStep?: number;
+  updatedAt: string;
+}
+
+export interface ShippingAddressData {
+  firstName: string;
+  lastName: string;
+  addressLine1: string;
+  addressLine2: string;
+  city: string;
+  state: string;
+  postalCode: string;
+  countryCode: string;
+}
+
+export interface RecipientContactData {
+  fullName: string;
+  idType: string;
+  idNumber: string;
+  phone: string;
+}
+
 export interface UserOrder {
   id: string;
   orderNumber: string;
@@ -49,6 +80,12 @@ export interface UserOrder {
   totalFormatted: string;
   itemCount: number;
   items: OrderItem[];
+  checkoutData: CheckoutSavedData | null;
+  shippingMethod: string | null;
+  shippingAddress: ShippingAddressData | null;
+  paymentMethod: string | null;
+  currentCheckoutStep: number | null;
+  cancelledAtStep: number | null;
 }
 
 const ORDER_STATE_LABELS: Record<string, { es: string; en: string }> = {
@@ -198,7 +235,7 @@ export async function getUserOrders(
       `&include=order_items` +
       `&sort=-placed,changed` +
       `&page[limit]=${limit}` +
-      `&fields[commerce_order--default]=id,order_number,state,placed,changed,total_price,order_items,field_checkout_started`,
+      `&fields[commerce_order--default]=id,order_number,state,placed,changed,total_price,order_items,field_checkout_started,field_checkout_data`,
       {
         headers: { 'Content-Type': 'application/vnd.api+json', Accept: 'application/vnd.api+json' },
         lang,
@@ -236,6 +273,10 @@ export async function getUserOrders(
 
       const items = Array.isArray(o.order_items) ? o.order_items : [];
 
+      const rawCheckoutData = o.field_checkout_data
+        ? (() => { try { return JSON.parse(o.field_checkout_data); } catch { return null; } })()
+        : null;
+
       return {
         id: o.id ?? '',
         orderNumber: o.order_number ?? o.drupal_internal__order_id ?? o.id ?? '—',
@@ -253,6 +294,12 @@ export async function getUserOrders(
           unitPriceFormatted: item.unit_price?.formatted ?? '',
           thumbnailUrl: null,
         })),
+        checkoutData: rawCheckoutData,
+        shippingMethod: rawCheckoutData?.shippingMethod ?? null,
+        shippingAddress: rawCheckoutData?.shippingAddress ?? null,
+        paymentMethod: rawCheckoutData?.paymentMethod ?? null,
+        currentCheckoutStep: rawCheckoutData?.currentStep ?? null,
+        cancelledAtStep: rawCheckoutData?.cancelledAtStep ?? null,
       };
     });
   } catch (err) {

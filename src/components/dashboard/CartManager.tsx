@@ -25,6 +25,8 @@ interface CartData {
   items: CartItem[];
   totalItems: number;
   totalPrice: string;
+  hasActiveCheckout?: boolean;
+  activeCheckoutOrderUuid?: string;
 }
 
 interface Props {
@@ -60,6 +62,9 @@ const T: Record<string, Record<string, string>> = {
     refreshing: 'Actualizando...',
     'cart.with_card': 'Con tarjeta',
     'cart.with_ribbon': 'Con cinta',
+    checkout_in_progress: 'Tu carrito está en proceso de pago',
+    checkout_in_progress_desc: 'Tienes un pedido en proceso. Puedes continuarlo o cancelarlo.',
+    continue_checkout: 'Continuar checkout',
   },
   en: {
     title: 'My Cart',
@@ -89,6 +94,9 @@ const T: Record<string, Record<string, string>> = {
     refreshing: 'Refreshing...',
     'cart.with_card': 'With card',
     'cart.with_ribbon': 'With ribbon',
+    checkout_in_progress: 'Your cart is being processed',
+    checkout_in_progress_desc: 'You have an order in progress. You can continue or cancel it.',
+    continue_checkout: 'Continue checkout',
   },
 };
 
@@ -278,7 +286,21 @@ export default function CartManager({ lang }: Props) {
         <h1 className="font-heading text-2xl text-headline font-semibold">{t(lang, 'title')}</h1>
         <div className="bg-white rounded-xl border border-border shadow-sm p-8 text-center">
           <p className="text-red-500">{t(lang, 'error')}</p>
-          <button onClick={fetchCart} className="btn-primary mt-4">{t(lang, 'retry')}</button>
+          <button onClick={() => fetchCart()} className="btn-primary mt-4">{t(lang, 'retry')}</button>
+        </div>
+      </div>
+    );
+  }
+
+  if (isCartEmpty && data?.hasActiveCheckout) {
+    return (
+      <div className="space-y-6">
+        <h1 className="font-heading text-2xl text-headline font-semibold">{t(lang, 'title')}</h1>
+        <div className="bg-white rounded-xl border border-border shadow-sm p-8 text-center">
+          <span className="material-symbols-outlined text-5xl text-muted opacity-30 mb-3 block">shopping_cart</span>
+          <h2 className="font-heading text-xl text-headline mb-2">{t(lang, 'checkout_in_progress')}</h2>
+          <p className="text-body-color mb-6">{t(lang, 'checkout_in_progress_desc')}</p>
+          <a href={`/${lang}/checkout`} className="btn-primary inline-flex">{t(lang, 'continue_checkout')}</a>
         </div>
       </div>
     );

@@ -54,10 +54,24 @@ interface RecipientContact {
   phone: string;
 }
 
+interface CheckoutSavedData {
+  currentStep?: number;
+  stepsCompleted?: number[];
+  shippingAddress?: ShippingAddress | null;
+  billingAddress?: ShippingAddress | null;
+  billingsSameAsShipping?: boolean;
+  shippingMethod?: 'delivery' | 'pickup' | null;
+  recipientContact?: RecipientContact | null;
+  paymentMethod?: string | null;
+  cancelledAtStep?: number;
+  updatedAt?: string;
+}
+
 interface Props {
   lang: 'es' | 'en';
   cartData: string;
   userAddresses: string;
+  savedCheckoutData?: string;
 }
 
 // ─── Translation helper ─────────────────────────────────────────────────────
@@ -131,6 +145,8 @@ const T: Record<string, Record<string, string>> = {
     continue_shopping: 'Seguir comprando',
     secure_payment: 'Pago 100% seguro y encriptado',
     secure_paypal: 'Pago procesado de forma segura via PayPal',
+    cancel_order: 'Cancelar pedido',
+    cancel_confirm: '¿Cancelar este pedido? Esta acción no se puede deshacer.',
   },
   en: {
     title: 'Checkout',
@@ -192,6 +208,8 @@ const T: Record<string, Record<string, string>> = {
     continue_shopping: 'Continue shopping',
     secure_payment: '100% secure and encrypted payment',
     secure_paypal: 'Payment securely processed via PayPal',
+    cancel_order: 'Cancel order',
+    cancel_confirm: 'Cancel this order? This cannot be undone.',
   },
 };
 
@@ -247,9 +265,10 @@ function NextButton({ label, onClick, loading }: { label: string; onClick: () =>
 
 // ─── Component ──────────────────────────────────────────────────────────────
 
-export default function CheckoutClient({ lang, cartData: cartJson, userAddresses: addrJson }: Props) {
+export default function CheckoutClient({ lang, cartData: cartJson, userAddresses: addrJson, savedCheckoutData: savedJson }: Props) {
   const cartData: CheckoutCartData = JSON.parse(cartJson);
   const initialAddresses: UserAddress[] = JSON.parse(addrJson);
+  const savedFromServer: CheckoutSavedData | null = savedJson ? JSON.parse(savedJson) : null;
 
   const [currentStep, setCurrentStep] = useState<number>(0);
   const [mobileSummaryOpen, setMobileSummaryOpen] = useState(false);
@@ -314,7 +333,64 @@ export default function CheckoutClient({ lang, cartData: cartJson, userAddresses
       .catch(() => {});
   }, []);
 
-  // Restore checkout step from sessionStorage on mount
+  // Restore checkout state from server-saved data and Drupal on mount
+  // Server-saved data is the initial source of truth (passed as prop from checkout.astro)
+  useEffect(() => {
+    if (savedFromServer) {
+      const cd = savedFromServer;
+      if (typeof cd.currentStep === 'number' && cd.currentStep > 0) {
+        setCurrentStep(cd.currentStep);
+      }
+      if (cd.shippingMethod) {
+        setShippingMethod(cd.shippingMethod);
+      }
+      if (cd.billingsSameAsShipping !== undefined) {
+        setBillingSameAsShipping(cd.billingsSameAsShipping);
+      }
+      if (cd.shippingAddress) {
+        setShippingForm(cd.shippingAddress);
+      }
+      if (cd.billingAddress && !cd.billingsSameAsShipping) {
+        setBillingForm(cd.billingAddress);
+      }
+      if (cd.recipientContact) {
+        setRecipient(cd.recipientContact);
+      }
+    } else {
+      // Fallback: try loading from the API
+      const loadFromDrupal = async () => {
+        try {
+          const res = await fetch(`/api/checkout/load-state?orderUuid=${cartData.orderUuid}`);
+          if (!res.ok) return;
+          const data = await res.json();
+          if (data.ok && data.checkoutData) {
+            const cd = data.checkoutData;
+            if (typeof cd.currentStep === 'number' && cd.currentStep > 0) {
+              setCurrentStep(cd.currentStep);
+            }
+            if (cd.shippingMethod) {
+              setShippingMethod(cd.shippingMethod);
+            }
+            if (cd.billingsSameAsShipping !== undefined) {
+              setBillingSameAsShipping(cd.billingsSameAsShipping);
+            }
+            if (cd.shippingAddress) {
+              setShippingForm(cd.shippingAddress);
+            }
+            if (cd.billingAddress && !cd.billingsSameAsShipping) {
+              setBillingForm(cd.billingAddress);
+            }
+            if (cd.recipientContact) {
+              setRecipient(cd.recipientContact);
+            }
+          }
+        } catch {}
+      };
+      loadFromDrupal();
+    }
+  }, [cartData.orderUuid, savedFromServer]);
+
+  // Restore checkout step from sessionStorage on mount (fallback)
   useEffect(() => {
     try {
       const saved = sessionStorage.getItem(`checkout_state_${cartData.orderId}`);
@@ -369,11 +445,45 @@ export default function CheckoutClient({ lang, cartData: cartJson, userAddresses
   const subtotalAmount = parseMoney(displayCart.totalPrice);
   const totalAmount = subtotalAmount + shippingCost;
 
+  function buildStepData(step: number): Partial<CheckoutSavedData> {
+    if (step === 0) {
+      const address = selectedAddress
+        ? {
+            firstName: selectedAddress.firstName ?? '',
+            lastName: selectedAddress.lastName ?? '',
+            addressLine1: selectedAddress.addressLine1 ?? '',
+            addressLine2: selectedAddress.addressLine2 ?? '',
+            city: selectedAddress.city ?? '',
+            state: selectedAddress.state ?? '',
+            postalCode: selectedAddress.postalCode ?? '',
+            countryCode: selectedAddress.countryCode ?? 'US',
+          }
+        : shippingForm;
+      return { shippingAddress: address, recipientContact: recipient.fullName ? recipient : null };
+    }
+    if (step === 1) return { shippingMethod };
+    if (step === 2) return { billingAddress: billingSameAsShipping ? undefined : billingForm, billingsSameAsShipping: billingSameAsShipping, paymentMethod: 'paypal' };
+    return {};
+  }
+
+  function saveStep(step: number) {
+    const stepData = buildStepData(currentStep);
+    fetch('/api/checkout/save-step', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        orderUuid: cartData.orderUuid,
+        step,
+        data: stepData,
+      }),
+    }).catch(() => {});
+  }
+
   const handleNext = async () => {
     setShippingErrors(null);
 
     if (currentStep === 0) {
-      if (selectedAddress) { setCurrentStep(1); return; }
+      if (selectedAddress) { setCurrentStep(1); saveStep(1); return; }
       if (!shippingForm.firstName || !shippingForm.lastName || !shippingForm.addressLine1 || !shippingForm.city || !shippingForm.postalCode) {
         setShippingErrors(lang === 'es' ? 'Completa todos los campos obligatorios.' : 'Complete all required fields.');
         return;
@@ -397,10 +507,11 @@ export default function CheckoutClient({ lang, cartData: cartJson, userAddresses
         } catch { /* ignore */ }
       }
       setCurrentStep(1);
+      saveStep(1);
       return;
     }
-    if (currentStep === 1) { setCurrentStep(2); return; }
-    if (currentStep === 2) { setCurrentStep(3); setOrderNumber(generateOrderNumber()); return; }
+    if (currentStep === 1) { setCurrentStep(2); saveStep(2); return; }
+    if (currentStep === 2) { setCurrentStep(3); setOrderNumber(generateOrderNumber()); saveStep(3); return; }
   };
 
   const handlePlaceOrder = useCallback(async () => {
@@ -458,6 +569,26 @@ export default function CheckoutClient({ lang, cartData: cartJson, userAddresses
       setSubmitting(false);
     }
   }, [selectedAddress, shippingForm, billingSameAsShipping, billingForm, shippingMethod, recipient, cartData, totalAmount, lang]);
+
+  const handleCancelOrder = async () => {
+    if (!window.confirm(t(lang, 'cancel_confirm'))) return;
+    try {
+      const res = await fetch('/api/checkout/cancel-order', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ orderUuid: cartData.orderUuid }),
+      });
+      const data = await res.json();
+      if (data.ok) {
+        sessionStorage.removeItem(`checkout_state_${cartData.orderId}`);
+        window.location.href = `/${lang}/dashboard/orders`;
+      } else {
+        alert(data.error ?? 'Error canceling order');
+      }
+    } catch {
+      alert('Connection error');
+    }
+  };
 
   // ── CAMBIO 1: Stepper ─────────────────────────────────────────────────────
 
@@ -885,6 +1016,25 @@ export default function CheckoutClient({ lang, cartData: cartJson, userAddresses
           </div>
         </div>
         {shippingErrors && <div className="ch-error">{shippingErrors}</div>}
+
+        <div style={{
+          background: '#fffbeb',
+          border: '1px solid #fde68a',
+          borderRadius: '0.75rem',
+          padding: '0.875rem 1rem',
+          marginBottom: '1rem',
+          fontSize: '0.8125rem',
+          color: '#92400e',
+          fontWeight: 500,
+          lineHeight: 1.5,
+        }}>
+          <span className="material-symbols-outlined" style={{fontSize:'1rem', verticalAlign:'middle', marginRight:'0.375rem'}}>info</span>
+          {lang === 'es'
+            ? 'El pago se procesará via PayPal. La integración de pago estará disponible próximamente.'
+            : 'Payment will be processed via PayPal. The payment integration will be available soon.'
+          }
+        </div>
+
         <button
           type="button"
           className="btn-primary ch-next-btn"
@@ -898,6 +1048,23 @@ export default function CheckoutClient({ lang, cartData: cartJson, userAddresses
           <span className="material-symbols-outlined" style={{fontSize:'0.875rem'}}>lock</span>
           {t(lang, 'secure_paypal')}
         </p>
+        <div style={{ textAlign: 'center', marginTop: '0.75rem' }}>
+          <button
+            onClick={handleCancelOrder}
+            style={{
+              background: 'none',
+              border: 'none',
+              color: '#ef4444',
+              fontSize: '0.8125rem',
+              fontWeight: 600,
+              cursor: 'pointer',
+              textDecoration: 'underline',
+              fontFamily: 'inherit',
+            }}
+          >
+            {t(lang, 'cancel_order')}
+          </button>
+        </div>
       </section>
     );
   }
@@ -929,6 +1096,27 @@ export default function CheckoutClient({ lang, cartData: cartJson, userAddresses
           {currentStep === 2 && renderStepPayment()}
           {currentStep === 3 && renderStepConfirm()}
         </div>
+
+        {/* Cancel order button (shown on all steps except confirm which has its own) */}
+        {currentStep < 3 && (
+          <div style={{ textAlign: 'center', marginTop: '1rem' }}>
+            <button
+              onClick={handleCancelOrder}
+              style={{
+                background: 'none',
+                border: 'none',
+                color: '#ef4444',
+                fontSize: '0.8125rem',
+                fontWeight: 600,
+                cursor: 'pointer',
+                textDecoration: 'underline',
+                fontFamily: 'inherit',
+              }}
+            >
+              {t(lang, 'cancel_order')}
+            </button>
+          </div>
+        )}
 
         {/* Desktop summary (always visible below form) */}
         <div className="ch-desktop-summary">

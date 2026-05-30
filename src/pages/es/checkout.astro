@@ -56,6 +56,20 @@ const cartData = {
 
 const userAddresses = await getUserAddresses(session.uid, 'es', session.accessToken);
 
+let savedCheckoutData: Record<string, any> | null = null;
+if (orderUuid && session.accessToken) {
+  try {
+    const baseUrl = (import.meta.env.NODEHIVE_BASE_URL as string).replace(/\/+$/, '');
+    const stateRes = await fetch(
+      `${baseUrl}/en/jsonapi/commerce_order/default/${orderUuid}?fields[commerce_order--default]=field_checkout_data,checkout_step`,
+      { headers: { Accept: 'application/vnd.api+json', Authorization: `Bearer ${session.accessToken}` } },
+    );
+    const stateData = await stateRes.json();
+    const raw = stateData?.data?.attributes?.field_checkout_data;
+    if (raw) savedCheckoutData = JSON.parse(raw);
+  } catch { /* ignorar, el checkout empieza desde cero */ }
+}
+
 if (orderUuid && session.accessToken && session.csrfToken) {
   try {
     const baseUrl = (import.meta.env.NODEHIVE_BASE_URL as string).replace(/\/+$/, '');
@@ -102,6 +116,7 @@ if (orderUuid && session.accessToken && session.csrfToken) {
     lang="es"
     cartData={JSON.stringify(cartData)}
     userAddresses={JSON.stringify(userAddresses)}
+    savedCheckoutData={JSON.stringify(savedCheckoutData)}
     client:load
   />
 </HomeLayout>

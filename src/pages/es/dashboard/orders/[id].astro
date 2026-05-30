@@ -20,7 +20,7 @@ let fetchError = false;
 
 try {
   const raw = await nodehiveFetch<Record<string, unknown>>(
-    `/jsonapi/commerce_order/default/${id}?include=order_items`,
+    `/jsonapi/commerce_order/default/${id}?include=order_items&fields[commerce_order--default]=id,order_number,state,placed,changed,total_price,order_items,field_checkout_started,field_checkout_data`,
     {
       headers: { 'Content-Type': 'application/vnd.api+json', Accept: 'application/vnd.api+json' },
       lang,
@@ -68,6 +68,22 @@ if (order?.placed) {
 }
 
 const items = Array.isArray(order?.order_items) ? order.order_items : [];
+
+let checkoutData: Record<string, any> | null = null;
+if (order?.field_checkout_data) {
+  try {
+    checkoutData = JSON.parse(order.field_checkout_data);
+  } catch {}
+}
+
+function formatAddr(addr: Record<string, string> | null | undefined): string {
+  if (!addr) return '—';
+  const parts = [addr.firstName, addr.lastName].filter(Boolean).join(' ');
+  const line1 = addr.addressLine1 || '';
+  const cityState = [addr.city, addr.state].filter(Boolean).join(', ');
+  const zip = addr.postalCode || '';
+  return [parts, line1, [cityState, zip].filter(Boolean).join(' ')].filter(Boolean).join(', ');
+}
 ---
 
 <DashboardLayout title={`Pedido #${order?.order_number ?? id}`} lang="es" activeSection="orders">
@@ -121,6 +137,47 @@ const items = Array.isArray(order?.order_items) ? order.order_items : [];
         </div>
       </div>
 
+      {checkoutData && (
+        <div class="bg-white rounded-xl border border-border shadow-sm p-6">
+          <h2 class="text-base font-bold text-headline mb-4">Detalles del checkout</h2>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
+            <div>
+              <p class="text-xs text-muted font-semibold uppercase tracking-wider mb-1">Dirección de envío</p>
+              <p class="text-body-color">{checkoutData.shippingAddress ? formatAddr(checkoutData.shippingAddress) : '—'}</p>
+            </div>
+            <div>
+              <p class="text-xs text-muted font-semibold uppercase tracking-wider mb-1">Dirección de facturación</p>
+              <p class="text-body-color">
+                {checkoutData.billingsSameAsShipping
+                  ? 'Igual al envío'
+                  : checkoutData.billingAddress ? formatAddr(checkoutData.billingAddress) : '—'
+                }
+              </p>
+            </div>
+            <div>
+              <p class="text-xs text-muted font-semibold uppercase tracking-wider mb-1">Método de envío</p>
+              <p class="text-body-color">
+                {checkoutData.shippingMethod === 'delivery' ? 'Delivery a domicilio ($24)' : checkoutData.shippingMethod === 'pickup' ? 'Recogida en tienda (Gratis)' : '—'}
+              </p>
+            </div>
+            <div>
+              <p class="text-xs text-muted font-semibold uppercase tracking-wider mb-1">Método de pago</p>
+              <p class="text-body-color">{checkoutData.paymentMethod === 'paypal' ? 'PayPal' : checkoutData.paymentMethod ?? '—'}</p>
+            </div>
+            {checkoutData.recipientContact && (
+              <div class="sm:col-span-2">
+                <p class="text-xs text-muted font-semibold uppercase tracking-wider mb-1">Destinatario</p>
+                <p class="text-body-color">
+                  {checkoutData.recipientContact.fullName}
+                  {checkoutData.recipientContact.idNumber ? ` (${checkoutData.recipientContact.idType}${checkoutData.recipientContact.idNumber})` : ''}
+                  {checkoutData.recipientContact.phone ? ` · ${checkoutData.recipientContact.phone}` : ''}
+                </p>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
       <div class="flex justify-between items-center">
         <a
           href="/es/dashboard/orders"
@@ -130,18 +187,29 @@ const items = Array.isArray(order?.order_items) ? order.order_items : [];
           Volver a mis pedidos
         </a>
 
-        {stateKey === 'draft' && (
+        {stateKey === 'draft' && checkoutData && (
+          <>
+            <a href="/es/checkout" class="text-sm font-bold text-primary hover:underline">
+              Continuar checkout
+            </a>
+            <button
+              id="cancel-order-btn-detail"
+              class="text-sm font-bold text-red-500 hover:underline"
+            >
+              Cancelar pedido
+            </button>
+          </>
+        )}
+        {stateKey === 'draft' && !checkoutData && (
           <a href="/es/checkout" class="text-sm font-bold text-primary hover:underline">
             Continuar pedido
           </a>
         )}
         {stateKey === 'placed' && (
-          <button
-            id="cancel-order-btn"
-            class="text-sm font-bold text-red-500 hover:underline"
-          >
-            Cancelar pedido
-          </button>
+          <span class="text-sm text-muted italic">Esperando confirmación de pago</span>
+        )}
+        {stateKey === 'canceled' && checkoutData?.cancelledAtStep !== undefined && (
+          <span class="text-sm text-muted italic">Cancelado en paso {checkoutData.cancelledAtStep + 1}</span>
         )}
       </div>
     </div>
@@ -174,6 +242,34 @@ const items = Array.isArray(order?.order_items) ? order.order_items : [];
         alert('Error de conexión');
         cancelBtn.disabled = false;
         cancelBtn.textContent = 'Cancelar pedido';
+      }
+    });
+  }
+
+  const cancelDetailBtn = document.getElementById('cancel-order-btn-detail');
+  if (cancelDetailBtn) {
+    cancelDetailBtn.addEventListener('click', async () => {
+      if (!confirm('¿Estás seguro de cancelar este pedido? Esta acción no se puede deshacer.')) return;
+      cancelDetailBtn.disabled = true;
+      cancelDetailBtn.textContent = 'Cancelando...';
+      try {
+        const res = await fetch('/api/checkout/cancel-order', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ orderUuid: orderId }),
+        });
+        const data = await res.json();
+        if (data.ok) {
+          window.location.reload();
+        } else {
+          alert('Error: ' + (data.error ?? 'No se pudo cancelar'));
+          cancelDetailBtn.disabled = false;
+          cancelDetailBtn.textContent = 'Cancelar pedido';
+        }
+      } catch {
+        alert('Error de conexión');
+        cancelDetailBtn.disabled = false;
+        cancelDetailBtn.textContent = 'Cancelar pedido';
       }
     });
   }

@@ -31,6 +31,8 @@ interface CartApiResponse {
   items: CartItemDisplay[];
   totalItems: number;
   totalPrice: string;
+  hasActiveCheckout?: boolean;
+  activeCheckoutOrderUuid?: string;
 }
 
 async function getVariationThumbnailMap(uuids: string[]): Promise<Map<string, string>> {
@@ -136,9 +138,36 @@ export const GET: APIRoute = async ({ cookies }) => {
 
   const rawCarts = result.data as CartOrder[];
 
+  const hasCheckoutStarted = rawCarts.length > 0 && rawCarts.some(
+    c => (c as any).field_checkout_started === true,
+  );
+
+  if (hasCheckoutStarted) {
+    const checkoutOrder = rawCarts.find(c => (c as any).field_checkout_started === true);
+    const response: CartApiResponse = {
+      items: [],
+      totalItems: 0,
+      totalPrice: '',
+      hasActiveCheckout: true,
+      activeCheckoutOrderUuid: checkoutOrder?.uuid ?? '',
+    };
+    const headers: Record<string, string> = {
+      'Content-Type': 'application/json',
+      'Cache-Control': 'no-store, no-cache, must-revalidate, max-age=0',
+      'Pragma': 'no-cache',
+      'Expires': '0',
+      ...relayCartCookie(result.headers, drupalSession),
+    };
+    return new Response(JSON.stringify(response), { status: 200, headers });
+  }
+
+  const activeCarts = rawCarts.filter(
+    c => (c as any).field_checkout_started !== true,
+  );
+
   const variationUuids = new Set<string>();
   const itemUuids: string[] = [];
-  for (const cart of rawCarts) {
+  for (const cart of activeCarts) {
     for (const item of cart.order_items ?? []) {
       const vuuid = item.purchased_entity?.uuid;
       if (vuuid) variationUuids.add(vuuid);
@@ -153,7 +182,7 @@ export const GET: APIRoute = async ({ cookies }) => {
     fetchCustomizations(itemUuids, ribbonColors),
   ]);
 
-  const items: CartItemDisplay[] = rawCarts.flatMap(cart =>
+  const items: CartItemDisplay[] = activeCarts.flatMap(cart =>
     (cart.order_items ?? []).map(item => {
       const cust = customizationMap[item.order_item_id];
       return {
@@ -175,7 +204,7 @@ export const GET: APIRoute = async ({ cookies }) => {
   );
 
   const totalItems = items.reduce((sum, i) => sum + i.quantity, 0);
-  const totalPrice = rawCarts[0]?.total_price?.formatted ?? '';
+  const totalPrice = activeCarts[0]?.total_price?.formatted ?? '';
 
   const response: CartApiResponse = { items, totalItems, totalPrice };
 
