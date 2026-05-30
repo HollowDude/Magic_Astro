@@ -43,6 +43,7 @@ export interface UserOrder {
   orderNumber: string;
   state: string;
   stateLabel: string;
+  checkoutStarted: boolean;
   placedTimestamp: number | null;
   placedDateFormatted: string;
   totalFormatted: string;
@@ -51,12 +52,12 @@ export interface UserOrder {
 }
 
 const ORDER_STATE_LABELS: Record<string, { es: string; en: string }> = {
-  draft:       { es: 'Borrador',       en: 'Draft' },
-  placed:      { es: 'En preparación', en: 'Processing' },
-  fulfillment: { es: 'En camino',      en: 'Shipped' },
-  completed:   { es: 'Entregado',      en: 'Delivered' },
-  canceled:    { es: 'Cancelado',      en: 'Canceled' },
-  validation:  { es: 'Pendiente',      en: 'Pending' },
+  draft:       { es: 'En proceso',         en: 'In progress' },
+  placed:      { es: 'En preparación',     en: 'Processing' },
+  fulfillment: { es: 'En camino',          en: 'Shipped' },
+  completed:   { es: 'Entregado',          en: 'Delivered' },
+  canceled:    { es: 'Cancelado',          en: 'Canceled' },
+  validation:  { es: 'Pendiente',          en: 'Pending' },
 };
 
 function formatOrderDate(timestamp: number | null, lang: Lang): string {
@@ -195,11 +196,13 @@ export async function getUserOrders(
       `/jsonapi/commerce_order/default?` +
       `filter[uid.drupal_internal__uid]=${uid}` +
       `&include=order_items` +
-      `&sort=-placed` +
-      `&page[limit]=${limit}`,
+      `&sort=-placed,changed` +
+      `&page[limit]=${limit}` +
+      `&fields[commerce_order--default]=id,order_number,state,placed,changed,total_price,order_items,field_checkout_started`,
       {
         headers: { 'Content-Type': 'application/vnd.api+json', Accept: 'application/vnd.api+json' },
         lang,
+        cacheTtl: 0,
       },
     );
 
@@ -209,10 +212,17 @@ export async function getUserOrders(
     }
 
     const result = dataFormatter.deserialize(raw.data) as any[];
-    const orders = Array.isArray(result) ? result : [];
+    let orders = Array.isArray(result) ? result : [];
+
+    orders = orders.filter((o: any) => {
+      const state = o.state ?? 'draft';
+      const checkoutStarted = o.field_checkout_started ?? false;
+      return state !== 'draft' || checkoutStarted;
+    });
 
     return orders.map((o: any): UserOrder => {
       const stateKey = o.state ?? 'placed';
+      const checkoutStarted = o.field_checkout_started ?? false;
       const labelObj = ORDER_STATE_LABELS[stateKey] ?? { es: stateKey, en: stateKey };
       const stateLabel = labelObj[lang] ?? labelObj.es;
 
@@ -231,6 +241,7 @@ export async function getUserOrders(
         orderNumber: o.order_number ?? o.drupal_internal__order_id ?? o.id ?? '—',
         state: stateKey,
         stateLabel,
+        checkoutStarted,
         placedTimestamp,
         placedDateFormatted: formatOrderDate(placedTimestamp, lang),
         totalFormatted: o.total_price?.formatted ?? o.order_total?.formatted ?? '',

@@ -7,6 +7,7 @@ import { getSession } from '@/services/session.service';
 import { getCart } from '@/services/nodehive/nodehive.cart';
 import { getUserAddresses } from '@/services/nodehive/nodehive.user';
 import { getLangFromUrl } from '@/i18n/utils';
+import { nodehiveFetch } from '@/services/nodehive/nodehive.client';
 
 const lang = getLangFromUrl(Astro.url);
 const session = await getSession(Astro.cookies);
@@ -25,9 +26,20 @@ if (isEmpty) {
   return Astro.redirect(`/en/shop`);
 }
 
+let orderUuid: string = rawCarts[0].uuid ?? '';
+if (!orderUuid) {
+  const baseUrl = (import.meta.env.NODEHIVE_BASE_URL as string).replace(/\/+$/, '');
+  const res = await fetch(`${baseUrl}/en/jsonapi/commerce_order/default?filter[drupal_internal__order_id]=${rawCarts[0].order_id}`, {
+    headers: { Accept: 'application/vnd.api+json' },
+  });
+  const json = await res.json().catch(() => ({}));
+  orderUuid = json?.data?.[0]?.id ?? '';
+  console.warn('[checkout] UUID not in cart response, fetched from JSONAPI:', orderUuid || 'NOT FOUND');
+}
+
 const cartData = {
   orderId: rawCarts[0].order_id,
-  orderUuid: rawCarts[0].uuid ?? '',
+  orderUuid,
   totalPrice: rawCarts[0].total_price?.formatted ?? '$0.00',
   items: rawCarts[0].order_items?.map((item: any) => ({
     itemId: item.order_item_id,
@@ -43,6 +55,42 @@ const cartData = {
 };
 
 const userAddresses = await getUserAddresses(session.uid, 'en', session.accessToken);
+
+if (orderUuid && session.accessToken && session.csrfToken) {
+  try {
+    const baseUrl = (import.meta.env.NODEHIVE_BASE_URL as string).replace(/\/+$/, '');
+    let csrfToken = session.csrfToken;
+    try {
+      const csrfRes = await fetch(`${baseUrl}/session/token`);
+      if (csrfRes.ok) csrfToken = await csrfRes.text();
+    } catch {}
+
+    const res = await fetch(`${baseUrl}/en/jsonapi/commerce_order/default/${orderUuid}`, {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/vnd.api+json',
+        Accept: 'application/vnd.api+json',
+        'X-CSRF-Token': csrfToken,
+        Authorization: `Bearer ${session.accessToken}`,
+      },
+      body: JSON.stringify({
+        data: {
+          type: 'commerce_order--default',
+          id: orderUuid,
+          attributes: { field_checkout_started: true },
+        },
+      }),
+    });
+    if (!res.ok) {
+      const text = await res.text().catch(() => '');
+      console.warn(`[checkout] field_checkout_started PATCH returned ${res.status}:`, text.slice(0, 200));
+    }
+  } catch (e) {
+    console.warn('[checkout] Could not mark order as checkout_started:', e);
+  }
+} else {
+  console.warn('[checkout] Cannot mark checkout_started', { hasUuid: !!orderUuid, hasToken: !!session.accessToken, hasCsrf: !!session.csrfToken });
+}
 ---
 
 <HomeLayout title="Checkout — Maggy Flowers" lang={lang}>

@@ -1,19 +1,27 @@
 const DRUPAL_S_COOKIE = 'drupal_s';
+const MAX_AGE = 2000000;
 
 export function relayCartCookie(
   drupalHeaders: Headers,
-  _path?: string,
+  existingRawValue?: string,
 ): Record<string, string> {
+  let rawValue: string | null = null;
+
   const setCookie = drupalHeaders.get('set-cookie');
-  if (!setCookie) return {};
+  if (setCookie) {
+    const cookieMatch = setCookie.match(/^([^=]+=[^;]+)/);
+    if (cookieMatch) rawValue = cookieMatch[1];
+  }
 
-  const cookieMatch = setCookie.match(/^([^=]+=[^;]+)/);
-  if (!cookieMatch) return {};
+  if (!rawValue && existingRawValue) {
+    rawValue = decodeURIComponent(existingRawValue);
+  }
 
-  const encoded = encodeURIComponent(cookieMatch[1]);
-  const maxAge = 2000000;
+  if (!rawValue) return {};
+
+  const encoded = encodeURIComponent(rawValue);
 
   return {
-    'Set-Cookie': `${DRUPAL_S_COOKIE}=${encoded}; Path=/; HttpOnly; SameSite=Lax; Max-Age=${maxAge}`,
+    'Set-Cookie': `${DRUPAL_S_COOKIE}=${encoded}; Path=/; HttpOnly; SameSite=Lax; Max-Age=${MAX_AGE}`,
   };
 }

@@ -8,43 +8,24 @@ export const POST: APIRoute = async ({ request, cookies }) => {
   }
 
   let body: any;
-  try {
-    body = await request.json();
-  } catch {
+  try { body = await request.json(); } catch {
     return new Response(JSON.stringify({ ok: false, error: 'Invalid JSON' }), { status: 400 });
   }
 
   const { orderUuid } = body;
-
   if (!orderUuid) {
     return new Response(JSON.stringify({ ok: false, error: 'Missing orderUuid' }), { status: 400 });
   }
 
-  const orderNumber = `MF-${new Date().getFullYear()}-${String(Math.floor(10000 + Math.random() * 90000))}`;
-
   try {
-    const csrfToken = session.csrfToken ?? '';
-    const accessToken = session.accessToken ?? '';
     const baseUrl = (import.meta.env.NODEHIVE_BASE_URL as string).replace(/\/+$/, '');
+    const accessToken = session.accessToken ?? '';
 
-    const patchBody: Record<string, any> = {
-      data: {
-        type: 'commerce_order--default',
-        id: orderUuid,
-        attributes: {
-          order_number: orderNumber,
-          state: 'placed',
-          placed: new Date().toISOString(),
-          data: {
-            paid_event_dispatched: false,
-            shipping_address: body.shippingAddress ?? null,
-            billing_address: body.billingAddress ?? null,
-            shipping_method: body.shippingMethod ?? null,
-            recipient_contact: body.recipientContact ?? null,
-          },
-        },
-      },
-    };
+    let csrfToken = session.csrfToken ?? '';
+    try {
+      const csrfRes = await fetch(`${baseUrl}/session/token`);
+      if (csrfRes.ok) csrfToken = await csrfRes.text();
+    } catch {}
 
     const res = await fetch(`${baseUrl}/en/jsonapi/commerce_order/default/${orderUuid}`, {
       method: 'PATCH',
@@ -54,25 +35,29 @@ export const POST: APIRoute = async ({ request, cookies }) => {
         'X-CSRF-Token': csrfToken,
         ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {}),
       },
-      body: JSON.stringify(patchBody),
+      body: JSON.stringify({
+        data: {
+          type: 'commerce_order--default',
+          id: orderUuid,
+          attributes: { field_checkout_started: true },
+        },
+      }),
     });
 
     if (!res.ok) {
       const errText = await res.text().catch(() => '');
-      throw new Error(`Drupal PATCH failed (${res.status}): ${errText}`);
+      console.warn(`[checkout/start] PATCH failed (${res.status}): ${errText}`);
+      return new Response(JSON.stringify({ ok: true, fieldUpdated: false }), { status: 200 });
     }
 
-    return new Response(JSON.stringify({
-      ok: true,
-      orderId: orderUuid,
-      orderNumber,
-    }), {
+    return new Response(JSON.stringify({ ok: true, fieldUpdated: true }), {
       status: 200,
       headers: { 'Content-Type': 'application/json' },
     });
   } catch (err: any) {
-    return new Response(JSON.stringify({ ok: false, error: err.message }), {
-      status: 500,
+    console.warn('[checkout/start] Error:', err.message);
+    return new Response(JSON.stringify({ ok: true, fieldUpdated: false }), {
+      status: 200,
       headers: { 'Content-Type': 'application/json' },
     });
   }

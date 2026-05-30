@@ -76,13 +76,18 @@ export const POST: APIRoute = async ({ request, cookies }) => {
       const baseUrl = (import.meta.env.NODEHIVE_BASE_URL as string).replace(/\/+$/, '');
 
       try {
+        const captureId = captureData.purchase_units?.[0]?.payments?.captures?.[0]?.id ?? null;
+
         const patchBody: Record<string, any> = {
           data: {
             type: 'commerce_order--default',
             id: orderUuid,
             attributes: {
-              state: 'fulfillment',
-              cart: false,
+              data: {
+                paypal_capture_id: captureId,
+                paypal_status: captureStatus,
+                paypal_captured_at: new Date().toISOString(),
+              },
             },
           },
         };
