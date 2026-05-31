@@ -22,13 +22,13 @@ const phone = profile?.phone || null;
 
 const defaultAddress = addresses.find(a => a.isDefault) ?? addresses[0] ?? null;
 
-const stateStyles: Record<string, { bg: string; text: string }> = {
-  placed:      { bg: 'bg-amber-100',   text: 'text-amber-700'  },
-  fulfillment: { bg: 'bg-blue-100',    text: 'text-blue-700'   },
-  completed:   { bg: 'bg-emerald-100', text: 'text-emerald-700'},
-  canceled:    { bg: 'bg-red-100',     text: 'text-red-600'    },
-  draft:       { bg: 'bg-gray-100',    text: 'text-gray-600'   },
-  validation:  { bg: 'bg-yellow-100',  text: 'text-yellow-700' },
+const stateMeta: Record<string, { icon: string; bg: string; text: string }> = {
+  placed:      { icon: 'local_florist',  bg: '#fffbeb', text: '#92400e' },
+  fulfillment: { icon: 'local_shipping', bg: '#eff6ff', text: '#1e40af' },
+  completed:   { icon: 'check_circle',   bg: 'var(--sage-light)', text: 'var(--sage)' },
+  canceled:    { icon: 'cancel',         bg: '#fef2f2', text: '#dc2626' },
+  draft:       { icon: 'edit_note',      bg: 'var(--blush)', text: 'var(--muted)' },
+  validation:  { icon: 'pending',        bg: '#fffbeb', text: '#92400e' },
 };
 ---
 
@@ -131,31 +131,41 @@ const stateStyles: Record<string, { bg: string; text: string }> = {
 
     {orders.length === 0 ? (
       <div class="text-center py-10">
-        <span class="material-symbols-outlined text-[2.5rem] text-muted opacity-30">shopping_bag</span>
+        <svg class="index-empty-svg" viewBox="0 0 120 80" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <circle cx="30" cy="50" r="18" fill="var(--blush)" />
+          <circle cx="60" cy="30" r="14" fill="var(--sage-light)" />
+          <circle cx="90" cy="55" r="16" fill="var(--blush)" />
+          <path d="M30 35a3 3 0 0 1 3 3v8a3 3 0 0 1-3 3h-2a3 3 0 0 1-3-3v-8a3 3 0 0 1 3-3h2z" fill="var(--primary)" opacity="0.3" />
+          <path d="M60 18a3 3 0 0 1 3 3v8a3 3 0 0 1-3 3h-2a3 3 0 0 1-3-3v-8a3 3 0 0 1 3-3h2z" fill="var(--sage)" opacity="0.3" />
+          <path d="M90 41a3 3 0 0 1 3 3v8a3 3 0 0 1-3 3h-2a3 3 0 0 1-3-3v-8a3 3 0 0 1 3-3h2z" fill="var(--primary)" opacity="0.3" />
+        </svg>
         <p class="text-sm text-body-color mt-2 mb-4">No tienes pedidos aún.</p>
         <a href="/es/shop" class="text-sm font-bold text-primary hover:underline">Explorar la tienda</a>
       </div>
     ) : (
       <div class="divide-y divide-border">
         {orders.map((order) => {
-          const style = stateStyles[order.state] ?? stateStyles.placed;
+          const meta = stateMeta[order.state] ?? stateMeta.placed;
           return (
             <a
               href={`/es/dashboard/orders/${order.id}`}
-              class="flex items-center justify-between gap-3 py-4 hover:bg-[var(--primary-alpha-4)] px-2 rounded-lg transition-colors group"
+              class="index-order-row group"
             >
-              <div class="flex-1 min-w-0">
-                <div class="flex items-center gap-2 flex-wrap">
-                  <span class="font-bold text-sm text-headline whitespace-nowrap">#{order.orderNumber}</span>
-                  <span class={`inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-bold ${style.bg} ${style.text}`}>{order.stateLabel}</span>
+              <div class="ior-left">
+                <span class="ior-icon" style={{ color: meta.text }}>
+                  <span class="material-symbols-outlined">{meta.icon}</span>
+                </span>
+                <div>
+                  <div class="ior-title-row">
+                    <span class="ior-number">#{order.orderNumber}</span>
+                    <span class="ior-badge" style={{ background: meta.bg, color: meta.text }}>{order.stateLabel}</span>
+                  </div>
+                  <p class="ior-meta">{order.placedDateFormatted}{order.itemCount > 0 ? ` · ${order.itemCount} artículo${order.itemCount !== 1 ? 's' : ''}` : ''}</p>
                 </div>
-                <p class="text-xs text-body-color mt-0.5 truncate">
-                  {order.placedDateFormatted}{order.itemCount > 0 ? ` · ${order.itemCount} art.` : ''}
-                </p>
               </div>
-              <div class="flex items-center gap-1.5 shrink-0">
-                <span class="font-bold text-sm text-headline whitespace-nowrap">{order.totalFormatted}</span>
-                <span class="material-symbols-outlined text-[18px] text-body-color group-hover:text-primary transition-colors leading-none">chevron_right</span>
+              <div class="ior-right">
+                <span class="ior-price">{order.totalFormatted}</span>
+                <span class="material-symbols-outlined ior-chevron">chevron_right</span>
               </div>
             </a>
           );
@@ -165,3 +175,88 @@ const stateStyles: Record<string, { bg: string; text: string }> = {
   </section>
 
 </DashboardLayout>
+
+<style>
+  .index-empty-svg {
+    width: 100px;
+    height: 70px;
+    margin: 0 auto 1rem;
+    display: block;
+  }
+  .index-order-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    padding: 0.75rem 0.5rem;
+    border-radius: 0.5rem;
+    transition: background 0.2s;
+    text-decoration: none;
+  }
+  .index-order-row:hover {
+    background: var(--primary-alpha-4);
+  }
+  .ior-left {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    flex: 1;
+    min-width: 0;
+  }
+  .ior-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+  .ior-icon .material-symbols-outlined {
+    font-size: 1.25rem;
+  }
+  .ior-title-row {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+  }
+  .ior-number {
+    font-family: var(--font-heading);
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: var(--headline);
+  }
+  .ior-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.125rem 0.5rem;
+    border-radius: 9999px;
+    font-size: 0.6875rem;
+    font-weight: 700;
+  }
+  .ior-meta {
+    font-size: 0.75rem;
+    color: var(--body-color);
+    margin-top: 0.125rem;
+  }
+  .ior-right {
+    display: flex;
+    align-items: center;
+    gap: 0.375rem;
+    flex-shrink: 0;
+  }
+  .ior-price {
+    font-family: var(--font-heading);
+    font-size: 0.9375rem;
+    font-weight: 600;
+    color: var(--primary);
+  }
+  .ior-chevron {
+    font-size: 1.125rem !important;
+    color: var(--body-color);
+    opacity: 0.5;
+    transition: opacity 0.2s;
+  }
+  .index-order-row:hover .ior-chevron {
+    opacity: 1;
+    color: var(--primary);
+  }
+</style>

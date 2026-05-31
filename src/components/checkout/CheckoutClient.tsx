@@ -309,17 +309,17 @@ export default function CheckoutClient({ lang, cartData: cartJson, userAddresses
   const [enrichedCart, setEnrichedCart] = useState<CheckoutCartData | null>(null);
 
   useEffect(() => {
-    fetch('/api/cart/', { cache: 'no-store' })
+    fetch(`/api/checkout/items?orderUuid=${cartData.orderUuid}`, { cache: 'no-store' })
       .then(r => r.json())
       .then(data => {
-        if (data?.items) {
+        if (data?.ok && data?.items) {
           setEnrichedCart({
-            orderId: cartData.orderId,
+            orderId: data.orderId ?? cartData.orderId,
             orderUuid: cartData.orderUuid,
-            totalPrice: data.totalPrice,
+            totalPrice: data.totalPrice ?? cartData.totalPrice,
             items: data.items.map((i: any) => ({
               itemId: i.itemId, title: i.title, quantity: i.quantity,
-              unitPrice: i.price, totalPrice: i.totalPrice,
+              unitPrice: i.unitPrice, totalPrice: i.totalPrice,
               variationId: i.variationId, thumbnailUrl: i.thumbnailUrl,
               hasCard: i.hasCard, ribbonColor: i.ribbonColor,
             })),
@@ -327,7 +327,7 @@ export default function CheckoutClient({ lang, cartData: cartJson, userAddresses
         }
       })
       .catch(() => {});
-  }, []);
+  }, [cartData.orderUuid]);
 
   // Restore checkout state from server-saved data and Drupal on mount
   // Server-saved data is the initial source of truth (passed as prop from checkout.astro)
@@ -396,7 +396,14 @@ export default function CheckoutClient({ lang, cartData: cartJson, userAddresses
       body: JSON.stringify({ orderUuid: cartData.orderUuid }),
     })
       .then(r => r.json())
-      .then(data => { if (data?.orderNumber) setOrderNumber(data.orderNumber); })
+      .then(data => {
+        if (data?.orderNumber) {
+          setOrderNumber(data.orderNumber);
+          window.dispatchEvent(new CustomEvent('cart:updated', {
+            detail: { items: [], totalItems: 0, totalPrice: '0.00' },
+          }));
+        }
+      })
       .catch(() => {});
   }, [cartData.orderUuid, resume]);
 

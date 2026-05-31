@@ -2,8 +2,10 @@
 export const prerender = false;
 
 import DashboardLayout from '@/layouts/DashboardLayout.astro';
+import Breadcrumb from '@/components/ui/Breadcrumb.astro';
 import { getSession } from '@/services/session.service';
 import { nodehiveFetch } from '@/services/nodehive/nodehive.client';
+import { fetchRibbonColors, ribbonColorDefFromUuid } from '@/services/nodehive/nodehive.cart';
 import Jsona from 'jsona';
 
 const session = await getSession(Astro.cookies);
@@ -17,10 +19,14 @@ const lang = 'en' as const;
 
 let order: any = null;
 let fetchError = false;
+let itemCustomizations: Record<number, { hasCard: boolean; cardMessage: string | null; ribbonColor: { name: string; hex: string } | null }> = {};
+let thumbnailByItemId: Record<number, string> = {};
 
 try {
   const raw = await nodehiveFetch<Record<string, unknown>>(
-    `/jsonapi/commerce_order/default/${id}?include=order_items&fields[commerce_order--default]=id,order_number,state,placed,changed,total_price,order_items,field_checkout_started,field_checkout_data`,
+    `/jsonapi/commerce_order/default/${id}?include=order_items` +
+    `&fields[commerce_order--default]=id,order_number,state,placed,changed,total_price,order_items,field_checkout_started,field_checkout_data` +
+    `&fields[commerce_order_item--default]=drupal_internal__order_item_id,title,quantity,unit_price,total_price,purchased_entity,field_has_card,field_card_message,field_ribbon_color`,
     {
       headers: { 'Content-Type': 'application/vnd.api+json', Accept: 'application/vnd.api+json' },
       lang,
@@ -29,6 +35,61 @@ try {
   );
 
   if (raw.status === 200) {
+    const rawData = raw.data as any;
+    const rawIncluded = Array.isArray(rawData?.included) ? rawData.included : [];
+
+    const ribbonColors = await fetchRibbonColors();
+    const variationUuids: string[] = [];
+    for (const entry of rawIncluded) {
+      if (entry?.type !== 'commerce_order_item--default') continue;
+      const attrs = entry?.attributes ?? {};
+      const internalId = attrs?.drupal_internal__order_item_id;
+      if (!internalId) continue;
+      const ribbonRel = entry?.relationships?.field_ribbon_color?.data;
+      itemCustomizations[internalId] = {
+        hasCard: attrs.field_has_card ?? false,
+        cardMessage: attrs.field_card_message ?? null,
+        ribbonColor: ribbonColorDefFromUuid(ribbonRel?.id ?? null, ribbonColors),
+      };
+      const variationRel = entry?.relationships?.purchased_entity?.data;
+      if (variationRel?.id) variationUuids.push(variationRel.id);
+    }
+
+    if (variationUuids.length > 0) {
+      try {
+        const params = new URLSearchParams();
+        params.set('include', 'field_gallery_of_photos,field_gallery_of_photos.field_media_image');
+        const valueParams = variationUuids.map(u => `filter[id][condition][value][]=${encodeURIComponent(u)}`).join('&');
+        const path = `/jsonapi/commerce_product_variation/flower?filter[id][condition][path]=id&filter[id][condition][operator]=IN&${valueParams}&${params.toString()}`;
+        const thumbRes = await nodehiveFetch<Record<string, unknown>>(path, {
+          headers: { 'Content-Type': 'application/vnd.api+json', Accept: 'application/vnd.api+json' },
+          skipApiKey: false,
+          cacheTtl: 60_000,
+        });
+        if (thumbRes.status === 200) {
+          const baseUrl = (import.meta.env.NODEHIVE_BASE_URL as string).replace(/\/+$/, '');
+          const thumbData = thumbRes.data as any;
+          const thumbIncluded = Array.isArray(thumbData?.included) ? thumbData.included : [];
+          for (const item of thumbData?.data ?? []) {
+            const rels = item?.relationships?.field_gallery_of_photos?.data ?? [];
+            const firstMediaId = rels[0]?.id;
+            if (!firstMediaId) continue;
+            const mediaEntity = thumbIncluded.find((inc: any) => inc.type === 'media--image' && inc.id === firstMediaId);
+            const fileId = mediaEntity?.relationships?.field_media_image?.data?.id;
+            if (!fileId) continue;
+            const fileEntity = thumbIncluded.find((inc: any) => inc.type === 'file--file' && inc.id === fileId);
+            const uri = fileEntity?.attributes?.uri?.url;
+            if (uri) {
+              const itemId = rawIncluded.find((e: any) =>
+                e?.relationships?.purchased_entity?.data?.id === item.id
+              )?.attributes?.drupal_internal__order_item_id;
+              if (itemId) thumbnailByItemId[itemId] = `${baseUrl}${uri}`;
+            }
+          }
+        }
+      } catch {}
+    }
+
     order = dataFormatter.deserialize(raw.data);
   } else if (raw.status === 403 || raw.status === 404) {
     return Astro.redirect('/en/dashboard/orders');
@@ -39,28 +100,23 @@ try {
   fetchError = true;
 }
 
-const stateLabels: Record<string, string> = {
-  draft: 'Draft', placed: 'Processing',
-  fulfillment: 'Shipped', completed: 'Delivered',
-  canceled: 'Canceled', validation: 'Pending',
-};
-const stateStyles: Record<string, string> = {
-  placed: 'bg-amber-100 text-amber-700',
-  fulfillment: 'bg-blue-100 text-blue-700',
-  completed: 'bg-emerald-100 text-emerald-700',
-  canceled: 'bg-red-100 text-red-600',
-  draft: 'bg-gray-100 text-gray-600',
+const stateMeta: Record<string, { icon: string; bg: string; text: string }> = {
+  placed:      { icon: 'local_florist',  bg: '#fffbeb', text: '#92400e' },
+  fulfillment: { icon: 'local_shipping', bg: '#eff6ff', text: '#1e40af' },
+  completed:   { icon: 'check_circle',   bg: 'var(--sage-light)', text: 'var(--sage)' },
+  canceled:    { icon: 'cancel',         bg: '#fef2f2', text: '#dc2626' },
+  draft:       { icon: 'edit_note',      bg: 'var(--blush)', text: 'var(--muted)' },
+  validation:  { icon: 'pending',        bg: '#fffbeb', text: '#92400e' },
 };
 
+const LABELS: Record<string, string> = { draft: 'Draft', placed: 'Processing', fulfillment: 'Shipped', completed: 'Delivered', canceled: 'Canceled', validation: 'Pending' };
 const stateKey = order?.state ?? 'placed';
-const stateLabel = stateLabels[stateKey] ?? stateKey;
-const stateStyle = stateStyles[stateKey] ?? stateStyles.placed;
+const stateLabel = (order?.state && LABELS[order.state as string]) ?? stateKey;
+const meta = stateMeta[stateKey] ?? stateMeta.placed;
 
 let placedDate = '—';
 if (order?.placed) {
-  const ts = typeof order.placed === 'number'
-    ? order.placed * 1000
-    : new Date(order.placed).getTime();
+  const ts = typeof order.placed === 'number' ? order.placed * 1000 : new Date(order.placed).getTime();
   if (!isNaN(ts)) {
     placedDate = new Date(ts).toLocaleDateString('en-US', {
       day: 'numeric', month: 'long', year: 'numeric',
@@ -68,14 +124,22 @@ if (order?.placed) {
   }
 }
 
-const items = Array.isArray(order?.order_items) ? order.order_items : [];
+const items = Array.isArray(order?.order_items)
+  ? order.order_items.map((item: any) => ({
+      ...item,
+      thumbnailUrl: thumbnailByItemId[item.drupal_internal__order_item_id] ?? null,
+      _custom: itemCustomizations[item.drupal_internal__order_item_id] ?? { hasCard: false, cardMessage: null, ribbonColor: null },
+    }))
+  : [];
 
 let checkoutData: Record<string, any> | null = null;
 if (order?.field_checkout_data) {
-  try {
-    checkoutData = JSON.parse(order.field_checkout_data);
-  } catch {}
+  try { checkoutData = JSON.parse(order.field_checkout_data); } catch {}
 }
+
+const stepNames = ['Shipping', 'Method', 'Payment', 'Confirmation'];
+const currentStep = checkoutData?.currentStep ?? 0;
+const steps = ['local_shipping', 'inventory_2', 'credit_card', 'check_circle'];
 
 function formatAddr(addr: Record<string, string> | null | undefined): string {
   if (!addr) return '—';
@@ -88,171 +152,651 @@ function formatAddr(addr: Record<string, string> | null | undefined): string {
 ---
 
 <DashboardLayout title={`Order #${order?.order_number ?? id}`} lang="en" activeSection="orders">
-
-  <nav class="flex items-center gap-2 text-xs text-body-color mb-6">
-    <a href="/en/dashboard/orders" class="hover:text-primary transition-colors">My Orders</a>
-    <span class="material-symbols-outlined text-[14px] leading-none">chevron_right</span>
-    <span class="text-headline font-semibold">#{order?.order_number ?? id}</span>
-  </nav>
+  <Breadcrumb crumbs={[
+    { label: 'My Orders', href: '/en/dashboard/orders' },
+    { label: `#${order?.order_number ?? id}` },
+  ]} />
 
   {fetchError || !order ? (
-    <div class="bg-white rounded-xl border border-border p-16 text-center">
-      <span class="material-symbols-outlined text-[2.5rem] text-muted opacity-30">error</span>
-      <p class="text-body-color mt-3">Could not load order.</p>
-      <a href="/en/dashboard/orders" class="text-sm font-bold text-primary hover:underline mt-3 inline-block">Back to my orders</a>
+    <div class="error-state">
+      <span class="material-symbols-outlined error-icon">error</span>
+      <p class="error-text">Could not load order.</p>
+      <a href="/en/dashboard/orders" class="btn-primary">Back to my orders</a>
     </div>
   ) : (
-    <div class="space-y-5">
-      <div class="bg-white rounded-xl border border-border shadow-sm p-6">
-        <div class="flex flex-col sm:flex-row sm:items-center gap-4 justify-between">
-          <div>
-            <h1 class="text-xl font-bold text-headline">Order #{order.order_number}</h1>
-            <p class="text-sm text-body-color mt-1">{placedDate}</p>
-          </div>
-          <span class={`inline-flex items-center px-3 py-1 rounded-full text-sm font-bold self-start sm:self-auto ${stateStyle}`}>{stateLabel}</span>
+    <div class="detail-page">
+
+      <!-- ===== Stepper ===== -->
+      {(stateKey === 'placed' || stateKey === 'draft') && checkoutData && (
+        <nav class="detail-stepper">
+          {steps.map((icon, i) => (
+            <div class="ds-item">
+              {i > 0 && <span class={`ds-line ${i <= currentStep ? 'ds-line--done' : ''}`} />}
+              <div class={`ds-circle ${i < currentStep ? 'ds-circle--done' : ''} ${i === currentStep ? 'ds-circle--active' : ''}`}>
+                <span class="material-symbols-outlined ds-circle-icon">{i < currentStep ? 'check' : icon}</span>
+              </div>
+              <span class={`ds-label ${i === currentStep ? 'ds-label--active' : ''} ${i < currentStep ? 'ds-label--past' : ''}`}>{stepNames[i]}</span>
+            </div>
+          ))}
+        </nav>
+      )}
+
+      <!-- ===== Order Header ===== -->
+      <div class="detail-header">
+        <div class="dh-left">
+          <h1 class="dh-order-num">Order #{order.order_number}</h1>
+          <p class="dh-date">{placedDate}</p>
         </div>
+        <span class="order-badge" style={{ background: meta.bg, color: meta.text }}>
+          <span class="badge-dot" style={{ background: meta.text }} />
+          {stateLabel}
+        </span>
       </div>
 
-      <div class="bg-white rounded-xl border border-border shadow-sm p-6">
-        <h2 class="text-base font-bold text-headline mb-4">Items ({items.length})</h2>
-
+      <!-- ===== Items Card ===== -->
+      <div class="detail-card">
+        <h2 class="dc-title">Items ({items.length})</h2>
         {items.length === 0 ? (
-          <p class="text-sm text-body-color italic">No items available.</p>
+          <p class="dc-empty">No items available.</p>
         ) : (
-          <div class="divide-y divide-border">
+          <div class="dc-items">
             {items.map((item: any) => (
-              <div class="flex items-start justify-between gap-4 py-4">
-                <div class="flex-1 min-w-0">
-                  <p class="text-sm font-semibold text-headline truncate">{item.title}</p>
-                  <p class="text-xs text-body-color mt-0.5">Qty: {Math.round(parseFloat(item.quantity ?? '1'))} · {item.unit_price?.formatted ?? ''}</p>
+              <div class="dc-item-row">
+                <div class="dc-item-thumb">
+                  {item.thumbnailUrl ? (
+                    <img src={item.thumbnailUrl} alt={item.title} class="dc-thumb-img" loading="lazy" />
+                  ) : (
+                    <span class="material-symbols-outlined dc-thumb-placeholder">local_florist</span>
+                  )}
                 </div>
-                <span class="font-bold text-sm text-headline shrink-0">{item.total_price?.formatted ?? ''}</span>
+                <div class="dc-item-info">
+                  <p class="dc-item-title">{item.title}</p>
+                  <p class="dc-item-meta">Qty: {Math.round(parseFloat(item.quantity ?? '1'))} &middot; {item.unit_price?.formatted ?? ''}</p>
+                  {(item._custom?.hasCard || item._custom?.ribbonColor) && (
+                    <div class="dc-item-custom">
+                      {item._custom?.hasCard && <span class="dc-item-badge">With card{item._custom?.cardMessage ? `: "${item._custom.cardMessage}"` : ''}</span>}
+                      {item._custom?.ribbonColor && <span class="dc-item-badge">Ribbon: {item._custom.ribbonColor.name}</span>}
+                    </div>
+                  )}
+                </div>
+                <span class="dc-item-total">{item.total_price?.formatted ?? ''}</span>
               </div>
             ))}
           </div>
         )}
-
-        <div class="border-t border-border mt-4 pt-4 flex justify-between items-center">
-          <span class="font-bold text-sm text-headline">Total</span>
-          <span class="font-bold text-lg text-primary">{order.total_price?.formatted ?? ''}</span>
+        <div class="dc-total-row">
+          <span class="dc-total-label">Total</span>
+          <span class="dc-total-value">{order.total_price?.formatted ?? ''}</span>
         </div>
       </div>
 
+      <!-- ===== Checkout Details ===== -->
       {checkoutData && (
-        <div class="bg-white rounded-xl border border-border shadow-sm p-6">
-          <h2 class="text-base font-bold text-headline mb-4">Checkout Details</h2>
-          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
-            <div>
-              <p class="text-xs text-muted font-semibold uppercase tracking-wider mb-1">Shipping Address</p>
-              <p class="text-body-color">{checkoutData.shippingAddress ? formatAddr(checkoutData.shippingAddress) : '—'}</p>
-            </div>
-            <div>
-              <p class="text-xs text-muted font-semibold uppercase tracking-wider mb-1">Billing Address</p>
-              <p class="text-body-color">
-                {checkoutData.billingsSameAsShipping
-                  ? 'Same as shipping'
-                  : checkoutData.billingAddress ? formatAddr(checkoutData.billingAddress) : '—'
-                }
-              </p>
-            </div>
-            <div>
-              <p class="text-xs text-muted font-semibold uppercase tracking-wider mb-1">Shipping Method</p>
-              <p class="text-body-color">
-                {checkoutData.shippingMethod === 'delivery' ? 'Home delivery ($24)' : checkoutData.shippingMethod === 'pickup' ? 'Store pickup (Free)' : '—'}
-              </p>
-            </div>
-            <div>
-              <p class="text-xs text-muted font-semibold uppercase tracking-wider mb-1">Payment Method</p>
-              <p class="text-body-color">{checkoutData.paymentMethod === 'paypal' ? 'PayPal' : checkoutData.paymentMethod ?? '—'}</p>
-            </div>
-            {checkoutData.recipientContact && (
-              <div class="sm:col-span-2">
-                <p class="text-xs text-muted font-semibold uppercase tracking-wider mb-1">Recipient</p>
-                <p class="text-body-color">
-                  {checkoutData.recipientContact.fullName}
-                  {checkoutData.recipientContact.idNumber ? ` (${checkoutData.recipientContact.idType}${checkoutData.recipientContact.idNumber})` : ''}
-                  {checkoutData.recipientContact.phone ? ` · ${checkoutData.recipientContact.phone}` : ''}
-                </p>
+        <div class="detail-card">
+          <h2 class="dc-title">Checkout Details</h2>
+          <div class="confirm-grid">
+            <div class="confirm-card">
+              <div class="confirm-header">
+                <h4>Shipping Address</h4>
               </div>
-            )}
+              <p class="confirm-method">{checkoutData.shippingMethod === 'delivery' ? 'Home delivery' : checkoutData.shippingMethod === 'pickup' ? 'Store pickup' : ''}</p>
+              <p class="confirm-addr">{checkoutData.shippingAddress ? formatAddr(checkoutData.shippingAddress) : '—'}</p>
+            </div>
+            <div class="confirm-card">
+              <div class="confirm-header">
+                <h4>Recipient</h4>
+              </div>
+              {checkoutData.recipientContact?.fullName ? (
+                <>
+                  <p class="confirm-addr">{checkoutData.recipientContact.fullName}</p>
+                  {checkoutData.recipientContact.idNumber && <p class="confirm-addr">{checkoutData.recipientContact.idType}{checkoutData.recipientContact.idNumber}</p>}
+                  {checkoutData.recipientContact.phone && <p class="confirm-addr">{checkoutData.recipientContact.phone}</p>}
+                </>
+              ) : (
+                <p class="confirm-empty">No recipient</p>
+              )}
+            </div>
+            <div class="confirm-card">
+              <div class="confirm-header">
+                <h4>Billing Address</h4>
+              </div>
+              {checkoutData.billingsSameAsShipping ? (
+                <p class="confirm-addr">Same as shipping</p>
+              ) : checkoutData.billingAddress ? (
+                <p class="confirm-addr">{formatAddr(checkoutData.billingAddress)}</p>
+              ) : (
+                <p class="confirm-empty">—</p>
+              )}
+            </div>
+            <div class="confirm-card">
+              <div class="confirm-header">
+                <h4>Payment Method</h4>
+              </div>
+              <p class="confirm-addr">{checkoutData.paymentMethod === 'paypal' ? 'PayPal' : checkoutData.paymentMethod ?? '—'}</p>
+            </div>
           </div>
         </div>
       )}
 
-      <div class="flex justify-between items-center">
-        <a
-          href="/en/dashboard/orders"
-          class="inline-flex items-center gap-1.5 text-sm font-bold text-body-color hover:text-primary transition-colors"
-        >
-          <span class="material-symbols-outlined text-[18px] leading-none">arrow_back</span>
+      <!-- ===== CTAs ===== -->
+      <div class="detail-actions">
+        <a href="/en/dashboard/orders" class="action-back">
+          <span class="material-symbols-outlined">arrow_back</span>
           Back to my orders
         </a>
 
-        {stateKey === 'draft' && checkoutData && (
-          <>
-            <a href="/en/checkout" class="text-sm font-bold text-primary hover:underline">
-              Continue checkout
+        <div class="action-group">
+          {stateKey === 'placed' && (
+            <a href={`/en/checkout?resume=${id}`} class="btn-primary action-continue">
+              Continue Checkout
+              <span class="material-symbols-outlined">arrow_forward</span>
             </a>
-            <button
-              id="cancel-order-btn-detail"
-              class="text-sm font-bold text-red-500 hover:underline"
-            >
-              Cancel order
+          )}
+
+          {stateKey === 'canceled' && checkoutData?.cancelledAtStep !== undefined && (
+            <span class="action-canceled-note">Canceled at step {checkoutData.cancelledAtStep + 1}</span>
+          )}
+
+          {(stateKey === 'draft' || stateKey === 'placed') && (
+            <button id="cancel-order-btn" class="action-cancel">
+              <span class="material-symbols-outlined">cancel</span>
+              {stateKey === 'placed' ? 'Cancel order' : 'Cancel order'}
             </button>
-          </>
-        )}
-        {stateKey === 'draft' && !checkoutData && (
-          <a href="/en/checkout" class="text-sm font-bold text-primary hover:underline">
-            Continue order
-          </a>
-        )}
-        {stateKey === 'placed' && (
-          <span class="text-sm text-muted italic">Waiting for payment confirmation</span>
-        )}
-        {stateKey === 'canceled' && checkoutData?.cancelledAtStep !== undefined && (
-          <span class="text-sm text-muted italic">Canceled at step {checkoutData.cancelledAtStep + 1}</span>
-        )}
+          )}
+        </div>
       </div>
     </div>
   )}
 
+  <!-- ===== Inline Cancel Modal ===== -->
+  <div id="cancel-modal" class="cancel-modal-overlay" style="display:none">
+    <div class="cancel-modal">
+      <div class="cancel-modal-body">
+        <span class="material-symbols-outlined cancel-modal-icon">warning</span>
+        <h3 class="cancel-modal-title">Cancel order</h3>
+        <p class="cancel-modal-desc">Are you sure you want to cancel this order? This action cannot be undone.</p>
+      </div>
+      <div class="cancel-modal-actions">
+        <button id="cancel-modal-no" class="cancel-modal-btn cancel-modal-btn--no">No, keep it</button>
+        <button id="cancel-modal-yes" class="cancel-modal-btn cancel-modal-btn--yes">Yes, cancel order</button>
+      </div>
+    </div>
+  </div>
 </DashboardLayout>
+
+<style is:global>
+  @keyframes fadeInUp {
+    from { opacity: 0; transform: translateY(12px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes hourglass-spin {
+    0% { transform: rotate(0deg); }
+    50% { transform: rotate(180deg); }
+    100% { transform: rotate(360deg); }
+  }
+
+  .error-state {
+    background: white;
+    border-radius: var(--radius-lg);
+    border: 1px solid var(--border);
+    padding: 4rem 2rem;
+    text-align: center;
+  }
+  .error-icon {
+    font-size: 2.5rem !important;
+    color: var(--muted);
+    opacity: 0.3;
+    margin-bottom: 0.75rem;
+  }
+  .error-text {
+    color: var(--body-color);
+    margin-bottom: 1.25rem;
+  }
+
+  .detail-page {
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+  }
+
+  /* ===== Stepper ===== */
+  .detail-stepper {
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    gap: 0;
+    position: relative;
+  }
+  .ds-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+    flex: 1;
+    position: relative;
+  }
+  .ds-line {
+    position: absolute;
+    top: 1.25rem;
+    right: 50%;
+    width: 100%;
+    height: 2px;
+    background: var(--border);
+    transition: background 0.3s;
+    z-index: 0;
+  }
+  .ds-line--done { background: var(--primary); }
+  .ds-circle {
+    position: relative;
+    z-index: 1;
+    width: 2.5rem;
+    height: 2.5rem;
+    border-radius: 9999px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--border);
+    color: var(--muted);
+    border: 2px solid var(--border);
+    transition: all 0.2s;
+  }
+  .ds-circle--done { background: var(--primary); border-color: var(--primary); color: white; }
+  .ds-circle--active { background: white; border-color: var(--primary); color: var(--primary); box-shadow: 0 0 0 4px color-mix(in srgb, var(--primary) 12%, transparent); }
+  .ds-circle-icon { font-size: 1rem !important; }
+  .ds-label {
+    font-size: 0.6875rem;
+    font-weight: 600;
+    color: var(--text-muted);
+    text-align: center;
+    line-height: 1.2;
+    white-space: nowrap;
+  }
+  .ds-label--active { color: var(--primary); }
+  .ds-label--past { color: var(--sage); }
+
+  /* ===== Detail Header ===== */
+  .detail-header {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+  }
+  .dh-left {  }
+  .dh-order-num {
+    font-family: var(--font-heading);
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: var(--headline);
+  }
+  .dh-date {
+    font-size: 0.8125rem;
+    color: var(--body-color);
+    margin-top: 0.125rem;
+  }
+  .order-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.375rem;
+    padding: 0.375rem 0.875rem;
+    border-radius: 9999px;
+    font-size: 0.8125rem;
+    font-weight: 700;
+  }
+  .badge-dot { width: 6px; height: 6px; border-radius: 50%; display: inline-block; }
+
+  /* ===== Detail Card ===== */
+  .detail-card {
+    background: white;
+    border-radius: var(--radius-lg);
+    border: 1px solid var(--border);
+    box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+    padding: 1.25rem;
+    animation: fadeInUp 0.22s ease-out both;
+  }
+  .dc-title {
+    font-size: 0.9375rem;
+    font-weight: 700;
+    color: var(--headline);
+    margin-bottom: 1rem;
+  }
+  .dc-empty {
+    font-size: 0.8125rem;
+    color: var(--body-color);
+    font-style: italic;
+  }
+
+  /* ===== Items ===== */
+  .dc-items {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+  }
+  .dc-item-row {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.75rem 0;
+    border-bottom: 1px solid var(--border);
+  }
+  .dc-item-row:last-child { border-bottom: none; }
+  .dc-item-thumb {
+    width: 48px;
+    height: 48px;
+    border-radius: 0.5rem;
+    overflow: hidden;
+    background: var(--blush);
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .dc-thumb-img { width: 100%; height: 100%; object-fit: cover; }
+  .dc-thumb-placeholder {
+    font-size: 1.25rem !important;
+    color: var(--primary);
+    opacity: 0.4;
+  }
+  .dc-item-info {
+    flex: 1;
+    min-width: 0;
+  }
+  .dc-item-title {
+    font-size: 0.8125rem;
+    font-weight: 600;
+    color: var(--headline);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .dc-item-meta {
+    font-size: 0.75rem;
+    color: var(--body-color);
+    margin-top: 0.125rem;
+  }
+  .dc-item-custom {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.375rem;
+    margin-top: 0.25rem;
+  }
+  .dc-item-badge {
+    font-size: 0.6875rem;
+    color: var(--primary);
+    background: color-mix(in srgb, var(--primary) 8%, transparent);
+    padding: 0.125rem 0.5rem;
+    border-radius: 9999px;
+    font-weight: 600;
+    line-height: 1.4;
+  }
+  .dc-item-total {
+    font-family: var(--font-heading);
+    font-size: 0.9375rem;
+    font-weight: 600;
+    color: var(--headline);
+    flex-shrink: 0;
+  }
+  .dc-total-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-top: 0.75rem;
+    border-top: 1px solid var(--border);
+    margin-top: 0.25rem;
+  }
+  .dc-total-label {
+    font-size: 0.875rem;
+    font-weight: 700;
+    color: var(--headline);
+  }
+  .dc-total-value {
+    font-family: var(--font-heading);
+    font-size: 1.125rem;
+    font-weight: 600;
+    color: var(--primary);
+  }
+
+  /* ===== Confirm Grid ===== */
+  .confirm-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.75rem;
+  }
+  .confirm-card {
+    background: var(--blush);
+    border-radius: var(--radius-lg);
+    padding: 1rem;
+  }
+  .confirm-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 0.5rem;
+  }
+  .confirm-header h4 {
+    font-size: 0.6875rem;
+    font-weight: 700;
+    color: var(--body-color);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+  .confirm-method {
+    font-size: 0.8125rem;
+    font-weight: 600;
+    color: var(--headline);
+    margin-bottom: 0.25rem;
+  }
+  .confirm-addr {
+    font-size: 0.75rem;
+    color: var(--body-color);
+    line-height: 1.4;
+  }
+  .confirm-empty {
+    font-size: 0.75rem;
+    color: var(--muted);
+    font-style: italic;
+  }
+
+  /* ===== Actions ===== */
+  .detail-actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+  }
+  .action-back {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.375rem;
+    font-size: 0.8125rem;
+    font-weight: 600;
+    color: var(--body-color);
+    text-decoration: none;
+    transition: color 0.2s;
+  }
+  .action-back:hover { color: var(--primary); }
+  .action-back .material-symbols-outlined { font-size: 1.125rem !important; }
+  .action-group {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+  }
+  .action-continue {
+    height: 2.75rem;
+    font-size: 0.875rem;
+    padding-inline: 1.25rem;
+    border-radius: 0.625rem;
+    gap: 0.5rem;
+  }
+  .action-continue .material-symbols-outlined { font-size: 1.125rem !important; }
+
+  .action-waiting {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    background: #fffbeb;
+    border: 1px solid #fde68a;
+    border-radius: var(--radius-lg);
+    padding: 0.75rem 1rem;
+    max-width: 320px;
+  }
+  .action-hourglass {
+    font-size: 1.5rem !important;
+    color: #f59e0b;
+    animation: hourglass-spin 2s ease-in-out infinite;
+  }
+  .action-waiting-title {
+    font-size: 0.8125rem;
+    font-weight: 700;
+    color: #92400e;
+  }
+  .action-waiting-desc {
+    font-size: 0.6875rem;
+    color: #a16207;
+    margin-top: 0.125rem;
+  }
+
+  .action-canceled-note {
+    font-size: 0.8125rem;
+    color: var(--body-color);
+    font-style: italic;
+  }
+
+  .action-cancel {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.375rem;
+    font-size: 0.8125rem;
+    font-weight: 600;
+    color: #dc2626;
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-family: inherit;
+    padding: 0.375rem 0.75rem;
+    border-radius: 0.5rem;
+    transition: background 0.2s;
+  }
+  .action-cancel:hover {
+    background: #fef2f2;
+  }
+  .action-cancel .material-symbols-outlined { font-size: 1.125rem !important; }
+
+  /* ===== Cancel Modal ===== */
+  .cancel-modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.4);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    padding: 1rem;
+  }
+  .cancel-modal {
+    background: white;
+    border-radius: var(--radius-lg);
+    max-width: 380px;
+    width: 100%;
+    box-shadow: 0 16px 48px rgba(0,0,0,0.15);
+    overflow: hidden;
+  }
+  .cancel-modal-body {
+    padding: 1.5rem 1.5rem 0.75rem;
+    text-align: center;
+  }
+  .cancel-modal-icon {
+    font-size: 2.5rem !important;
+    color: #dc2626;
+    margin-bottom: 0.5rem;
+  }
+  .cancel-modal-title {
+    font-size: 1.125rem;
+    font-weight: 700;
+    color: var(--headline);
+    margin-bottom: 0.375rem;
+  }
+  .cancel-modal-desc {
+    font-size: 0.8125rem;
+    color: var(--body-color);
+    line-height: 1.4;
+  }
+  .cancel-modal-actions {
+    display: flex;
+    gap: 0.5rem;
+    padding: 0.75rem 1.5rem 1.5rem;
+  }
+  .cancel-modal-btn {
+    flex: 1;
+    height: 2.75rem;
+    border-radius: 0.625rem;
+    font-size: 0.8125rem;
+    font-weight: 700;
+    border: none;
+    cursor: pointer;
+    font-family: inherit;
+    transition: opacity 0.2s;
+  }
+  .cancel-modal-btn:disabled { opacity: 0.6; cursor: not-allowed; }
+  .cancel-modal-btn--no {
+    background: var(--blush);
+    color: var(--body-color);
+  }
+  .cancel-modal-btn--no:hover { background: var(--border); }
+  .cancel-modal-btn--yes {
+    background: #dc2626;
+    color: white;
+  }
+  .cancel-modal-btn--yes:hover { background: #b91c1c; }
+
+  @media (max-width: 639px) {
+    .detail-stepper { margin-bottom: 0.5rem; }
+    .ds-label { display: none; }
+    .ds-circle { width: 2rem; height: 2rem; }
+    .ds-circle-icon { font-size: 0.875rem !important; }
+    .ds-line { top: 1rem; }
+    .confirm-grid { grid-template-columns: 1fr; }
+    .detail-actions { flex-direction: column; align-items: stretch; }
+    .action-group { justify-content: center; }
+  }
+  @media (max-width: 480px) {
+    .dh-order-num { font-size: 1.25rem; }
+    .dc-item-thumb { width: 40px; height: 40px; }
+    .action-waiting { max-width: 100%; }
+  }
+</style>
 
 <script define:vars={{ orderId: id }}>
   const cancelBtn = document.getElementById('cancel-order-btn');
+  const modal = document.getElementById('cancel-modal');
+  const modalYes = document.getElementById('cancel-modal-yes');
+  const modalNo = document.getElementById('cancel-modal-no');
+
+  function showModal() {
+    if (modal) modal.style.display = 'flex';
+  }
+  function hideModal() {
+    if (modal) modal.style.display = 'none';
+  }
+
   if (cancelBtn) {
-    cancelBtn.addEventListener('click', async () => {
-      if (!confirm('Are you sure you want to cancel this order?')) return;
-      cancelBtn.disabled = true;
-      cancelBtn.textContent = 'Canceling...';
-      try {
-        const res = await fetch(`/api/orders/${orderId}/transition`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ state: 'canceled' }),
-        });
-        const data = await res.json();
-        if (data.ok) {
-          window.location.reload();
-        } else {
-          alert('Error: ' + (data.error ?? 'Could not cancel'));
-          cancelBtn.disabled = false;
-          cancelBtn.textContent = 'Cancel order';
-        }
-      } catch {
-        alert('Connection error');
-        cancelBtn.disabled = false;
-        cancelBtn.textContent = 'Cancel order';
-      }
+    cancelBtn.addEventListener('click', showModal);
+  }
+  if (modalNo) {
+    modalNo.addEventListener('click', hideModal);
+  }
+  if (modal) {
+    modal.addEventListener('click', (e) => {
+      if (e.target === modal) hideModal();
     });
   }
 
-  const cancelDetailBtn = document.getElementById('cancel-order-btn-detail');
-  if (cancelDetailBtn) {
-    cancelDetailBtn.addEventListener('click', async () => {
-      if (!confirm('Are you sure you want to cancel this order? This cannot be undone.')) return;
-      cancelDetailBtn.disabled = true;
-      cancelDetailBtn.textContent = 'Canceling...';
+  if (modalYes) {
+    modalYes.addEventListener('click', async () => {
+      modalYes.disabled = true;
+      modalYes.textContent = 'Canceling...';
       try {
         const res = await fetch('/api/checkout/cancel-order', {
           method: 'POST',
@@ -264,13 +808,15 @@ function formatAddr(addr: Record<string, string> | null | undefined): string {
           window.location.reload();
         } else {
           alert('Error: ' + (data.error ?? 'Could not cancel'));
-          cancelDetailBtn.disabled = false;
-          cancelDetailBtn.textContent = 'Cancel order';
+          modalYes.disabled = false;
+          modalYes.textContent = 'Yes, cancel order';
+          hideModal();
         }
       } catch {
         alert('Connection error');
-        cancelDetailBtn.disabled = false;
-        cancelDetailBtn.textContent = 'Cancel order';
+        modalYes.disabled = false;
+        modalYes.textContent = 'Yes, cancel order';
+        hideModal();
       }
     });
   }

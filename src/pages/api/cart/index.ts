@@ -2,6 +2,7 @@ import type { APIRoute } from 'astro';
 import { getCart, fetchRibbonColors, ribbonColorDefFromUuid, type CartOrder, type CustomizationEntry } from '@/services/nodehive/nodehive.cart';
 import type { RibbonColorDef } from '@/services/nodehive/nodehive.cart';
 import { nodehiveFetch } from '@/services/nodehive/nodehive.client';
+import { getSession } from '@/services/session.service';
 import { relayCartCookie } from './cookie-helper';
 
 const NODEHIVE_BASE_URL = import.meta.env.NODEHIVE_BASE_URL as string;
@@ -88,6 +89,7 @@ async function fetchCustomizations(
   orderUuids: string[],
   ribbonColors: RibbonColorDef[],
   drupalSession?: string,
+  accessToken?: string,
 ): Promise<Record<number, CustomizationEntry>> {
   if (orderUuids.length === 0) return {};
 
@@ -96,15 +98,18 @@ async function fetchCustomizations(
     const valueParams = orderUuids.map(u => `filter[id][condition][value][]=${encodeURIComponent(u)}`).join('&');
     const url = `${baseUrl}/en/jsonapi/commerce_order/default?include=order_items&fields[commerce_order--default]=drupal_internal__order_id&filter[id][condition][path]=id&filter[id][condition][operator]=IN&${valueParams}`;
 
-    const res = await fetch(url, {
-      headers: {
-        Accept: 'application/vnd.api+json',
-        ...(drupalSession ? { Cookie: `drupal_s=${drupalSession}` } : {}),
-      },
-    });
+    const headers: Record<string, string> = {
+      Accept: 'application/vnd.api+json',
+    };
+    if (accessToken) {
+      headers['Authorization'] = `Bearer ${accessToken}`;
+    } else if (drupalSession) {
+      headers['Cookie'] = `drupal_s=${drupalSession}`;
+    }
+
+    const res = await fetch(url, { headers });
 
     if (!res.ok) {
-      console.error(`[cart] fetchCustomizations via order returned ${res.status}`);
       return {};
     }
 
@@ -129,6 +134,9 @@ async function fetchCustomizations(
         ribbonColorUuid: relData?.id ?? null,
       };
     }
+    if (Object.keys(map).length === 0) {
+      console.warn('[cart] fetchCustomizations: all items omitted due to JSON:API permissions.');
+    }
     return map;
   } catch (e) {
     console.error('[cart] fetchCustomizations error:', e);
@@ -139,6 +147,8 @@ async function fetchCustomizations(
 export const GET: APIRoute = async ({ cookies }) => {
   const drupalSession = cookies.get('drupal_s')?.value;
   const decoded = drupalSession ? decodeURIComponent(drupalSession) : undefined;
+  const session = await getSession(cookies);
+  const accessToken = session?.accessToken;
   const result = await getCart(decoded);
 
   const rawCarts = Array.isArray(result.data) ? (result.data as CartOrder[]) : [];
@@ -217,7 +227,7 @@ export const GET: APIRoute = async ({ cookies }) => {
 
   const [thumbnailMap, customizationMap] = await Promise.all([
     getVariationThumbnailMap(Array.from(variationUuids)),
-    fetchCustomizations(orderUuids, ribbonColors, drupalSession),
+    fetchCustomizations(orderUuids, ribbonColors, drupalSession, accessToken),
   ]);
 
   const items: CartItemDisplay[] = activeCarts.flatMap(cart =>
