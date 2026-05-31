@@ -146,6 +146,9 @@ const stateMeta: Record<string, { icon: string; bg: string; text: string }> = {
       <div class="divide-y divide-border">
         {orders.map((order) => {
           const meta = stateMeta[order.state] ?? stateMeta.placed;
+          const isPickup = order.shippingMethod === 'pickup';
+          const fulfillmentLabel = isPickup ? 'Listo para recoger' : 'En camino';
+          const effectiveStateLabel = order.state === 'fulfillment' ? fulfillmentLabel : order.stateLabel;
           return (
             <a
               href={`/es/dashboard/orders/${order.id}`}
@@ -158,7 +161,7 @@ const stateMeta: Record<string, { icon: string; bg: string; text: string }> = {
                 <div>
                   <div class="ior-title-row">
                     <span class="ior-number">#{order.orderNumber}</span>
-                    <span class="ior-badge" style={{ background: meta.bg, color: meta.text }}>{order.stateLabel}</span>
+                    <span class="ior-badge" style={{ background: meta.bg, color: meta.text }}>{effectiveStateLabel}</span>
                   </div>
                   <p class="ior-meta">{order.placedDateFormatted}{order.itemCount > 0 ? ` · ${order.itemCount} artículo${order.itemCount !== 1 ? 's' : ''}` : ''}</p>
                 </div>

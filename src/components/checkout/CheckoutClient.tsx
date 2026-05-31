@@ -1034,24 +1034,6 @@ export default function CheckoutClient({ lang, cartData: cartJson, userAddresses
         </div>
         {shippingErrors && <div className="ch-error">{shippingErrors}</div>}
 
-        <div style={{
-          background: '#fffbeb',
-          border: '1px solid #fde68a',
-          borderRadius: '0.75rem',
-          padding: '0.875rem 1rem',
-          marginBottom: '1rem',
-          fontSize: '0.8125rem',
-          color: '#92400e',
-          fontWeight: 500,
-          lineHeight: 1.5,
-        }}>
-          <span className="material-symbols-outlined" style={{fontSize:'1rem', verticalAlign:'middle', marginRight:'0.375rem'}}>info</span>
-          {lang === 'es'
-            ? 'El pago se procesará via PayPal. La integración de pago estará disponible próximamente.'
-            : 'Payment will be processed via PayPal. The payment integration will be available soon.'
-          }
-        </div>
-
         <button
           type="button"
           className="btn-primary ch-next-btn"

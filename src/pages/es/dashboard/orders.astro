@@ -83,6 +83,9 @@ const activeOrders = orders.filter((o: any) => o.state !== 'canceled' && o.state
       <div class="orders-list">
         {orders.map((order, idx) => {
           const meta = stateMeta[order.state] ?? stateMeta.placed;
+          const isPickup = order.shippingMethod === 'pickup';
+          const fulfillmentLabel = isPickup ? 'Listo para recoger' : 'En camino';
+          const effectiveStateLabel = order.state === 'fulfillment' ? fulfillmentLabel : order.stateLabel;
           const items = order.items ?? [];
           const displayItems = items.slice(0, 2);
           const extraDesktop = items.length - 2;
@@ -110,8 +113,13 @@ const activeOrders = orders.filter((o: any) => o.state !== 'canceled' && o.state
               <div class="order-card-meta">
                 <span class="order-badge" style={{ background: meta.bg, color: meta.text }}>
                   <span class="badge-dot" style={{ background: meta.dotBg }} />
-                  {order.stateLabel}
+                  {effectiveStateLabel}
                 </span>
+                {order.state !== 'draft' && order.state !== 'canceled' && (
+                  <span style={{ fontSize: '0.6875rem', fontWeight: 600, color: order.isPaid ? 'var(--sage)' : '#f59e0b' }}>
+                    {order.isPaid ? 'Pagado' : 'Pendiente'}
+                  </span>
+                )}
                 {items.length > 0 && (
                   <span class="order-items-count">{items.length} {items.length === 1 ? 'artículo' : 'artículos'}</span>
                 )}

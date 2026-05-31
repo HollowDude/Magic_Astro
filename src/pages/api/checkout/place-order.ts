@@ -94,7 +94,7 @@ export const POST: APIRoute = async ({ request, cookies }) => {
     const baseUrl = (import.meta.env.NODEHIVE_BASE_URL as string).replace(/\/+$/, '');
     const orderUrl = `${baseUrl}/en/jsonapi/commerce_order/default/${orderUuid}`;
 
-    const getRes = await fetch(`${orderUrl}?fields[commerce_order--default]=order_number`, {
+    const getRes = await fetch(`${orderUrl}?fields[commerce_order--default]=order_number,field_checkout_data`, {
       headers: {
         Accept: 'application/vnd.api+json',
         ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {}),
@@ -103,11 +103,22 @@ export const POST: APIRoute = async ({ request, cookies }) => {
     const getJson = await getRes.json().catch(() => ({}));
     const existingOrderNumber = getJson?.data?.attributes?.order_number ?? '';
 
-    const customData: Record<string, any> = {};
-    if (shippingAddress) customData.shipping_address = shippingAddress;
-    if (billingAddress) customData.billing_address = billingAddress;
-    if (shippingMethod) customData.shipping_method = shippingMethod;
-    if (recipientContact) customData.recipient_contact = recipientContact;
+    let existingData: Record<string, any> = {};
+    const existingRaw = getJson?.data?.attributes?.field_checkout_data;
+    if (existingRaw) {
+      try { existingData = JSON.parse(existingRaw); } catch {}
+    }
+
+    const { paypal_capture_id: _, paypal_status: __, ...cleanExisting } = existingData;
+    const mergedData: Record<string, any> = {
+      ...cleanExisting,
+      shippingAddress: shippingAddress ?? existingData.shippingAddress ?? null,
+      billingAddress: billingAddress ?? existingData.billingAddress ?? null,
+      shippingMethod: shippingMethod ?? existingData.shippingMethod ?? null,
+      recipientContact: recipientContact ?? existingData.recipientContact ?? null,
+      paymentMethod: 'paypal',
+      updatedAt: new Date().toISOString(),
+    };
 
     const patchBody: Record<string, any> = {
       data: {
@@ -117,9 +128,7 @@ export const POST: APIRoute = async ({ request, cookies }) => {
       },
     };
 
-    if (Object.keys(customData).length > 0) {
-      patchBody.data.attributes.field_checkout_data = JSON.stringify(customData);
-    }
+    patchBody.data.attributes.field_checkout_data = JSON.stringify(mergedData);
 
     if (billingAddress?.address_line1) {
       const profileUuid = await createBillingProfile(baseUrl, accessToken, csrfToken, session.uid, billingAddress);

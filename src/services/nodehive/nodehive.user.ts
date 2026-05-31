@@ -86,6 +86,7 @@ export interface UserOrder {
   paymentMethod: string | null;
   currentCheckoutStep: number | null;
   cancelledAtStep: number | null;
+  isPaid: boolean;
 }
 
 const ORDER_STATE_LABELS: Record<string, { es: string; en: string }> = {
@@ -305,6 +306,7 @@ export async function getUserOrders(
         paymentMethod: rawCheckoutData?.paymentMethod ?? null,
         currentCheckoutStep: rawCheckoutData?.currentStep ?? null,
         cancelledAtStep: rawCheckoutData?.cancelledAtStep ?? null,
+        isPaid: !!(rawCheckoutData?.paypal_capture_id && rawCheckoutData?.paypal_status === 'COMPLETED'),
       };
     });
   } catch (err) {

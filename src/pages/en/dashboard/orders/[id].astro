@@ -109,10 +109,19 @@ const stateMeta: Record<string, { icon: string; bg: string; text: string }> = {
   validation:  { icon: 'pending',        bg: '#fffbeb', text: '#92400e' },
 };
 
-const LABELS: Record<string, string> = { draft: 'Draft', placed: 'Processing', fulfillment: 'Shipped', completed: 'Delivered', canceled: 'Canceled', validation: 'Pending' };
+let checkoutData: Record<string, any> | null = null;
+if (order?.field_checkout_data) {
+  try { checkoutData = JSON.parse(order.field_checkout_data); } catch {}
+}
+
+const isPickup = checkoutData?.shippingMethod === 'pickup';
+const FULFILLMENT_LABEL = isPickup ? 'Ready for pickup' : 'Shipped';
+const LABELS: Record<string, string> = { draft: 'Draft', placed: 'Processing', fulfillment: FULFILLMENT_LABEL, completed: 'Delivered', canceled: 'Canceled', validation: 'Pending' };
 const stateKey = order?.state ?? 'placed';
 const stateLabel = (order?.state && LABELS[order.state as string]) ?? stateKey;
 const meta = stateMeta[stateKey] ?? stateMeta.placed;
+
+const isPaid = !!(checkoutData?.paypal_capture_id && checkoutData?.paypal_status === 'COMPLETED');
 
 let placedDate = '—';
 if (order?.placed) {
@@ -131,11 +140,6 @@ const items = Array.isArray(order?.order_items)
       _custom: itemCustomizations[item.drupal_internal__order_item_id] ?? { hasCard: false, cardMessage: null, ribbonColor: null },
     }))
   : [];
-
-let checkoutData: Record<string, any> | null = null;
-if (order?.field_checkout_data) {
-  try { checkoutData = JSON.parse(order.field_checkout_data); } catch {}
-}
 
 const stepNames = ['Shipping', 'Method', 'Payment', 'Confirmation'];
 const currentStep = checkoutData?.currentStep ?? 0;
@@ -191,6 +195,12 @@ function formatAddr(addr: Record<string, string> | null | undefined): string {
           <span class="badge-dot" style={{ background: meta.text }} />
           {stateLabel}
         </span>
+        {checkoutData && (
+          <span class="payment-badge" style={{ background: isPaid ? 'var(--sage-light)' : '#fffbeb', color: isPaid ? 'var(--sage)' : '#92400e' }}>
+            <span class="badge-dot" style={{ background: isPaid ? 'var(--sage)' : '#f59e0b' }} />
+            {isPaid ? 'Payment confirmed' : 'Payment pending'}
+          </span>
+        )}
       </div>
 
       <!-- ===== Items Card ===== -->
@@ -444,6 +454,15 @@ function formatAddr(addr: Record<string, string> | null | undefined): string {
     font-weight: 700;
   }
   .badge-dot { width: 6px; height: 6px; border-radius: 50%; display: inline-block; }
+  .payment-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.375rem;
+    padding: 0.25rem 0.75rem;
+    border-radius: 9999px;
+    font-size: 0.6875rem;
+    font-weight: 700;
+  }
 
   /* ===== Detail Card ===== */
   .detail-card {
