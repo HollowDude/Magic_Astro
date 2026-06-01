@@ -148,7 +148,9 @@ const stateMeta: Record<string, { icon: string; bg: string; text: string }> = {
           const meta = stateMeta[order.state] ?? stateMeta.placed;
           const isPickup = order.shippingMethod === 'pickup';
           const fulfillmentLabel = isPickup ? 'Ready for pickup' : 'Shipped';
-          const effectiveStateLabel = order.state === 'fulfillment' ? fulfillmentLabel : order.stateLabel;
+          const isZellePending = order.paymentMethod === 'zelle' && !order.isPaid;
+          const effectiveStateLabel = isZellePending ? 'Awaiting Zelle payment' : (order.state === 'fulfillment' ? fulfillmentLabel : order.stateLabel);
+          const orderShippingCost = order.checkoutData?.shippingCost ?? (order.shippingMethod === 'delivery' ? 24 : 0);
           return (
             <a
               href={`/en/dashboard/orders/${order.id}`}
@@ -167,7 +169,10 @@ const stateMeta: Record<string, { icon: string; bg: string; text: string }> = {
                 </div>
               </div>
               <div class="ior-right">
-                <span class="ior-price">{order.totalFormatted}</span>
+                <div class="ior-prices">
+                  <span class="ior-price">{order.totalFormatted}</span>
+                  {orderShippingCost > 0 && <span class="ior-delivery">+ ${orderShippingCost.toFixed(2)} delivery</span>}
+                </div>
                 <span class="material-symbols-outlined ior-chevron">chevron_right</span>
               </div>
             </a>
@@ -252,6 +257,8 @@ const stateMeta: Record<string, { icon: string; bg: string; text: string }> = {
     font-weight: 600;
     color: var(--primary);
   }
+  .ior-prices { text-align: right; }
+  .ior-delivery { display: block; font-size: 0.625rem; font-weight: 600; color: var(--body-color); white-space: nowrap; }
   .ior-chevron {
     font-size: 1.125rem !important;
     color: var(--body-color);

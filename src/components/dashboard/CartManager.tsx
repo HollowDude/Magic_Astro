@@ -29,6 +29,17 @@ interface CartData {
   activeCheckoutOrderUuid?: string;
 }
 
+interface ShippingConfig {
+  deliveryPrice: number;
+  deliveryCurrency: string;
+  deliveryLabel: string;
+  deliveryTime: string;
+  pickupLabel: string;
+  pickupTime: string;
+  pickupAddress: string;
+  pickupPrice: number;
+}
+
 interface Props {
   lang: 'es' | 'en';
 }
@@ -46,6 +57,7 @@ const T: Record<string, Record<string, string>> = {
     subtotal: 'Subtotal',
     shipping: 'Envío',
     shipping_free: 'Gratis',
+    shipping_optional: 'Opcional',
     remove: 'Eliminar',
     remove_confirm: '¿Eliminar este producto del carrito?',
     clear: 'Vaciar carrito',
@@ -78,6 +90,7 @@ const T: Record<string, Record<string, string>> = {
     subtotal: 'Subtotal',
     shipping: 'Shipping',
     shipping_free: 'Free',
+    shipping_optional: 'Optional',
     remove: 'Remove',
     remove_confirm: 'Remove this item from your cart?',
     clear: 'Clear cart',
@@ -136,6 +149,7 @@ export default function CartManager({ lang }: Props) {
   const [updatingIds, setUpdatingIds] = useState<Set<number>>(new Set());
   const [clearing, setClearing] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
+  const [shippingConfig, setShippingConfig] = useState<ShippingConfig | null>(null);
 
   const emitCartUpdated = useCallback((next: CartData | null) => {
     if (!next) return;
@@ -147,25 +161,30 @@ export default function CartManager({ lang }: Props) {
   }, []);
 
   const fetchCart = useCallback(async ({ silent }: { silent?: boolean } = {}) => {
-    if (!silent) setLoading(true);
-    setError(false);
     try {
+      if (!silent) setLoading(true);
       const res = await fetch('/api/cart/', {
-        cache: 'no-store',
-        headers: { 'Cache-Control': 'no-store' },
+        headers: { 'Content-Type': 'application/json' },
       });
-      if (!res.ok) throw new Error('Failed');
-      const json: CartData = await res.json();
+      if (!res.ok) throw new Error('Not OK');
+      const json = await res.json();
       setData(json);
-      emitCartUpdated(json);
+      setError(false);
     } catch {
       if (!silent) setError(true);
     } finally {
       if (!silent) setLoading(false);
     }
-  }, [emitCartUpdated]);
+  }, []);
 
   useEffect(() => { fetchCart(); }, [fetchCart]);
+
+  useEffect(() => {
+    fetch(`/api/checkout/shipping-config?lang=${lang}`)
+      .then(r => r.ok ? r.json() : null)
+      .then(cfg => setShippingConfig(cfg))
+      .catch(() => {});
+  }, [lang]);
 
   const refreshCart = useCallback(async () => {
     setRefreshing(true);
@@ -448,7 +467,9 @@ export default function CartManager({ lang }: Props) {
             </div>
             <div className="flex items-center justify-between">
               <span className="font-body text-sm text-body-color">{t(lang, 'shipping')}</span>
-              <span className="font-body text-sm font-semibold text-sage">{t(lang, 'shipping_free')}</span>
+              <span className="font-body text-sm font-semibold text-sage">
+                {shippingConfig ? `+ $${shippingConfig.deliveryPrice.toFixed(2)} (${t(lang, 'shipping_optional')})` : t(lang, 'shipping_free')}
+              </span>
             </div>
             <hr className="border-border" />
             <div className="flex items-center justify-between">

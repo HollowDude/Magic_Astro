@@ -35,6 +35,21 @@ export const POST: APIRoute = async ({ request, cookies }) => {
     }).catch(() => {});
   }
 
+  let existingCheckoutData: Record<string, any> = {};
+  try {
+    const getRes = await fetch(
+      `${baseUrl}/en/jsonapi/commerce_order/default/${orderUuid}?fields[commerce_order--default]=field_checkout_data`,
+      { headers: { Accept: 'application/vnd.api+json', Authorization: `Bearer ${accessToken}` } },
+    );
+    if (getRes.ok) {
+      const getJson = await getRes.json();
+      const raw = getJson?.data?.attributes?.field_checkout_data;
+      if (raw) existingCheckoutData = JSON.parse(raw);
+    }
+  } catch {}
+
+  existingCheckoutData.zelle_paid = true;
+
   await fetch(`${baseUrl}/en/jsonapi/commerce_order/default/${orderUuid}`, {
     method: 'PATCH',
     headers: {
@@ -49,6 +64,7 @@ export const POST: APIRoute = async ({ request, cookies }) => {
         attributes: {
           state: 'fulfillment',
           field_payment_reference: reference ?? '',
+          field_checkout_data: JSON.stringify(existingCheckoutData),
         },
       },
     }),

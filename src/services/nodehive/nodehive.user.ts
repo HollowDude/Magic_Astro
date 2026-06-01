@@ -237,7 +237,7 @@ export async function getUserOrders(
       `&include=order_items` +
       `&sort=-placed,changed` +
       `&page[limit]=${limit}` +
-      `&fields[commerce_order--default]=id,order_number,state,placed,changed,total_price,order_items,field_checkout_started,field_checkout_data`,
+      `&fields[commerce_order--default]=id,order_number,state,placed,changed,total_price,order_items,field_checkout_started,field_checkout_data,data`,
       {
         headers: { 'Content-Type': 'application/vnd.api+json', Accept: 'application/vnd.api+json' },
         lang,
@@ -266,8 +266,23 @@ export async function getUserOrders(
     return orders.map((o: any): UserOrder => {
       const stateKey = o.state ?? 'placed';
       const checkoutStarted = o.field_checkout_started ?? false;
-      const labelObj = ORDER_STATE_LABELS[stateKey] ?? { es: stateKey, en: stateKey };
-      const stateLabel = labelObj[lang] ?? labelObj.es;
+
+      const rawCheckoutData = o.field_checkout_data
+        ? (() => { try { return JSON.parse(o.field_checkout_data); } catch { return null; } })()
+        : null;
+
+      const orderData = o.data ?? {};
+      const paidEventDispatched = orderData.paid_event_dispatched === true;
+
+      const isZellePending = rawCheckoutData?.paymentMethod === 'zelle' && !paidEventDispatched;
+
+      let stateLabel: string;
+      if (isZellePending) {
+        stateLabel = lang === 'es' ? 'Esperando pago Zelle' : 'Awaiting Zelle payment';
+      } else {
+        const labelObj = ORDER_STATE_LABELS[stateKey] ?? { es: stateKey, en: stateKey };
+        stateLabel = labelObj[lang] ?? labelObj.es;
+      }
 
       let placedTimestamp: number | null = null;
       if (typeof o.placed === 'number') {
@@ -278,10 +293,6 @@ export async function getUserOrders(
       }
 
       const items = Array.isArray(o.order_items) ? o.order_items : [];
-
-      const rawCheckoutData = o.field_checkout_data
-        ? (() => { try { return JSON.parse(o.field_checkout_data); } catch { return null; } })()
-        : null;
 
       return {
         id: o.id ?? '',
@@ -306,7 +317,7 @@ export async function getUserOrders(
         paymentMethod: rawCheckoutData?.paymentMethod ?? null,
         currentCheckoutStep: rawCheckoutData?.currentStep ?? null,
         cancelledAtStep: rawCheckoutData?.cancelledAtStep ?? null,
-        isPaid: !!(rawCheckoutData?.paypal_capture_id && rawCheckoutData?.paypal_status === 'COMPLETED'),
+        isPaid: !!(rawCheckoutData?.paypal_capture_id && rawCheckoutData?.paypal_status === 'COMPLETED') || paidEventDispatched,
       };
     });
   } catch (err) {

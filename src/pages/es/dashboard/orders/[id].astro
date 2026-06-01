@@ -26,7 +26,7 @@ let thumbnailByItemId: Record<number, string> = {};
 try {
   const raw = await nodehiveFetch<Record<string, unknown>>(
     `/jsonapi/commerce_order/default/${id}?include=order_items` +
-    `&fields[commerce_order--default]=id,order_number,state,placed,changed,total_price,order_items,field_checkout_started,field_checkout_data` +
+    `&fields[commerce_order--default]=id,order_number,state,placed,changed,total_price,order_items,field_checkout_started,field_checkout_data,data` +
     `&fields[commerce_order_item--default]=drupal_internal__order_item_id,title,quantity,unit_price,total_price,purchased_entity,field_has_card,field_card_message,field_ribbon_color`,
     {
       headers: { 'Content-Type': 'application/vnd.api+json', Accept: 'application/vnd.api+json' },
@@ -122,16 +122,16 @@ const isPickup = checkoutData?.shippingMethod === 'pickup';
 const FULFILLMENT_LABEL = isPickup ? 'Listo para recoger' : 'En camino';
 const LABELS: Record<string, string> = { draft: 'Borrador', placed: 'En preparación', fulfillment: FULFILLMENT_LABEL, completed: 'Entregado', canceled: 'Cancelado', validation: 'Pendiente' };
 const stateKey = order?.state ?? 'placed';
-const stateLabel = (order?.state && LABELS[order.state as string]) ?? stateKey;
+const paidEventDispatched = order?.data?.paid_event_dispatched === true;
+const isZellePending = checkoutData?.paymentMethod === 'zelle' && !paidEventDispatched;
+const isZellePaid = checkoutData?.paymentMethod === 'zelle' && paidEventDispatched;
+const stateLabel = isZellePending ? 'Esperando pago Zelle' : ((order?.state && LABELS[order.state as string]) ?? stateKey);
 const meta = stateMeta[stateKey] ?? stateMeta.placed;
 
-const isPaid = !!(checkoutData?.paypal_capture_id && checkoutData?.paypal_status === 'COMPLETED');
-const isZellePending = checkoutData?.paymentMethod === 'zelle' &&
-  !checkoutData?.paypal_capture_id &&
-  stateKey !== 'canceled' &&
-  stateKey !== 'completed';
-const isZellePaid = checkoutData?.paymentMethod === 'zelle' &&
-  (stateKey === 'fulfillment' || stateKey === 'completed');
+const shippingCost = checkoutData?.shippingCost ?? (checkoutData?.shippingMethod === 'delivery' ? 24 : 0);
+const shippingFormatted = shippingCost > 0 ? `$${shippingCost.toFixed(2)}` : 'Gratis';
+
+const isPaid = !!(checkoutData?.paypal_capture_id && checkoutData?.paypal_status === 'COMPLETED') || paidEventDispatched;
 
 let placedDate = '—';
 if (order?.placed) {
@@ -201,10 +201,12 @@ function formatAddr(addr: Record<string, string> | null | undefined): string {
           <h1 class="dh-order-num">Pedido #{order.order_number}</h1>
           <p class="dh-date">{placedDate}</p>
         </div>
-        <span class="order-badge" style={{ background: meta.bg, color: meta.text }}>
-          <span class="badge-dot" style={{ background: meta.text }} />
-          {stateLabel}
-        </span>
+        {!isZellePending && (
+          <span class="order-badge" style={{ background: meta.bg, color: meta.text }}>
+            <span class="badge-dot" style={{ background: meta.text }} />
+            {stateLabel}
+          </span>
+        )}
         {checkoutData && (
           isZellePending ? (
             <span class="payment-badge" style="background:#fffbeb;color:#92400e">
@@ -305,6 +307,14 @@ function formatAddr(addr: Record<string, string> | null | undefined): string {
                 <h4>Método de pago</h4>
               </div>
               <p class="confirm-addr">{checkoutData.paymentMethod === 'paypal' ? 'PayPal' : checkoutData.paymentMethod === 'zelle' ? 'Zelle' : checkoutData.paymentMethod ?? '—'}</p>
+            </div>
+            <div class="confirm-card">
+              <div class="confirm-header">
+                <h4>Resumen de pago</h4>
+              </div>
+              <p class="confirm-addr">Subtotal: {order?.total_price?.formatted ?? ''}</p>
+              <p class="confirm-addr">Envío: {shippingFormatted}</p>
+              <p class="confirm-addr" style="font-weight:700;color:var(--headline);margin-top:0.375rem;padding-top:0.375rem;border-top:1px solid var(--border)">Total: {order?.total_price?.formatted ? (() => { const raw = order.total_price.formatted.replace(/[^0-9.,-]/g,'').replace(',','.'); const n = parseFloat(raw); return Number.isFinite(n) ? `$${(n + shippingCost).toFixed(2)}` : order.total_price.formatted; })() : ''}</p>
             </div>
           </div>
         </div>

@@ -85,12 +85,14 @@ const activeOrders = orders.filter((o: any) => o.state !== 'canceled' && o.state
           const meta = stateMeta[order.state] ?? stateMeta.placed;
           const isPickup = order.shippingMethod === 'pickup';
           const fulfillmentLabel = isPickup ? 'Listo para recoger' : 'En camino';
-          const effectiveStateLabel = order.state === 'fulfillment' ? fulfillmentLabel : order.stateLabel;
+          const isZellePending = order.paymentMethod === 'zelle' && !order.isPaid;
+          const effectiveStateLabel = isZellePending ? 'Esperando pago Zelle' : (order.state === 'fulfillment' ? fulfillmentLabel : order.stateLabel);
           const items = order.items ?? [];
           const displayItems = items.slice(0, 2);
           const extraDesktop = items.length - 2;
           const showProgress = (order.checkoutStarted && order.state === 'draft') || (order.state === 'placed' && order.currentCheckoutStep !== null);
           const currentStep = order.currentCheckoutStep ?? 0;
+          const orderShippingCost = order.checkoutData?.shippingCost ?? (order.shippingMethod === 'delivery' ? 24 : 0);
           return (
             <a
               href={`/es/dashboard/orders/${order.id}`}
@@ -105,7 +107,10 @@ const activeOrders = orders.filter((o: any) => o.state !== 'canceled' && o.state
                   <span class="order-number">{order.state === 'draft' && order.orderNumber === '—' ? 'Sin número' : `#${order.orderNumber}`}</span>
                 </div>
                 <div class="order-card-right">
-                  <span class="order-price">{order.totalFormatted}</span>
+                  <div class="order-prices">
+                    <span class="order-price">{order.totalFormatted}</span>
+                    {orderShippingCost > 0 && <span class="order-delivery">+ ${orderShippingCost.toFixed(2)} envío</span>}
+                  </div>
                   <span class="material-symbols-outlined order-chevron">chevron_right</span>
                 </div>
               </div>
@@ -265,6 +270,8 @@ const activeOrders = orders.filter((o: any) => o.state !== 'canceled' && o.state
     font-weight: 600;
     color: var(--primary);
   }
+  .order-prices { text-align: right; }
+  .order-delivery { display: block; font-size: 0.6875rem; font-weight: 600; color: var(--body-color); white-space: nowrap; }
   .order-chevron {
     font-size: 1.125rem !important;
     color: var(--body-color);

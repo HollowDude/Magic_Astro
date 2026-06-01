@@ -7,6 +7,7 @@ import { getSession } from '@/services/session.service';
 import { getCart } from '@/services/nodehive/nodehive.cart';
 import { getUserAddresses } from '@/services/nodehive/nodehive.user';
 import { getLangFromUrl } from '@/i18n/utils';
+import { getShippingConfig } from '@/services/nodehive/nodehive.shipping';
 
 const lang = getLangFromUrl(Astro.url);
 const session = await getSession(Astro.cookies);
@@ -126,6 +127,7 @@ if (resumeUuid && session.accessToken) {
 }
 
 const userAddresses = await getUserAddresses(session.uid, 'es', session.accessToken);
+const shippingConfig = await getShippingConfig('es');
 ---
 
 <HomeLayout title="Checkout — Maggy Flowers" lang={lang}>
@@ -136,6 +138,7 @@ const userAddresses = await getUserAddresses(session.uid, 'es', session.accessTo
     savedCheckoutData={JSON.stringify(savedCheckoutData)}
     orderNumber={existingOrderNumber}
     resume={!!resumeUuid}
+    shippingConfig={JSON.stringify(shippingConfig)}
     client:load
   />
 </HomeLayout>

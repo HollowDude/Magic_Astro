@@ -1,5 +1,6 @@
 import type { APIRoute } from 'astro';
 import { getSession } from '@/services/session.service';
+import { transitionOrderState } from '@/services/nodehive/checkout-transition.service';
 
 export const POST: APIRoute = async ({ request, cookies }) => {
   const session = await getSession(cookies);
@@ -81,6 +82,18 @@ export const POST: APIRoute = async ({ request, cookies }) => {
     const paymentJson = await paymentRes.json().catch(() => ({}));
     const paymentEntityId = paymentJson?.data?.id ?? null;
     console.log('[zelle-create] Payment entity created:', paymentEntityId);
+
+    const transition = await transitionOrderState({
+      baseUrl,
+      orderUuid,
+      csrfToken,
+      accessToken,
+      targetState: 'fulfillment',
+    });
+
+    if (!transition.ok) {
+      console.warn('[zelle-create] State transition to fulfillment failed:', transition.error);
+    }
 
     return new Response(JSON.stringify({
       ok: true,

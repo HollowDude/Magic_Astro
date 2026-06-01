@@ -6,6 +6,7 @@ interface TransitionOrderStateParams {
   csrfToken: string;
   accessToken?: string;
   lang?: string;
+  targetState?: string;
 }
 
 export async function transitionOrderState(
@@ -17,6 +18,7 @@ export async function transitionOrderState(
     csrfToken,
     accessToken,
     lang = 'en',
+    targetState = 'placed',
   } = params;
 
   const patchBody = {
@@ -24,7 +26,7 @@ export async function transitionOrderState(
       type: 'commerce_order--default',
       id: orderUuid,
       attributes: {
-        state: 'placed',
+        state: targetState,
       },
     },
   };
@@ -46,5 +48,5 @@ export async function transitionOrderState(
     return { ok: false, error: `State transition PATCH failed (${patchRes.status}): ${err.slice(0, 300)}` };
   }
 
-  return { ok: true, state: 'placed' };
+  return { ok: true, state: targetState };
 }

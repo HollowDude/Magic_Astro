@@ -2,6 +2,17 @@ import { useState, useEffect, useCallback, useMemo } from 'react';
 
 // ─── Types ──────────────────────────────────────────────────────────────────
 
+interface ShippingConfig {
+  deliveryPrice: number;
+  deliveryCurrency: string;
+  deliveryLabel: string;
+  deliveryTime: string;
+  pickupLabel: string;
+  pickupTime: string;
+  pickupAddress: string;
+  pickupPrice: number;
+}
+
 interface CheckoutCartItem {
   itemId: number;
   title: string;
@@ -61,6 +72,7 @@ interface CheckoutSavedData {
   billingAddress?: ShippingAddress | null;
   billingsSameAsShipping?: boolean;
   shippingMethod?: 'delivery' | 'pickup' | null;
+  shippingCost?: number;
   recipientContact?: RecipientContact | null;
   paymentMethod?: string | null;
   cancelledAtStep?: number;
@@ -74,6 +86,7 @@ interface Props {
   savedCheckoutData?: string;
   orderNumber?: string;
   resume?: boolean;
+  shippingConfig?: string;
 }
 
 // ─── Translation helper ─────────────────────────────────────────────────────
@@ -273,10 +286,11 @@ function NextButton({ label, onClick, loading }: { label: string; onClick: () =>
 
 // ─── Component ──────────────────────────────────────────────────────────────
 
-export default function CheckoutClient({ lang, cartData: cartJson, userAddresses: addrJson, savedCheckoutData: savedJson, orderNumber: orderNumberProp, resume }: Props) {
+export default function CheckoutClient({ lang, cartData: cartJson, userAddresses: addrJson, savedCheckoutData: savedJson, orderNumber: orderNumberProp, resume, shippingConfig: shippingConfigJson }: Props) {
   const cartData = useMemo<CheckoutCartData>(() => JSON.parse(cartJson), [cartJson]);
   const initialAddresses = useMemo<UserAddress[]>(() => JSON.parse(addrJson), [addrJson]);
   const savedFromServer = useMemo<CheckoutSavedData | null>(() => savedJson ? JSON.parse(savedJson) : null, [savedJson]);
+  const shippingConfig = useMemo<ShippingConfig | null>(() => shippingConfigJson ? JSON.parse(shippingConfigJson) : null, [shippingConfigJson]);
 
   const [currentStep, setCurrentStep] = useState<number>(0);
   const [mobileSummaryOpen, setMobileSummaryOpen] = useState(false);
@@ -298,7 +312,7 @@ export default function CheckoutClient({ lang, cartData: cartJson, userAddresses
   const [shippingErrors, setShippingErrors] = useState<string | null>(null);
 
   // Step 2
-  const [shippingMethod, setShippingMethod] = useState<'delivery' | 'pickup'>('delivery');
+  const [shippingMethod, setShippingMethod] = useState<'delivery' | 'pickup' | null>(null);
   const [paymentMethod, setPaymentMethod] = useState<'paypal' | 'zelle'>('paypal');
 
   // Step 3
@@ -477,7 +491,8 @@ export default function CheckoutClient({ lang, cartData: cartJson, userAddresses
       .catch(() => {});
   }, [shippingForm.countryCode]);
 
-  const shippingCost = shippingMethod === 'delivery' ? 24.00 : 0;
+  const deliveryPrice = shippingConfig?.deliveryPrice ?? 24;
+  const shippingCost = shippingMethod === 'delivery' ? deliveryPrice : 0;
   const subtotalAmount = parseMoney(displayCart.totalPrice);
   const totalAmount = subtotalAmount + shippingCost;
 
@@ -497,7 +512,7 @@ export default function CheckoutClient({ lang, cartData: cartJson, userAddresses
         : shippingForm;
       return { shippingAddress: address, recipientContact: recipient.fullName ? recipient : null };
     }
-    if (step === 1) return { shippingMethod };
+    if (step === 1) return { shippingMethod, shippingCost: shippingMethod === 'delivery' ? deliveryPrice : 0 };
     if (step === 2) return { billingAddress: billingSameAsShipping ? undefined : billingForm, billingsSameAsShipping: billingSameAsShipping, paymentMethod };
     return {};
   }
@@ -964,20 +979,20 @@ export default function CheckoutClient({ lang, cartData: cartJson, userAddresses
               onChange={() => setShippingMethod('delivery')} className="ch-radio" />
             <span className="material-symbols-outlined ch-method-icon" style={{color: shippingMethod==='delivery' ? 'var(--primary)' : 'var(--muted)', fontSize:'1.75rem'}}>local_shipping</span>
             <div className="ch-method-body">
-              <p className="ch-method-title">{t(lang, 'delivery')}</p>
-              <p className="ch-method-desc">{t(lang, 'delivery_time')}</p>
+              <p className="ch-method-title">{shippingConfig?.deliveryLabel ?? t(lang, 'delivery')}</p>
+              <p className="ch-method-desc">{shippingConfig?.deliveryTime ?? t(lang, 'delivery_time')}</p>
             </div>
-            <p className="ch-method-price">{t(lang, 'delivery_price')}</p>
+            <p className="ch-method-price">{shippingConfig ? formatMoney(shippingConfig.deliveryPrice) : t(lang, 'delivery_price')}</p>
           </label>
           <label className={`ch-method-card ${shippingMethod === 'pickup' ? 'ch-method-selected' : ''}`}>
             <input type="radio" name="shipping" value="pickup" checked={shippingMethod === 'pickup'}
               onChange={() => setShippingMethod('pickup')} className="ch-radio" />
             <span className="material-symbols-outlined ch-method-icon" style={{color: shippingMethod==='pickup' ? 'var(--primary)' : 'var(--muted)', fontSize:'1.75rem'}}>store</span>
             <div className="ch-method-body">
-              <p className="ch-method-title">{t(lang, 'pickup')}</p>
-              <p className="ch-method-desc">{t(lang, 'pickup_time')}<br />{t(lang, 'pickup_address')}</p>
+              <p className="ch-method-title">{shippingConfig?.pickupLabel ?? t(lang, 'pickup')}</p>
+              <p className="ch-method-desc">{shippingConfig?.pickupTime ?? t(lang, 'pickup_time')}<br />{shippingConfig?.pickupAddress ?? t(lang, 'pickup_address')}</p>
             </div>
-            <p className="ch-method-price">{t(lang, 'pickup_price')}</p>
+            <p className="ch-method-price">{shippingConfig && shippingConfig.pickupPrice === 0 ? t(lang, 'shipping_free') : (shippingConfig ? formatMoney(shippingConfig.pickupPrice) : t(lang, 'pickup_price'))}</p>
           </label>
         </div>
 
@@ -1090,9 +1105,9 @@ export default function CheckoutClient({ lang, cartData: cartJson, userAddresses
         <div className="ch-confirm-grid">
           <div className="ch-confirm-card">
             <div className="ch-confirm-card-header"><h4>{t(lang, 'shipping_title')}</h4><button type="button" className="ch-edit-btn" onClick={() => setCurrentStep(0)}>{t(lang, 'edit')}</button></div>
-            <p className="ch-confirm-method">{t(lang, shippingMethod === 'delivery' ? 'delivery' : 'pickup')}</p>
+            <p className="ch-confirm-method">{shippingMethod === 'delivery' ? (shippingConfig?.deliveryLabel ?? t(lang, 'delivery')) : (shippingConfig?.pickupLabel ?? t(lang, 'pickup'))}</p>
             <p className="ch-confirm-addr">{formatAddress(address as ShippingAddress)}</p>
-            <p className="ch-confirm-time">{t(lang, shippingMethod === 'delivery' ? 'delivery_time' : 'pickup_time')}</p>
+            <p className="ch-confirm-time">{shippingMethod === 'delivery' ? (shippingConfig?.deliveryTime ?? t(lang, 'delivery_time')) : (shippingConfig?.pickupTime ?? t(lang, 'pickup_time'))}</p>
           </div>
           <div className="ch-confirm-card">
             <div className="ch-confirm-card-header"><h4>{t(lang, 'recipient_title')}</h4></div>

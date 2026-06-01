@@ -85,13 +85,15 @@ function recentOrderTimestamp(): string {
           const meta = stateMeta[order.state] ?? stateMeta.placed;
           const isPickup = order.shippingMethod === 'pickup';
           const fulfillmentLabel = isPickup ? 'Ready for pickup' : 'Shipped';
-          const effectiveStateLabel = order.state === 'fulfillment' ? fulfillmentLabel : order.stateLabel;
+          const isZellePending = order.paymentMethod === 'zelle' && !order.isPaid;
+          const effectiveStateLabel = isZellePending ? 'Awaiting Zelle payment' : (order.state === 'fulfillment' ? fulfillmentLabel : order.stateLabel);
           const items = order.items ?? [];
           const displayItems = items.slice(0, 2);
           const extraDesktop = items.length - 2;
           const extraMobile = items.length - 1;
           const showProgress = (order.checkoutStarted && order.state === 'draft') || (order.state === 'placed' && order.currentCheckoutStep !== null);
           const currentStep = order.currentCheckoutStep ?? 0;
+          const orderShippingCost = order.checkoutData?.shippingCost ?? (order.shippingMethod === 'delivery' ? 24 : 0);
           return (
             <a
               href={`/en/dashboard/orders/${order.id}`}
@@ -106,7 +108,10 @@ function recentOrderTimestamp(): string {
                   <span class="order-number">{order.state === 'draft' && order.orderNumber === '—' ? 'No number' : `#${order.orderNumber}`}</span>
                 </div>
                 <div class="order-card-right">
-                  <span class="order-price">{order.totalFormatted}</span>
+                  <div class="order-prices">
+                    <span class="order-price">{order.totalFormatted}</span>
+                    {orderShippingCost > 0 && <span class="order-delivery">+ ${orderShippingCost.toFixed(2)} delivery</span>}
+                  </div>
                   <span class="material-symbols-outlined order-chevron">chevron_right</span>
                 </div>
               </div>
@@ -266,6 +271,8 @@ function recentOrderTimestamp(): string {
     font-weight: 600;
     color: var(--primary);
   }
+  .order-prices { text-align: right; }
+  .order-delivery { display: block; font-size: 0.6875rem; font-weight: 600; color: var(--body-color); white-space: nowrap; }
   .order-chevron {
     font-size: 1.125rem !important;
     color: var(--body-color);

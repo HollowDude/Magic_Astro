@@ -143,8 +143,21 @@ if (drupalOrderId && session?.accessToken) {
 }
 
 // Calculate subtotal and shipping cost from checkoutData
-const shippingCost = checkoutData?.shippingMethod === 'delivery' ? 24 : 0;
-const shippingFormatted = shippingCost > 0 ? '$24.00' : (lang === 'es' ? 'Gratis' : 'Free');
+function parseMoney(value: string): number {
+  if (!value) return 0;
+  const cleaned = value.replace(/[^0-9.,-]/g, '').replace(',', '.');
+  const parsed = parseFloat(cleaned);
+  return Number.isFinite(parsed) ? parsed : 0;
+}
+function fmt(amount: number): string {
+  return `$${amount.toFixed(2)}`;
+}
+
+const shippingCost = checkoutData?.shippingCost ?? (checkoutData?.shippingMethod === 'delivery' ? 24 : 0);
+const shippingFormatted = shippingCost > 0 ? fmt(shippingCost) : (lang === 'es' ? 'Gratis' : 'Free');
+const subtotalNum = parseMoney(orderTotalPrice);
+const grandTotalNum = subtotalNum + shippingCost;
+const grandTotalFormatted = fmt(grandTotalNum);
 
 // ── Load store address from Drupal (for pickup) ──
 const contactData = await getFooterContactData(lang);
@@ -323,7 +336,7 @@ const storeAddress = contactData?.address
             )}
             <div class="scp-total-row scp-total-row--final">
               <span>{lang === 'es' ? 'Total pagado' : 'Total paid'}</span>
-              <span>{orderTotalPrice || '—'}</span>
+              <span>{grandTotalFormatted || orderTotalPrice || '—'}</span>
             </div>
           </div>
 
