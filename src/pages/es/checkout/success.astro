@@ -14,7 +14,7 @@ if (!session) {
 }
 
 const orderNumber = Astro.url.searchParams.get('order') ?? '';
-const drupalOrderId = Astro.url.searchParams.get('orderId') ?? '';
+const drupalOrderUuid = Astro.url.searchParams.get('orderUuid') ?? Astro.url.searchParams.get('orderId') ?? '';
 const paypalToken = Astro.url.searchParams.get('token') ?? '';
 
 // ── Cargar datos de la orden desde Drupal ──
@@ -35,13 +35,13 @@ let checkoutData: Record<string, any> | null = null;
 let orderTotalPrice = '';
 let orderSubtotalPrice = '';
 
-if (drupalOrderId && session?.accessToken) {
+if (drupalOrderUuid && session?.accessToken) {
   try {
     const baseUrl = (import.meta.env.NODEHIVE_BASE_URL as string).replace(/\/+$/, '');
 
     // 1. Cargar la orden con sus items incluidos
     const orderRes = await fetch(
-      `${baseUrl}/en/jsonapi/commerce_order/default/${drupalOrderId}` +
+      `${baseUrl}/en/jsonapi/commerce_order/default/${drupalOrderUuid}` +
       `?include=order_items` +
       `&fields[commerce_order--default]=total_price,field_checkout_data,order_items` +
       `&fields[commerce_order_item--default]=drupal_internal__order_item_id,title,quantity,unit_price,total_price,purchased_entity,field_has_card,field_card_message,field_ribbon_color`,
@@ -358,17 +358,19 @@ const storeAddress = contactData?.address
 </HomeLayout>
 
 <script>
-  const paypalToken = new URLSearchParams(window.location.search).get('token');
-  const drupalOrderId = new URLSearchParams(window.location.search).get('orderId');
+  const params = new URLSearchParams(window.location.search);
+  const paypalToken = params.get('token');
+  const drupalOrderUuid = params.get('orderUuid') || params.get('orderId');
+  const payerId = params.get('PayerID');
 
-  if (paypalToken) {
+  if (paypalToken && drupalOrderUuid) {
     fetch('/api/checkout/paypal-capture', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         paypalOrderId: paypalToken,
-        drupalOrderUuid: drupalOrderId || null,
-        drupalOrderId: drupalOrderId || null,
+        drupalOrderUuid,
+        payerId,
       }),
     }).catch(() => {});
   }

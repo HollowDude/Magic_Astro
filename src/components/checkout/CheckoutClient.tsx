@@ -582,6 +582,10 @@ export default function CheckoutClient({ lang, cartData: cartJson, userAddresses
         : shippingForm;
       const billing = billingSameAsShipping ? address : billingForm;
 
+      const orderNumParam = orderNumber ? `&order=${orderNumber}` : '';
+      const returnUrl = `${window.location.origin}/${lang}/checkout/success?orderUuid=${cartData.orderUuid}${orderNumParam}`;
+      const cancelUrl = `${window.location.origin}/${lang}/checkout`;
+
       const placeRes = await fetch('/api/checkout/place-order', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -593,6 +597,8 @@ export default function CheckoutClient({ lang, cartData: cartJson, userAddresses
           recipientContact: recipient.fullName ? recipient : null,
           paymentMethod,
           lang,
+          returnUrl,
+          cancelUrl,
         }),
       });
       const placeData = await placeRes.json();
@@ -621,21 +627,9 @@ export default function CheckoutClient({ lang, cartData: cartJson, userAddresses
           `&phone=${encodeURIComponent(zelleData.zellePhone)}` +
           `&name=${encodeURIComponent(zelleData.zelleName)}`;
       } else {
-        const paypalRes = await fetch('/api/checkout/paypal-create', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            orderId: placeData.orderId,
-            amount: totalAmount,
-            currency: 'USD',
-            returnUrl: `${window.location.origin}/${lang}/checkout/success?order=${placeData.orderNumber}&orderId=${placeData.orderId}`,
-            cancelUrl: `${window.location.origin}/${lang}/checkout`,
-          }),
-        });
-        const paypalData = await paypalRes.json();
-        if (paypalData.approvalUrl) {
+        if (placeData.approvalUrl) {
           sessionStorage.removeItem(`checkout_state_${cartData.orderId}`);
-          window.location.href = paypalData.approvalUrl;
+          window.location.href = placeData.approvalUrl;
         } else {
           throw new Error('PayPal URL not received');
         }
@@ -644,7 +638,7 @@ export default function CheckoutClient({ lang, cartData: cartJson, userAddresses
       setShippingErrors(e.message ?? 'Error processing payment');
       setSubmitting(false);
     }
-  }, [selectedAddress, shippingForm, billingSameAsShipping, billingForm, shippingMethod, paymentMethod, recipient, cartData, totalAmount, lang]);
+  }, [selectedAddress, shippingForm, billingSameAsShipping, billingForm, shippingMethod, paymentMethod, recipient, cartData, totalAmount, lang, orderNumber]);
 
   const handleCancelOrder = async () => {
     if (!window.confirm(t(lang, 'cancel_confirm'))) return;

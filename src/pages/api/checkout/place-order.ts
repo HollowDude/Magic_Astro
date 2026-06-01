@@ -1,6 +1,8 @@
 import type { APIRoute } from 'astro';
 import { getSession } from '@/services/session.service';
 
+const GATEWAY_ID = 'paypal_checkout';
+
 async function createBillingProfile(
   baseUrl: string,
   accessToken: string,
@@ -82,7 +84,7 @@ export const POST: APIRoute = async ({ request, cookies }) => {
     return new Response(JSON.stringify({ ok: false, error: 'Invalid JSON' }), { status: 400 });
   }
 
-  const { orderUuid, shippingAddress, billingAddress, shippingMethod, recipientContact, paymentMethod, lang } = body;
+  const { orderUuid, shippingAddress, billingAddress, shippingMethod, recipientContact, paymentMethod, lang, returnUrl, cancelUrl } = body;
 
   if (!orderUuid) {
     return new Response(JSON.stringify({ ok: false, error: 'Missing orderUuid' }), { status: 400 });
@@ -94,7 +96,7 @@ export const POST: APIRoute = async ({ request, cookies }) => {
     const baseUrl = (import.meta.env.NODEHIVE_BASE_URL as string).replace(/\/+$/, '');
     const orderUrl = `${baseUrl}/en/jsonapi/commerce_order/default/${orderUuid}`;
 
-    const getRes = await fetch(`${orderUrl}?fields[commerce_order--default]=order_number,field_checkout_data`, {
+    const getRes = await fetch(`${orderUrl}?fields[commerce_order--default]=order_number,drupal_internal__order_id,field_checkout_data`, {
       headers: {
         Accept: 'application/vnd.api+json',
         ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {}),
@@ -102,6 +104,7 @@ export const POST: APIRoute = async ({ request, cookies }) => {
     });
     const getJson = await getRes.json().catch(() => ({}));
     const existingOrderNumber = getJson?.data?.attributes?.order_number ?? '';
+    const internalOrderId = getJson?.data?.attributes?.drupal_internal__order_id;
 
     let existingData: Record<string, any> = {};
     const existingRaw = getJson?.data?.attributes?.field_checkout_data;
@@ -117,6 +120,8 @@ export const POST: APIRoute = async ({ request, cookies }) => {
       shippingMethod: shippingMethod ?? existingData.shippingMethod ?? null,
       recipientContact: recipientContact ?? existingData.recipientContact ?? null,
       paymentMethod: paymentMethod ?? 'paypal',
+      return_url: returnUrl ?? existingData.return_url ?? existingData.returnUrl ?? '',
+      cancel_url: cancelUrl ?? existingData.cancel_url ?? existingData.cancelUrl ?? '',
       updatedAt: new Date().toISOString(),
     };
 
@@ -157,10 +162,47 @@ export const POST: APIRoute = async ({ request, cookies }) => {
       throw new Error(`Drupal PATCH failed (${patchRes.status})`);
     }
 
+    let approvalUrl: string | null = null;
+    let paypalOrderId: string | null = null;
+
+    if (paymentMethod === 'paypal' && internalOrderId) {
+      const createRes = await fetch(
+        `${baseUrl}/commerce-paypal/checkout-create/${GATEWAY_ID}/${internalOrderId}?_format=json`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Accept: 'application/json',
+            Authorization: `Bearer ${accessToken}`,
+          },
+          body: JSON.stringify({
+            return_url: body.returnUrl ?? body.return_url ?? '',
+            cancel_url: body.cancelUrl ?? body.cancel_url ?? '',
+          }),
+        },
+      );
+
+      if (!createRes.ok) {
+        const errText = await createRes.text().catch(() => '');
+        console.error('[place-order] PayPal create-order failed:', createRes.status, errText.slice(0, 300));
+        throw new Error(`PayPal order creation failed: ${createRes.status}`);
+      }
+
+      const createData = await createRes.json();
+      paypalOrderId = createData.id;
+      const isSandbox = baseUrl.includes('127.0.0.1') || baseUrl.includes('localhost') || baseUrl.includes('magback.lombaoestudios.com');
+      approvalUrl = isSandbox
+        ? `https://www.sandbox.paypal.com/checkoutnow?token=${paypalOrderId}`
+        : `https://www.paypal.com/checkoutnow?token=${paypalOrderId}`;
+    }
+
     return new Response(JSON.stringify({
       ok: true,
       orderId: orderUuid,
       orderNumber: existingOrderNumber,
+      internalId: internalOrderId,
+      approvalUrl,
+      paypalOrderId,
     }), {
       status: 200,
       headers: { 'Content-Type': 'application/json' },
