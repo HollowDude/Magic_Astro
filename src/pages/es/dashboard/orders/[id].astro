@@ -7,6 +7,7 @@ import { getSession } from '@/services/session.service';
 import { nodehiveFetch } from '@/services/nodehive/nodehive.client';
 import { fetchRibbonColors, ribbonColorDefFromUuid } from '@/services/nodehive/nodehive.cart';
 import Jsona from 'jsona';
+import { getFooterContactData } from '@/services/nodehive/nodehive.footer';
 
 const session = await getSession(Astro.cookies);
 if (!session) return Astro.redirect('/es/login');
@@ -100,6 +101,9 @@ try {
   fetchError = true;
 }
 
+const contactDataForZelle = await getFooterContactData(lang).catch(() => null);
+const zellePhoneFromDrupal = contactDataForZelle?.zelle ?? '';
+
 const stateMeta: Record<string, { icon: string; bg: string; text: string }> = {
   placed:      { icon: 'local_florist',  bg: '#fffbeb', text: '#92400e' },
   fulfillment: { icon: 'local_shipping', bg: '#eff6ff', text: '#1e40af' },
@@ -122,6 +126,12 @@ const stateLabel = (order?.state && LABELS[order.state as string]) ?? stateKey;
 const meta = stateMeta[stateKey] ?? stateMeta.placed;
 
 const isPaid = !!(checkoutData?.paypal_capture_id && checkoutData?.paypal_status === 'COMPLETED');
+const isZellePending = checkoutData?.paymentMethod === 'zelle' &&
+  !checkoutData?.paypal_capture_id &&
+  stateKey !== 'canceled' &&
+  stateKey !== 'completed';
+const isZellePaid = checkoutData?.paymentMethod === 'zelle' &&
+  (stateKey === 'fulfillment' || stateKey === 'completed');
 
 let placedDate = '—';
 if (order?.placed) {
@@ -196,10 +206,22 @@ function formatAddr(addr: Record<string, string> | null | undefined): string {
           {stateLabel}
         </span>
         {checkoutData && (
-          <span class="payment-badge" style={{ background: isPaid ? 'var(--sage-light)' : '#fffbeb', color: isPaid ? 'var(--sage)' : '#92400e' }}>
-            <span class="badge-dot" style={{ background: isPaid ? 'var(--sage)' : '#f59e0b' }} />
-            {isPaid ? 'Pago confirmado' : 'Pendiente de pago'}
-          </span>
+          isZellePending ? (
+            <span class="payment-badge" style="background:#fffbeb;color:#92400e">
+              <span class="badge-dot" style="background:#f59e0b" />
+              Esperando pago Zelle
+            </span>
+          ) : isZellePaid ? (
+            <span class="payment-badge" style="background:var(--sage-light);color:var(--sage)">
+              <span class="badge-dot" style="background:var(--sage)" />
+              Pago Zelle confirmado
+            </span>
+          ) : (
+            <span class="payment-badge" style={{ background: isPaid ? 'var(--sage-light)' : '#fffbeb', color: isPaid ? 'var(--sage)' : '#92400e' }}>
+              <span class="badge-dot" style={{ background: isPaid ? 'var(--sage)' : '#f59e0b' }} />
+              {isPaid ? 'Pago confirmado' : 'Pendiente de pago'}
+            </span>
+          )
         )}
       </div>
 
@@ -282,7 +304,7 @@ function formatAddr(addr: Record<string, string> | null | undefined): string {
               <div class="confirm-header">
                 <h4>Método de pago</h4>
               </div>
-              <p class="confirm-addr">{checkoutData.paymentMethod === 'paypal' ? 'PayPal' : checkoutData.paymentMethod ?? '—'}</p>
+              <p class="confirm-addr">{checkoutData.paymentMethod === 'paypal' ? 'PayPal' : checkoutData.paymentMethod === 'zelle' ? 'Zelle' : checkoutData.paymentMethod ?? '—'}</p>
             </div>
           </div>
         </div>
@@ -296,11 +318,23 @@ function formatAddr(addr: Record<string, string> | null | undefined): string {
         </a>
 
         <div class="action-group">
-          {stateKey === 'placed' && (
+          {stateKey === 'placed' && !isZellePending && (
             <a href={`/es/checkout?resume=${id}`} class="btn-primary action-continue">
               Continuar Checkout
               <span class="material-symbols-outlined">arrow_forward</span>
             </a>
+          )}
+
+          {isZellePending && (
+            <div class="action-waiting">
+              <span class="material-symbols-outlined" style="color:#f59e0b;font-size:1.5rem">schedule</span>
+              <div>
+                <p class="action-waiting-title">Pago Zelle pendiente</p>
+                <p class="action-waiting-desc">
+                  Transfiere a {zellePhoneFromDrupal || import.meta.env.ZELLE_RECIPIENT_PHONE} por un total de {order?.total_price?.formatted ?? ''}
+                </p>
+              </div>
+            </div>
           )}
 
           {stateKey === 'canceled' && checkoutData?.cancelledAtStep !== undefined && (

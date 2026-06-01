@@ -82,7 +82,7 @@ export const POST: APIRoute = async ({ request, cookies }) => {
     return new Response(JSON.stringify({ ok: false, error: 'Invalid JSON' }), { status: 400 });
   }
 
-  const { orderUuid, shippingAddress, billingAddress, shippingMethod, recipientContact, lang } = body;
+  const { orderUuid, shippingAddress, billingAddress, shippingMethod, recipientContact, paymentMethod, lang } = body;
 
   if (!orderUuid) {
     return new Response(JSON.stringify({ ok: false, error: 'Missing orderUuid' }), { status: 400 });
@@ -116,7 +116,7 @@ export const POST: APIRoute = async ({ request, cookies }) => {
       billingAddress: billingAddress ?? existingData.billingAddress ?? null,
       shippingMethod: shippingMethod ?? existingData.shippingMethod ?? null,
       recipientContact: recipientContact ?? existingData.recipientContact ?? null,
-      paymentMethod: 'paypal',
+      paymentMethod: paymentMethod ?? 'paypal',
       updatedAt: new Date().toISOString(),
     };
 

@@ -369,7 +369,7 @@ export default function HeaderClient({ isLoggedIn, currentPath, lang, navLinks: 
         window.__NODEHIVE_EDITOR__.setLang(targetLang);
       }
     } catch {}
-    window.location.href = getLocalizedPath(currentPath, targetLang);
+    window.location.href = getLocalizedPath(currentPath, targetLang) + window.location.search;
   };
 
   const showPanel = searchOpen && searchValue.length >= 1;

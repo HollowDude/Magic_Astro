@@ -147,6 +147,12 @@ const T: Record<string, Record<string, string>> = {
     continue_shopping: 'Seguir comprando',
     secure_payment: 'Pago 100% seguro y encriptado',
     secure_paypal: 'Pago procesado de forma segura via PayPal',
+    secure_zelle: 'Pago pendiente de verificación',
+    zelle_label: 'Zelle',
+    zelle_desc: 'Transferencia directa',
+    zelle_info: 'Recibirás las instrucciones de transferencia al confirmar.',
+    zelle_no_fees: 'Sin comisiones',
+    zelle_pending: 'Pendiente de pago Zelle',
     cancel_order: 'Cancelar pedido',
     cancel_confirm: '¿Cancelar este pedido? Esta acción no se puede deshacer.',
   },
@@ -210,6 +216,12 @@ const T: Record<string, Record<string, string>> = {
     continue_shopping: 'Continue shopping',
     secure_payment: '100% secure and encrypted payment',
     secure_paypal: 'Payment securely processed via PayPal',
+    secure_zelle: 'Payment pending verification',
+    zelle_label: 'Zelle',
+    zelle_desc: 'Direct transfer',
+    zelle_info: 'You\'ll receive transfer instructions upon confirmation.',
+    zelle_no_fees: 'No fees',
+    zelle_pending: 'Zelle payment pending',
     cancel_order: 'Cancel order',
     cancel_confirm: 'Cancel this order? This cannot be undone.',
   },
@@ -287,6 +299,7 @@ export default function CheckoutClient({ lang, cartData: cartJson, userAddresses
 
   // Step 2
   const [shippingMethod, setShippingMethod] = useState<'delivery' | 'pickup'>('delivery');
+  const [paymentMethod, setPaymentMethod] = useState<'paypal' | 'zelle'>('paypal');
 
   // Step 3
   const [billingSameAsShipping, setBillingSameAsShipping] = useState(true);
@@ -352,6 +365,9 @@ export default function CheckoutClient({ lang, cartData: cartJson, userAddresses
       if (cd.recipientContact) {
         setRecipient(cd.recipientContact);
       }
+      if (cd.paymentMethod === 'zelle' || cd.paymentMethod === 'paypal') {
+        setPaymentMethod(cd.paymentMethod);
+      }
     } else {
       // Fallback: try loading from the API
       const loadFromDrupal = async () => {
@@ -378,6 +394,9 @@ export default function CheckoutClient({ lang, cartData: cartJson, userAddresses
             }
             if (cd.recipientContact) {
               setRecipient(cd.recipientContact);
+            }
+            if (cd.paymentMethod === 'zelle' || cd.paymentMethod === 'paypal') {
+              setPaymentMethod(cd.paymentMethod);
             }
           }
         } catch {}
@@ -479,7 +498,7 @@ export default function CheckoutClient({ lang, cartData: cartJson, userAddresses
       return { shippingAddress: address, recipientContact: recipient.fullName ? recipient : null };
     }
     if (step === 1) return { shippingMethod };
-    if (step === 2) return { billingAddress: billingSameAsShipping ? undefined : billingForm, billingsSameAsShipping: billingSameAsShipping, paymentMethod: 'paypal' };
+    if (step === 2) return { billingAddress: billingSameAsShipping ? undefined : billingForm, billingsSameAsShipping: billingSameAsShipping, paymentMethod };
     return {};
   }
 
@@ -557,35 +576,60 @@ export default function CheckoutClient({ lang, cartData: cartJson, userAddresses
           shippingMethod,
           billingAddress: billing,
           recipientContact: recipient.fullName ? recipient : null,
+          paymentMethod,
           lang,
         }),
       });
       const placeData = await placeRes.json();
       if (!placeData.ok) throw new Error(placeData.error ?? 'Order placement failed');
 
-      const paypalRes = await fetch('/api/checkout/paypal-create', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          orderId: placeData.orderId,
-          amount: totalAmount,
-          currency: 'USD',
-          returnUrl: `${window.location.origin}/${lang}/checkout/success?order=${placeData.orderNumber}&orderId=${placeData.orderId}`,
-          cancelUrl: `${window.location.origin}/${lang}/checkout`,
-        }),
-      });
-      const paypalData = await paypalRes.json();
-      if (paypalData.approvalUrl) {
+      if (paymentMethod === 'zelle') {
+        const zelleRes = await fetch('/api/checkout/zelle-create', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            orderUuid: cartData.orderUuid,
+            orderId: placeData.orderId,
+            orderNumber: placeData.orderNumber,
+            amount: totalAmount,
+          }),
+        });
+        const zelleData = await zelleRes.json();
+        if (!zelleData.ok) throw new Error(zelleData.error);
+
         sessionStorage.removeItem(`checkout_state_${cartData.orderId}`);
-        window.location.href = paypalData.approvalUrl;
+        window.location.href =
+          `${window.location.origin}/${lang}/checkout/pending-zelle` +
+          `?order=${placeData.orderNumber}` +
+          `&orderId=${placeData.orderId}` +
+          `&amount=${totalAmount}` +
+          `&phone=${encodeURIComponent(zelleData.zellePhone)}` +
+          `&name=${encodeURIComponent(zelleData.zelleName)}`;
       } else {
-        throw new Error('PayPal URL not received');
+        const paypalRes = await fetch('/api/checkout/paypal-create', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            orderId: placeData.orderId,
+            amount: totalAmount,
+            currency: 'USD',
+            returnUrl: `${window.location.origin}/${lang}/checkout/success?order=${placeData.orderNumber}&orderId=${placeData.orderId}`,
+            cancelUrl: `${window.location.origin}/${lang}/checkout`,
+          }),
+        });
+        const paypalData = await paypalRes.json();
+        if (paypalData.approvalUrl) {
+          sessionStorage.removeItem(`checkout_state_${cartData.orderId}`);
+          window.location.href = paypalData.approvalUrl;
+        } else {
+          throw new Error('PayPal URL not received');
+        }
       }
     } catch (e: any) {
       setShippingErrors(e.message ?? 'Error processing payment');
       setSubmitting(false);
     }
-  }, [selectedAddress, shippingForm, billingSameAsShipping, billingForm, shippingMethod, recipient, cartData, totalAmount, lang]);
+  }, [selectedAddress, shippingForm, billingSameAsShipping, billingForm, shippingMethod, paymentMethod, recipient, cartData, totalAmount, lang]);
 
   const handleCancelOrder = async () => {
     if (!window.confirm(t(lang, 'cancel_confirm'))) return;
@@ -979,19 +1023,52 @@ export default function CheckoutClient({ lang, cartData: cartJson, userAddresses
 
         <div className="ch-section-card">
           <h3 className="ch-section-title">{t(lang, 'payment_method')}</h3>
-          <div className="ch-payment-option">
-            <div className="ch-payment-radio"><span className="ch-radio-dot" /></div>
+
+          <label className={`ch-payment-option-card ${paymentMethod === 'paypal' ? 'ch-payment-selected' : ''}`}
+            onClick={() => setPaymentMethod('paypal')}>
+            <div className="ch-payment-radio">
+              {paymentMethod === 'paypal' && <span className="ch-radio-dot" />}
+            </div>
             <div className="ch-payment-info">
-              <p className="ch-payment-name">{t(lang, 'card_method')}<span className="ch-payment-processor"> — {t(lang, 'card_processor')}</span></p>
+              <p className="ch-payment-name">
+                {t(lang, 'card_method')}
+                <span className="ch-payment-processor"> — {t(lang, 'card_processor')}</span>
+              </p>
               <div className="ch-payment-logos">
                 <img src="https://cdn.jsdelivr.net/gh/maggyflowers/maggy-assets/icons/visa.svg" alt="VISA" className="ch-card-logo" />
                 <img src="https://cdn.jsdelivr.net/gh/maggyflowers/maggy-assets/icons/mastercard.svg" alt="MC" className="ch-card-logo" />
               </div>
             </div>
-          </div>
+          </label>
+
+          <label className={`ch-payment-option-card ${paymentMethod === 'zelle' ? 'ch-payment-selected' : ''}`}
+            onClick={() => setPaymentMethod('zelle')}>
+            <div className="ch-payment-radio">
+              {paymentMethod === 'zelle' && <span className="ch-radio-dot" />}
+            </div>
+            <div className="ch-payment-info">
+              <p className="ch-payment-name">
+                {t(lang, 'zelle_label')}
+                <span className="ch-payment-processor"> — {t(lang, 'zelle_desc')}</span>
+              </p>
+              <div style={{display:'flex', alignItems:'center', gap:'0.375rem', marginTop:'0.25rem'}}>
+                <span className="ch-zelle-badge">Zelle</span>
+                <span style={{fontSize:'0.75rem', color:'var(--text-muted)'}}>
+                  {t(lang, 'zelle_no_fees')}
+                </span>
+              </div>
+              {paymentMethod === 'zelle' && (
+                <div className="ch-zelle-info-note">
+                  <span className="material-symbols-outlined" style={{fontSize:'0.875rem', color:'var(--sage)'}}>info</span>
+                  {t(lang, 'zelle_info')}
+                </div>
+              )}
+            </div>
+          </label>
+
           <div className="ch-security-note">
             <span className="material-symbols-outlined ch-security-icon">lock</span>
-            <span>{t(lang, 'security_note')}</span>
+            <span>{t(lang, paymentMethod === 'zelle' ? 'secure_zelle' : 'security_note')}</span>
           </div>
         </div>
 
@@ -1029,7 +1106,7 @@ export default function CheckoutClient({ lang, cartData: cartJson, userAddresses
           </div>
           <div className="ch-confirm-card">
             <div className="ch-confirm-card-header"><h4>{t(lang, 'payment_method')}</h4><button type="button" className="ch-edit-btn" onClick={() => setCurrentStep(2)}>{t(lang, 'edit')}</button></div>
-            <p className="ch-confirm-addr">{t(lang, 'card_method')} ({t(lang, 'card_processor')})</p>
+            <p className="ch-confirm-addr">{paymentMethod === 'zelle' ? t(lang, 'zelle_label') : `${t(lang, 'card_method')} (${t(lang, 'card_processor')})`}</p>
           </div>
         </div>
         {shippingErrors && <div className="ch-error">{shippingErrors}</div>}
@@ -1045,7 +1122,7 @@ export default function CheckoutClient({ lang, cartData: cartJson, userAddresses
         </button>
         <p style={{textAlign:'center', fontSize:'0.75rem', color:'var(--text-muted)', marginTop:'0.75rem', display:'flex', alignItems:'center', justifyContent:'center', gap:'0.375rem'}}>
           <span className="material-symbols-outlined" style={{fontSize:'0.875rem'}}>lock</span>
-          {t(lang, 'secure_paypal')}
+          {paymentMethod === 'zelle' ? t(lang, 'secure_zelle') : t(lang, 'secure_paypal')}
         </p>
         <div style={{ textAlign: 'center', marginTop: '0.75rem' }}>
           <button
@@ -1206,6 +1283,10 @@ export default function CheckoutClient({ lang, cartData: cartJson, userAddresses
         .ch-section-card { border: 1.5px solid var(--border); border-radius: 0.875rem; padding: 1.125rem; margin-bottom: 1rem; }
         .ch-section-title { font-size: 0.8125rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted); margin-bottom: 0.75rem; }
         .ch-mt { margin-top: 0.75rem; }
+        .ch-payment-option-card { display: flex; align-items: flex-start; gap: 0.875rem; padding: 1rem; border: 1.5px solid var(--border); border-radius: 0.75rem; margin-bottom: 0.625rem; cursor: pointer; transition: border-color 0.15s, background 0.15s; }
+        .ch-payment-selected { border-color: var(--primary); background: color-mix(in srgb, var(--primary) 4%, transparent); }
+        .ch-zelle-badge { display: inline-block; background: #6d1ed4; color: white; font-size: 0.6875rem; font-weight: 700; padding: 0.125rem 0.5rem; border-radius: 0.25rem; letter-spacing: 0.02em; }
+        .ch-zelle-info-note { font-size: 0.75rem; color: var(--text-muted); margin-top: 0.375rem; display: flex; align-items: center; gap: 0.25rem; }
         .ch-payment-option { display: flex; align-items: center; gap: 0.875rem; padding: 1rem; border: 1.5px solid var(--primary); border-radius: 0.75rem; background: color-mix(in srgb, var(--primary) 4%, transparent); margin-bottom: 1rem; }
         .ch-payment-radio { width: 1.25rem; height: 1.25rem; border: 2px solid var(--primary); border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
         .ch-radio-dot { width: 0.625rem; height: 0.625rem; background: var(--primary); border-radius: 50%; }
