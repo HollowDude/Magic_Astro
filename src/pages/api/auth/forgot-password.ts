@@ -3,8 +3,8 @@
  *
  * POST /api/auth/forgot-password
  *
- * Recibe { email: string }, llama a Drupal /user/password para enviar
- * el one-time login link al correo del usuario.
+ * Recibe { email: string, lang?: string }, llama al endpoint de Drupal
+ * que envía el correo en el idioma especificado.
  *
  * Drupal siempre devuelve 200 (incluso si el email no existe) por seguridad,
  * así que siempre respondemos { ok: true } salvo error de servidor.
@@ -23,20 +23,21 @@ export const POST: APIRoute = async ({ request }) => {
     return json({ ok: false, error: 'El cuerpo de la petición debe ser JSON.' }, 400);
   }
 
-  const { email } = body as Record<string, string>;
+  const { email, lang } = body as Record<string, string>;
+  const langcode = (lang === 'es' || lang === 'en') ? lang : '';
 
   if (!email?.trim() || !EMAIL_RE.test(email.trim())) {
     return json({ ok: false, error: 'El correo electrónico no es válido.' }, 400);
   }
 
   try {
-    const res = await nodehiveFetch<Record<string, unknown>>('/user/password?_format=json', {
+    const res = await nodehiveFetch<Record<string, unknown>>('/api/user/password-lang?_format=json', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         Accept: 'application/json',
       },
-      body: { mail: email.trim() },
+      body: { mail: email.trim(), langcode },
       skipApiKey: true,
     });
 

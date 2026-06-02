@@ -28,7 +28,7 @@ export const POST: APIRoute = async ({ request }) => {
     return json({ ok: false, error: 'El cuerpo de la petición debe ser JSON.' }, 400);
   }
 
-  const { username, email } = body as Record<string, string>;
+  const { username, email, lang } = body as Record<string, string>;
 
   // ── 2. Validaciones ──────────────────────────────────────────────────────
   if (!username?.trim()) {
@@ -45,6 +45,7 @@ export const POST: APIRoute = async ({ request }) => {
   const result = await register({
     username: username.trim(),
     email:    email.trim(),
+    lang:    (lang === 'es' || lang === 'en') ? lang : undefined,
   });
 
   if (!result.ok) {

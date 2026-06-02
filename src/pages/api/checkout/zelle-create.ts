@@ -18,7 +18,27 @@ export const POST: APIRoute = async ({ request, cookies }) => {
   try {
     const baseUrl = (import.meta.env.NODEHIVE_BASE_URL as string).replace(/\/+$/, '');
     const accessToken = session.accessToken ?? '';
-    const gatewayUuid = import.meta.env.ZELLE_PAYMENT_GATEWAY_UUID as string;
+
+    // Resolve gateway UUID: try env var first, then fetch by machine name from Drupal
+    const gatewayId = (import.meta.env.ZELLE_PAYMENT_GATEWAY_ID as string) || 'zelle';
+    let gatewayUuid = import.meta.env.ZELLE_PAYMENT_GATEWAY_UUID as string;
+    if (!gatewayUuid) {
+      try {
+        const gwRes = await fetch(
+          `${baseUrl}/commerce-paypal-headless/gateway-uuid/${gatewayId}?_format=json`,
+          {
+            headers: {
+              Accept: 'application/json',
+              Authorization: `Bearer ${accessToken}`,
+            },
+          },
+        );
+        if (gwRes.ok) {
+          const gwData = await gwRes.json();
+          gatewayUuid = gwData.uuid;
+        }
+      } catch {}
+    }
 
     console.log('[zelle-create] orderUuid:', orderUuid, 'gatewayUuid:', gatewayUuid, 'amount:', amount);
 
@@ -27,7 +47,7 @@ export const POST: APIRoute = async ({ request, cookies }) => {
       return new Response(JSON.stringify({ ok: false, error: 'Invalid order UUID' }), { status: 400 });
     }
     if (!gatewayUuid) {
-      console.warn('[zelle-create] ZELLE_PAYMENT_GATEWAY_UUID not set — restart dev server after adding .env vars');
+      console.warn('[zelle-create] Payment gateway UUID could not be determined');
       return new Response(JSON.stringify({ ok: false, error: 'Payment gateway not configured' }), { status: 500 });
     }
 

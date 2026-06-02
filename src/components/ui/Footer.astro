@@ -166,7 +166,7 @@ function getSocialIcon(iconTitle: string | null, iconUrl: string | null): string
       {/* Fallback socials si NodeHive no devuelve nada */}
       {(!identity?.socials || identity.socials.length === 0) && (
         <div class="footer-socials">
-          <span class="text-xs text-headline/30 italic">
+          <span class="text-xs italic" style="color: rgba(109, 81, 87, 0.30);">
             {lang === 'en' ? 'Social links coming soon' : 'Redes sociales próximamente'}
           </span>
         </div>
@@ -275,7 +275,7 @@ function getSocialIcon(iconTitle: string | null, iconUrl: string | null): string
       <div class="footer-cta">
         <button
           type="button"
-          onclick="window.dispatchEvent(new CustomEvent('open-contact-modal'))"
+          onclick="window.dispatchEvent(new CustomEvent('open-contact-modal')); setTimeout(() => window.dispatchEvent(new CustomEvent('open-contact-modal')), 500);"
           class="footer-cta-btn"
         >
           {lang === 'en' ? 'Contact Us' : 'Contáctenos'}
@@ -305,7 +305,7 @@ function getSocialIcon(iconTitle: string | null, iconUrl: string | null): string
 <style>
   .footer-root {
     background: var(--color-blush);
-    color: color-mix(in srgb, var(--color-headline) 70%, transparent);
+    color: var(--headline-alpha-70);
     padding-block: 4rem 0;
     margin-top: auto;
     font-family: var(--font-body);
@@ -354,7 +354,7 @@ function getSocialIcon(iconTitle: string | null, iconUrl: string | null): string
   .footer-phrase {
     font-size: 0.9375rem;
     font-style: italic;
-    color: color-mix(in srgb, var(--color-headline) 60%, transparent);
+    color: var(--headline-alpha-60);
     line-height: 1.55;
   }
 
@@ -371,7 +371,7 @@ function getSocialIcon(iconTitle: string | null, iconUrl: string | null): string
     width: 2.5rem;
     height: 2.5rem;
     border-radius: 9999px;
-    background: color-mix(in srgb, var(--color-headline) 10%, transparent);
+    background: var(--headline-alpha-10);
     color: var(--color-headline);
     text-decoration: none;
     transition: background 0.2s, transform 0.15s;
@@ -417,7 +417,7 @@ function getSocialIcon(iconTitle: string | null, iconUrl: string | null): string
 
   .footer-link {
     font-size: 0.875rem;
-    color: color-mix(in srgb, var(--color-headline) 60%, transparent);
+    color: var(--headline-alpha-60);
     text-decoration: none;
     transition: color 0.2s;
   }
@@ -437,7 +437,7 @@ function getSocialIcon(iconTitle: string | null, iconUrl: string | null): string
     align-items: flex-start;
     gap: 0.625rem;
     font-size: 0.875rem;
-    color: color-mix(in srgb, var(--color-headline) 65%, transparent);
+    color: var(--headline-alpha-65);
     line-height: 1.5;
   }
 
@@ -466,7 +466,7 @@ function getSocialIcon(iconTitle: string | null, iconUrl: string | null): string
     font-weight: 700;
     text-decoration: none;
     transition: background 0.2s, transform 0.15s;
-    box-shadow: 0 4px 14px color-mix(in srgb, var(--primary) 35%, transparent);
+    box-shadow: 0 4px 14px var(--primary-alpha-35);
   }
 
   .footer-cta-btn:hover {
@@ -481,7 +481,7 @@ function getSocialIcon(iconTitle: string | null, iconUrl: string | null): string
     padding-inline: 1.5rem;
     margin-top: 3rem;
     padding-block: 1.5rem;
-    border-top: 1px solid color-mix(in srgb, var(--color-headline) 12%, transparent);
+    border-top: 1px solid var(--headline-alpha-12);
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -499,7 +499,7 @@ function getSocialIcon(iconTitle: string | null, iconUrl: string | null): string
 
   .footer-copyright {
     font-size: 0.8125rem;
-    color: color-mix(in srgb, var(--color-headline) 45%, transparent);
+    color: var(--headline-alpha-45);
   }
 
   .footer-payment {
@@ -511,15 +511,15 @@ function getSocialIcon(iconTitle: string | null, iconUrl: string | null): string
   .footer-payment-label {
     font-size: 0.8125rem;
     font-weight: 500;
-    color: color-mix(in srgb, var(--color-headline) 55%, transparent);
+    color: var(--headline-alpha-55);
   }
 
   .footer-payment-badge {
     display: flex;
     align-items: center;
     gap: 0.5rem;
-    background: color-mix(in srgb, var(--color-headline) 8%, transparent);
-    border: 1px solid color-mix(in srgb, var(--color-headline) 12%, transparent);
+    background: var(--headline-alpha-8);
+    border: 1px solid var(--headline-alpha-12);
     border-radius: 0.375rem;
     padding: 0.25rem 0.75rem;
   }

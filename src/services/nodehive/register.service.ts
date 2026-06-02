@@ -9,6 +9,7 @@ import { nodehiveFetch } from './nodehive.client';
 export interface RegisterData {
   username: string;
   email: string;
+  lang?: string;
 }
 
 export interface RegisterResult {
@@ -20,15 +21,16 @@ export interface RegisterResult {
 
 export async function register(data: RegisterData): Promise<RegisterResult> {
   try {
-    const res = await nodehiveFetch<Record<string, unknown>>('/user/register?_format=json', {
+    const res = await nodehiveFetch<Record<string, unknown>>('/api/user/register-lang?_format=json', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         Accept: 'application/json',
       },
       body: {
-        name: { value: data.username },
-        mail: { value: data.email },
+        name: data.username,
+        mail: data.email,
+        langcode: data.lang ?? 'en',
       },
     });
 

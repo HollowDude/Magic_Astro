@@ -98,6 +98,7 @@ export default function RegisterForm({
         body:    JSON.stringify({
           username: username.trim(),
           email:    email.trim(),
+          lang,
         }),
       });
 
