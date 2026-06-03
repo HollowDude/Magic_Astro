@@ -72,9 +72,9 @@ const addressText = contact?.address ? buildAddress(contact.address) : null;
 // SVG Icons para redes sociales — devuelve HTML string
 function getSocialIcon(iconTitle: string | null, iconUrl: string | null): string {
   const title = (iconTitle ?? '').toLowerCase();
-  
+
   if (iconUrl) {
-    return `<img src="${iconUrl}" alt="${iconTitle ?? ''}" class="social-icon-img" />`;
+    return `<img src="${iconUrl}" alt="${iconTitle ?? ''}" class="social-icon-img" onerror="console.warn('Social icon failed to load:', this.src); this.outerHTML='<span class=&quot;material-symbols-outlined text-[1.125rem] leading-none&quot;>language</span>';" />`;
   }
   
   if (title.includes('facebook')) {
@@ -387,7 +387,6 @@ function getSocialIcon(iconTitle: string | null, iconUrl: string | null): string
     width: 1.125rem;
     height: 1.125rem;
     object-fit: contain;
-    filter: brightness(0) invert(0.4);
   }
 
   /* Columnas genéricas */
@@ -466,7 +465,7 @@ function getSocialIcon(iconTitle: string | null, iconUrl: string | null): string
     font-weight: 700;
     text-decoration: none;
     transition: background 0.2s, transform 0.15s;
-    box-shadow: 0 4px 14px var(--primary-alpha-35);
+    box-shadow: 0 4px 14px rgba(235, 71, 99, 0.35);
   }
 
   .footer-cta-btn:hover {

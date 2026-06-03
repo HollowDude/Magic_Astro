@@ -1,6 +1,5 @@
 import type { APIRoute } from 'astro';
 import { getSession } from '@/services/session.service';
-import { transitionOrderState } from '@/services/nodehive/checkout-transition.service';
 
 export const POST: APIRoute = async ({ request, cookies }) => {
   const session = await getSession(cookies);
@@ -51,69 +50,30 @@ export const POST: APIRoute = async ({ request, cookies }) => {
       return new Response(JSON.stringify({ ok: false, error: 'Payment gateway not configured' }), { status: 500 });
     }
 
-    let csrfToken = session.csrfToken ?? '';
-    try {
-      const csrfRes = await fetch(`${baseUrl}/session/token`);
-      if (csrfRes.ok) csrfToken = await csrfRes.text();
-    } catch {}
-
-    const requestBody = {
-      data: {
-        type: 'commerce_payment--payment_manual',
-        attributes: {
-          amount: { number: String(amount), currency_code: 'USD' },
-          state: 'pending',
-          remote_id: '',
-          remote_status: 'awaiting_zelle',
-          payment_gateway_mode: 'test',
-        },
-        relationships: {
-          order_id: {
-            data: { type: 'commerce_order--default', id: orderUuid },
-          },
-          payment_gateway: {
-            data: {
-              type: 'commerce_payment_gateway--commerce_payment_gateway',
-              id: gatewayUuid,
-            },
-          },
-        },
-      },
-    };
-
-    console.log('[zelle-create] Request body:', JSON.stringify(requestBody));
-
-    const paymentRes = await fetch(`${baseUrl}/en/jsonapi/commerce_payment/payment_manual`, {
+    // POST to Drupal custom endpoint that creates the Zelle payment
+    const paymentRes = await fetch(`${baseUrl}/api/nodehive/zelle-create`, {
       method: 'POST',
       headers: {
-        'Content-Type': 'application/vnd.api+json',
-        Accept: 'application/vnd.api+json',
-        'X-CSRF-Token': csrfToken,
+        'Content-Type': 'application/json',
+        Accept: 'application/json',
         Authorization: `Bearer ${accessToken}`,
       },
-      body: JSON.stringify(requestBody),
+      body: JSON.stringify({
+        order_uuid: orderUuid,
+        gateway_uuid: gatewayUuid,
+        amount: String(amount),
+        currency_code: 'USD',
+      }),
     });
 
     if (!paymentRes.ok) {
       const errText = await paymentRes.text().catch(() => '');
-      console.warn('[zelle-create] Payment entity error:', paymentRes.status, errText.slice(0, 500));
+      console.warn('[zelle-create] Payment creation error:', paymentRes.status, errText.slice(0, 500));
     }
 
     const paymentJson = await paymentRes.json().catch(() => ({}));
-    const paymentEntityId = paymentJson?.data?.id ?? null;
+    const paymentEntityId = paymentJson?.payment_id ?? paymentJson?.data?.id ?? null;
     console.log('[zelle-create] Payment entity created:', paymentEntityId);
-
-    const transition = await transitionOrderState({
-      baseUrl,
-      orderUuid,
-      csrfToken,
-      accessToken,
-      targetState: 'fulfillment',
-    });
-
-    if (!transition.ok) {
-      console.warn('[zelle-create] State transition to fulfillment failed:', transition.error);
-    }
 
     return new Response(JSON.stringify({
       ok: true,

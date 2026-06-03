@@ -53,7 +53,8 @@ export interface NodeHiveMedia {
  */
 export function nodehiveFileUrl(file: NodeHiveFile | undefined, baseUrl: string): string | null {
   if (!file?.uri?.url) return null;
-  return `${baseUrl}${file.uri.url}`;
+  const normalizedBase = baseUrl.replace(/\/+$/, '');
+  return `${normalizedBase}${file.uri.url}`;
 }
 
 /**

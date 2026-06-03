@@ -120,8 +120,6 @@ const T: Record<string, Record<string, string>> = {
     pickup_address: 'Av. Principal Las Mercedes, Local 4B',
     taxes: 'Impuestos',
     total: 'Total',
-    discount: 'Código de descuento',
-    discount_apply: 'Aplicar',
     shipping_title: 'Información de envío',
     default_address: 'Dirección predeterminada',
     change_address: 'Cambiar dirección',
@@ -155,7 +153,6 @@ const T: Record<string, Record<string, string>> = {
     billing_same_as_shipping: 'Igual al envío',
     payment_method: 'Método de pago',
     success_title: '¡Pedido confirmado!',
-    success_desc: 'Recibirás un correo con la confirmación de tu pedido.',
     download_receipt: 'Descargar recibo',
     continue_shopping: 'Seguir comprando',
     secure_payment: 'Pago 100% seguro y encriptado',
@@ -189,8 +186,6 @@ const T: Record<string, Record<string, string>> = {
     pickup_address: 'Av. Principal Las Mercedes, Local 4B',
     taxes: 'Taxes',
     total: 'Total',
-    discount: 'Discount code',
-    discount_apply: 'Apply',
     shipping_title: 'Shipping information',
     default_address: 'Default address',
     change_address: 'Change address',
@@ -224,7 +219,6 @@ const T: Record<string, Record<string, string>> = {
     billing_same_as_shipping: 'Same as shipping',
     payment_method: 'Payment method',
     success_title: 'Order confirmed!',
-    success_desc: 'You will receive a confirmation email.',
     download_receipt: 'Download receipt',
     continue_shopping: 'Continue shopping',
     secure_payment: '100% secure and encrypted payment',
@@ -539,7 +533,7 @@ export default function CheckoutClient({ lang, cartData: cartJson, userAddresses
         setShippingErrors(lang === 'es' ? 'Completa todos los campos obligatorios.' : 'Complete all required fields.');
         return;
       }
-      if (saveNewAddress) {
+      if (saveNewAddress || initialAddresses.length === 0) {
         try {
           await fetch('/api/user/addresses/create', {
             method: 'POST',
@@ -553,6 +547,8 @@ export default function CheckoutClient({ lang, cartData: cartJson, userAddresses
               locality: shippingForm.city,
               administrativeArea: shippingForm.state || undefined,
               postalCode: shippingForm.postalCode,
+              isDefault: initialAddresses.length === 0,
+              lang,
             }),
           });
         } catch { /* ignore */ }
@@ -739,10 +735,6 @@ export default function CheckoutClient({ lang, cartData: cartJson, userAddresses
             </div>
           ))}
         </div>
-        <div className="ch-summary-discount">
-          <input type="text" className="ch-discount-input" placeholder={t(lang, 'discount')} />
-          <button type="button" className="ch-discount-btn">{t(lang, 'discount_apply')}</button>
-        </div>
         <div className="ch-summary-totals">
           <div className="ch-total-row"><span>{t(lang, 'subtotal')}</span><span>{displayCart.totalPrice}</span></div>
           <div className="ch-total-row">
@@ -766,11 +758,6 @@ export default function CheckoutClient({ lang, cartData: cartJson, userAddresses
           .ch-summary-item-title { font-size: 0.8125rem; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
           .ch-summary-item-sub { font-size: 0.6875rem; color: var(--text-muted); }
           .ch-summary-item-price { font-size: 0.8125rem; font-weight: 600; white-space: nowrap; }
-          .ch-summary-discount { display: flex; gap: 0.5rem; margin-bottom: 1rem; }
-          .ch-discount-input { flex: 1; height: 2.5rem; border: 1.5px solid var(--border); border-radius: 0.5rem; padding: 0 0.875rem; font-size: 0.8125rem; outline: none; font-family: inherit; transition: border-color 0.15s; }
-          .ch-discount-input:focus { border-color: var(--primary); }
-          .ch-discount-btn { height: 2.5rem; padding: 0 1rem; background: var(--headline); color: white; border: none; border-radius: 0.5rem; font-size: 0.8125rem; font-weight: 700; cursor: pointer; font-family: inherit; transition: background 0.15s; }
-          .ch-discount-btn:hover { background: var(--primary); }
           .ch-summary-totals { display: flex; flex-direction: column; gap: 0.5rem; }
           .ch-total-row { display: flex; justify-content: space-between; font-size: 0.875rem; }
           .ch-total-final { font-size: 1.25rem; font-weight: 800; padding-top: 0.5rem; }
