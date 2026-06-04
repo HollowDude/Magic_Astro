@@ -5,6 +5,11 @@ interface RibbonColorInfo {
   hex: string;
 }
 
+interface CartItemAddition {
+  orderItemId: number; title: string; unitPrice: string;
+  totalPrice: string; quantity: number; thumbnailUrl: string | null;
+}
+
 interface CartItem {
   itemId: number;
   orderId: number;
@@ -19,6 +24,8 @@ interface CartItem {
   hasCard: boolean;
   cardMessage: string | null;
   ribbonColor: RibbonColorInfo | null;
+  additions: CartItemAddition[];
+  isAddition: boolean;
 }
 
 interface CartData {
@@ -74,6 +81,9 @@ const T: Record<string, Record<string, string>> = {
     refreshing: 'Actualizando...',
     'cart.with_card': 'Con tarjeta',
     'cart.with_ribbon': 'Con cinta',
+    'cart.with_additions': 'Con extras',
+    'cart.additions_section': 'Extras incluidos',
+    'cart.additions_subtotal': 'Subtotal extras',
     checkout_in_progress: 'Tu carrito está en proceso de pago',
     checkout_in_progress_desc: 'Tienes un pedido en proceso. Puedes continuarlo o cancelarlo.',
     continue_checkout: 'Continuar checkout',
@@ -107,6 +117,9 @@ const T: Record<string, Record<string, string>> = {
     refreshing: 'Refreshing...',
     'cart.with_card': 'With card',
     'cart.with_ribbon': 'With ribbon',
+    'cart.with_additions': 'With extras',
+    'cart.additions_section': 'Included extras',
+    'cart.additions_subtotal': 'Extras subtotal',
     checkout_in_progress: 'Your cart is being processed',
     checkout_in_progress_desc: 'You have an order in progress. You can continue or cancel it.',
     continue_checkout: 'Continue checkout',
@@ -231,15 +244,29 @@ export default function CartManager({ lang }: Props) {
     const snapshot = data;
     if (!snapshot) return;
 
+    setUpdatingIds(prev => new Set(prev).add(item.itemId));
+    emitCartLoading(true, 'remove');
+
+    // If flower has additions, remove them first
+    if (item.additions && item.additions.length > 0) {
+      for (const add of item.additions) {
+        try {
+          await fetch(`/api/cart/items/${add.orderItemId}`, {
+            method: 'DELETE',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ order_id: item.orderId }),
+          });
+        } catch {}
+      }
+    }
+
     const sampleTotal = snapshot.totalPrice || snapshot.items[0]?.price || '';
-    const nextItems = snapshot.items.filter(i => i.itemId !== item.itemId);
+    const nextItems = snapshot.items.filter(i => i.itemId !== item.itemId && !item.additions?.some(a => a.orderItemId === i.itemId));
     const totals = computeTotals(nextItems, sampleTotal);
     const nextData = { ...snapshot, items: nextItems, ...totals };
     setData(nextData);
     emitCartUpdated(nextData);
 
-    setUpdatingIds(prev => new Set(prev).add(item.itemId));
-    emitCartLoading(true, 'remove');
     try {
       const res = await fetch(`/api/cart/items/${item.itemId}`, {
         method: 'DELETE',
@@ -286,7 +313,7 @@ export default function CartManager({ lang }: Props) {
   };
 
   const shopHref = `/${lang}/shop`;
-  const isCartEmpty = !data || data.items.length === 0;
+  const isCartEmpty = !data || data.items.filter(i => !i.isAddition).length === 0;
 
   if (loading) {
     return (
@@ -329,7 +356,7 @@ export default function CartManager({ lang }: Props) {
     <div className="space-y-6">
       <div className="flex items-center justify-between gap-3 flex-wrap">
         <h1 className="font-heading text-2xl text-headline font-semibold">
-          {t(lang, 'title')} ({data.totalItems} {data.totalItems === 1 ? 'artículo' : 'artículos'})
+          {t(lang, 'title')} ({data.items.filter(i => !i.isAddition).length} {data.items.filter(i => !i.isAddition).length === 1 ? 'artículo' : 'artículos'})
         </h1>
         <button
           onClick={refreshCart}
@@ -359,7 +386,7 @@ export default function CartManager({ lang }: Props) {
               </tr>
             </thead>
             <tbody>
-              {data.items.map((item) => {
+              {data.items.filter(i => !i.isAddition).map((item) => {
                 const isUpdating = updatingIds.has(item.itemId);
                 return (
                   <tr key={item.itemId} className={`border-b border-border last:border-b-0 ${isUpdating ? 'opacity-60' : ''}`}>
@@ -385,6 +412,20 @@ export default function CartManager({ lang }: Props) {
                             {item.ribbonColor && (
                               <span className="inline-flex items-center gap-1 font-body text-[11px] text-muted" title={t(lang, 'cart.with_ribbon')}>
                                 <span className="w-2.5 h-2.5 rounded-full shrink-0" style={{ background: item.ribbonColor.hex, border: '1px solid rgba(0,0,0,0.12)' }} />
+                              </span>
+                            )}
+                            {item.additions && item.additions.length > 0 && (
+                              <span className="relative inline-flex items-center gap-0.5 font-body text-[11px] text-sage font-semibold group/additions">
+                                <span className="material-symbols-outlined !text-sm leading-none">redeem</span>
+                                {t(lang, 'cart.with_additions')} ({item.additions.length})
+                                <span className="absolute bottom-full left-1/2 -translate-x-1/2 mb-1.5 hidden group-hover/additions:flex flex-col gap-1 bg-headline text-white rounded-lg px-2.5 py-1.5 text-[11px] whitespace-nowrap z-200 min-w-[130px] shadow-lg">
+                                  {item.additions.map(a => (
+                                    <span key={a.orderItemId} className="flex items-center gap-1">
+                                      <span className="material-symbols-outlined !text-xs leading-none">redeem</span>
+                                      {a.title} · {a.unitPrice}
+                                    </span>
+                                  ))}
+                                </span>
                               </span>
                             )}
                           </div>
@@ -456,6 +497,85 @@ export default function CartManager({ lang }: Props) {
           </div>
         </div>
 
+        {/* ═══ Additions section ═══ */}
+        {data.items.filter(i => i.isAddition).length > 0 && (
+          <div style={{marginTop:'1.5rem'}}>
+            <h3 style={{display:'flex', alignItems:'center', gap:'0.5rem', fontFamily:'var(--font-heading)', fontSize:'1rem', fontWeight:600, color:'var(--headline)', marginBottom:'0.75rem'}}>
+              <span className="material-symbols-outlined" style={{fontSize:'1.125rem', color:'var(--sage)'}}>redeem</span>
+              {t(lang, 'cart.additions_section')}
+            </h3>
+            <div className="bg-white rounded-xl border border-border shadow-sm overflow-hidden">
+              <table className="w-full text-left">
+                <thead>
+                  <tr className="border-b border-border" style={{background:'var(--sage-light)'}}>
+                    <th className="font-body text-xs font-bold uppercase tracking-widest text-muted px-5 py-3.5">{t(lang, 'product')}</th>
+                    <th className="font-body text-xs font-bold uppercase tracking-widest text-muted px-5 py-3.5 hidden sm:table-cell">{t(lang, 'price')}</th>
+                    <th className="font-body text-xs font-bold uppercase tracking-widest text-muted px-5 py-3.5 text-center">{t(lang, 'quantity')}</th>
+                    <th className="font-body text-xs font-bold uppercase tracking-widest text-muted px-5 py-3.5 text-right hidden sm:table-cell">{t(lang, 'total')}</th>
+                    <th className="w-14 px-5 py-3.5" />
+                  </tr>
+                </thead>
+                <tbody>
+                  {data.items.filter(i => i.isAddition).map((item) => {
+                    const isUpdating = updatingIds.has(item.itemId);
+                    return (
+                      <tr key={item.itemId} className={`border-b border-border last:border-b-0 ${isUpdating ? 'opacity-60' : ''}`} style={{background:'var(--sage-light)'}}>
+                        <td className="px-5 py-4">
+                          <div className="flex items-center gap-3">
+                            <div className="w-10 h-10 rounded-lg overflow-hidden bg-blush shrink-0">
+                              {item.thumbnailUrl ? (
+                                <img src={item.thumbnailUrl} alt={item.title} className="w-full h-full object-cover" loading="lazy" />
+                              ) : (
+                                <div className="w-full h-full flex items-center justify-center">
+                                  <span className="material-symbols-outlined text-lg text-sage opacity-40 leading-none">redeem</span>
+                                </div>
+                              )}
+                            </div>
+                            <div className="min-w-0">
+                              <p className="font-body text-sm font-semibold text-headline truncate">{item.title}</p>
+                            </div>
+                          </div>
+                        </td>
+                        <td className="px-5 py-4 hidden sm:table-cell align-middle">
+                          <span className="font-body text-sm" style={{color:'var(--sage)'}}>{item.price}</span>
+                        </td>
+                        <td className="px-5 py-4 align-middle text-center">
+                          <span className="font-body text-sm font-bold text-headline">{item.quantity}</span>
+                        </td>
+                        <td className="px-5 py-4 text-right hidden sm:table-cell align-middle">
+                          <span className="font-body text-sm font-bold" style={{color:'var(--sage)'}}>{item.totalPrice}</span>
+                        </td>
+                        <td className="px-5 py-4 text-right align-middle">
+                          <button
+                            onClick={() => removeItem(item)}
+                            disabled={isUpdating}
+                            className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-transparent text-muted hover:text-red-500 hover:bg-red-50 border-none cursor-pointer transition-colors disabled:opacity-50"
+                            aria-label={t(lang, 'remove')}
+                          >
+                            <span className="material-symbols-outlined !text-lg leading-none">delete</span>
+                          </button>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+              <div className="px-5 py-3 border-t border-border" style={{background:'var(--sage-light)'}}>
+                <div className="flex justify-between" style={{fontSize:'0.875rem'}}>
+                  <span style={{fontWeight:600, color:'var(--headline)'}}>{t(lang, 'cart.additions_subtotal')}</span>
+                  <span style={{fontWeight:700, color:'var(--sage)'}}>
+                    {(() => {
+                      const items = data.items.filter(i => i.isAddition);
+                      const total = items.reduce((s, i) => s + (parseFloat(i.unitPrice || '0') * i.quantity), 0);
+                      return formatMoney(total, items[0]?.totalPrice ?? '$0.00');
+                    })()}
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* ═══ Summary ═══ */}
         <div className="bg-white rounded-xl border border-border shadow-sm p-6 sticky top-28">
           <h2 className="font-heading text-lg font-semibold text-headline mb-5">{t(lang, 'summary')}</h2>
@@ -487,5 +607,6 @@ export default function CartManager({ lang }: Props) {
         </div>
       </div>
     </div>
+
   );
 }

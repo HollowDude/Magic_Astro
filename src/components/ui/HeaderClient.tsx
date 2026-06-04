@@ -172,12 +172,18 @@ export default function HeaderClient({ isLoggedIn, currentPath, lang, navLinks: 
   const [cartLoading, setCartLoading] = useState(false);
   const [cartLoaded, setCartLoaded] = useState(false);
   const [cartBusyCount, setCartBusyCount] = useState(0);
+  interface CartItemAddition {
+    orderItemId: number; title: string; unitPrice: string;
+    totalPrice: string; quantity: number; thumbnailUrl: string | null;
+  }
+
   const [cartData, setCartData] = useState<{
     items: Array<{
       itemId: number; variationId: number | null; title: string; sku: string;
       price: string; quantity: number; totalPrice: string; thumbnailUrl: string | null;
       hasCard: boolean; cardMessage: string | null;
       ribbonColor: { name: string; hex: string } | null;
+      additions: CartItemAddition[]; isAddition: boolean;
     }>;
     totalItems: number; totalPrice: string;
   }>({ items: [], totalItems: 0, totalPrice: '' });
@@ -559,7 +565,7 @@ export default function HeaderClient({ isLoggedIn, currentPath, lang, navLinks: 
                     ) : (
                       <>
                         <div className="max-h-[18rem] overflow-y-auto divide-y divide-border">
-                          {cartData.items.slice(0, 8).map(item => (
+                          {cartData.items.filter(i => !i.isAddition).slice(0, 8).map(item => (
                             <div key={item.itemId} className="flex items-center gap-3 px-5 py-3">
                               <div className="w-10 h-10 rounded-lg overflow-hidden bg-blush shrink-0">
                                 {item.thumbnailUrl ? (
@@ -573,7 +579,7 @@ export default function HeaderClient({ isLoggedIn, currentPath, lang, navLinks: 
                               <div className="flex-1 min-w-0">
                                 <p className="font-body text-sm font-semibold text-headline truncate">{item.title}</p>
                                 <p className="font-body text-xs text-muted mt-px">{item.price}</p>
-                                {(item.hasCard || item.ribbonColor) && (
+                                {(item.hasCard || item.ribbonColor || (item.additions && item.additions.length > 0)) && (
                                   <div className="flex items-center gap-2 mt-0.5">
                                     {item.hasCard && (
                                       <span className="inline-flex items-center font-body text-muted/70" title={item.cardMessage ?? 'Con tarjeta'}>
@@ -585,6 +591,19 @@ export default function HeaderClient({ isLoggedIn, currentPath, lang, navLinks: 
                                         <span className="w-2 h-2 rounded-full shrink-0" style={{ background: item.ribbonColor.hex, border: '1px solid rgba(0,0,0,0.12)' }} />
                                       </span>
                                     )}
+                                    {item.additions && item.additions.length > 0 && (
+                                      <span className="relative inline-flex items-center group/additions">
+                                        <span className="material-symbols-outlined !text-xs leading-none text-sage">redeem</span>
+                                        <span className="absolute bottom-full left-1/2 -translate-x-1/2 mb-1.5 hidden group-hover/additions:flex flex-col gap-1 bg-headline text-white rounded-lg px-2.5 py-1.5 text-[11px] whitespace-nowrap z-200 min-w-[130px] shadow-lg">
+                                          {item.additions.map(a => (
+                                            <span key={a.orderItemId} className="flex items-center gap-1">
+                                              <span className="material-symbols-outlined !text-xs leading-none">redeem</span>
+                                              {a.title} · {a.unitPrice}
+                                            </span>
+                                          ))}
+                                        </span>
+                                      </span>
+                                    )}
                                   </div>
                                 )}
                               </div>
@@ -594,9 +613,9 @@ export default function HeaderClient({ isLoggedIn, currentPath, lang, navLinks: 
                               </div>
                             </div>
                           ))}
-                          {cartData.items.length > 8 && (
+                          {cartData.items.filter(i => !i.isAddition).length > 8 && (
                             <div className="px-5 py-2 text-center">
-                              <span className="font-body text-xs text-muted">+{cartData.items.length - 8} más</span>
+                              <span className="font-body text-xs text-muted">+{cartData.items.filter(i => !i.isAddition).length - 8} más</span>
                             </div>
                           )}
                         </div>

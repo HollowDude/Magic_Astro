@@ -4,6 +4,13 @@ import type { RibbonColorDef } from '@/services/nodehive/nodehive.cart';
 import { nodehiveFetch } from '@/services/nodehive/nodehive.client';
 import { relayCartCookie } from './cookie-helper';
 
+interface AdditionInput {
+  variationId: number;
+  variationUuid: string;
+  quantity: number;
+  productUuid?: string;
+}
+
 interface CartItemInput {
   purchased_entity_type: string;
   purchased_entity_id: number;
@@ -11,6 +18,7 @@ interface CartItemInput {
   combine?: boolean;
   cardMessage?: string;
   ribbonColor?: string;
+  additions?: AdditionInput[];
 }
 
 interface MatchKey {
@@ -156,6 +164,65 @@ async function patchOrderItemCustomizations(
   }
 }
 
+async function patchOrderItemAdditions(
+  itemUuid: string,
+  additionProductUuids: string[],
+  sessionCookie: string | undefined,
+): Promise<void> {
+  if (additionProductUuids.length === 0) return;
+
+  const baseUrl = (import.meta.env.NODEHIVE_BASE_URL as string).replace(/\/+$/, '');
+
+  let csrfToken: string | null = null;
+  try {
+    const csrfRes = await fetch(`${baseUrl}/session/token`, {
+      headers: { Cookie: sessionCookie ?? '' },
+    });
+    if (csrfRes.ok) csrfToken = await csrfRes.text();
+  } catch {
+    console.warn('[cart/add] patchOrderItemAdditions: no CSRF token');
+    return;
+  }
+
+  if (!csrfToken) return;
+
+  const patchBody = {
+    data: {
+      type: 'commerce_order_item--default',
+      id: itemUuid,
+      relationships: {
+        field_additions: {
+          data: additionProductUuids.map(uuid => ({
+            type: 'commerce_product--addition',
+            id: uuid,
+          })),
+        },
+      },
+    },
+  };
+
+  try {
+    const patchRes = await nodehiveFetch(
+      `/jsonapi/commerce_order_item/default/${itemUuid}`,
+      {
+        method: 'PATCH',
+        body: patchBody,
+        headers: {
+          'Content-Type': 'application/vnd.api+json',
+          Accept: 'application/vnd.api+json',
+          'X-CSRF-Token': csrfToken,
+        },
+        sessionCookie,
+      },
+    );
+    if (patchRes.status !== 200) {
+      console.error(`[cart/add] PATCH additions on ${itemUuid} returned ${patchRes.status}`);
+    }
+  } catch (e) {
+    console.error('[cart/add] PATCH additions error:', e);
+  }
+}
+
 export const POST: APIRoute = async ({ request, cookies }) => {
   let body: unknown;
   try {
@@ -200,7 +267,7 @@ export const POST: APIRoute = async ({ request, cookies }) => {
   }> = [];
 
   for (const item of items) {
-    const { cardMessage, ribbonColor: ribbonColorName, ...cartItemBase } = item;
+    const { cardMessage, ribbonColor: ribbonColorName, additions, ...cartItemBase } = item;
     const inputQty = cartItemBase.quantity ?? 1;
 
     const normalizedCard = cardMessage?.trim() || null;
@@ -220,6 +287,9 @@ export const POST: APIRoute = async ({ request, cookies }) => {
     // Resolve display name/hex from the fetched ribbon colors
     const ribbonColorDisplay = ribbonColorDefFromUuid(ribbonColorUuid, ribbonColors);
 
+    let flowerUuid: string;
+    let sessionForPatch = decoded;
+
     if (existing) {
       const newQty = existing.quantity + inputQty;
       const updateRes = await updateCartItem(
@@ -229,6 +299,7 @@ export const POST: APIRoute = async ({ request, cookies }) => {
         decoded,
       );
       latestSetCookie = updateRes.headers;
+      flowerUuid = existing.uuid;
 
       resultItems.push({
         uuid: existing.uuid,
@@ -248,11 +319,12 @@ export const POST: APIRoute = async ({ request, cookies }) => {
       if (!newItem) continue;
 
       const setCookieHeader = addRes.headers.get('set-cookie');
-      let sessionForPatch = decoded;
       if (setCookieHeader) {
         const rawSession = setCookieHeader.match(/^([^=]+=[^;]+)/)?.[1];
         if (rawSession) sessionForPatch = rawSession;
       }
+
+      flowerUuid = newItem.uuid;
 
       if (normalizedCard || ribbonColorUuid) {
         await patchOrderItemCustomizations(
@@ -270,6 +342,29 @@ export const POST: APIRoute = async ({ request, cookies }) => {
         cardMessage: normalizedCard,
         ribbonColor: ribbonColorDisplay,
       });
+    }
+
+    // ── Process additions ────────────────────────────────────────────────
+    if (additions && additions.length > 0) {
+      const addProductUuids: string[] = [];
+
+      for (const addition of additions) {
+        const addRes = await addToCart([{
+          purchased_entity_type: 'commerce_product_variation',
+          purchased_entity_id: addition.variationId,
+          quantity: addition.quantity || 1,
+          combine: false,
+        }], sessionForPatch);
+        latestSetCookie = addRes.headers;
+
+        if (addition.productUuid) {
+          addProductUuids.push(addition.productUuid);
+        }
+      }
+
+      if (addProductUuids.length > 0) {
+        await patchOrderItemAdditions(flowerUuid, addProductUuids, sessionForPatch);
+      }
     }
   }
 

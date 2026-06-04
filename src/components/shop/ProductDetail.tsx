@@ -1,6 +1,8 @@
 import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { ui, defaultLang } from '@/i18n/ui';
 import type { Lang, UiKey } from '@/i18n/ui';
+import AdditionsSelector from './AdditionsSelector';
+import type { SelectedAddition } from './AdditionsSelector';
 
 function t(lang: Lang, key: UiKey): string {
   return (ui[lang] as Record<string, string>)[key]
@@ -87,6 +89,7 @@ export default function ProductDetail({ product, lang, isLoggedIn, selectedVaria
   const [isAdding, setIsAdding] = useState(false);
   const [cardError, setCardError] = useState(false);
   const [ribbonColors, setRibbonColors] = useState<RibbonColorDef[]>([]);
+  const [selectedAdditions, setSelectedAdditions] = useState<SelectedAddition[]>([]);
 
   useEffect(() => {
     fetch('/api/ribbon-colors')
@@ -218,6 +221,14 @@ export default function ProductDetail({ product, lang, isLoggedIn, selectedVaria
       if (ribbonColorName) {
         body[0].ribbonColor = ribbonColorName;
       }
+      if (selectedAdditions.length > 0) {
+        body[0].additions = selectedAdditions.map(a => ({
+          variationId: a.variationId,
+          variationUuid: a.variationUuid,
+          quantity: 1,
+          productUuid: a.id,
+        }));
+      }
 
       const res = await fetch('/api/cart/add', {
         method: 'POST',
@@ -227,6 +238,7 @@ export default function ProductDetail({ product, lang, isLoggedIn, selectedVaria
       if (!res.ok) throw new Error('Cart API error');
       window.dispatchEvent(new CustomEvent('cart:updated', { detail: { delta: 1 } }));
       setAddedToast(true);
+      setSelectedAdditions([]);
       setTimeout(() => setAddedToast(false), 3000);
     } catch {
       setAddedToast(true);
@@ -329,6 +341,11 @@ export default function ProductDetail({ product, lang, isLoggedIn, selectedVaria
           <span className="font-body text-3xl font-extrabold text-primary tracking-tight leading-none">
             {activeVar?.price || t(lang, 'shop.price_on_request')}
           </span>
+          {selectedAdditions.length > 0 && (
+            <span className="font-body text-[0.8125rem] text-muted">
+              +{t(lang, 'product.additions.in_cart').replace('{n}', String(selectedAdditions.length))}
+            </span>
+          )}
         </div>
 
         {hasColorVariants && (
@@ -495,6 +512,13 @@ export default function ProductDetail({ product, lang, isLoggedIn, selectedVaria
             {t(lang, 'product.ribbon.add')}
           </button>
         ) : null}
+
+        {/* ═══ Selector de extras ═══ */}
+        <AdditionsSelector
+          lang={lang}
+          selected={selectedAdditions}
+          onChange={setSelectedAdditions}
+        />
 
         {/* Botones de acción */}
         <div className="flex flex-col sm:flex-row gap-3">

@@ -23,6 +23,7 @@ interface CheckoutCartItem {
   thumbnailUrl: string | null;
   hasCard: boolean;
   ribbonColor: { name: string; hex: string } | null;
+  isAddition?: boolean;
 }
 
 interface CheckoutCartData {
@@ -715,23 +716,24 @@ export default function CheckoutClient({ lang, cartData: cartJson, userAddresses
         <h3 className="ch-summary-title">{t(lang, 'summary')}</h3>
         <div className="ch-summary-items">
           {displayCart.items.map(item => (
-            <div key={item.itemId} className="ch-summary-item">
+            <div key={item.itemId} className="ch-summary-item" style={item.isAddition ? {background:'var(--sage-light)', borderRadius:'0.75rem', paddingLeft:'0.75rem'} : {}}>
               <div className="ch-summary-item-img-wrap">
                 {item.thumbnailUrl ? (
                   <img src={item.thumbnailUrl} alt={item.title} className="ch-summary-item-img" />
                 ) : (
                   <div className="ch-summary-item-placeholder">
-                    <span className="material-symbols-outlined">local_florist</span>
+                    <span className="material-symbols-outlined">{item.isAddition ? 'redeem' : 'local_florist'}</span>
                   </div>
                 )}
-                <span className="ch-summary-item-qty">{item.quantity}</span>
+                {!item.isAddition && <span className="ch-summary-item-qty">{item.quantity}</span>}
               </div>
               <div className="ch-summary-item-info">
-                <p className="ch-summary-item-title">{item.title}</p>
+                <p className="ch-summary-item-title" style={item.isAddition ? {color:'var(--sage)', fontSize:'0.8125rem'} : {}}>{item.title}</p>
                 {item.hasCard && <p className="ch-summary-item-sub">{lang === 'es' ? 'Con tarjeta' : 'With card'}</p>}
                 {item.ribbonColor && <p className="ch-summary-item-sub">{lang === 'es' ? 'Cinta' : 'Ribbon'}: {item.ribbonColor.name}</p>}
+                {item.isAddition && <p className="ch-summary-item-sub" style={{color:'var(--sage)', fontSize:'0.6875rem'}}>{lang === 'es' ? 'Extra' : 'Addition'}</p>}
               </div>
-              <span className="ch-summary-item-price">{item.totalPrice}</span>
+              <span className="ch-summary-item-price" style={item.isAddition ? {color:'var(--sage)'} : {}}>{item.totalPrice}</span>
             </div>
           ))}
         </div>
