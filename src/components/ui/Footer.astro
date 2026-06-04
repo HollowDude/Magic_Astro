@@ -1,6 +1,7 @@
 ---
 // src/components/ui/Footer.astro
 import { getFooterData } from '@/services/nodehive/nodehive.footer';
+import { getWhatsAppButtonData } from '@/services/nodehive/nodehive.whatsapp';
 import { getLangFromUrl, getPrefix } from '@/i18n/utils';
 import type { Lang } from '@/i18n/ui';
 
@@ -11,7 +12,15 @@ interface Props {
 const { lang: langProp } = Astro.props;
 const lang = (langProp ?? Astro.currentLocale ?? getLangFromUrl(Astro.url)) as Lang;
 const prefix = getPrefix(lang);
-const { identity, contact } = await getFooterData(lang);
+const [footerData, whatsappData] = await Promise.all([
+  getFooterData(lang),
+  getWhatsAppButtonData(lang),
+]);
+const { identity, contact } = footerData;
+
+const waMessage = lang === 'en' ? whatsappData?.messageEn : whatsappData?.messageEs;
+const waPhone = contact?.zelle ? contact.zelle.replace(/[\s\-\+]/g, '') : null;
+const waHref = waPhone ? `https://wa.me/${waPhone}${waMessage ? `?text=${encodeURIComponent(waMessage)}` : ''}` : null;
 
 // Links de ayuda — rutas ya existentes
 const helpLinks = lang === 'en'
@@ -244,7 +253,13 @@ function getSocialIcon(iconTitle: string | null, iconUrl: string | null): string
             <span>{addressText}</span>
           </li>
         )}
-        {contact?.zelle && (
+        {contact?.zelle && waHref && (
+          <li class="footer-contact-item" data-nodehive-field="field_zelle">
+            <span class="material-symbols-outlined footer-contact-icon">phone_iphone</span>
+            <a href={waHref} target="_blank" rel="noopener noreferrer" class="footer-link">{contact.zelle}</a>
+          </li>
+        )}
+        {contact?.zelle && !waHref && (
           <li class="footer-contact-item" data-nodehive-field="field_zelle">
             <span class="material-symbols-outlined footer-contact-icon">phone_iphone</span>
             <span>{contact.zelle}</span>
