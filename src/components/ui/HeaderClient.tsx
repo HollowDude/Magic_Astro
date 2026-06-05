@@ -592,16 +592,16 @@ export default function HeaderClient({ isLoggedIn, currentPath, lang, navLinks: 
                                       </span>
                                     )}
                                     {item.additions && item.additions.length > 0 && (
-                                      <span className="relative inline-flex items-center group/additions">
+                                      <span className="inline-flex items-center gap-1">
                                         <span className="material-symbols-outlined !text-xs leading-none text-sage">redeem</span>
-                                        <span className="absolute bottom-full left-1/2 -translate-x-1/2 mb-1.5 hidden group-hover/additions:flex flex-col gap-1 bg-headline text-white rounded-lg px-2.5 py-1.5 text-[11px] whitespace-nowrap z-200 min-w-[130px] shadow-lg">
-                                          {item.additions.map(a => (
-                                            <span key={a.orderItemId} className="flex items-center gap-1">
-                                              <span className="material-symbols-outlined !text-xs leading-none">redeem</span>
-                                              {a.title} · {a.unitPrice}
-                                            </span>
-                                          ))}
-                                        </span>
+                                        {item.additions.slice(0, 2).map((a, i, arr) => (
+                                          <span key={a.orderItemId} className="font-body text-[10px] text-sage">
+                                            {a.title}{i < arr.length - 1 ? ',' : ''}
+                                          </span>
+                                        ))}
+                                        {item.additions.length > 2 && (
+                                          <span className="font-body text-[10px] text-sage font-semibold">+{item.additions.length - 2}</span>
+                                        )}
                                       </span>
                                     )}
                                   </div>

@@ -344,6 +344,7 @@ export default function CheckoutClient({ lang, cartData: cartJson, userAddresses
               unitPrice: i.unitPrice, totalPrice: i.totalPrice,
               variationId: i.variationId, thumbnailUrl: i.thumbnailUrl,
               hasCard: i.hasCard, ribbonColor: i.ribbonColor,
+              isAddition: i.isAddition ?? false,
             })),
           });
         }
@@ -711,32 +712,59 @@ export default function CheckoutClient({ lang, cartData: cartJson, userAddresses
   // ── CAMBIO 6: Summary sidebar ─────────────────────────────────────────────
 
   function renderSummary() {
+    const flowers = displayCart.items.filter(i => !i.isAddition);
+    const extras = displayCart.items.filter(i => i.isAddition);
     return (
       <aside className="ch-summary">
         <h3 className="ch-summary-title">{t(lang, 'summary')}</h3>
         <div className="ch-summary-items">
-          {displayCart.items.map(item => (
-            <div key={item.itemId} className="ch-summary-item" style={item.isAddition ? {background:'var(--sage-light)', borderRadius:'0.75rem', paddingLeft:'0.75rem'} : {}}>
+          {flowers.map(item => (
+            <div key={item.itemId} className="ch-summary-item">
               <div className="ch-summary-item-img-wrap">
                 {item.thumbnailUrl ? (
                   <img src={item.thumbnailUrl} alt={item.title} className="ch-summary-item-img" />
                 ) : (
                   <div className="ch-summary-item-placeholder">
-                    <span className="material-symbols-outlined">{item.isAddition ? 'redeem' : 'local_florist'}</span>
+                    <span className="material-symbols-outlined">local_florist</span>
                   </div>
                 )}
-                {!item.isAddition && <span className="ch-summary-item-qty">{item.quantity}</span>}
+                <span className="ch-summary-item-qty">{item.quantity}</span>
               </div>
               <div className="ch-summary-item-info">
-                <p className="ch-summary-item-title" style={item.isAddition ? {color:'var(--sage)', fontSize:'0.8125rem'} : {}}>{item.title}</p>
+                <p className="ch-summary-item-title">{item.title}</p>
                 {item.hasCard && <p className="ch-summary-item-sub">{lang === 'es' ? 'Con tarjeta' : 'With card'}</p>}
                 {item.ribbonColor && <p className="ch-summary-item-sub">{lang === 'es' ? 'Cinta' : 'Ribbon'}: {item.ribbonColor.name}</p>}
-                {item.isAddition && <p className="ch-summary-item-sub" style={{color:'var(--sage)', fontSize:'0.6875rem'}}>{lang === 'es' ? 'Extra' : 'Addition'}</p>}
               </div>
-              <span className="ch-summary-item-price" style={item.isAddition ? {color:'var(--sage)'} : {}}>{item.totalPrice}</span>
+              <span className="ch-summary-item-price">{item.totalPrice}</span>
             </div>
           ))}
         </div>
+        {extras.length > 0 && (
+          <div className="ch-summary-extras">
+            <div className="ch-summary-extras-header">
+              <span className="material-symbols-outlined" style={{fontSize:'0.875rem'}}>redeem</span>
+              {lang === 'es' ? 'Extras incluidos' : 'Included extras'}
+            </div>
+            {extras.map(item => (
+              <div key={item.itemId} className="ch-summary-item" style={{background:'var(--sage-light)', borderRadius:'0.75rem', paddingLeft:'0.75rem'}}>
+                <div className="ch-summary-item-img-wrap">
+                  {item.thumbnailUrl ? (
+                    <img src={item.thumbnailUrl} alt={item.title} className="ch-summary-item-img" />
+                  ) : (
+                    <div className="ch-summary-item-placeholder">
+                      <span className="material-symbols-outlined" style={{color:'var(--sage)'}}>redeem</span>
+                    </div>
+                  )}
+                </div>
+                <div className="ch-summary-item-info">
+                  <p className="ch-summary-item-title" style={{color:'var(--sage)', fontSize:'0.8125rem'}}>{item.title}</p>
+                  <p className="ch-summary-item-sub" style={{color:'var(--sage)', fontSize:'0.6875rem'}}>{lang === 'es' ? 'Extra' : 'Addition'}</p>
+                </div>
+                <span className="ch-summary-item-price" style={{color:'var(--sage)'}}>{item.totalPrice}</span>
+              </div>
+            ))}
+          </div>
+        )}
         <div className="ch-summary-totals">
           <div className="ch-total-row"><span>{t(lang, 'subtotal')}</span><span>{displayCart.totalPrice}</span></div>
           <div className="ch-total-row">
@@ -750,7 +778,7 @@ export default function CheckoutClient({ lang, cartData: cartJson, userAddresses
         <style>{`
           .ch-summary { background: white; border: 1.5px solid var(--border); border-radius: 1rem; padding: 1.5rem; box-shadow: 0 4px 20px rgba(109,81,87,0.06); }
           .ch-summary-title { font-size: 1rem; font-weight: 800; color: var(--headline); font-family: var(--font-heading); margin-bottom: 1.25rem; padding-bottom: 0.75rem; border-bottom: 1px solid var(--border); }
-          .ch-summary-items { display: flex; flex-direction: column; gap: 0.75rem; margin-bottom: 1rem; max-height: 300px; overflow-y: auto; }
+          .ch-summary-items { display: flex; flex-direction: column; gap: 0.75rem; max-height: 300px; overflow-y: auto; }
           .ch-summary-item { display: flex; gap: 0.75rem; align-items: flex-start; }
           .ch-summary-item-img-wrap { position: relative; width: 3.75rem; height: 3.75rem; border-radius: 0.625rem; overflow: hidden; background: var(--blush); flex-shrink: 0; border: 1px solid var(--border); }
           .ch-summary-item-img { width: 100%; height: 100%; object-fit: cover; }
@@ -760,6 +788,8 @@ export default function CheckoutClient({ lang, cartData: cartJson, userAddresses
           .ch-summary-item-title { font-size: 0.8125rem; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
           .ch-summary-item-sub { font-size: 0.6875rem; color: var(--text-muted); }
           .ch-summary-item-price { font-size: 0.8125rem; font-weight: 600; white-space: nowrap; }
+          .ch-summary-extras { border-top: 1px solid var(--border); padding-top: 0.75rem; margin-top: 0.25rem; margin-bottom: 1rem; display: flex; flex-direction: column; gap: 0.75rem; max-height: 300px; overflow-y: auto; }
+          .ch-summary-extras-header { display: flex; align-items: center; gap: 0.375rem; font-size: 0.75rem; font-weight: 700; color: var(--sage); font-family: var(--font-heading); }
           .ch-summary-totals { display: flex; flex-direction: column; gap: 0.5rem; }
           .ch-total-row { display: flex; justify-content: space-between; font-size: 0.875rem; }
           .ch-total-final { font-size: 1.25rem; font-weight: 800; padding-top: 0.5rem; }
@@ -1106,6 +1136,20 @@ export default function CheckoutClient({ lang, cartData: cartJson, userAddresses
             <div className="ch-confirm-card-header"><h4>{t(lang, 'payment_method')}</h4><button type="button" className="ch-edit-btn" onClick={() => setCurrentStep(2)}>{t(lang, 'edit')}</button></div>
             <p className="ch-confirm-addr">{paymentMethod === 'zelle' ? t(lang, 'zelle_label') : `${t(lang, 'card_method')} (${t(lang, 'card_processor')})`}</p>
           </div>
+          {displayCart.items.filter(i => i.isAddition).length > 0 && (
+            <div className="ch-confirm-card">
+              <div className="ch-confirm-card-header"><h4>
+                <span className="material-symbols-outlined" style={{color:'var(--sage)', verticalAlign:'middle', marginRight:'0.25rem', fontSize:'1.125rem'}}>redeem</span>
+                {lang === 'es' ? 'Extras' : 'Extras'}
+              </h4></div>
+              {displayCart.items.filter(i => i.isAddition).map(addItem => (
+                <p key={addItem.itemId} className="ch-confirm-addr" style={{display:'flex', justifyContent:'space-between', gap:'0.5rem'}}>
+                  <span>{addItem.title} × {addItem.quantity}</span>
+                  <span style={{color:'var(--sage)', fontWeight:600, whiteSpace:'nowrap'}}>{addItem.totalPrice}</span>
+                </p>
+              ))}
+            </div>
+          )}
         </div>
         {shippingErrors && <div className="ch-error">{shippingErrors}</div>}
 

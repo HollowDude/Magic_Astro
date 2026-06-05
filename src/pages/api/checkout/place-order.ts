@@ -165,6 +165,20 @@ export const POST: APIRoute = async ({ request, cookies }) => {
     let approvalUrl: string | null = null;
     let paypalOrderId: string | null = null;
 
+    if (paymentMethod === 'zelle' && internalOrderId) {
+      await fetch(
+        `${baseUrl}/commerce-paypal-headless/place/${internalOrderId}?_format=json`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Accept: 'application/json',
+            Authorization: `Bearer ${accessToken}`,
+          },
+        },
+      ).catch(() => {});
+    }
+
     if (paymentMethod === 'paypal' && internalOrderId) {
       const createRes = await fetch(
         `${baseUrl}/commerce-paypal/checkout-create/${GATEWAY_ID}/${internalOrderId}?_format=json`,

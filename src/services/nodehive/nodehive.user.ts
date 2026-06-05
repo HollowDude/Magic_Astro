@@ -274,7 +274,7 @@ export async function getUserOrders(
       const orderData = o.data ?? {};
       const paidEventDispatched = orderData.paid_event_dispatched === true;
 
-      const isZellePending = rawCheckoutData?.paymentMethod === 'zelle' && !paidEventDispatched;
+      const isZellePending = rawCheckoutData?.paymentMethod === 'zelle' && !paidEventDispatched && stateKey === 'placed';
 
       let stateLabel: string;
       if (isZellePending) {

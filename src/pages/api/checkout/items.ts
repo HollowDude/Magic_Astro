@@ -21,53 +21,57 @@ interface CheckoutItemResponse {
   hasCard: boolean;
   cardMessage: string | null;
   ribbonColor: RibbonColorInfo | null;
+  isAddition: boolean;
 }
 
 async function getVariationThumbnailMap(uuids: string[]): Promise<Map<string, string>> {
   const map = new Map<string, string>();
   if (uuids.length === 0) return map;
 
-  const params = new URLSearchParams();
-  params.set('include', 'field_gallery_of_photos,field_gallery_of_photos.field_media_image');
+  const baseUrl = NODEHIVE_BASE_URL.replace(/\/+$/, '');
   const valueParams = uuids.map(u => `filter[id][condition][value][]=${encodeURIComponent(u)}`).join('&');
-  const path = `/jsonapi/commerce_product_variation/flower?filter[id][condition][path]=id&filter[id][condition][operator]=IN&${valueParams}&${params.toString()}`;
 
-  try {
-    const raw = await nodehiveFetch<Record<string, unknown>>(path, {
-      headers: {
-        'Content-Type': 'application/vnd.api+json',
-        Accept: 'application/vnd.api+json',
-      },
-      skipApiKey: false,
-      cacheTtl: 60_000,
-    });
-    if (raw.status !== 200) return map;
+  async function fetchForType(variationType: string, mediaField: string): Promise<void> {
+    const params = new URLSearchParams();
+    params.set('include', `${mediaField},${mediaField}.field_media_image`);
+    const path = `/jsonapi/commerce_product_variation/${variationType}?filter[id][condition][path]=id&filter[id][condition][operator]=IN&${valueParams}&${params.toString()}`;
 
-    const data = raw.data as any;
-    const included: Array<Record<string, any>> = data?.included ?? [];
+    try {
+      const raw = await nodehiveFetch<Record<string, unknown>>(path, {
+        headers: { 'Content-Type': 'application/vnd.api+json', Accept: 'application/vnd.api+json' },
+        skipApiKey: false,
+        cacheTtl: 60_000,
+      });
+      if (raw.status !== 200) return;
 
-    for (const item of data?.data ?? []) {
-      const itemUuid = item?.id;
-      if (!itemUuid) continue;
+      const data = raw.data as any;
+      const included: Array<Record<string, any>> = data?.included ?? [];
 
-      const rels = item?.relationships?.field_gallery_of_photos?.data ?? [];
-      const firstMediaId = rels[0]?.id;
-      if (!firstMediaId) continue;
+      for (const item of data?.data ?? []) {
+        const itemUuid = item?.id;
+        if (!itemUuid) continue;
 
-      const mediaEntity = included.find((inc: any) => inc.type === 'media--image' && inc.id === firstMediaId);
-      const fileId = mediaEntity?.relationships?.field_media_image?.data?.id;
-      if (!fileId) continue;
+        const relData = item?.relationships?.[mediaField]?.data;
+        const mediaId = Array.isArray(relData) ? relData[0]?.id : relData?.id;
+        if (!mediaId) continue;
 
-      const fileEntity = included.find((inc: any) => inc.type === 'file--file' && inc.id === fileId);
-      const uri = fileEntity?.attributes?.uri?.url;
-      if (uri) {
-        const baseUrl = NODEHIVE_BASE_URL.replace(/\/+$/, '');
-        map.set(itemUuid, `${baseUrl}${uri}`);
+        const mediaEntity = included.find((inc: any) => inc.type === 'media--image' && inc.id === mediaId);
+        const fileId = mediaEntity?.relationships?.field_media_image?.data?.id;
+        if (!fileId) continue;
+
+        const fileEntity = included.find((inc: any) => inc.type === 'file--file' && inc.id === fileId);
+        const uri = fileEntity?.attributes?.uri?.url;
+        if (uri) map.set(itemUuid, `${baseUrl}${uri}`);
       }
+    } catch {
+      // silent fail
     }
-  } catch {
-    // silent fail
   }
+
+  await Promise.all([
+    fetchForType('flower', 'field_gallery_of_photos'),
+    fetchForType('addition', 'field_photo'),
+  ]);
 
   return map;
 }
@@ -140,6 +144,7 @@ export const GET: APIRoute = async ({ url, cookies }) => {
       const ribbonRel = inc?.relationships?.field_ribbon_color?.data;
       const ribbonColorUuid = ribbonRel?.id ?? null;
 
+      const variationRel2 = inc?.relationships?.purchased_entity?.data;
       return {
         itemId,
         title: a.title ?? '',
@@ -151,6 +156,7 @@ export const GET: APIRoute = async ({ url, cookies }) => {
         hasCard: a.field_has_card ?? false,
         cardMessage: a.field_card_message ?? null,
         ribbonColor: ribbonColorDefFromUuid(ribbonColorUuid, ribbonColors),
+        isAddition: variationRel2?.type?.includes('addition') ?? false,
       };
     });
 

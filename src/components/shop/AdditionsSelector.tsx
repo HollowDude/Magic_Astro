@@ -89,6 +89,8 @@ export default function AdditionsSelector({ lang, selected, onChange }: Props) {
 
   if (options.length === 0) return null;
 
+  const totalPrice = selected.reduce((s, a) => s + a.priceNumber, 0);
+
   return (
     <div className="flex flex-col gap-3">
       {open ? (
@@ -116,7 +118,7 @@ export default function AdditionsSelector({ lang, selected, onChange }: Props) {
                   onClick={() => toggle(opt)}
                   className={`flex flex-col items-center gap-2 p-3 rounded-xl border-2 bg-white transition-all duration-150 cursor-pointer text-left ${
                     isSelected
-                      ? 'border-primary bg-[color-mix(in_srgb,var(--primary)_6%,transparent)]'
+                      ? 'border-[var(--primary)] bg-[var(--blush)]'
                       : 'border-border hover:border-primary/40'
                   }`}
                 >
@@ -141,7 +143,7 @@ export default function AdditionsSelector({ lang, selected, onChange }: Props) {
                     </span>
                   </div>
                   {isSelected && (
-                    <span className="material-symbols-outlined !text-sm leading-none text-primary">check_circle</span>
+                    <span className="material-symbols-outlined !text-sm leading-none text-primary transition-all">check_circle</span>
                   )}
                 </button>
               );
@@ -149,29 +151,46 @@ export default function AdditionsSelector({ lang, selected, onChange }: Props) {
           </div>
 
           {selected.length > 0 && (
-            <div className="mt-4 pt-3 border-t border-border">
-              <div className="flex items-center justify-between mb-2">
-                <span className="font-body text-xs font-semibold text-headline">
-                  {t(lang, 'product.additions.selected')} ({selected.length})
-                </span>
-                <button
-                  type="button"
-                  onClick={clearAll}
-                  className="font-body text-[11px] text-muted hover:text-red-500 underline underline-offset-2 cursor-pointer bg-transparent border-none p-0 transition-colors"
-                >
-                  {t(lang, 'product.additions.remove')}
-                </button>
-              </div>
-              {selected.map(s => (
-                <div key={s.variationId} className="flex items-center justify-between py-1">
-                  <div className="flex items-center gap-2 min-w-0">
-                    <span className="material-symbols-outlined !text-sm leading-none text-sage shrink-0">redeem</span>
-                    <span className="font-body text-xs text-body-color truncate">{s.title}</span>
-                  </div>
-                  <span className="font-body text-xs font-semibold text-sage shrink-0 ml-2">{s.price}</span>
+            <>
+              <div className="mt-4 pt-3 border-t border-border">
+                <div className="flex items-center justify-between mb-2">
+                  <span className="font-body text-xs font-semibold text-headline">
+                    {t(lang, 'product.additions.selected')} ({selected.length})
+                  </span>
+                  <button
+                    type="button"
+                    onClick={clearAll}
+                    className="font-body text-[11px] text-muted hover:text-red-500 underline underline-offset-2 cursor-pointer bg-transparent border-none p-0 transition-colors"
+                  >
+                    {t(lang, 'product.additions.remove')}
+                  </button>
                 </div>
-              ))}
-            </div>
+                {selected.map(s => (
+                  <div key={s.variationId} className="flex items-center justify-between py-1">
+                    <div className="flex items-center gap-2 min-w-0">
+                      <span className="material-symbols-outlined !text-sm leading-none text-sage shrink-0">redeem</span>
+                      <span className="font-body text-xs text-body-color truncate">{s.title}</span>
+                    </div>
+                    <div className="flex items-center gap-2 shrink-0">
+                      <span className="font-body text-xs font-semibold text-sage">{s.price}</span>
+                      <button
+                        type="button"
+                        onClick={() => toggle(s as unknown as AdditionOption)}
+                        style={{background:'none', border:'none', cursor:'pointer', color:'var(--muted)', padding:0, display:'flex', alignItems:'center'}}
+                      >
+                        <span className="material-symbols-outlined" style={{fontSize:'0.875rem'}}>close</span>
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+              <div className="flex justify-between mt-2 pt-2 border-t border-border">
+                <span style={{fontSize:'0.75rem', color:'var(--muted)'}}>Total extras:</span>
+                <span style={{fontSize:'0.75rem', fontWeight:700, color:'var(--sage)'}}>
+                  ${totalPrice.toFixed(2)}
+                </span>
+              </div>
+            </>
           )}
         </div>
       ) : (
@@ -182,12 +201,15 @@ export default function AdditionsSelector({ lang, selected, onChange }: Props) {
             selected.length > 0 ? 'border-primary/60 text-primary' : ''
           }`}
         >
-          <span className="material-symbols-outlined !text-lg leading-none">
-            {selected.length > 0 ? 'redeem' : 'add'}
-          </span>
-          {selected.length > 0
-            ? t(lang, 'product.additions.in_cart').replace('{n}', String(selected.length))
-            : t(lang, 'product.additions.add')}
+          <span className="material-symbols-outlined !text-lg leading-none">redeem</span>
+          {selected.length > 0 ? (
+            <>
+              <span>{t(lang, 'product.additions.in_cart').replace('{n}', String(selected.length))}</span>
+              <span className="bg-sage text-white rounded-full px-3 py-0.5 text-xs font-bold">{selected.length}</span>
+            </>
+          ) : (
+            t(lang, 'product.additions.add')
+          )}
         </button>
       )}
     </div>

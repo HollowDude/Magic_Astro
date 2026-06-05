@@ -20,14 +20,14 @@ const lang = 'es' as const;
 
 let order: any = null;
 let fetchError = false;
-let itemCustomizations: Record<number, { hasCard: boolean; cardMessage: string | null; ribbonColor: { name: string; hex: string } | null }> = {};
+let itemCustomizations: Record<number, { hasCard: boolean; cardMessage: string | null; ribbonColor: { name: string; hex: string } | null; isAddition: boolean }> = {};
 let thumbnailByItemId: Record<number, string> = {};
 
 try {
   const raw = await nodehiveFetch<Record<string, unknown>>(
     `/jsonapi/commerce_order/default/${id}?include=order_items` +
     `&fields[commerce_order--default]=id,order_number,state,placed,changed,total_price,order_items,field_checkout_started,field_checkout_data,data` +
-    `&fields[commerce_order_item--default]=drupal_internal__order_item_id,title,quantity,unit_price,total_price,purchased_entity,field_has_card,field_card_message,field_ribbon_color`,
+    `&fields[commerce_order_item--default]=drupal_internal__order_item_id,title,quantity,unit_price,total_price,purchased_entity,field_has_card,field_card_message,field_ribbon_color,field_additions`,
     {
       headers: { 'Content-Type': 'application/vnd.api+json', Accept: 'application/vnd.api+json' },
       lang,
@@ -47,35 +47,39 @@ try {
       const internalId = attrs?.drupal_internal__order_item_id;
       if (!internalId) continue;
       const ribbonRel = entry?.relationships?.field_ribbon_color?.data;
+      const variationRel = entry?.relationships?.purchased_entity?.data;
       itemCustomizations[internalId] = {
         hasCard: attrs.field_has_card ?? false,
         cardMessage: attrs.field_card_message ?? null,
         ribbonColor: ribbonColorDefFromUuid(ribbonRel?.id ?? null, ribbonColors),
+        isAddition: variationRel?.type?.includes('addition') ?? false,
       };
-      const variationRel = entry?.relationships?.purchased_entity?.data;
       if (variationRel?.id) variationUuids.push(variationRel.id);
     }
 
     if (variationUuids.length > 0) {
-      try {
-        const params = new URLSearchParams();
-        params.set('include', 'field_gallery_of_photos,field_gallery_of_photos.field_media_image');
-        const valueParams = variationUuids.map(u => `filter[id][condition][value][]=${encodeURIComponent(u)}`).join('&');
-        const path = `/jsonapi/commerce_product_variation/flower?filter[id][condition][path]=id&filter[id][condition][operator]=IN&${valueParams}&${params.toString()}`;
-        const thumbRes = await nodehiveFetch<Record<string, unknown>>(path, {
-          headers: { 'Content-Type': 'application/vnd.api+json', Accept: 'application/vnd.api+json' },
-          skipApiKey: false,
-          cacheTtl: 60_000,
-        });
-        if (thumbRes.status === 200) {
-          const baseUrl = (import.meta.env.NODEHIVE_BASE_URL as string).replace(/\/+$/, '');
+      const baseUrl = (import.meta.env.NODEHIVE_BASE_URL as string).replace(/\/+$/, '');
+      const valueParams = variationUuids.map(u => `filter[id][condition][value][]=${encodeURIComponent(u)}`).join('&');
+
+      async function fetchThumbnails(variationType: string, mediaField: string): Promise<void> {
+        try {
+          const params = new URLSearchParams();
+          params.set('include', `${mediaField},${mediaField}.field_media_image`);
+          const path = `/jsonapi/commerce_product_variation/${variationType}?filter[id][condition][path]=id&filter[id][condition][operator]=IN&${valueParams}&${params.toString()}`;
+          const thumbRes = await nodehiveFetch<Record<string, unknown>>(path, {
+            headers: { 'Content-Type': 'application/vnd.api+json', Accept: 'application/vnd.api+json' },
+            skipApiKey: false,
+            cacheTtl: 60_000,
+          });
+          if (thumbRes.status !== 200) return;
+
           const thumbData = thumbRes.data as any;
           const thumbIncluded = Array.isArray(thumbData?.included) ? thumbData.included : [];
           for (const item of thumbData?.data ?? []) {
-            const rels = item?.relationships?.field_gallery_of_photos?.data ?? [];
-            const firstMediaId = rels[0]?.id;
-            if (!firstMediaId) continue;
-            const mediaEntity = thumbIncluded.find((inc: any) => inc.type === 'media--image' && inc.id === firstMediaId);
+            const relData = item?.relationships?.[mediaField]?.data;
+            const mediaId = Array.isArray(relData) ? relData[0]?.id : relData?.id;
+            if (!mediaId) continue;
+            const mediaEntity = thumbIncluded.find((inc: any) => inc.type === 'media--image' && inc.id === mediaId);
             const fileId = mediaEntity?.relationships?.field_media_image?.data?.id;
             if (!fileId) continue;
             const fileEntity = thumbIncluded.find((inc: any) => inc.type === 'file--file' && inc.id === fileId);
@@ -87,8 +91,13 @@ try {
               if (itemId) thumbnailByItemId[itemId] = `${baseUrl}${uri}`;
             }
           }
-        }
-      } catch {}
+        } catch {}
+      }
+
+      await Promise.all([
+        fetchThumbnails('flower', 'field_gallery_of_photos'),
+        fetchThumbnails('addition', 'field_photo'),
+      ]);
     }
 
     order = dataFormatter.deserialize(raw.data);
@@ -123,8 +132,8 @@ const FULFILLMENT_LABEL = isPickup ? 'Listo para recoger' : 'En camino';
 const LABELS: Record<string, string> = { draft: 'Borrador', placed: 'En preparación', fulfillment: FULFILLMENT_LABEL, completed: 'Entregado', canceled: 'Cancelado', validation: 'Pendiente' };
 const stateKey = order?.state ?? 'placed';
 const paidEventDispatched = order?.data?.paid_event_dispatched === true;
-const isZellePending = checkoutData?.paymentMethod === 'zelle' && !paidEventDispatched;
-const isZellePaid = checkoutData?.paymentMethod === 'zelle' && paidEventDispatched;
+const isZellePending = checkoutData?.paymentMethod === 'zelle' && !paidEventDispatched && stateKey === 'placed';
+const isZellePaid = checkoutData?.paymentMethod === 'zelle' && (paidEventDispatched || stateKey === 'fulfillment' || stateKey === 'completed');
 const stateLabel = isZellePending ? 'Esperando pago Zelle' : ((order?.state && LABELS[order.state as string]) ?? stateKey);
 const meta = stateMeta[stateKey] ?? stateMeta.placed;
 
@@ -147,7 +156,7 @@ const items = Array.isArray(order?.order_items)
   ? order.order_items.map((item: any) => ({
       ...item,
       thumbnailUrl: thumbnailByItemId[item.drupal_internal__order_item_id] ?? null,
-      _custom: itemCustomizations[item.drupal_internal__order_item_id] ?? { hasCard: false, cardMessage: null, ribbonColor: null },
+      _custom: itemCustomizations[item.drupal_internal__order_item_id] ?? { hasCard: false, cardMessage: null, ribbonColor: null, isAddition: false },
     }))
   : [];
 
@@ -235,17 +244,17 @@ function formatAddr(addr: Record<string, string> | null | undefined): string {
         ) : (
           <div class="dc-items">
             {items.map((item: any) => (
-              <div class="dc-item-row">
+              <div class="dc-item-row" style={item._custom?.isAddition ? {background:'var(--sage-light)', borderRadius:'0.5rem', marginTop:'0.25rem', paddingLeft:'0.75rem'} : {}}>
                 <div class="dc-item-thumb">
                   {item.thumbnailUrl ? (
                     <img src={item.thumbnailUrl} alt={item.title} class="dc-thumb-img" loading="lazy" />
                   ) : (
-                    <span class="material-symbols-outlined dc-thumb-placeholder">local_florist</span>
+                    <span class="material-symbols-outlined dc-thumb-placeholder" style={item._custom?.isAddition ? {color:'var(--sage)'} : {}}>{item._custom?.isAddition ? 'redeem' : 'local_florist'}</span>
                   )}
                 </div>
                 <div class="dc-item-info">
-                  <p class="dc-item-title">{item.title}</p>
-                  <p class="dc-item-meta">Qty: {Math.round(parseFloat(item.quantity ?? '1'))} &middot; {item.unit_price?.formatted ?? ''}</p>
+                  <p class="dc-item-title" style={item._custom?.isAddition ? {color:'var(--sage)', fontSize:'0.8125rem'} : {}}>{item.title}</p>
+                  <p class="dc-item-meta" style={item._custom?.isAddition ? {color:'var(--sage)'} : {}}>Cant: {Math.round(parseFloat(item.quantity ?? '1'))} &middot; {item.unit_price?.formatted ?? ''}</p>
                   {(item._custom?.hasCard || item._custom?.ribbonColor) && (
                     <div class="dc-item-custom">
                       {item._custom?.hasCard && <span class="dc-item-badge">Con tarjeta{item._custom?.cardMessage ? `: "${item._custom.cardMessage}"` : ''}</span>}
@@ -253,13 +262,13 @@ function formatAddr(addr: Record<string, string> | null | undefined): string {
                     </div>
                   )}
                 </div>
-                <span class="dc-item-total">{item.total_price?.formatted ?? ''}</span>
+                <span class="dc-item-total" style={item._custom?.isAddition ? {color:'var(--sage)'} : {}}>{item.total_price?.formatted ?? ''}</span>
               </div>
             ))}
           </div>
         )}
         <div class="dc-total-row">
-          <span class="dc-total-label">Total</span>
+          <span class="dc-total-label">Subtotal</span>
           <span class="dc-total-value">{order.total_price?.formatted ?? ''}</span>
         </div>
       </div>

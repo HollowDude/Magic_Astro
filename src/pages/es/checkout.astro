@@ -110,6 +110,7 @@ if (resumeUuid && session.accessToken) {
       thumbnailUrl: null,
       hasCard: false,
       ribbonColor: null,
+      isAddition: item.purchased_entity?.type?.includes('addition') ?? false,
     })) ?? [],
   };
 

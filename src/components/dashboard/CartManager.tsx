@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, Fragment } from 'react';
 
 interface RibbonColorInfo {
   name: string;
@@ -283,6 +283,37 @@ export default function CartManager({ lang }: Props) {
     }
   };
 
+  const removeAddition = async (add: CartItemAddition, parentOrderId: number) => {
+    if (!window.confirm(t(lang, 'remove_confirm'))) return;
+    const snapshot = data;
+    if (!snapshot) return;
+
+    const sampleTotal = snapshot.totalPrice || snapshot.items[0]?.price || '';
+    const filteredItems = snapshot.items.filter(i => {
+      if (i.isAddition && i.itemId === add.orderItemId) return false;
+      return true;
+    }).map(i => ({
+      ...i,
+      additions: i.additions.filter(a => a.orderItemId !== add.orderItemId),
+    }));
+
+    const totals = computeTotals(filteredItems, sampleTotal);
+    const nextData = { ...snapshot, items: filteredItems, ...totals };
+    setData(nextData);
+    emitCartUpdated(nextData);
+
+    try {
+      await fetch(`/api/cart/items/${add.orderItemId}`, {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ order_id: parentOrderId }),
+      });
+    } catch {
+      setData(snapshot);
+      emitCartUpdated(snapshot);
+    }
+  };
+
   const handleClear = async () => {
     if (!data?.items.length) return;
     if (!window.confirm(t(lang, 'clear_confirm'))) return;
@@ -389,94 +420,128 @@ export default function CartManager({ lang }: Props) {
               {data.items.filter(i => !i.isAddition).map((item) => {
                 const isUpdating = updatingIds.has(item.itemId);
                 return (
-                  <tr key={item.itemId} className={`border-b border-border last:border-b-0 ${isUpdating ? 'opacity-60' : ''}`}>
-                    <td className="px-5 py-4">
-                      <div className="flex items-center gap-3">
-                        <div className="w-14 h-14 rounded-lg overflow-hidden bg-blush shrink-0">
-                          {item.thumbnailUrl ? (
-                            <img src={item.thumbnailUrl} alt={item.title} className="w-full h-full object-cover" loading="lazy" />
-                          ) : (
-                            <div className="w-full h-full flex items-center justify-center">
-                              <span className="material-symbols-outlined text-xl text-primary opacity-40 leading-none">local_florist</span>
-                            </div>
-                          )}
-                        </div>
-                        <div className="min-w-0">
-                          <p className="font-body text-sm font-semibold text-headline truncate">{item.title}</p>
-                          <div className="flex flex-wrap items-center gap-2 mt-1">
-                            {item.hasCard && (
-                              <span className="inline-flex items-center font-body text-muted" title={item.cardMessage ?? `Con tarjeta`}>
-                                <span className="material-symbols-outlined !text-sm leading-none">mail</span>
-                              </span>
-                            )}
-                            {item.ribbonColor && (
-                              <span className="inline-flex items-center gap-1 font-body text-[11px] text-muted" title={t(lang, 'cart.with_ribbon')}>
-                                <span className="w-2.5 h-2.5 rounded-full shrink-0" style={{ background: item.ribbonColor.hex, border: '1px solid rgba(0,0,0,0.12)' }} />
-                              </span>
-                            )}
-                            {item.additions && item.additions.length > 0 && (
-                              <span className="relative inline-flex items-center gap-0.5 font-body text-[11px] text-sage font-semibold group/additions">
-                                <span className="material-symbols-outlined !text-sm leading-none">redeem</span>
-                                {t(lang, 'cart.with_additions')} ({item.additions.length})
-                                <span className="absolute bottom-full left-1/2 -translate-x-1/2 mb-1.5 hidden group-hover/additions:flex flex-col gap-1 bg-headline text-white rounded-lg px-2.5 py-1.5 text-[11px] whitespace-nowrap z-200 min-w-[130px] shadow-lg">
-                                  {item.additions.map(a => (
-                                    <span key={a.orderItemId} className="flex items-center gap-1">
-                                      <span className="material-symbols-outlined !text-xs leading-none">redeem</span>
-                                      {a.title} · {a.unitPrice}
-                                    </span>
-                                  ))}
-                                </span>
-                              </span>
+                  <Fragment key={item.itemId}>
+                    <tr className={`border-b border-border last:border-b-0 ${isUpdating ? 'opacity-60' : ''}`}>
+                      <td className="px-5 py-4">
+                        <div className="flex items-center gap-3">
+                          <div className="w-14 h-14 rounded-lg overflow-hidden bg-blush shrink-0">
+                            {item.thumbnailUrl ? (
+                              <img src={item.thumbnailUrl} alt={item.title} className="w-full h-full object-cover" loading="lazy" />
+                            ) : (
+                              <div className="w-full h-full flex items-center justify-center">
+                                <span className="material-symbols-outlined text-xl text-primary opacity-40 leading-none">local_florist</span>
+                              </div>
                             )}
                           </div>
-                          <span className="sm:hidden font-body text-xs font-bold text-primary mt-1 block">{item.price}</span>
+                          <div className="min-w-0">
+                            <p className="font-body text-sm font-semibold text-headline truncate">{item.title}</p>
+                            <div className="flex flex-wrap items-center gap-2 mt-1">
+                              {item.hasCard && (
+                                <span className="inline-flex items-center font-body text-muted" title={item.cardMessage ?? `Con tarjeta`}>
+                                  <span className="material-symbols-outlined !text-sm leading-none">mail</span>
+                                </span>
+                              )}
+                              {item.ribbonColor && (
+                                <span className="inline-flex items-center gap-1 font-body text-[11px] text-muted" title={t(lang, 'cart.with_ribbon')}>
+                                  <span className="w-2.5 h-2.5 rounded-full shrink-0" style={{ background: item.ribbonColor.hex, border: '1px solid rgba(0,0,0,0.12)' }} />
+                                </span>
+                              )}
+                              {item.additions && item.additions.length > 0 && (
+                                <span className="inline-flex items-center gap-0.5 font-body text-[11px] text-sage font-semibold">
+                                  <span className="material-symbols-outlined !text-sm leading-none">redeem</span>
+                                  {t(lang, 'cart.with_additions')} ({item.additions.length})
+                                </span>
+                              )}
+                            </div>
+                            <span className="sm:hidden font-body text-xs font-bold text-primary mt-1 block">{item.price}</span>
+                          </div>
                         </div>
-                      </div>
-                    </td>
-                    <td className="px-5 py-4 hidden sm:table-cell align-middle">
-                      <span className="font-body text-sm text-body-color">{item.price}</span>
-                    </td>
-                    <td className="px-5 py-4 align-middle">
-                      <div className="flex items-center justify-center gap-1">
+                      </td>
+                      <td className="px-5 py-4 hidden sm:table-cell align-middle">
+                        <span className="font-body text-sm text-body-color">{item.price}</span>
+                      </td>
+                      <td className="px-5 py-4 align-middle">
+                        <div className="flex items-center justify-center gap-1">
+                          <button
+                            onClick={() => updateQuantity(item, item.quantity - 1)}
+                            disabled={item.quantity <= 1 || isUpdating}
+                            className="flex items-center justify-center w-7 h-7 rounded-full bg-blush text-headline border-none cursor-pointer transition-colors hover:bg-primary/15 disabled:opacity-30 disabled:cursor-not-allowed"
+                            aria-label="Decrease quantity"
+                          >
+                            <span className="material-symbols-outlined !text-sm leading-none">remove</span>
+                          </button>
+                          <span className="w-8 text-center font-body text-sm font-bold text-headline tabular-nums select-none">
+                            {isUpdating ? (
+                              <span className="inline-block w-3 h-3 rounded-full border-2 border-border border-t-primary animate-spin" />
+                            ) : (
+                              item.quantity
+                            )}
+                          </span>
+                          <button
+                            onClick={() => updateQuantity(item, item.quantity + 1)}
+                            disabled={isUpdating}
+                            className="flex items-center justify-center w-7 h-7 rounded-full bg-blush text-headline border-none cursor-pointer transition-colors hover:bg-primary/15 disabled:opacity-30 disabled:cursor-not-allowed"
+                            aria-label="Increase quantity"
+                          >
+                            <span className="material-symbols-outlined !text-sm leading-none">add</span>
+                          </button>
+                        </div>
+                      </td>
+                      <td className="px-5 py-4 text-right hidden sm:table-cell align-middle">
+                        <span className="font-body text-sm font-bold text-headline">{item.totalPrice}</span>
+                      </td>
+                      <td className="px-5 py-4 text-right align-middle">
                         <button
-                          onClick={() => updateQuantity(item, item.quantity - 1)}
-                          disabled={item.quantity <= 1 || isUpdating}
-                          className="flex items-center justify-center w-7 h-7 rounded-full bg-blush text-headline border-none cursor-pointer transition-colors hover:bg-primary/15 disabled:opacity-30 disabled:cursor-not-allowed"
-                          aria-label="Decrease quantity"
-                        >
-                          <span className="material-symbols-outlined !text-sm leading-none">remove</span>
-                        </button>
-                        <span className="w-8 text-center font-body text-sm font-bold text-headline tabular-nums select-none">
-                          {isUpdating ? (
-                            <span className="inline-block w-3 h-3 rounded-full border-2 border-border border-t-primary animate-spin" />
-                          ) : (
-                            item.quantity
-                          )}
-                        </span>
-                        <button
-                          onClick={() => updateQuantity(item, item.quantity + 1)}
+                          onClick={() => removeItem(item)}
                           disabled={isUpdating}
-                          className="flex items-center justify-center w-7 h-7 rounded-full bg-blush text-headline border-none cursor-pointer transition-colors hover:bg-primary/15 disabled:opacity-30 disabled:cursor-not-allowed"
-                          aria-label="Increase quantity"
+                          className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-transparent text-muted hover:text-red-500 hover:bg-red-50 border-none cursor-pointer transition-colors disabled:opacity-50"
+                          aria-label={t(lang, 'remove')}
                         >
-                          <span className="material-symbols-outlined !text-sm leading-none">add</span>
+                          <span className="material-symbols-outlined !text-lg leading-none">delete</span>
                         </button>
-                      </div>
-                    </td>
-                    <td className="px-5 py-4 text-right hidden sm:table-cell align-middle">
-                      <span className="font-body text-sm font-bold text-headline">{item.totalPrice}</span>
-                    </td>
-                    <td className="px-5 py-4 text-right align-middle">
-                      <button
-                        onClick={() => removeItem(item)}
-                        disabled={isUpdating}
-                        className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-transparent text-muted hover:text-red-500 hover:bg-red-50 border-none cursor-pointer transition-colors disabled:opacity-50"
-                        aria-label={t(lang, 'remove')}
-                      >
-                        <span className="material-symbols-outlined !text-lg leading-none">delete</span>
-                      </button>
-                    </td>
-                  </tr>
+                      </td>
+                    </tr>
+                    {item.additions && item.additions.length > 0 && item.additions.map((add) => {
+                      return (
+                        <tr key={add.orderItemId} className="border-b border-border last:border-b-0" style={{background:'var(--sage-light)'}}>
+                          <td className="px-5 py-3">
+                            <div className="flex items-center gap-3" style={{paddingLeft:'2rem'}}>
+                              <div className="w-9 h-9 rounded-lg overflow-hidden bg-white shrink-0">
+                                {add.thumbnailUrl ? (
+                                  <img src={add.thumbnailUrl} alt={add.title} className="w-full h-full object-cover" loading="lazy" />
+                                ) : (
+                                  <div className="w-full h-full flex items-center justify-center">
+                                    <span className="material-symbols-outlined !text-sm leading-none" style={{color:'var(--sage)'}}>redeem</span>
+                                  </div>
+                                )}
+                              </div>
+                              <div className="min-w-0">
+                                <p className="font-body text-sm font-semibold text-headline truncate">{add.title}</p>
+                              </div>
+                            </div>
+                          </td>
+                          <td className="px-5 py-3 hidden sm:table-cell align-middle">
+                            <span className="font-body text-sm" style={{color:'var(--sage)'}}>{add.unitPrice}</span>
+                          </td>
+                          <td className="px-5 py-3 align-middle text-center">
+                            <span className="font-body text-sm text-headline">{add.quantity}</span>
+                          </td>
+                          <td className="px-5 py-3 text-right hidden sm:table-cell align-middle">
+                            <span className="font-body text-sm font-bold" style={{color:'var(--sage)'}}>{add.totalPrice}</span>
+                          </td>
+                          <td className="px-5 py-3 text-right align-middle">
+                            <button
+                              onClick={() => removeAddition(add, item.orderId)}
+                              className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-transparent text-muted hover:text-red-500 hover:bg-red-50 border-none cursor-pointer transition-colors"
+                              aria-label={t(lang, 'remove')}
+                            >
+                              <span className="material-symbols-outlined !text-lg leading-none">delete</span>
+                            </button>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </Fragment>
                 );
               })}
             </tbody>
@@ -497,85 +562,6 @@ export default function CartManager({ lang }: Props) {
           </div>
         </div>
 
-        {/* ═══ Additions section ═══ */}
-        {data.items.filter(i => i.isAddition).length > 0 && (
-          <div style={{marginTop:'1.5rem'}}>
-            <h3 style={{display:'flex', alignItems:'center', gap:'0.5rem', fontFamily:'var(--font-heading)', fontSize:'1rem', fontWeight:600, color:'var(--headline)', marginBottom:'0.75rem'}}>
-              <span className="material-symbols-outlined" style={{fontSize:'1.125rem', color:'var(--sage)'}}>redeem</span>
-              {t(lang, 'cart.additions_section')}
-            </h3>
-            <div className="bg-white rounded-xl border border-border shadow-sm overflow-hidden">
-              <table className="w-full text-left">
-                <thead>
-                  <tr className="border-b border-border" style={{background:'var(--sage-light)'}}>
-                    <th className="font-body text-xs font-bold uppercase tracking-widest text-muted px-5 py-3.5">{t(lang, 'product')}</th>
-                    <th className="font-body text-xs font-bold uppercase tracking-widest text-muted px-5 py-3.5 hidden sm:table-cell">{t(lang, 'price')}</th>
-                    <th className="font-body text-xs font-bold uppercase tracking-widest text-muted px-5 py-3.5 text-center">{t(lang, 'quantity')}</th>
-                    <th className="font-body text-xs font-bold uppercase tracking-widest text-muted px-5 py-3.5 text-right hidden sm:table-cell">{t(lang, 'total')}</th>
-                    <th className="w-14 px-5 py-3.5" />
-                  </tr>
-                </thead>
-                <tbody>
-                  {data.items.filter(i => i.isAddition).map((item) => {
-                    const isUpdating = updatingIds.has(item.itemId);
-                    return (
-                      <tr key={item.itemId} className={`border-b border-border last:border-b-0 ${isUpdating ? 'opacity-60' : ''}`} style={{background:'var(--sage-light)'}}>
-                        <td className="px-5 py-4">
-                          <div className="flex items-center gap-3">
-                            <div className="w-10 h-10 rounded-lg overflow-hidden bg-blush shrink-0">
-                              {item.thumbnailUrl ? (
-                                <img src={item.thumbnailUrl} alt={item.title} className="w-full h-full object-cover" loading="lazy" />
-                              ) : (
-                                <div className="w-full h-full flex items-center justify-center">
-                                  <span className="material-symbols-outlined text-lg text-sage opacity-40 leading-none">redeem</span>
-                                </div>
-                              )}
-                            </div>
-                            <div className="min-w-0">
-                              <p className="font-body text-sm font-semibold text-headline truncate">{item.title}</p>
-                            </div>
-                          </div>
-                        </td>
-                        <td className="px-5 py-4 hidden sm:table-cell align-middle">
-                          <span className="font-body text-sm" style={{color:'var(--sage)'}}>{item.price}</span>
-                        </td>
-                        <td className="px-5 py-4 align-middle text-center">
-                          <span className="font-body text-sm font-bold text-headline">{item.quantity}</span>
-                        </td>
-                        <td className="px-5 py-4 text-right hidden sm:table-cell align-middle">
-                          <span className="font-body text-sm font-bold" style={{color:'var(--sage)'}}>{item.totalPrice}</span>
-                        </td>
-                        <td className="px-5 py-4 text-right align-middle">
-                          <button
-                            onClick={() => removeItem(item)}
-                            disabled={isUpdating}
-                            className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-transparent text-muted hover:text-red-500 hover:bg-red-50 border-none cursor-pointer transition-colors disabled:opacity-50"
-                            aria-label={t(lang, 'remove')}
-                          >
-                            <span className="material-symbols-outlined !text-lg leading-none">delete</span>
-                          </button>
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-              <div className="px-5 py-3 border-t border-border" style={{background:'var(--sage-light)'}}>
-                <div className="flex justify-between" style={{fontSize:'0.875rem'}}>
-                  <span style={{fontWeight:600, color:'var(--headline)'}}>{t(lang, 'cart.additions_subtotal')}</span>
-                  <span style={{fontWeight:700, color:'var(--sage)'}}>
-                    {(() => {
-                      const items = data.items.filter(i => i.isAddition);
-                      const total = items.reduce((s, i) => s + (parseFloat(i.unitPrice || '0') * i.quantity), 0);
-                      return formatMoney(total, items[0]?.totalPrice ?? '$0.00');
-                    })()}
-                  </span>
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
-
         {/* ═══ Summary ═══ */}
         <div className="bg-white rounded-xl border border-border shadow-sm p-6 sticky top-28">
           <h2 className="font-heading text-lg font-semibold text-headline mb-5">{t(lang, 'summary')}</h2>
@@ -591,6 +577,21 @@ export default function CartManager({ lang }: Props) {
                 {shippingConfig ? `+ $${shippingConfig.deliveryPrice.toFixed(2)} (${t(lang, 'shipping_optional')})` : t(lang, 'shipping_free')}
               </span>
             </div>
+            {data.items.filter(i => i.isAddition).length > 0 && (
+              <div className="flex items-center justify-between">
+                <span className="font-body text-sm text-body-color">
+                  <span className="material-symbols-outlined !text-sm leading-none align-middle mr-1" style={{color:'var(--sage)'}}>redeem</span>
+                  {t(lang, 'cart.additions_subtotal')}
+                </span>
+                <span className="font-body text-sm font-semibold" style={{color:'var(--sage)'}}>
+                  {(() => {
+                    const items = data.items.filter(i => i.isAddition);
+                    const total = items.reduce((s, i) => s + (parseFloat(i.unitPrice || '0') * i.quantity), 0);
+                    return formatMoney(total, items[0]?.totalPrice ?? '$0.00');
+                  })()}
+                </span>
+              </div>
+            )}
             <hr className="border-border" />
             <div className="flex items-center justify-between">
               <span className="font-body text-base font-bold text-headline">{t(lang, 'order_total')}</span>
