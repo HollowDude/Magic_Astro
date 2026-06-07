@@ -119,13 +119,35 @@ if (order?.field_checkout_data) {
   try { checkoutData = JSON.parse(order.field_checkout_data); } catch {}
 }
 
+// Check if a Zelle payment entity exists in Drupal (created by the bank callback)
+let hasZellePaymentEntity = false;
+if (order && checkoutData?.paymentMethod === 'zelle') {
+  try {
+    const baseUrl = (import.meta.env.NODEHIVE_BASE_URL as string).replace(/\/+$/, '');
+    const payRes = await fetch(
+      `${baseUrl}/jsonapi/commerce_payment/payment_manual?filter[order_id.id]=${id}&page[limit]=1`,
+      {
+        headers: {
+          Accept: 'application/vnd.api+json',
+          Authorization: `Bearer ${session.accessToken}`,
+          'api-key': import.meta.env.NODEHIVE_API_KEY as string,
+        },
+      },
+    );
+    if (payRes.ok) {
+      const payData = await payRes.json();
+      hasZellePaymentEntity = Array.isArray(payData?.data) && payData.data.length > 0;
+    }
+  } catch {}
+}
+
 const isPickup = checkoutData?.shippingMethod === 'pickup';
 const FULFILLMENT_LABEL = isPickup ? 'Ready for pickup' : 'Shipped';
 const LABELS: Record<string, string> = { draft: 'Draft', placed: 'Processing', fulfillment: FULFILLMENT_LABEL, completed: 'Delivered', canceled: 'Canceled', validation: 'Pending' };
 const stateKey = order?.state ?? 'placed';
 const paidEventDispatched = order?.data?.paid_event_dispatched === true;
-const isZellePending = checkoutData?.paymentMethod === 'zelle' && !paidEventDispatched && stateKey === 'placed';
-const isZellePaid = checkoutData?.paymentMethod === 'zelle' && (paidEventDispatched || stateKey === 'fulfillment' || stateKey === 'completed');
+const isZellePending = checkoutData?.paymentMethod === 'zelle' && hasZellePaymentEntity && !paidEventDispatched;
+const isZellePaid = checkoutData?.paymentMethod === 'zelle' && paidEventDispatched;
 const stateLabel = isZellePending ? 'Awaiting Zelle payment' : ((order?.state && LABELS[order.state as string]) ?? stateKey);
 const meta = stateMeta[stateKey] ?? stateMeta.placed;
 

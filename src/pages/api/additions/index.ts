@@ -77,7 +77,7 @@ export const GET: APIRoute = async ({ url }) => {
         id: prod.id,
         variationId: varAttrs.drupal_internal__variation_id,
         variationUuid: varData.id,
-        title: varAttrs.title ?? prod?.attributes?.title ?? '',
+        title: prod?.attributes?.title ?? varAttrs.title ?? '',
         price: price.formatted ?? '',
         priceNumber: parseFloat(price.number ?? '0'),
         thumbnailUrl,

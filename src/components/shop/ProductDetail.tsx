@@ -559,10 +559,6 @@ export default function ProductDetail({ product, lang, isLoggedIn, selectedVaria
           </div>
         )}
 
-        <p className="flex items-center justify-center gap-1.5 font-body text-[13px] text-muted">
-          <span className="material-symbols-outlined !text-base leading-none">local_shipping</span>
-          {t(lang, 'product.free_shipping')}
-        </p>
       </div>
     </div>
   );

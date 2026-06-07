@@ -201,7 +201,7 @@ export default function HeaderClient({ isLoggedIn, currentPath, lang, navLinks: 
     setCartLoading(true);
     const task = (async () => {
       try {
-        const res = await fetch('/api/cart/', {
+        const res = await fetch(`/api/cart/?lang=${lang}`, {
           cache: 'no-store',
           headers: { 'Cache-Control': 'no-store' },
         });

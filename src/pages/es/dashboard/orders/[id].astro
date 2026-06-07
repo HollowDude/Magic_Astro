@@ -22,6 +22,7 @@ let order: any = null;
 let fetchError = false;
 let itemCustomizations: Record<number, { hasCard: boolean; cardMessage: string | null; ribbonColor: { name: string; hex: string } | null; isAddition: boolean }> = {};
 let thumbnailByItemId: Record<number, string> = {};
+let titleByItemId: Record<number, string> = {};
 
 try {
   const raw = await nodehiveFetch<Record<string, unknown>>(
@@ -98,6 +99,57 @@ try {
         fetchThumbnails('flower', 'field_gallery_of_photos'),
         fetchThumbnails('addition', 'field_photo'),
       ]);
+
+      // Fetch translated titles for addition items
+      const additionVarUuids = rawIncluded
+        .filter((e: any) => e?.relationships?.purchased_entity?.data?.type?.includes('addition'))
+        .map((e: any) => e?.relationships?.purchased_entity?.data?.id)
+        .filter(Boolean);
+      if (additionVarUuids.length > 0) {
+        try {
+          const avp = additionVarUuids.map((u: string) => `filter[id][condition][value][]=${encodeURIComponent(u)}`).join('&');
+          const varPath = `/jsonapi/commerce_product_variation/addition?filter[id][condition][path]=id&filter[id][condition][operator]=IN&${avp}&include=product_id&page[limit]=50`;
+          const vr = await nodehiveFetch<Record<string, unknown>>(varPath, {
+            headers: { 'Content-Type': 'application/vnd.api+json', Accept: 'application/vnd.api+json' },
+            skipApiKey: false, cacheTtl: 60_000,
+          });
+          if (vr.status === 200) {
+            const vd = vr.data as any;
+            const prodUuids: string[] = [];
+            const v2p = new Map<string, string>();
+            for (const vi of vd?.data ?? []) {
+              if (vi?.id && vi?.relationships?.product_id?.data?.id) {
+                v2p.set(vi.id, vi.relationships.product_id.data.id);
+                prodUuids.push(vi.relationships.product_id.data.id);
+              }
+            }
+            if (prodUuids.length > 0) {
+              const uniqueP = [...new Set(prodUuids)];
+              const pp = uniqueP.map((u: string) => `filter[id][condition][value][]=${encodeURIComponent(u)}`).join('&');
+              const pr = await nodehiveFetch<Record<string, unknown>>(`/jsonapi/commerce_product/addition?filter[id][condition][path]=id&filter[id][condition][operator]=IN&${pp}&page[limit]=50`, {
+                headers: { 'Content-Type': 'application/vnd.api+json', Accept: 'application/vnd.api+json' },
+                lang, cacheTtl: 60_000,
+              });
+              if (pr.status === 200) {
+                const pd = pr.data as any;
+                const pTitleMap = new Map<string, string>();
+                for (const pi of pd?.data ?? []) {
+                  if (pi?.id && pi?.attributes?.title) pTitleMap.set(pi.id, pi.attributes.title);
+                }
+                for (const [varUuid, prodUuid] of v2p) {
+                  const t = pTitleMap.get(prodUuid);
+                  if (t) {
+                    const itemId = rawIncluded.find((e: any) =>
+                      e?.relationships?.purchased_entity?.data?.id === varUuid
+                    )?.attributes?.drupal_internal__order_item_id;
+                    if (itemId) titleByItemId[itemId] = t;
+                  }
+                }
+              }
+            }
+          }
+        } catch {}
+      }
     }
 
     order = dataFormatter.deserialize(raw.data);
@@ -127,13 +179,35 @@ if (order?.field_checkout_data) {
   try { checkoutData = JSON.parse(order.field_checkout_data); } catch {}
 }
 
+// Check if a Zelle payment entity exists in Drupal (created by the bank callback)
+let hasZellePaymentEntity = false;
+if (order && checkoutData?.paymentMethod === 'zelle') {
+  try {
+    const baseUrl = (import.meta.env.NODEHIVE_BASE_URL as string).replace(/\/+$/, '');
+    const payRes = await fetch(
+      `${baseUrl}/jsonapi/commerce_payment/payment_manual?filter[order_id.id]=${id}&page[limit]=1`,
+      {
+        headers: {
+          Accept: 'application/vnd.api+json',
+          Authorization: `Bearer ${session.accessToken}`,
+          'api-key': import.meta.env.NODEHIVE_API_KEY as string,
+        },
+      },
+    );
+    if (payRes.ok) {
+      const payData = await payRes.json();
+      hasZellePaymentEntity = Array.isArray(payData?.data) && payData.data.length > 0;
+    }
+  } catch {}
+}
+
 const isPickup = checkoutData?.shippingMethod === 'pickup';
 const FULFILLMENT_LABEL = isPickup ? 'Listo para recoger' : 'En camino';
 const LABELS: Record<string, string> = { draft: 'Borrador', placed: 'En preparación', fulfillment: FULFILLMENT_LABEL, completed: 'Entregado', canceled: 'Cancelado', validation: 'Pendiente' };
 const stateKey = order?.state ?? 'placed';
 const paidEventDispatched = order?.data?.paid_event_dispatched === true;
-const isZellePending = checkoutData?.paymentMethod === 'zelle' && !paidEventDispatched && stateKey === 'placed';
-const isZellePaid = checkoutData?.paymentMethod === 'zelle' && (paidEventDispatched || stateKey === 'fulfillment' || stateKey === 'completed');
+const isZellePending = checkoutData?.paymentMethod === 'zelle' && hasZellePaymentEntity && !paidEventDispatched;
+const isZellePaid = checkoutData?.paymentMethod === 'zelle' && paidEventDispatched;
 const stateLabel = isZellePending ? 'Esperando pago Zelle' : ((order?.state && LABELS[order.state as string]) ?? stateKey);
 const meta = stateMeta[stateKey] ?? stateMeta.placed;
 
@@ -155,6 +229,7 @@ if (order?.placed) {
 const items = Array.isArray(order?.order_items)
   ? order.order_items.map((item: any) => ({
       ...item,
+      title: titleByItemId[item.drupal_internal__order_item_id] ?? item.title,
       thumbnailUrl: thumbnailByItemId[item.drupal_internal__order_item_id] ?? null,
       _custom: itemCustomizations[item.drupal_internal__order_item_id] ?? { hasCard: false, cardMessage: null, ribbonColor: null, isAddition: false },
     }))

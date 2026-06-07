@@ -331,7 +331,7 @@ export default function CheckoutClient({ lang, cartData: cartJson, userAddresses
   const [enrichedCart, setEnrichedCart] = useState<CheckoutCartData | null>(null);
 
   useEffect(() => {
-    fetch(`/api/checkout/items?orderUuid=${cartData.orderUuid}`, { cache: 'no-store' })
+    fetch(`/api/checkout/items?orderUuid=${cartData.orderUuid}&lang=${lang}`, { cache: 'no-store' })
       .then(r => r.json())
       .then(data => {
         if (data?.ok && data?.items) {

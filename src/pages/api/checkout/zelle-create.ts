@@ -76,7 +76,7 @@ export const POST: APIRoute = async ({ request, cookies }) => {
     console.log('[zelle-create] Payment entity created:', paymentEntityId);
 
     return new Response(JSON.stringify({
-      ok: true,
+      ok: paymentRes.ok,
       zellePhone: import.meta.env.ZELLE_RECIPIENT_PHONE,
       zelleName: import.meta.env.ZELLE_RECIPIENT_NAME,
       amount: Number(amount).toFixed(2),

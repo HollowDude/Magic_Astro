@@ -96,6 +96,35 @@ async function getVariationThumbnailMap(uuids: string[]): Promise<Map<string, st
   return map;
 }
 
+async function getAdditionTitleMap(productUuids: string[], lang: string): Promise<Map<string, string>> {
+  const map = new Map<string, string>();
+  if (productUuids.length === 0) return map;
+
+  const uniqueUuids = [...new Set(productUuids)];
+  const valueParams = uniqueUuids.map(u => `filter[id][condition][value][]=${encodeURIComponent(u)}`).join('&');
+  const path = `/jsonapi/commerce_product/addition?filter[id][condition][path]=id&filter[id][condition][operator]=IN&${valueParams}&page[limit]=50`;
+
+  try {
+    const raw = await nodehiveFetch<Record<string, unknown>>(path, {
+      headers: { 'Content-Type': 'application/vnd.api+json', Accept: 'application/vnd.api+json' },
+      lang,
+      cacheTtl: 60_000,
+    });
+    if (raw.status !== 200) return map;
+
+    const data = raw.data as any;
+    for (const item of data?.data ?? []) {
+      if (item?.id && item?.attributes?.title) {
+        map.set(item.id, item.attributes.title);
+      }
+    }
+  } catch {
+    // silent fail
+  }
+
+  return map;
+}
+
 async function getAdditionThumbnailMap(uuids: string[]): Promise<Map<string, string>> {
   const map = new Map<string, string>();
   if (uuids.length === 0) return map;
@@ -150,9 +179,10 @@ async function fetchAdditionsData(
   additionByProductId: Map<number, number>,
   drupalSession?: string,
   accessToken?: string,
-): Promise<Map<number, AdditionDisplay[]>> {
+): Promise<{ additionsByParentId: Map<number, AdditionDisplay[]>, additionProductByOrderItem: Map<number, string> }> {
   const additionsByParentId = new Map<number, AdditionDisplay[]>();
-  if (orderUuids.length === 0 || additionByProductId.size === 0) return additionsByParentId;
+  const additionProductByOrderItem = new Map<number, string>();
+  if (orderUuids.length === 0 || additionByProductId.size === 0) return { additionsByParentId, additionProductByOrderItem };
 
   try {
     const baseUrl = NODEHIVE_BASE_URL.replace(/\/+$/, '');
@@ -169,7 +199,7 @@ async function fetchAdditionsData(
     }
 
     const res = await fetch(url, { headers });
-    if (!res.ok) return additionsByParentId;
+    if (!res.ok) return { additionsByParentId, additionProductByOrderItem };
 
     const json = await res.json();
     const included = json?.included ?? [];
@@ -203,6 +233,8 @@ async function fetchAdditionsData(
         const addEntry = orderItemById.get(addOiId);
         if (!addEntry) continue;
 
+        additionProductByOrderItem.set(addOiId, addRef.id);
+
         parentAdditions.push({
           orderItemId: addOiId,
           title: addEntry?.attributes?.title ?? '',
@@ -221,7 +253,7 @@ async function fetchAdditionsData(
     console.error('[cart] fetchAdditionsData error:', e);
   }
 
-  return additionsByParentId;
+  return { additionsByParentId, additionProductByOrderItem };
 }
 
 async function fetchCustomizations(
@@ -283,7 +315,7 @@ async function fetchCustomizations(
   }
 }
 
-export const GET: APIRoute = async ({ cookies }) => {
+export const GET: APIRoute = async ({ cookies, url }) => {
   const drupalSession = cookies.get('drupal_s')?.value;
   const decoded = drupalSession ? decodeURIComponent(drupalSession) : undefined;
   const session = await getSession(cookies);
@@ -382,11 +414,21 @@ export const GET: APIRoute = async ({ cookies }) => {
 
   const ribbonColors = await fetchRibbonColors();
 
-  const [thumbnailMap, customizationMap, additionsByParentId] = await Promise.all([
+  const [thumbnailMap, customizationMap, { additionsByParentId, additionProductByOrderItem }] = await Promise.all([
     getVariationThumbnailMap(Array.from(variationUuids)),
     fetchCustomizations(orderUuids, ribbonColors, decoded, accessToken),
     fetchAdditionsData(orderUuids, additionByProductId, decoded, accessToken),
   ]);
+
+  // Fetch translated addition titles
+  const lang = url.searchParams.get('lang') ?? 'es';
+  let additionTitleMap = new Map<string, string>();
+  if (additionProductByOrderItem.size > 0) {
+    const productUuids = Array.from(additionProductByOrderItem.values()).filter(Boolean) as string[];
+    if (productUuids.length > 0) {
+      additionTitleMap = await getAdditionTitleMap(productUuids, lang);
+    }
+  }
 
   // Fetch addition variation thumbnails
   let additionThumbnailMap = new Map<string, string>();
@@ -402,6 +444,7 @@ export const GET: APIRoute = async ({ cookies }) => {
       // Resolve thumbnails for parent additions
       const resolvedAdditions = parentAdditions.map(add => ({
         ...add,
+        title: additionTitleMap.get(additionProductByOrderItem.get(add.orderItemId) ?? '') ?? add.title,
         thumbnailUrl: additionThumbnailMap.get(
           cart.order_items.find((oi: any) => oi.order_item_id === add.orderItemId)
             ?.purchased_entity?.uuid ?? '',

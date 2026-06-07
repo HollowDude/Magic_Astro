@@ -176,7 +176,7 @@ export default function CartManager({ lang }: Props) {
   const fetchCart = useCallback(async ({ silent }: { silent?: boolean } = {}) => {
     try {
       if (!silent) setLoading(true);
-      const res = await fetch('/api/cart/', {
+      const res = await fetch(`/api/cart/?lang=${lang}`, {
         headers: { 'Content-Type': 'application/json' },
       });
       if (!res.ok) throw new Error('Not OK');

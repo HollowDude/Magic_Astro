@@ -76,6 +76,67 @@ async function getVariationThumbnailMap(uuids: string[]): Promise<Map<string, st
   return map;
 }
 
+async function getCheckoutAdditionTitleMap(variationUuids: string[], lang: string): Promise<Map<string, string>> {
+  const map = new Map<string, string>();
+  if (variationUuids.length === 0) return map;
+
+  const baseUrl = NODEHIVE_BASE_URL.replace(/\/+$/, '');
+  const valueParams = variationUuids.map(u => `filter[id][condition][value][]=${encodeURIComponent(u)}`).join('&');
+
+  try {
+    const varPath = `/jsonapi/commerce_product_variation/addition?filter[id][condition][path]=id&filter[id][condition][operator]=IN&${valueParams}&include=product_id&page[limit]=50`;
+    const varRaw = await nodehiveFetch<Record<string, unknown>>(varPath, {
+      headers: { 'Content-Type': 'application/vnd.api+json', Accept: 'application/vnd.api+json' },
+      skipApiKey: false,
+      cacheTtl: 60_000,
+    });
+
+    if (varRaw.status !== 200) return map;
+    const varData = varRaw.data as any;
+    const prodUuids: string[] = [];
+    const varToProd = new Map<string, string>();
+
+    for (const item of varData?.data ?? []) {
+      const varUuid = item?.id;
+      if (!varUuid) continue;
+      const prodRef = item?.relationships?.product_id?.data;
+      if (prodRef?.id) {
+        varToProd.set(varUuid, prodRef.id);
+        prodUuids.push(prodRef.id);
+      }
+    }
+
+    if (prodUuids.length === 0) return map;
+
+    const uniqueProdUuids = [...new Set(prodUuids)];
+    const prodValueParams = uniqueProdUuids.map(u => `filter[id][condition][value][]=${encodeURIComponent(u)}`).join('&');
+    const prodPath = `/jsonapi/commerce_product/addition?filter[id][condition][path]=id&filter[id][condition][operator]=IN&${prodValueParams}&page[limit]=50`;
+
+    const prodRaw = await nodehiveFetch<Record<string, unknown>>(prodPath, {
+      headers: { 'Content-Type': 'application/vnd.api+json', Accept: 'application/vnd.api+json' },
+      lang,
+      cacheTtl: 60_000,
+    });
+
+    if (prodRaw.status !== 200) return map;
+    const prodData = prodRaw.data as any;
+
+    for (const item of prodData?.data ?? []) {
+      if (item?.id && item?.attributes?.title) {
+        for (const [varUuid, prodUuid] of varToProd) {
+          if (prodUuid === item.id) {
+            map.set(varUuid, item.attributes.title);
+          }
+        }
+      }
+    }
+  } catch {
+    // silent fail
+  }
+
+  return map;
+}
+
 export const GET: APIRoute = async ({ url, cookies }) => {
   const session = await getSession(cookies);
   if (!session) {
@@ -86,6 +147,8 @@ export const GET: APIRoute = async ({ url, cookies }) => {
   if (!orderUuid) {
     return new Response(JSON.stringify({ ok: false, error: 'Missing orderUuid' }), { status: 400 });
   }
+
+  const lang = url.searchParams.get('lang') ?? 'es';
 
   try {
     const baseUrl = NODEHIVE_BASE_URL.replace(/\/+$/, '');
@@ -114,6 +177,7 @@ export const GET: APIRoute = async ({ url, cookies }) => {
     const included = Array.isArray(json?.included) ? json.included : [];
 
     const variationUuids: string[] = [];
+    const additionVariationUuids: string[] = [];
     const rawItems: Array<{
       inc: any;
       itemId: number;
@@ -129,7 +193,12 @@ export const GET: APIRoute = async ({ url, cookies }) => {
 
       const variationRel = inc?.relationships?.purchased_entity?.data;
       const variationUuid = variationRel?.id ?? null;
-      if (variationUuid) variationUuids.push(variationUuid);
+      if (variationUuid) {
+        variationUuids.push(variationUuid);
+        if (variationRel?.type?.includes('addition')) {
+          additionVariationUuids.push(variationUuid);
+        }
+      }
 
       rawItems.push({ inc, itemId, variationUuid });
     }
@@ -139,15 +208,21 @@ export const GET: APIRoute = async ({ url, cookies }) => {
       getVariationThumbnailMap(variationUuids),
     ]);
 
+    let additionTitleMap = new Map<string, string>();
+    if (additionVariationUuids.length > 0) {
+      additionTitleMap = await getCheckoutAdditionTitleMap(additionVariationUuids, lang);
+    }
+
     const items: CheckoutItemResponse[] = rawItems.map(({ inc, itemId, variationUuid }) => {
       const a = inc?.attributes ?? {};
       const ribbonRel = inc?.relationships?.field_ribbon_color?.data;
       const ribbonColorUuid = ribbonRel?.id ?? null;
 
       const variationRel2 = inc?.relationships?.purchased_entity?.data;
+      const isAddition = variationRel2?.type?.includes('addition') ?? false;
       return {
         itemId,
-        title: a.title ?? '',
+        title: isAddition ? (additionTitleMap.get(variationUuid ?? '') ?? a.title ?? '') : (a.title ?? ''),
         quantity: parseFloat(a.quantity ?? '1') || 0,
         unitPrice: a.unit_price?.formatted ?? '',
         totalPrice: a.total_price?.formatted ?? '',
@@ -156,7 +231,7 @@ export const GET: APIRoute = async ({ url, cookies }) => {
         hasCard: a.field_has_card ?? false,
         cardMessage: a.field_card_message ?? null,
         ribbonColor: ribbonColorDefFromUuid(ribbonColorUuid, ribbonColors),
-        isAddition: variationRel2?.type?.includes('addition') ?? false,
+        isAddition,
       };
     });
 
