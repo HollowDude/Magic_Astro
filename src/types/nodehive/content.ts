@@ -58,10 +58,7 @@ export interface HeroData {
     style: 'primary' | 'secondary';
   }>;
   pageId?: string;
-  pageInternalId?: number | null;
-  parentId?: string | null;
   componentId?: string;
-  componentInternalId?: number | null;
 }
 
 /**
@@ -109,9 +106,6 @@ export interface TestimonialItem {
  * Datos de comentarios desde el bloque.
  */
 export interface ComentariosData {
-  paragraphId?: string | null;
-  paragraphInternalId?: number | null;
-  parentId?: string | number | null;
   titulo: string | null;
   descripcion: string | null;
   comentarios: TestimonialItem[];
@@ -131,9 +125,6 @@ export interface CategoryData {
  * Datos de categorías desde el bloque.
  */
 export interface CategoryBlockData {
-  paragraphId?: string | null;
-  paragraphInternalId?: number | null;
-  parentId?: string | number | null;
   titulo: string | null;
   subTitulo: string | null;
   categorias: CategoryData[];
@@ -143,9 +134,6 @@ export interface CategoryBlockData {
  * Datos de contacto desde el bloque.
  */
 export interface ContactBlockData {
-  paragraphId?: string | null;
-  paragraphInternalId?: number | null;
-  parentId?: string | number | null;
   titulo: string | null;
   subTitulo: string | null;
   descripcion: string | null;
@@ -171,46 +159,8 @@ export interface FeaturedProduct {
  * Datos de productos destacados desde el bloque.
  */
 export interface FeaturedProductsData {
-  paragraphId?: string | null;
-  paragraphInternalId?: number | null;
-  parentId?: string | number | null;
   titulo: string | null;
   productos: FeaturedProduct[];
-}
-
-// ─────────────────────────────────────────────────────────────────────────────
-// Shop Page Paragraphs
-// ─────────────────────────────────────────────────────────────────────────────
-
-export interface ShopHeaderData {
-  paragraphId: string | null;
-  paragraphInternalId: number | null;
-  parentId?: string | number | null;
-  bundle?: string | null;
-  title: string | null;
-  description: string | null;
-  titleField?: string | null;
-  descriptionField?: string | null;
-}
-
-export interface ShopBodyData {
-  paragraphId: string | null;
-  paragraphInternalId: number | null;
-  parentId?: string | number | null;
-  bundle?: string | null;
-  filters?: string[] | null;
-  sorts?: string[] | null;
-  itemsPerPage?: number | null;
-  filtersField?: string | null;
-  sortsField?: string | null;
-  itemsPerPageField?: string | null;
-}
-
-export interface ShopPageData {
-  pageId?: string;
-  pageInternalId?: number | null;
-  header?: ShopHeaderData | null;
-  body?: ShopBodyData | null;
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -220,7 +170,6 @@ export interface ShopPageData {
 export interface AboutHeroData {
   paragraphId: string | null;
   paragraphInternalId: number | null;
-  parentId?: string | number | null;
   title: string | null;
   subtitle: string | null;
   fotoUrl: string | null;
@@ -229,7 +178,6 @@ export interface AboutHeroData {
 export interface AboutStoryData {
   paragraphId: string | null;
   paragraphInternalId: number | null;
-  parentId?: string | number | null;
   title: string | null;
   subtitle: string | null;
   description: string | null;
@@ -242,13 +190,11 @@ export interface AboutArchievementItem {
   title: string;
   description: string;
   icon: string;
-  fotoUrl: string | null;
 }
 
 export interface AboutArchievementsData {
   paragraphId: string | null;
   paragraphInternalId: number | null;
-  parentId?: string | number | null;
   title: string | null;
   items: AboutArchievementItem[];
 }
@@ -256,7 +202,6 @@ export interface AboutArchievementsData {
 export interface AboutCertificactionData {
   paragraphId: string | null;
   paragraphInternalId: number | null;
-  parentId?: string | number | null;
   title: string | null;
   subtitle: string | null;
   fotoUrl: string | null;
@@ -272,7 +217,6 @@ export interface AboutIdentityTag {
 export interface AboutIdentityData {
   paragraphId: string | null;
   paragraphInternalId: number | null;
-  parentId?: string | number | null;
   title: string | null;
   subtitle: string | null;
   tags: AboutIdentityTag[];
@@ -289,174 +233,6 @@ export interface AboutObjectiveItem {
 export interface AboutObjectifsData {
   paragraphId: string | null;
   paragraphInternalId: number | null;
-  parentId?: string | number | null;
   title: string | null;
   items: AboutObjectiveItem[];
-}
-
-// ─── Auth Page Paragraphs ───────────────────────────────────────────────────
-
-export interface AuthHeroPanelData {
-  paragraphId: string | null;
-  paragraphInternalId: number | null;
-  parentId?: string | number | null;
-  bundle: string;
-  title: string | null;
-  description: string | null;
-  fotoUrl: string | null;
-}
-
-export interface AuthFormHeaderData {
-  paragraphId: string | null;
-  paragraphInternalId: number | null;
-  parentId?: string | number | null;
-  bundle: string;
-  title: string | null;
-  subtitle: string | null;
-}
-
-export interface AuthPageData {
-  pageId?: string;
-  pageInternalId?: number | null;
-  heroPanel: AuthHeroPanelData | null;
-  formHeader: AuthFormHeaderData | null;
-}
-
-// ─────────────────────────────────────────────────────────────────────────────
-// Portfolio Page Paragraphs
-// ─────────────────────────────────────────────────────────────────────────────
-
-export interface PortfolioEventCategory {
-  id: string;
-  internalId: number | null;
-  name: string;
-  slug: string;
-}
-
-export interface PortfolioEventImage {
-  url: string;
-  alt: string;
-}
-
-export interface PortfolioEventItem {
-  id: string;
-  internalId: number | null;
-  bundle: string;
-  title: string;
-  subtitle: string | null;
-  category: PortfolioEventCategory | null;
-  images: PortfolioEventImage[];
-}
-
-export interface PortfolioHeaderData {
-  paragraphId: string | null;
-  paragraphInternalId: number | null;
-  parentId?: string | number | null;
-  bundle: string;
-  title: string | null;
-  subtitle: string | null;
-  description: string | null;
-}
-
-export interface PortfolioGalleryData {
-  paragraphId: string | null;
-  paragraphInternalId: number | null;
-  parentId?: string | number | null;
-  parentInternalId?: number | null;
-  bundle: string;
-  itemsPerLoad: number;
-  events: PortfolioEventItem[];
-  categories: PortfolioEventCategory[];
-}
-
-export interface PortfolioPageData {
-  pageId?: string;
-  pageInternalId?: number | null;
-  header: PortfolioHeaderData | null;
-  gallery: PortfolioGalleryData | null;
-}
-
-// Courses / Academy Page Paragraphs
-
-export type CourseFormat = 'in-person' | 'digital' | 'workshop';
-export type CourseLevel  = 'beginner' | 'intermediate' | 'advanced' | 'all';
-
-export interface CourseItem {
-  id:          string;
-  internalId:  number | null;
-  title:       string;
-  description: string | null;
-  imageUrl:    string | null;
-  price:       string | null;
-  isFree:      boolean;
-  format:      CourseFormat;
-  level:       CourseLevel | null;
-  date:        string | null;
-  duration:    string | null;
-  rating:      number | null;
-  reviewCount: number | null;
-  spotsLeft:   number | null;
-  ctaUrl:      string | null;
-  bundle:      string;
-}
-
-export interface CoursesHeroSlide {
-  image:       string;
-  label:       string;
-  badgeText:   string | null;
-  badgeColor:  string | null;
-  title:       string;
-  description: string | null;
-  ctaUrl:      string | null;
-  ctaText:     string | null;
-  ctaStyle?:   string | null;
-  ctaSecondaryUrl?:   string | null;
-  ctaSecondaryText?:  string | null;
-  ctaSecondaryStyle?: string | null;
-}
-
-export interface CoursesHeroData {
-  paragraphId:         string | null;
-  paragraphInternalId: number | null;
-  parentId?:           string | number | null;
-  bundle:              string;
-  slides:              CoursesHeroSlide[];
-}
-
-export interface CoursesStatsData {
-  paragraphId:         string | null;
-  paragraphInternalId: number | null;
-  parentId?:           string | number | null;
-  bundle:              string;
-  students:            string | null;
-  courses:             string | null;
-  rating:              string | null;
-  satisfaction:        string | null;
-  studentsPrefix?:     string | null;
-  studentsSuffix?:     string | null;
-  coursesPrefix?:      string | null;
-  coursesSuffix?:      string | null;
-  ratingPrefix?:       string | null;
-  ratingSuffix?:       string | null;
-  satisfactionPrefix?: string | null;
-  satisfactionSuffix?: string | null;
-}
-
-export interface CoursesGridData {
-  paragraphId:         string | null;
-  paragraphInternalId: number | null;
-  parentId?:           string | number | null;
-  bundle:              string;
-  title:               string | null;
-  subtitle:            string | null;
-  courses:             CourseItem[];
-  itemsPerLoad:        number;
-}
-
-export interface CoursesPageData {
-  pageId?:             string;
-  pageInternalId?:     number | null;
-  hero:                CoursesHeroData | null;
-  stats:               CoursesStatsData | null;
-  grid:                CoursesGridData | null;
 }

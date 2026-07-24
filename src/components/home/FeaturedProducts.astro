@@ -6,7 +6,6 @@ import type { Lang } from '@/i18n/ui';
 
 const lang = (Astro.currentLocale ?? getLangFromUrl(Astro.url)) as Lang;
 const data = await getFeaturedProductsParagraphData(lang);
-const { parentId = null } = Astro.props;
 
 const labels = {
   es: {
@@ -34,9 +33,6 @@ const titulo = data?.titulo ?? t.title;
   data-nodehive-entity-type="paragraph"
   data-nodehive-entity-bundle="_component_home_products"
   data-nodehive-entity-id={data?.paragraphId}
-  data-nodehive-entity-internal-id={data?.paragraphInternalId ?? null}
-  data-nodehive-parent_id={parentId ?? null}
-  data-nodehive-langcode={lang}
 >
   <div class="max-w-[80rem] mx-auto">
 
@@ -54,7 +50,7 @@ const titulo = data?.titulo ?? t.title;
           const href = `${prefix}${product.url}`;
 
           return (
-            <article class="bg-blush rounded-2xl overflow-hidden flex flex-col relative transition-all duration-250 ease-out cursor-pointer group hover:-translate-y-1 hover:shadow-[0_12px_36px_var(--headline-alpha-15)]">
+            <article class="bg-blush rounded-2xl overflow-hidden flex flex-col relative transition-all duration-250 ease-out cursor-pointer group hover:-translate-y-1 hover:shadow-[0_12px_36px_color-mix(in_srgb,var(--color-headline)_15%,transparent)]">
               <a href={href} class="absolute inset-0 z-[1] rounded-2xl outline-offset-4 focus-visible:outline-[2.5px] focus-visible:outline-primary" aria-label={product.title} tabindex="0"></a>
 
               <div class="relative w-full aspect-square pt-3 px-3">
@@ -67,7 +63,7 @@ const titulo = data?.titulo ?? t.title;
                     class="w-full h-full rounded-[0.625rem] object-cover transition-transform duration-400 ease-out group-hover:scale-105"
                   />
                 ) : (
-                  <div class="w-full h-full rounded-[0.625rem] bg-[var(--primary-blush-tint)] flex items-center justify-center transition-transform duration-400 ease-out group-hover:scale-105" role="img" aria-label={product.title}>
+                  <div class="w-full h-full rounded-[0.625rem] bg-[color-mix(in_srgb,var(--color-primary)_8%,var(--color-blush))] flex items-center justify-center transition-transform duration-400 ease-out group-hover:scale-105" role="img" aria-label={product.title}>
                     <span class="material-symbols-outlined text-5xl text-primary opacity-35">local_florist</span>
                   </div>
                 )}

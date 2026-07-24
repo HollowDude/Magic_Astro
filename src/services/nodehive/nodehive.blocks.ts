@@ -223,8 +223,6 @@ export async function getComentariosData(lang?: Lang): Promise<ComentariosData |
 
 export interface CategoryBlockData {
   blockId: string | null;
-  paragraphInternalId?: number | null;
-  parentId?: string | number | null;
   titulo: string | null;
   subTitulo: string | null;
   categorias: Array<{
@@ -314,8 +312,6 @@ interface ContactHomeBlock extends BlockContentBase {
 
 export interface ContactBlockData {
   paragraphId: string | null;
-  paragraphInternalId?: number | null;
-  parentId?: string | number | null;
   titulo: string | null;
   subTitulo: string | null;
   descripcion: string | null;
@@ -403,8 +399,6 @@ export interface FeaturedProduct {
 
 export interface FeaturedProductsData {
   blockId: string | null;
-  paragraphInternalId?: number | null;
-  parentId?: string | number | null;
   titulo: string | null;
   productos: FeaturedProduct[];
 }
@@ -548,11 +542,8 @@ export interface ServiceItem {
 
 export interface ServicesBlockData {
   blockId: string | null;
-  paragraphInternalId?: number | null;
-  parentId?: string | number | null;
   titulo: string | null;
   subTitulo: string | null;
-  subTituloPrimary: string | null;
   servicios: ServiceItem[];
 }
 
@@ -648,8 +639,6 @@ export interface TestimonialItem {
 
 export interface CommentsBlockData {
   blockId: string | null;
-  paragraphInternalId?: number | null;
-  parentId?: string | number | null;
   titulo: string | null;
   subTitulo: string | null;
   comentarios: TestimonialItem[];

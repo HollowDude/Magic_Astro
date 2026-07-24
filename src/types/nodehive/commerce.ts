@@ -24,7 +24,6 @@ export interface CommerceVariationBase {
   sku: string;
   title: string;
   price: CommercePrice;
-  drupal_internal__variation_id?: number;
 }
 
 /**

@@ -7,7 +7,6 @@ import type { Lang } from '@/i18n/ui';
 const lang = (Astro.currentLocale ?? getLangFromUrl(Astro.url)) as Lang;
 const data = await getContactUsParagraphData(lang);
 const prefix = getPrefix(lang);
-const { parentId = null } = Astro.props;
 
 const descripcionFallback = lang === 'en'
   ? "We bring your floral dreams to life. We design unique arrangements tailored to your tastes and needs, ideal for weddings, celebrations, corporate events, or special gifts."
@@ -25,9 +24,6 @@ const ctaHref   = data?.ctaUrl    ?? `${prefix}/`;
   data-nodehive-entity-type="paragraph"
   data-nodehive-entity-bundle="_component_home_contact_us"
   data-nodehive-entity-id={data?.paragraphId}
-  data-nodehive-entity-internal-id={data?.paragraphInternalId ?? null}
-  data-nodehive-parent_id={parentId ?? null}
-  data-nodehive-langcode={lang}
 >
   <div class="max-w-[1200px] mx-auto px-6 flex flex-col lg:flex-row items-center gap-12 lg:gap-20">
     
@@ -57,13 +53,12 @@ const ctaHref   = data?.ctaUrl    ?? `${prefix}/`;
       <p class="font-body text-lg leading-relaxed text-body-color mb-10 max-w-[600px] mx-auto lg:mx-0" data-nodehive-field="field_description">
         {descripcion}
       </p>
-      <button
-        type="button"
-        onclick="window.dispatchEvent(new CustomEvent('open-contact-modal'))"
-        class="inline-flex items-center justify-center h-14 px-10 rounded-full bg-primary text-white text-base font-bold no-underline transition-all duration-200 hover:scale-105 hover:bg-primary-dark shadow-[0_10px_20px_var(--primary-alpha-30)] cursor-pointer"
+      <a 
+        href={ctaHref}
+        class="inline-flex items-center justify-center h-14 px-10 rounded-full bg-primary text-white text-base font-bold no-underline transition-all duration-200 hover:scale-105 hover:bg-primary-dark shadow-[0_10px_20px_color-mix(in_srgb,var(--color-primary)_30%,transparent)]"
       >
         {ctaLabel}
-      </button>
+      </a>
     </div>
 
   </div>

@@ -38,8 +38,6 @@ const MAX_CACHE_ENTRIES = 500;
 
 /** TTL por defecto en ms. 0 en dev para ver cambios inmediatamente. */
 const DEFAULT_TTL_MS: number = import.meta.env.PROD ? 60_000 : 0;
-/** Timeout por defecto en ms para requests HTTP. */
-const DEFAULT_TIMEOUT_MS: number = 7_000;
 
 function cacheGet<T>(key: string): RawResponse<T> | null {
   const entry = _cache.get(key);
@@ -76,21 +74,6 @@ export interface RequestOptions {
    * > 0       → TTL explícito.
    */
   cacheTtl?: number;
-  /**
-   * Timeout en ms para cortar la request.
-   * undefined → usa DEFAULT_TIMEOUT_MS (7000).
-   * 0         → sin timeout.
-   */
-  timeoutMs?: number;
-  /**
-   * Si true, no envía el header api-key (útil para login).
-   */
-  skipApiKey?: boolean;
-  /**
-   * Token Bearer para autenticación como usuario (para mutaciones que requieren
-   * sesión de usuario, no solo api-key).
-   */
-  bearerToken?: string;
 }
 
 export interface RawResponse<T> {
@@ -102,7 +85,7 @@ export interface RawResponse<T> {
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
 function langPrefix(lang: string | undefined): string {
-  if (!lang) return '';
+  if (!lang || lang === NODEHIVE_DEFAULT_LANG) return '';
   return `/${lang}`;
 }
 
@@ -120,15 +103,10 @@ export async function nodehiveFetch<T = unknown>(
     sessionCookie,
     lang,
     cacheTtl,
-    timeoutMs,
-    skipApiKey,
-    bearerToken,
   } = options;
 
   const effectiveTtl = cacheTtl ?? DEFAULT_TTL_MS;
-  const effectiveTimeout = timeoutMs ?? DEFAULT_TIMEOUT_MS;
-  const baseUrl = NODEHIVE_BASE_URL.replace(/\/+$/, '');
-  const url          = `${baseUrl}${langPrefix(lang)}${path}`;
+  const url          = `${NODEHIVE_BASE_URL}${langPrefix(lang)}${path}`;
 
   // ── Hit de caché ────────────────────────────────────────────────────────────
   if (method === 'GET' && effectiveTtl > 0) {
@@ -141,10 +119,9 @@ export async function nodehiveFetch<T = unknown>(
   const headers: Record<string, string> = {
     'Content-Type': isForm ? 'application/x-www-form-urlencoded' : 'application/json',
     Accept:         'application/json',
-    ...(!skipApiKey ? { 'api-key': NODEHIVE_API_KEY } : {}),
+    'api-key':      NODEHIVE_API_KEY,
     ...extraHeaders,
   };
-  if (bearerToken) headers['Authorization'] = `Bearer ${bearerToken}`;
   if (sessionCookie) headers['Cookie'] = sessionCookie;
 
   let serializedBody: string | undefined;
@@ -156,30 +133,13 @@ export async function nodehiveFetch<T = unknown>(
 
   // ── Fetch ───────────────────────────────────────────────────────────────────
   let response: Response;
-  const controller = new AbortController();
-  const timeoutId = effectiveTimeout > 0
-    ? setTimeout(() => controller.abort(), effectiveTimeout)
-    : null;
   try {
-    response = await fetch(url, {
-      method,
-      headers,
-      body: serializedBody,
-      signal: controller.signal,
-    });
+    response = await fetch(url, { method, headers, body: serializedBody });
   } catch (networkError) {
-    const errorName = (networkError as { name?: string })?.name;
-    if (errorName === 'AbortError') {
-      throw new Error(
-        `Tiempo de espera agotado (${effectiveTimeout} ms) al conectar con NodeHive en ${url}.`,
-      );
-    }
     throw new Error(
       `No se pudo conectar con NodeHive en ${url}. ` +
       `Verificá que el servidor esté corriendo. (${networkError})`,
     );
-  } finally {
-    if (timeoutId) clearTimeout(timeoutId);
   }
 
   if (response.status === 404 && lang && lang !== NODEHIVE_DEFAULT_LANG) {

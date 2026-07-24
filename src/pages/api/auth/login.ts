@@ -18,31 +18,14 @@ export const POST: APIRoute = async ({ request, cookies }) => {
 
   const result = await login({ username: username.trim(), password });
 
-  console.log('[Auth Login] result:', JSON.stringify({ ok: result.ok, statusCode: result.statusCode, error: result.error }));
-
   if (!result.ok) {
-    const status = result.statusCode ?? 401;
-    return json({ ok: false, error: result.error }, status);
+    return json({ ok: false, error: result.error }, result.statusCode === 403 ? 403 : 401);
   }
 
-  await setSession(cookies, result.data);
+  await setSession(cookies, result.data); // ← await
 
-  const { csrfToken: _c, logoutToken: _l, sessionCookie: _s, accessToken: _a, ...publicUser } = result.data;
-
-  const responseHeaders: Record<string, string> = { 'Content-Type': 'application/json' };
-
-  if (result.data.sessionCookie) {
-    const cookieMatch = result.data.sessionCookie.match(/^([^=]+=[^;]+)/);
-    if (cookieMatch) {
-      const encoded = encodeURIComponent(cookieMatch[1]);
-      responseHeaders['Set-Cookie'] = `drupal_s=${encoded}; Path=/; HttpOnly; SameSite=Lax; Max-Age=2000000`;
-    }
-  }
-
-  return new Response(JSON.stringify({ ok: true, user: publicUser }), {
-    status: 200,
-    headers: responseHeaders,
-  });
+  const { csrfToken: _c, logoutToken: _l, ...publicUser } = result.data;
+  return json({ ok: true, user: publicUser }, 200);
 };
 
 function json(data: unknown, status: number): Response {

@@ -1,53 +1,14 @@
 ---
 import HeaderClient from '@/components/ui/HeaderClient';
-import ClientErrorBoundary from '@/components/ui/ClientErrorBoundary';
 import { nodehiveFetch } from '@/services/nodehive/nodehive.client';
 import { getSession } from '@/services/session.service';
 import { getLangFromUrl, getPrefix } from '@/i18n/utils';
-import { getHeaderLogoData } from '@/services/nodehive/nodehive.header';
 import type { Lang } from '@/i18n/ui';
-import { existsSync, readdirSync } from 'node:fs';
-import path from 'node:path';
 
 const session     = await getSession(Astro.cookies);
 const isLoggedIn  = !!session;
 const currentPath = Astro.url.pathname;
 const lang = (Astro.currentLocale ?? getLangFromUrl(Astro.url)) as 'es' | 'en';
-
-// Check for profile picture: local upload first, then Drupal user_picture
-let userPicture: string | null = null;
-if (session) {
-  // Local upload takes priority (user's most recent action)
-  const uploadsDir = path.resolve(process.cwd(), 'data/uploads/profiles');
-  try {
-    if (existsSync(uploadsDir)) {
-      const files = readdirSync(uploadsDir);
-      const match = files.find(f => f.startsWith(`${session.uid}.`));
-      if (match) userPicture = `/api/files/profiles/${match}`;
-    }
-  } catch { /* ignore */ }
-
-  // Fall back to Drupal user_picture
-  if (!userPicture && session.accessToken) {
-    try {
-      const restRes = await nodehiveFetch<Record<string, unknown>>(
-        `/user/${session.uid}?_format=json`,
-        {
-          headers: { Accept: 'application/json' },
-          lang,
-          bearerToken: session.accessToken,
-        },
-      );
-      if (restRes.status === 200) {
-        const restData = restRes.data as Record<string, any>;
-        const pictureUrl = restData?.user_picture?.[0]?.url;
-        if (pictureUrl) {
-          userPicture = `/api/files/drupal-proxy?url=${encodeURIComponent(pictureUrl)}`;
-        }
-      }
-    } catch { /* ignore */ }
-  }
-}
 
 interface MenuLink {
   title: string;
@@ -60,7 +21,7 @@ interface MenuResponse {
 
 let navLinks: { label: string; href: string }[] = [];
 try {
-  const res = await nodehiveFetch<MenuResponse>('/jsonapi/menu_items/main', {
+  const res = await nodehiveFetch<MenuResponse>('/api/menu_items/main', {
     lang,
     cacheTtl: 30_000,
   });
@@ -78,18 +39,12 @@ try {
       });
   }
 } catch (_) {}
-
-const headerLogo = await getHeaderLogoData(lang);
 ---
 
-<ClientErrorBoundary client:load>
-  <HeaderClient
-    isLoggedIn={isLoggedIn}
-    currentPath={currentPath}
-    lang={lang}
-    navLinks={navLinks}
-    headerLogoData={headerLogo}
-    userPicture={userPicture}
-    client:load
-  />
-</ClientErrorBoundary>
+<HeaderClient
+  isLoggedIn={isLoggedIn}
+  currentPath={currentPath}
+  lang={lang}
+  navLinks={navLinks}
+  client:load
+/>

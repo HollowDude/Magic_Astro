@@ -19,65 +19,20 @@ export interface ShopCategory {
 // Exportado para que ShopContent.astro pueda validar el param de URL en SSR
 export type SortKey = 'featured' | 'price_asc' | 'price_desc' | 'newest';
 
-export type ShopFilterKey = 'categories' | 'price' | 'colors' | 'type' | 'ocasion';
-
-interface ShopBodyFields {
-  filters?: string | null;
-  sorts?: string | null;
-  itemsPerPage?: string | null;
-}
-
 interface Props {
   products:      ProductCardData[];
   categories:    ShopCategory[];
   lang:          Lang;
-  isLoggedIn?:   boolean;
+  // Todos los parámetros iniciales vienen del SSR (leídos desde la URL por ShopContent.astro)
   initialCat?:    string;
   initialPrice?:  string;
-  initialColors?: string;
-  initialTipos?:  string;
-  initialOcasiones?: string;
+  initialColors?: string; // comma-separated
+  initialTipos?:  string; // comma-separated
   initialSort?:   SortKey;
   initialPage?:   number;
-  enabledFilters?: ShopFilterKey[];
-  enabledSorts?:   SortKey[];
-  itemsPerPage?:   number;
-  bodyFields?:     ShopBodyFields | null;
 }
 
-const DEFAULT_FILTERS: ShopFilterKey[] = ['categories', 'price', 'colors', 'type'];
-const DEFAULT_SORTS: SortKey[] = ['featured', 'price_asc', 'price_desc', 'newest'];
-const DEFAULT_ITEMS_PER_PAGE = 9;
-const EMPTY_SET = new Set<string>();
-
-const COLOR_FALLBACK_MAP: Record<string, string> = {
-  orange:    '#f97316',
-  naranja:   '#f97316',
-  pink:      '#f9a8d4',
-  rosa:      '#f9a8d4',
-  purple:    '#a855f7',
-  morado:    '#a855f7',
-  lila:      '#a855f7',
-  red:       '#ef4444',
-  rojo:      '#ef4444',
-  white:     '#f5f5f5',
-  blanco:    '#f5f5f5',
-  yellow:    '#fde047',
-  amarillo:  '#fde047',
-  blue:      '#3b82f6',
-  azul:      '#3b82f6',
-  green:     '#22c55e',
-  verde:     '#22c55e',
-  ivory:     '#f3e7d3',
-  marfil:    '#f3e7d3',
-  beige:     '#d8c3a5',
-};
-
-function resolveColorHex(name: string | null, hex: string | null): string {
-  if (hex) return hex.startsWith('#') ? hex : `#${hex}`;
-  if (!name) return '';
-  return COLOR_FALLBACK_MAP[name.toLowerCase()] ?? '';
-}
+const ITEMS_PER_PAGE = 9;
 
 function toSlug(name: string): string {
   return name.toLowerCase().replace(/\s+/g, '-');
@@ -92,31 +47,21 @@ interface SidebarProps {
   selectedPrice: string;
   selectedColors: Set<string>;
   selectedTipos: Set<string>;
-  selectedOcasiones: Set<string>;
   availableColors: { name: string; hex: string }[];
   availableTipos: string[];
-  availableOcasiones: string[];
   priceRanges: { key: string; label: string }[];
   hasFilters: boolean;
-  showCategories: boolean;
-  showPrice: boolean;
-  showColors: boolean;
-  showTipos: boolean;
-  showOcasion: boolean;
-  filtersField?: string | null;
   onCatChange: (slug: string) => void;
   onPriceChange: (key: string) => void;
   onColorToggle: (name: string) => void;
   onTipoToggle: (tipo: string) => void;
-  onOcasionToggle: (name: string) => void;
   onClear: () => void;
 }
 
 function SidebarContent({
-  lang, categories, selectedCat, selectedPrice, selectedColors, selectedTipos, selectedOcasiones,
-  availableColors, availableTipos, availableOcasiones, priceRanges, hasFilters,
-  showCategories, showPrice, showColors, showTipos, showOcasion, filtersField,
-  onCatChange, onPriceChange, onColorToggle, onTipoToggle, onOcasionToggle, onClear,
+  lang, categories, selectedCat, selectedPrice, selectedColors, selectedTipos,
+  availableColors, availableTipos, priceRanges, hasFilters,
+  onCatChange, onPriceChange, onColorToggle, onTipoToggle, onClear,
 }: SidebarProps) {
   const checkboxClass = "w-4 h-4 accent-primary cursor-pointer shrink-0 rounded-[0.25rem]";
   const radioClass    = "w-4 h-4 accent-primary cursor-pointer shrink-0";
@@ -125,8 +70,8 @@ function SidebarContent({
   const titleClass    = "font-body text-[13px] font-bold text-headline pb-2.5 border-b border-border uppercase tracking-widest mb-3";
 
   return (
-    <div className="flex flex-col gap-7" data-nodehive-field={filtersField ?? undefined}>
-      {showCategories && categories.length > 0 && (
+    <div className="flex flex-col gap-7">
+      {categories.length > 0 && (
         <section>
           <h3 className={titleClass}>{t(lang, 'shop.filters.categories')}</h3>
           <div className="flex flex-col gap-2">
@@ -141,28 +86,25 @@ function SidebarContent({
         </section>
       )}
 
-      {showPrice && (
-        <section>
-          <h3 className={titleClass}>{t(lang, 'shop.filters.price')}</h3>
-          <div className="flex flex-col gap-2">
-            {priceRanges.map(range => (
-              <label key={range.key} className={labelClass}>
-                <input type="radio" name="shop-price" checked={selectedPrice === range.key}
-                  onChange={() => onPriceChange(range.key)} className={radioClass} />
-                <span className={textClass}>{range.label}</span>
-              </label>
-            ))}
-          </div>
-        </section>
-      )}
+      <section>
+        <h3 className={titleClass}>{t(lang, 'shop.filters.price')}</h3>
+        <div className="flex flex-col gap-2">
+          {priceRanges.map(range => (
+            <label key={range.key} className={labelClass}>
+              <input type="radio" name="shop-price" checked={selectedPrice === range.key}
+                onChange={() => onPriceChange(range.key)} className={radioClass} />
+              <span className={textClass}>{range.label}</span>
+            </label>
+          ))}
+        </div>
+      </section>
 
-      {showColors && availableColors.length > 0 && (
+      {availableColors.length > 0 && (
         <section>
           <h3 className={titleClass}>{t(lang, 'shop.filters.colors')}</h3>
           <div className="flex flex-wrap gap-2 mt-3">
             {availableColors.map(({ name, hex }) => {
               const active = selectedColors.has(name);
-              const dotFill = hex || 'var(--muted)';
               return (
                 <button key={name} type="button" title={name}
                   onClick={() => onColorToggle(name)}
@@ -171,7 +113,7 @@ function SidebarContent({
                       ? 'border-primary scale-115 shadow-[0_0_0_2px_white,0_0_0_4px_var(--primary)]'
                       : 'border-black/10 shadow-sm'
                   }`}
-                  style={{ background: dotFill }}
+                  style={{ background: hex || 'var(--muted)' }}
                 />
               );
             })}
@@ -179,7 +121,7 @@ function SidebarContent({
         </section>
       )}
 
-      {showTipos && availableTipos.length > 0 && (
+      {availableTipos.length > 0 && (
         <section>
           <h3 className={titleClass}>{t(lang, 'shop.filters.type')}</h3>
           <div className="flex flex-col gap-2">
@@ -190,25 +132,6 @@ function SidebarContent({
                 <label key={tipo} className={labelClass}>
                   <input type="checkbox" checked={selectedTipos.has(tipo)}
                     onChange={() => onTipoToggle(tipo)} className={checkboxClass} />
-                  <span className={textClass}>{label}</span>
-                </label>
-              );
-            })}
-          </div>
-        </section>
-      )}
-
-      {showOcasion && availableOcasiones.length > 0 && (
-        <section>
-          <h3 className={titleClass}>{t(lang, 'shop.filters.ocasion')}</h3>
-          <div className="flex flex-col gap-2">
-            {availableOcasiones.map(ocasion => {
-              const keyAttempt = `shop.filters.ocasion.${ocasion.toLowerCase().replace(/\s+/g, '').normalize('NFD').replace(/[\u0300-\u036f]/g, '')}` as UiKey;
-              const label = (ui[lang] as Record<string, string>)[keyAttempt] ?? ocasion;
-              return (
-                <label key={ocasion} className={labelClass}>
-                  <input type="checkbox" checked={selectedOcasiones.has(ocasion)}
-                    onChange={() => onOcasionToggle(ocasion)} className={checkboxClass} />
                   <span className={textClass}>{label}</span>
                 </label>
               );
@@ -232,18 +155,13 @@ function SidebarContent({
 // ── ShopClient ────────────────────────────────────────────────────────────────
 
 export default function ShopClient({
-  products, categories, lang, isLoggedIn = false,
+  products, categories, lang,
   initialCat    = '',
   initialPrice  = '',
   initialColors = '',
   initialTipos  = '',
-  initialOcasiones = '',
   initialSort   = 'featured',
   initialPage   = 1,
-  enabledFilters,
-  enabledSorts,
-  itemsPerPage = DEFAULT_ITEMS_PER_PAGE,
-  bodyFields,
 }: Props) {
   const priceRanges = useMemo(() => [
     { key: 'under50',  label: t(lang, 'shop.filters.price.under50'),  min: 0,   max: 50       },
@@ -252,41 +170,17 @@ export default function ShopClient({
     { key: 'over200',  label: t(lang, 'shop.filters.price.over200'),  min: 200, max: Infinity },
   ], [lang]);
 
-   const availableTipos = useMemo(() => {
-     const set = new Set<string>();
-     products.forEach(p => {
-       const vars = p.variations?.length ? p.variations : [{ tipo: p.tipo }];
-       vars.forEach(v => { if (v.tipo) set.add(v.tipo); });
-     });
-     return Array.from(set);
-   }, [products]);
-
-  const availableOcasiones = useMemo(() => {
-    const set = new Set<string>();
-    products.forEach(p => {
-      if (Array.isArray(p.ocasiones)) {
-        p.ocasiones.forEach(o => { if (o) set.add(o); });
-      }
-    });
-    return Array.from(set);
+  const availableColors = useMemo(() => {
+    const map = new Map<string, string>();
+    products.forEach(p => { if (p.colorName) map.set(p.colorName, p.colorHex ?? ''); });
+    return Array.from(map.entries()).map(([name, hex]) => ({ name, hex }));
   }, [products]);
 
-  const filterKeys = enabledFilters ?? DEFAULT_FILTERS;
-  const filterKeySignature = filterKeys.join('|');
-  const filtersEnabled = useMemo(() => new Set(filterKeys), [filterKeySignature]);
-
-  const sortKeySignature = enabledSorts ? enabledSorts.join('|') : '';
-  const sortOptions = useMemo(() => {
-    if (enabledSorts && enabledSorts.length > 0) return enabledSorts;
-    if (enabledSorts && enabledSorts.length === 0) return ['featured'];
-    return DEFAULT_SORTS;
-  }, [sortKeySignature]);
-  const showSortMenu = sortOptions.length > 1;
-
-  const perPage = Math.max(1, itemsPerPage);
-  const filtersField = bodyFields?.filters ?? undefined;
-  const sortsField = bodyFields?.sorts ?? undefined;
-  const itemsPerPageField = bodyFields?.itemsPerPage ?? undefined;
+  const availableTipos = useMemo(() => {
+    const set = new Set<string>();
+    products.forEach(p => { if (p.tipo) set.add(p.tipo); });
+    return Array.from(set);
+  }, [products]);
 
   // Estado inicializado desde props SSR (que a su vez vienen de la URL)
   const [selectedCat,    setSelectedCat]    = useState<string>(initialCat);
@@ -297,79 +191,18 @@ export default function ShopClient({
   const [selectedTipos,  setSelectedTipos]  = useState<Set<string>>(
     () => new Set(initialTipos.split(',').filter(Boolean)),
   );
-  const [selectedOcasiones, setSelectedOcasiones] = useState<Set<string>>(
-    () => new Set(initialOcasiones.split(',').filter(Boolean)),
-  );
   const [sortBy,         setSortBy]         = useState<SortKey>(initialSort);
   const [page,           setPage]           = useState(initialPage);
   const [filtersOpen,    setFiltersOpen]    = useState(false);
   const [sortOpen,       setSortOpen]       = useState(false);
 
-  const showCategories = filtersEnabled.has('categories');
-  const showPrice = filtersEnabled.has('price');
-  const showColors = filtersEnabled.has('colors');
-  const showTipos = filtersEnabled.has('type');
-  const showOcasion = filtersEnabled.has('ocasion');
-
-  const activeSelectedCat = showCategories ? selectedCat : '';
-  const activeSelectedPrice = showPrice ? selectedPrice : '';
-  const activeSelectedColors = showColors ? selectedColors : EMPTY_SET;
-  const activeSelectedTipos = showTipos ? selectedTipos : EMPTY_SET;
-  const activeSelectedOcasiones = showOcasion ? selectedOcasiones : EMPTY_SET;
-
-  const availableColors = useMemo(() => {
-    const map = new Map<string, string>();
-    const typeFilter = activeSelectedTipos.size > 0 ? activeSelectedTipos : null;
-    products.forEach(p => {
-      const vars = p.variations?.length
-        ? p.variations
-        : [{ colorName: p.colorName, colorHex: p.colorHex, tipo: p.tipo }];
-      vars.forEach(v => {
-        if (!v.colorName) return;
-        if (typeFilter && (!v.tipo || !typeFilter.has(v.tipo))) return;
-        map.set(v.colorName, resolveColorHex(v.colorName, v.colorHex ?? null));
-      });
-    });
-    return Array.from(map.entries()).map(([name, hex]) => ({ name, hex }));
-  }, [products, activeSelectedTipos]);
-
-  useEffect(() => {
-    if (!showCategories && selectedCat) setSelectedCat('');
-    if (!showPrice && selectedPrice) setSelectedPrice('');
-    if (!showColors && selectedColors.size > 0) setSelectedColors(new Set());
-    if (!showTipos && selectedTipos.size > 0) setSelectedTipos(new Set());
-    if (!showOcasion && selectedOcasiones.size > 0) setSelectedOcasiones(new Set());
-  }, [showCategories, showPrice, showColors, showTipos, showOcasion, selectedCat, selectedPrice, selectedColors, selectedTipos, selectedOcasiones]);
-
-  useEffect(() => {
-    if (!showColors || activeSelectedColors.size === 0) return;
-    const availableSet = new Set(availableColors.map(c => c.name));
-    let changed = false;
-    const next = new Set<string>();
-    activeSelectedColors.forEach(color => {
-      if (availableSet.has(color)) {
-        next.add(color);
-      } else {
-        changed = true;
-      }
-    });
-    if (changed) setSelectedColors(next);
-  }, [showColors, availableColors, activeSelectedColors]);
-
-  useEffect(() => {
-    if (!sortOptions.includes(sortBy)) {
-      setSortBy(sortOptions[0] ?? 'featured');
-    }
-  }, [sortOptions, sortBy]);
-
   // ── Sincronizar URL cuando cambia el estado ─────────────────────────────────
   useEffect(() => {
     const params = new URLSearchParams();
-    if (activeSelectedCat)           params.set('cat',    activeSelectedCat);
-    if (activeSelectedPrice)         params.set('price',  activeSelectedPrice);
-    if (activeSelectedColors.size > 0) params.set('colors', Array.from(activeSelectedColors).join(','));
-    if (activeSelectedTipos.size > 0)  params.set('tipos',  Array.from(activeSelectedTipos).join(','));
-    if (activeSelectedOcasiones.size > 0) params.set('ocasiones', Array.from(activeSelectedOcasiones).join(','));
+    if (selectedCat)           params.set('cat',    selectedCat);
+    if (selectedPrice)         params.set('price',  selectedPrice);
+    if (selectedColors.size > 0) params.set('colors', Array.from(selectedColors).join(','));
+    if (selectedTipos.size > 0)  params.set('tipos',  Array.from(selectedTipos).join(','));
     if (sortBy !== 'featured') params.set('sort',   sortBy);
     if (page > 1)              params.set('page',   String(page));
 
@@ -379,50 +212,29 @@ export default function ShopClient({
       : window.location.pathname;
 
     window.history.replaceState(null, '', newUrl);
-  }, [activeSelectedCat, activeSelectedPrice, activeSelectedColors, activeSelectedTipos, activeSelectedOcasiones, sortBy, page]);
+  }, [selectedCat, selectedPrice, selectedColors, selectedTipos, sortBy, page]);
 
   // ── Restaurar estado al navegar con el botón atrás/adelante ────────────────
   useEffect(() => {
     const handlePop = () => {
       const sp = new URLSearchParams(window.location.search);
-      const nextCat = showCategories ? (sp.get('cat') ?? '') : '';
-      const nextPrice = showPrice ? (sp.get('price') ?? '') : '';
-      const nextColors = showColors
-        ? new Set(sp.get('colors')?.split(',').filter(Boolean) ?? [])
-        : new Set<string>();
-      const nextTipos = showTipos
-        ? new Set(sp.get('tipos')?.split(',').filter(Boolean) ?? [])
-        : new Set<string>();
-      const nextOcasiones = showOcasion
-        ? new Set(sp.get('ocasiones')?.split(',').filter(Boolean) ?? [])
-        : new Set<string>();
+      setSelectedCat(sp.get('cat')    ?? '');
+      setSelectedPrice(sp.get('price') ?? '');
+      setSelectedColors(new Set(sp.get('colors')?.split(',').filter(Boolean) ?? []));
+      setSelectedTipos(new Set(sp.get('tipos')?.split(',').filter(Boolean)   ?? []));
       const rawSort = sp.get('sort') as SortKey | null;
-      const nextSort = rawSort && sortOptions.includes(rawSort) ? rawSort : (sortOptions[0] ?? 'featured');
-
-      setSelectedCat(nextCat);
-      setSelectedPrice(nextPrice);
-      setSelectedColors(nextColors);
-      setSelectedTipos(nextTipos);
-      setSelectedOcasiones(nextOcasiones);
-      setSortBy(nextSort);
+      setSortBy(rawSort ?? 'featured');
       setPage(Math.max(1, parseInt(sp.get('page') ?? '1', 10)));
     };
     window.addEventListener('popstate', handlePop);
     return () => window.removeEventListener('popstate', handlePop);
-  }, [showCategories, showPrice, showColors, showTipos, sortOptions]);
+  }, []);
 
-  const hasFilters = !!(
-    activeSelectedCat ||
-    activeSelectedPrice ||
-    activeSelectedColors.size > 0 ||
-    activeSelectedTipos.size > 0 ||
-    activeSelectedOcasiones.size > 0
-  );
+  const hasFilters = !!(selectedCat || selectedPrice || selectedColors.size > 0 || selectedTipos.size > 0);
 
   function clearFilters() {
     setSelectedCat(''); setSelectedPrice('');
     setSelectedColors(new Set()); setSelectedTipos(new Set());
-    setSelectedOcasiones(new Set());
     setPage(1);
   }
   function handleCatChange(slug: string)  { setSelectedCat(prev => prev === slug ? '' : slug); setPage(1); }
@@ -435,49 +247,24 @@ export default function ShopClient({
     setSelectedTipos(prev => { const n = new Set(prev); n.has(tipo) ? n.delete(tipo) : n.add(tipo); return n; });
     setPage(1);
   }
-  function toggleOcasion(name: string) {
-    setSelectedOcasiones(prev => { const n = new Set(prev); n.has(name) ? n.delete(name) : n.add(name); return n; });
-    setPage(1);
-  }
 
-   const filtered = useMemo(() => {
-     let result = [...products];
-     if (activeSelectedCat) {
-       result = result.filter(p => p.category && toSlug(p.category) === activeSelectedCat);
-     }
-     if (activeSelectedPrice) {
-       const range = priceRanges.find(r => r.key === activeSelectedPrice);
-       if (range) result = result.filter(p => p.priceNumber >= range.min && p.priceNumber < range.max);
-     }
-     if (activeSelectedColors.size > 0) {
-       result = result.filter(p => {
-         const vars = p.variations?.length
-           ? p.variations
-           : [{ colorName: p.colorName, tipo: p.tipo }];
-         return vars.some(v => {
-           if (!v.colorName || !activeSelectedColors.has(v.colorName)) return false;
-           if (activeSelectedTipos.size === 0) return true;
-           return !!(v.tipo && activeSelectedTipos.has(v.tipo));
-         });
-       });
-     }
-     if (activeSelectedTipos.size > 0) {
-       result = result.filter(p => {
-         const vars = p.variations?.length ? p.variations : [{ tipo: p.tipo }];
-         return vars.some(v => v.tipo && activeSelectedTipos.has(v.tipo));
-       });
-     }
-     if (activeSelectedOcasiones.size > 0) {
-       result = result.filter(p => Array.isArray(p.ocasiones) && p.ocasiones.some(o => activeSelectedOcasiones.has(o)));
-     }
-     if (sortBy === 'price_asc')  result.sort((a, b) => a.priceNumber - b.priceNumber);
-     if (sortBy === 'price_desc') result.sort((a, b) => b.priceNumber - a.priceNumber);
-     if (sortBy === 'newest')    result.reverse();
-     return result;
-   }, [products, activeSelectedCat, activeSelectedPrice, activeSelectedColors, activeSelectedTipos, activeSelectedOcasiones, sortBy, priceRanges]);
+  const filtered = useMemo(() => {
+    let result = [...products];
+    if (selectedCat)   result = result.filter(p => p.category && toSlug(p.category) === selectedCat);
+    if (selectedPrice) {
+      const range = priceRanges.find(r => r.key === selectedPrice);
+      if (range) result = result.filter(p => p.priceNumber >= range.min && p.priceNumber < range.max);
+    }
+    if (selectedColors.size > 0) result = result.filter(p => p.colorName && selectedColors.has(p.colorName));
+    if (selectedTipos.size > 0)  result = result.filter(p => p.tipo      && selectedTipos.has(p.tipo));
+    if (sortBy === 'price_asc')  result.sort((a, b) => a.priceNumber - b.priceNumber);
+    if (sortBy === 'price_desc') result.sort((a, b) => b.priceNumber - a.priceNumber);
+    if (sortBy === 'newest')    result.reverse();
+    return result;
+  }, [products, selectedCat, selectedPrice, selectedColors, selectedTipos, sortBy, priceRanges]);
 
-  const totalPages = Math.max(1, Math.ceil(filtered.length / perPage));
-  const paginated  = filtered.slice((page - 1) * perPage, page * perPage);
+  const totalPages = Math.max(1, Math.ceil(filtered.length / ITEMS_PER_PAGE));
+  const paginated  = filtered.slice((page - 1) * ITEMS_PER_PAGE, page * ITEMS_PER_PAGE);
 
   const sortLabels: Record<SortKey, string> = {
     featured:   t(lang, 'shop.sort.featured'),
@@ -487,13 +274,10 @@ export default function ShopClient({
   };
 
   const sidebarProps = {
-    lang, categories, selectedCat, selectedPrice, selectedColors, selectedTipos, selectedOcasiones,
-    availableColors, availableTipos, availableOcasiones, priceRanges, hasFilters,
-    showCategories, showPrice, showColors, showTipos, showOcasion,
-    filtersField,
+    lang, categories, selectedCat, selectedPrice, selectedColors, selectedTipos,
+    availableColors, availableTipos, priceRanges, hasFilters,
     onCatChange: handleCatChange, onPriceChange: handlePriceChange,
     onColorToggle: toggleColor,   onTipoToggle: toggleTipo,
-    onOcasionToggle: toggleOcasion,
     onClear: clearFilters,
   };
 
@@ -537,16 +321,16 @@ export default function ShopClient({
                 <>
                   <div className="fixed inset-0 z-10" onClick={() => setSortOpen(false)} />
                   <div className="absolute right-0 top-[calc(100%+6px)] w-48 bg-white border border-border rounded-xl shadow-xl z-20 overflow-hidden">
-{sortOptions.map(key => (
-                        <button key={key}
-                          onClick={() => { setSortBy(key); setSortOpen(false); setPage(1); }}
-                          className={`block w-full px-4 py-2.5 text-left font-body text-sm transition-colors ${
-                            sortBy === key ? 'text-primary font-bold bg-primary/5' : 'text-headline font-medium hover:bg-gray-50'
-                          }`}
-                        >
-                          {sortLabels[key]}
-                        </button>
-                      ))}
+                    {(Object.keys(sortLabels) as SortKey[]).map(key => (
+                      <button key={key}
+                        onClick={() => { setSortBy(key); setSortOpen(false); setPage(1); }}
+                        className={`block w-full px-4 py-2.5 text-left font-body text-sm transition-colors ${
+                          sortBy === key ? 'text-primary font-bold bg-primary/5' : 'text-headline font-medium hover:bg-gray-50'
+                        }`}
+                      >
+                        {sortLabels[key]}
+                      </button>
+                    ))}
                   </div>
                 </>
               )}
@@ -575,8 +359,6 @@ export default function ShopClient({
                 product={product}
                 lang={lang}
                 href={`/${lang}/${product.id}`}
-                isLoggedIn={isLoggedIn}
-                allowedTipos={activeSelectedTipos.size > 0 ? activeSelectedTipos : undefined}
               />
             ))}
           </div>
