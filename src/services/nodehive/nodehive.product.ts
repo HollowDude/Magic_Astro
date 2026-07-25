@@ -32,12 +32,13 @@ function buildBaseParams(p: DrupalJsonApiParams): void {
      'title', 'body', 'field_description', 'field_category',
      'field_ocasion', 'field_tag', 'variations',
    ])
-   .addFields('commerce_product_variation--flower', [
-     'sku', 'price', 'title',
-     'field_color',
-     'field_gallery_of_photos',
-     'field_type',
-   ])
+    .addFields('commerce_product_variation--flower', [
+      'drupal_internal__variation_id',
+      'sku', 'price', 'title',
+      'field_color',
+      'field_gallery_of_photos',
+      'field_type',
+    ])
    .addFields('file--file',                      ['filename', 'uri', 'filemime'])
    .addFields('media--image',                    ['name', 'field_media_image'])
    .addFields('taxonomy_term--colors',           ['name', 'field_color_hex'])
@@ -73,10 +74,8 @@ export async function getProductById(id: string, lang?: Lang): Promise<FlowerPro
 // ── getRelatedProducts ────────────────────────────────────────────────────────
 
 /**
- * Obtiene productos relacionados en paralelo:
- * 1. Por categoría Y por color simultáneamente.
- * 2. Merge con deduplicación (categoría tiene prioridad).
- * 3. Fallback a recientes si no hay suficientes.
+ * Obtiene productos relacionados:
+ * Solo por categoría. Si no hay suficientes, retorna los que haya (0 si no coincide ninguno).
  */
 export async function getRelatedProducts(
   product: FlowerProduct,
@@ -84,27 +83,10 @@ export async function getRelatedProducts(
   limit = 4,
 ): Promise<FlowerProduct[]> {
   const categoryId = product.field_category?.id;
-  const colorName  = product.variations?.[0]?.field_color?.name;
 
-  // ── Fetch paralelo de las dos fuentes principales ─────────────────────────
-  const [byCategory, byColor] = await Promise.all([
-    categoryId
-      ? fetchRelatedByFilter('field_category.id', categoryId, product.id, lang, limit)
-      : Promise.resolve([]),
-    colorName
-      ? fetchRelatedByFilter(
-          'variations.field_color.name', colorName, product.id, lang, limit,
-        )
-      : Promise.resolve([]),
-  ]);
+  if (!categoryId) return [];
 
-  // Merge: categoría primero, luego color (dedupe elimina duplicados)
-  const merged = dedupe([...byCategory, ...byColor], product.id);
-  if (merged.length >= limit) return merged.slice(0, limit);
-
-  // ── Fallback: recientes ───────────────────────────────────────────────────
-  const latest = await fetchLatestProducts(product.id, lang, limit);
-  return dedupe([...merged, ...latest], product.id).slice(0, limit);
+  return fetchRelatedByFilter('field_category.id', categoryId, product.id, lang, limit);
 }
 
 // ── getProductDetailPageData ──────────────────────────────────────────────────
@@ -120,13 +102,33 @@ export async function getProductDetailPageData(
   productTitle:    string;
   productData:     {
     id: string; title: string; price: string; description: string;
-    images: string[]; badge: null; tipo: string | null;
+    images: string[]; badge: null; tag: string | null; tipo: string | null;
     colorName: string | null; colorHex: string | null; category: string | null;
+    variationId: number | null;
+    allVariations: Array<{
+      variationId: number | null;
+      drupalUuid: string | null;
+      colorName: string | null;
+      colorHex: string | null;
+      tipo: string | null;
+      images: string[];
+      price: string;
+    }>;
   };
   relatedProducts: Array<{
     id: string; title: string; price: string; priceNumber: number;
-    thumbnail: string | null; badge: null; tipo: string | null;
+    thumbnail: string | null; badge: null; tag: string | null; tipo: string | null;
     colorName: string | null; colorHex: string | null; category: string | null;
+    ocasiones: string[];
+    variationId: number | null;
+    variations: Array<{
+      variationId: number | null;
+      drupalUuid: string | null;
+      colorName: string | null;
+      colorHex: string | null;
+      tipo: string | null;
+      thumbnail: string | null;
+    }>;
   }>;
 } | null> {
   const NODEHIVE_BASE_URL = import.meta.env.NODEHIVE_BASE_URL as string;
@@ -144,10 +146,26 @@ export async function getProductDetailPageData(
     description: product.body?.processed ?? product.field_description ?? '',
     images:      allImages,
     badge:       null as null,
-    tipo:        variation?.field_type                         ?? null,
+    tag:         (() => {
+        const raw = product.field_tag;
+        if (Array.isArray(raw)) return raw.map((o: any) => o.name ?? '').filter(Boolean)[0] ?? null;
+        if (raw && typeof raw === 'object' && (raw as any).name) return (raw as any).name;
+        return null;
+      })(),
+      tipo:        (variation?.field_type ?? null)?.toLowerCase() ?? null,
     colorName:   variation?.field_color?.name                  ?? null,
     colorHex:    variation?.field_color?.field_color_hex       ?? null,
     category:    product.field_category?.name                  ?? null,
+    variationId: variation?.drupal_internal__variation_id      ?? null,
+      allVariations: (Array.isArray(product.variations) ? product.variations : []).map(v => ({
+        variationId: v?.drupal_internal__variation_id ?? null,
+        drupalUuid: v?.id ?? null,
+        colorName: v?.field_color?.name ?? null,
+        colorHex: v?.field_color?.field_color_hex ?? null,
+        tipo: (v?.field_type ?? null)?.toLowerCase() ?? null,
+        images: v ? getVariationGallery(v, NODEHIVE_BASE_URL) : [],
+        price: v?.price?.formatted ?? '',
+      })),
   };
 
   const rawRelated = await getRelatedProducts(product, lang, 4);
@@ -161,10 +179,34 @@ export async function getProductDetailPageData(
       priceNumber: parseFloat(v?.price?.number          ?? '0'),
       thumbnail:   getProductThumbnail(p, NODEHIVE_BASE_URL),
       badge:       null as null,
-      tipo:        v?.field_type                         ?? null,
+      tag:         (() => {
+          const raw = p.field_tag;
+          if (Array.isArray(raw)) return raw.map((o: any) => o.name ?? '').filter(Boolean)[0] ?? null;
+          if (raw && typeof raw === 'object' && (raw as any).name) return (raw as any).name;
+          return null;
+        })(),
+      tipo:        (v?.field_type ?? null)?.toLowerCase() ?? null,
       colorName:   v?.field_color?.name                  ?? null,
       colorHex:    v?.field_color?.field_color_hex       ?? null,
       category:    p.field_category?.name                ?? null,
+      ocasiones:   (() => {
+          const raw = p.field_ocasion;
+          if (Array.isArray(raw)) return raw.map((o: any) => o.name ?? '').filter(Boolean);
+          if (raw && typeof raw === 'object' && raw.name) return [raw.name];
+          return [];
+        })(),
+      variationId: v?.drupal_internal__variation_id      ?? null,
+      variations: (Array.isArray(p.variations) ? p.variations : []).map(variation => ({
+        variationId: variation?.drupal_internal__variation_id ?? null,
+        drupalUuid: variation?.id ?? null,
+        colorName: variation?.field_color?.name ?? null,
+        colorHex: variation?.field_color?.field_color_hex ?? null,
+        tipo: (variation?.field_type ?? null)?.toLowerCase() ?? null,
+        thumbnail: (() => {
+          const gallery = variation ? getVariationGallery(variation, NODEHIVE_BASE_URL) : [];
+          return gallery[0] ?? null;
+        })(),
+      })),
     };
   });
 
@@ -183,31 +225,6 @@ async function fetchRelatedByFilter(
   const params = new DrupalJsonApiParams();
   buildListParams(params, limit + 1);
   params.addFilter(filterPath, filterValue);
-
-  try {
-    const raw = await nodehiveFetch<Record<string, unknown>>(
-      `/jsonapi/commerce_product/flower?${params.getQueryString()}`,
-      { ...FETCH_OPTIONS, lang },
-    );
-    if (raw.status !== 200) return [];
-
-    const all = dataFormatter.deserialize(raw.data);
-    return dedupe(
-      Array.isArray(all) ? (all as FlowerProduct[]) : [all as FlowerProduct],
-      excludeId,
-    );
-  } catch {
-    return [];
-  }
-}
-
-async function fetchLatestProducts(
-  excludeId: string,
-  lang?: Lang,
-  limit = 4,
-): Promise<FlowerProduct[]> {
-  const params = new DrupalJsonApiParams();
-  buildListParams(params, limit + 1);
 
   try {
     const raw = await nodehiveFetch<Record<string, unknown>>(

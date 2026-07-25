@@ -4,9 +4,18 @@ import HeroCarousel from '@/components/home/HeroCarousel';
 import { getHomepageHeroData } from '@/services/nodehive/nodehive.paragraphs';
 import { getLangFromUrl } from '@/i18n/utils';
 import type { Lang } from '@/i18n/ui';
+import type { HeroData } from '@/types/nodehive/content';
 
-const lang = (Astro.currentLocale ?? getLangFromUrl(Astro.url)) as Lang;
-const hero = await getHomepageHeroData(lang);
+interface Props {
+  hero?: HeroData | null;
+  lang?: Lang;
+  parentId?: number | string | null;
+}
+
+const { hero: heroProp = null, lang: langProp, parentId: parentIdProp = null } = Astro.props;
+const lang = (langProp ?? (Astro.currentLocale ?? getLangFromUrl(Astro.url))) as Lang;
+const hero = heroProp ?? await getHomepageHeroData(lang);
+const parentId = parentIdProp ?? hero?.pageInternalId ?? null;
 ---
 
 <!-- Contenedor sin atributos de entidad (el párrafo está dentro de HeroCarousel) -->
@@ -19,6 +28,7 @@ const hero = await getHomepageHeroData(lang);
     ctaButtons={hero?.ctaButtons}
     componentId={hero?.componentId}
     componentInternalId={hero?.componentInternalId}
+    parentId={parentId}
     lang={lang}
     client:load
   />

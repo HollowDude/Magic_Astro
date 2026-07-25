@@ -24,6 +24,7 @@ interface Props {
   lang?:         Lang;
   componentId?:  string;
   componentInternalId?: number;
+  parentId?:     string | number | null;
 }
 
 const INTERVAL = 5000;
@@ -37,6 +38,7 @@ export default function HeroCarousel({
   lang = 'es',
   componentId,
   componentInternalId,
+  parentId,
 }: Props) {
   const fallbackTitle       = t(lang, 'hero.title');
   const fallbackSubtitle    = t(lang, 'hero.slogan');
@@ -94,6 +96,7 @@ export default function HeroCarousel({
       data-nodehive-entity-bundle="_component_home_hero"
       data-nodehive-entity-id={componentId ?? null}
       data-nodehive-entity-internal-id={componentInternalId ?? null}
+      data-nodehive-parent_id={parentId ?? undefined}
       data-nodehive-langcode={lang}
     >
       {activeSlides.map((slide, i) => {
@@ -113,11 +116,12 @@ export default function HeroCarousel({
         );
       })}
 
-      <div className="absolute inset-0 bg-gradient-to-b from-[rgba(20,5,10,0.38)] to-[rgba(20,5,10,0.55)] z-[2]" />
+      <div className="absolute inset-0 bg-gradient-to-r from-black/75 via-black/50 to-transparent z-[2]" />
+      <div className="absolute inset-0 bg-gradient-to-b from-[rgba(20,5,10,0.45)] via-[rgba(20,5,10,0.55)] to-[rgba(20,5,10,0.75)] z-[2]" />
 
       <div className="relative z-10 flex flex-col items-center text-center gap-5 max-w-[52rem] py-20 px-6">
         <h1 
-          className="text-[clamp(2.25rem,6vw,4rem)] font-black leading-[1.1] tracking-[-0.03em] text-white [text-shadow:0_2px_16px_rgba(0,0,0,0.3)] font-body m-0"
+          className="text-[clamp(2.25rem,6vw,4rem)] font-black leading-[1.1] tracking-[-0.03em] text-white [text-shadow:0_2px_8px_rgba(0,0,0,0.6),0_4px_20px_rgba(0,0,0,0.4)] font-body m-0 [text-wrap:balance]"
           data-nodehive-field="field_title"
         >
           {activeTitle}
@@ -125,7 +129,7 @@ export default function HeroCarousel({
         
         {activeSubtitle && (
           <h2 
-            className="text-[clamp(1.25rem,3vw,2rem)] font-bold leading-tight text-[#fbdadd] tracking-[-0.02em] font-body m-0"
+            className="text-[clamp(1.25rem,3vw,2rem)] font-bold leading-tight text-[#fbdadd] tracking-[-0.02em] font-body m-0 [text-shadow:0_2px_8px_rgba(0,0,0,0.6),0_4px_20px_rgba(0,0,0,0.4)] [text-wrap:balance]"
             data-nodehive-field="field_subtitle"
           >
             {activeSubtitle}
@@ -133,7 +137,7 @@ export default function HeroCarousel({
         )}
         
         <p 
-          className="max-w-[38rem] text-[clamp(1rem,2vw,1.125rem)] leading-relaxed text-white/90 font-body m-0"
+          className="max-w-[38rem] text-[clamp(1rem,2vw,1.125rem)] leading-relaxed text-white/95 font-body m-0 [text-shadow:0_2px_8px_rgba(0,0,0,0.6),0_4px_20px_rgba(0,0,0,0.4)]"
           data-nodehive-field="field_description"
         >
           {activeDescription}
@@ -150,7 +154,7 @@ export default function HeroCarousel({
                 href={btn.url}
                 className={`inline-flex items-center justify-center h-12 min-w-[10rem] px-8 rounded-full text-base font-bold no-underline font-body transition-all duration-200 hover:scale-105 ${
                   btn.style === 'primary'
-                    ? 'bg-primary text-white shadow-[0_4px_18px_color-mix(in_srgb,var(--color-primary)_45%,transparent)] hover:bg-primary-dark'
+                    ? 'bg-primary text-white shadow-[0_4px_18px_var(--primary-alpha-45)] hover:bg-primary-dark'
                     : 'bg-white/90 text-[#181112] backdrop-blur-[4px] hover:bg-white'
                 }`}
               >
@@ -162,7 +166,7 @@ export default function HeroCarousel({
           <div className="mt-3 flex flex-wrap justify-center gap-4">
             <a
               href={`${getPrefix(lang)}/shop`}
-              className="inline-flex items-center justify-center h-12 min-w-[10rem] px-8 rounded-full bg-primary text-white text-base font-bold no-underline font-body shadow-[0_4px_18px_color-mix(in_srgb,var(--color-primary)_45%,transparent)] transition-all duration-200 hover:scale-105 hover:bg-primary-dark"
+              className="inline-flex items-center justify-center h-12 min-w-[10rem] px-8 rounded-full bg-primary text-white text-base font-bold no-underline font-body shadow-[0_4px_18px_var(--primary-alpha-45)] transition-all duration-200 hover:scale-105 hover:bg-primary-dark"
             >
               {t(lang, 'hero.cta.shop')}
             </a>

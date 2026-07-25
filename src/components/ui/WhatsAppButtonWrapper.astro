@@ -1,0 +1,25 @@
+---
+import WhatsAppButton from '@/components/ui/WhatsAppButton';
+import { getWhatsAppButtonData } from '@/services/nodehive/nodehive.whatsapp';
+import type { Lang } from '@/i18n/ui';
+
+interface Props {
+  lang: Lang;
+}
+
+const { lang } = Astro.props;
+const data = await getWhatsAppButtonData(lang);
+---
+
+<WhatsAppButton
+  lang={lang}
+  phoneNumber={data?.phoneNumber ?? null}
+  messageEs={data?.messageEs ?? null}
+  messageEn={data?.messageEn ?? null}
+  isEnabled={data?.isEnabled ?? false}
+  entityType={data?.entityType ?? undefined}
+  bundle={data?.bundle ?? undefined}
+  fragmentId={data?.fragmentId ?? undefined}
+  fragmentInternalId={data?.fragmentInternalId ?? undefined}
+  client:load
+/>

@@ -1,0 +1,31 @@
+---
+import ContactModal from '@/components/ui/ContactModal';
+import { getFooterContactData } from '@/services/nodehive/nodehive.footer';
+import type { Lang } from '@/i18n/ui';
+
+interface Props {
+  lang: Lang;
+}
+
+const { lang } = Astro.props;
+const contactData = await getFooterContactData(lang);
+
+const phone    = contactData?.zelle   ?? null;
+const email    = contactData?.mail    ?? null;
+const schedule = contactData?.schedule ?? null;
+
+const address = contactData?.address
+  ? [contactData.address.line1, contactData.address.line2, contactData.address.city, contactData.address.state]
+      .filter(Boolean)
+      .join(', ')
+  : null;
+---
+
+<ContactModal
+  lang={lang}
+  phone={phone}
+  email={email}
+  address={address}
+  schedule={schedule}
+  client:load
+/>

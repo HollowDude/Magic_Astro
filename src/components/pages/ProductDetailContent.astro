@@ -8,17 +8,21 @@ import ProductCard, { type ProductCardData } from '@/components/shop/ProductCard
 import { useTranslations } from '@/i18n/utils';
 import { ui } from '@/i18n/ui';
 import type { Lang } from '@/i18n/ui';
+import { getSession } from '@/services/session.service';
 
 interface Props {
   lang:             Lang;
   productTitle:     string;
   productData:      Omit<ProductDetailData, 'badge'> & { badge: null };
   relatedProducts:  ProductCardData[];
+  selectedVariationId?: string | null;
 }
 
-const { lang, productTitle, productData, relatedProducts } = Astro.props;
+const { lang, productTitle, productData, relatedProducts, selectedVariationId } = Astro.props;
 const t      = useTranslations(lang);
-const prefix = lang === 'en' ? '/en' : '';
+const prefix = `/${lang}`;
+const session = await getSession(Astro.cookies);
+const isLoggedIn = !!session;
 
 // Computar badge en capa de presentación
 const badge = productData.tipo
@@ -37,7 +41,13 @@ const fullProductData: ProductDetailData = { ...productData, badge };
       ]} />
 
       <div class="mt-8">
-        <ProductDetail product={fullProductData} lang={lang} client:load />
+        <ProductDetail
+          product={fullProductData}
+          lang={lang}
+          isLoggedIn={isLoggedIn}
+          selectedVariationId={selectedVariationId ?? null}
+          client:load
+        />
       </div>
 
       <hr class="section-divider" />

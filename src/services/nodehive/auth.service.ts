@@ -4,8 +4,9 @@
  * Servicio de autenticación de usuarios en NodeHive (Drupal).
  */
 
-const NODEHIVE_BASE_URL = import.meta.env.NODEHIVE_BASE_URL as string;
-const NODEHIVE_API_KEY  = import.meta.env.NODEHIVE_API_KEY  as string;
+import { nodehiveFetch } from './nodehive.client';
+
+const NODEHIVE_BASE_URL = (import.meta.env.NODEHIVE_BASE_URL as string)?.replace(/\/+$/, '') ?? '';
 
 export interface LoginData {
   username: string;
@@ -19,6 +20,8 @@ export interface SessionUser {
   roles: string[];
   csrfToken: string;
   logoutToken: string;
+  accessToken?: string;
+  sessionCookie?: string;
 }
 
 export interface LoginResult {
@@ -30,39 +33,66 @@ export interface LoginResult {
 
 export async function login(data: LoginData): Promise<LoginResult> {
   try {
-    const res = await fetch(`${NODEHIVE_BASE_URL}/user/login?_format=json`, {
+    const res = await nodehiveFetch<Record<string, unknown>>('/user/login?_format=json', {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Accept': 'application/json',
-        'api-key': NODEHIVE_API_KEY,
-      },
-      body: JSON.stringify({
+      body: {
         name: data.username,
         pass: data.password,
-      }),
+      },
+      headers: {
+        'Content-Type': 'application/json',
+        Accept: 'application/json',
+      },
+      skipApiKey: true,
+      timeoutMs: 10000,
     });
 
-    const json = await res.json().catch(() => ({}));
+    const json = (res.data && typeof res.data === 'object') ? res.data as any : {};
 
-    if (!res.ok) {
+    if (res.status < 200 || res.status >= 300) {
       const msg = json?.message ?? 'Credenciales incorrectas.';
       return { ok: false, statusCode: res.status, error: msg };
     }
 
+    // Fetch user mail via Bearer token (login response incluye access_token)
+    let mail = '';
+    const accessToken: string = json.access_token ?? '';
+    const uid = String(json.current_user?.uid ?? '');
+    if (accessToken && uid) {
+      try {
+        const mailRes = await fetch(`${NODEHIVE_BASE_URL}/user/${uid}?_format=json`, {
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+            Accept: 'application/json',
+          },
+        });
+        if (mailRes.ok) {
+          const userData = await mailRes.json() as any;
+          mail = userData?.mail?.[0]?.value ?? '';
+        }
+      } catch {
+        // fallback: mail stays empty
+      }
+    }
+
+    const setCookie = res.headers.get('set-cookie') ?? '';
+    const sessionCookie = setCookie;
+
     return {
       ok: true,
       data: {
-        uid:         String(json.current_user?.uid ?? ''),
+        uid,
         name:        json.current_user?.name ?? data.username,
-        mail:        json.current_user?.mail ?? '',
+        mail,
         roles:       json.current_user?.roles ?? [],
         csrfToken:   json.csrf_token   ?? '',
         logoutToken: json.logout_token ?? '',
+        accessToken,
+        sessionCookie,
       },
     };
   } catch (err) {
-    return { ok: false, error: 'No se pudo conectar con el servidor.' };
+    return { ok: false, statusCode: 503, error: 'No se pudo conectar con el servidor.' };
   }
 }
 
@@ -71,13 +101,12 @@ export async function logout(
   sessionCookie?: string,
 ): Promise<{ ok: boolean }> {
   try {
-    await fetch(`${NODEHIVE_BASE_URL}/user/logout?_format=json&token=${logoutToken}`, {
+    await nodehiveFetch(`/user/logout?_format=json&token=${logoutToken}`, {
       method: 'GET',
       headers: {
-        'Accept': 'application/json',
-        'api-key': NODEHIVE_API_KEY,
-        ...(sessionCookie ? { Cookie: sessionCookie } : {}),
+        Accept: 'application/json',
       },
+      sessionCookie,
     });
   } catch {}
   return { ok: true };

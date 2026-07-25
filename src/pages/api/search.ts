@@ -17,7 +17,7 @@ import { getProductThumbnail } from '@/types/nodehive';
 import type { FloresProduct } from '@/types/nodehive';
 
 const dataFormatter = new Jsona();
-const DRUPAL_BASE_URL = import.meta.env.DRUPAL_BASE_URL as string;
+const NODEHIVE_BASE_URL = import.meta.env.NODEHIVE_BASE_URL as string;
 
 // ── Tipo público ──────────────────────────────────────────────────────────────
 export interface SearchResult {
@@ -48,6 +48,7 @@ export const GET: APIRoute = async ({ url }) => {
       .addInclude([
         'variations',
         'variations.field_gallery_of_photos',
+        'variations.field_gallery_of_photos.field_media_image',
       ])
       .addFields('commerce_product--flower', ['title', 'variations'])
       .addFields('commerce_product_variation--flower', [
@@ -55,6 +56,7 @@ export const GET: APIRoute = async ({ url }) => {
         'title',
         'field_gallery_of_photos',
       ])
+      .addFields('media--image', ['name', 'field_media_image'])
       .addFields('file--file', ['filename', 'uri', 'filemime']);
 
   const path = `/jsonapi/commerce_product/flower?${apiParams.getQueryString()}`;
@@ -82,7 +84,7 @@ export const GET: APIRoute = async ({ url }) => {
       id:        p.id,
       title:     p.title,
       price:     p.variations?.[0]?.price?.formatted ?? '',
-      thumbnail: getProductThumbnail(p, DRUPAL_BASE_URL),
+      thumbnail: getProductThumbnail(p, NODEHIVE_BASE_URL),
     }));
 
     return jsonOk({ results, hasMore });

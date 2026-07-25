@@ -13,31 +13,80 @@ interface AlertState {
 
 interface Props {
   lang?: Lang;
+  formTitle?: string | null;
+  formSubtitle?: string | null;
+  formParagraphId?: string | null;
+  formParagraphInternalId?: number | null;
+  formParentId?: string | number | null;
 }
 
-export default function RegisterForm({ lang = 'es' }: Props) {
+const TRANSLATIONS = {
+  es: {
+    title: 'Crear una cuenta',
+    subtitle: 'Completá tus datos para empezar a aprender.',
+    tabLogin: 'Iniciar Sesión',
+    tabRegister: 'Registrarme',
+    usernameLabel: 'Nombre de usuario',
+    usernamePlaceholder: 'Tu usuario',
+    emailLabel: 'Correo electrónico',
+    emailPlaceholder: 'tu@correo.com',
+    submitButton: 'Crear cuenta',
+    hasAccount: '¿Ya tenés una cuenta?',
+    loginHere: 'Iniciá sesión aquí',
+    errorEmpty: 'Completa todos los campos para continuar.',
+    errorServer: 'No pudimos conectar con el servidor. Intenta otra vez.',
+    success: () => `¡Cuenta creada! Revisa tu correo para activar tu acceso.`,
+  },
+  en: {
+    title: 'Create your account',
+    subtitle: 'Fill in your details to start learning.',
+    tabLogin: 'Sign In',
+    tabRegister: 'Register',
+    usernameLabel: 'Username',
+    usernamePlaceholder: 'Your username',
+    emailLabel: 'Email address',
+    emailPlaceholder: 'you@example.com',
+    submitButton: 'Create account',
+    hasAccount: 'Already have an account?',
+    loginHere: 'Sign in here',
+    errorEmpty: 'Please fill in all fields to continue.',
+    errorServer: 'Could not connect to server. Try again.',
+    success: () => `Account created! Check your email to activate your access.`,
+  },
+} as const;
+
+export default function RegisterForm({
+  lang = 'es',
+  formTitle,
+  formSubtitle,
+  formParagraphId,
+  formParagraphInternalId,
+  formParentId,
+}: Props) {
+  const t = TRANSLATIONS[lang] ?? TRANSLATIONS.es;
+  const displayTitle = formTitle ?? t.title;
+  const displaySubtitle = formSubtitle ?? t.subtitle;
   const [username, setUsername] = useState('');
   const [email,    setEmail]    = useState('');
-  const [password, setPassword] = useState('');
-  const [confirm,  setConfirm]  = useState('');
   const [loading,  setLoading]  = useState(false);
   const [alert,    setAlert]    = useState<AlertState | null>(null);
+
+  function friendlyRegisterError(status: number, message?: string): string {
+    if (status === 400) return t.errorEmpty;
+    if (status === 409) return lang === 'es' ? 'Ese usuario o correo ya existe.' : 'Username or email already exists.';
+    if (status === 503) return t.errorServer;
+    if (message && message.length < 140 && !/json|token|exception|stack|trace|sql/i.test(message)) {
+      return message;
+    }
+    return lang === 'es' ? 'Ocurrió un problema. Intenta más tarde.' : 'Something went wrong. Try again later.';
+  }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setAlert(null);
 
-    // Validaciones del lado del cliente
-    if (!username.trim() || !email.trim() || !password || !confirm) {
-      setAlert({ type: 'error', message: 'Por favor, completá todos los campos.' });
-      return;
-    }
-    if (password !== confirm) {
-      setAlert({ type: 'error', message: 'Las contraseñas no coinciden.' });
-      return;
-    }
-    if (password.length < 6) {
-      setAlert({ type: 'error', message: 'La contraseña debe tener al menos 6 caracteres.' });
+    if (!username.trim() || !email.trim()) {
+      setAlert({ type: 'error', message: t.errorEmpty });
       return;
     }
 
@@ -49,39 +98,55 @@ export default function RegisterForm({ lang = 'es' }: Props) {
         body:    JSON.stringify({
           username: username.trim(),
           email:    email.trim(),
-          password,
+          lang,
         }),
       });
 
-      const data = await res.json();
+      const status = res.status;
+      const data = await res.json().catch(() => ({}));
 
       if (data.ok) {
         setAlert({
           type:    'success',
-          message: `¡Cuenta creada! Bienvenido, ${data.user.name}. Redirigiendo al login…`,
+          message: t.success(),
         });
-        setTimeout(() => { window.location.href = `/${lang}/login`; }, 1800);
       } else {
-        setAlert({ type: 'error', message: data.error ?? 'No se pudo crear la cuenta.' });
+        setAlert({ type: 'error', message: friendlyRegisterError(status, data.error) });
       }
     } catch {
-      setAlert({ type: 'error', message: 'No se pudo conectar con el servidor.' });
+      setAlert({ type: 'error', message: t.errorServer });
     } finally {
       setLoading(false);
     }
   }
 
   return (
-    <div className="form-panel">
+    <div
+      className="form-panel"
+      data-nodehive-entity-type={formParagraphId ? 'paragraph' : undefined}
+      data-nodehive-entity-id={formParagraphId ?? undefined}
+      data-nodehive-entity-internal-id={formParagraphInternalId ?? undefined}
+      data-nodehive-parent_id={formParentId ?? undefined}
+    >
       <div className="form-header">
-        <h2 className="form-title">Crear una cuenta</h2>
-        <p className="form-subtitle">Completá tus datos para empezar a aprender.</p>
+        <h2
+          className="form-title"
+          data-nodehive-field={formParagraphId ? 'field_title' : undefined}
+        >
+          {displayTitle}
+        </h2>
+        <p
+          className="form-subtitle"
+          data-nodehive-field={formParagraphId ? 'field_subtitle' : undefined}
+        >
+          {displaySubtitle}
+        </p>
       </div>
 
       {/* Tabs */}
       <nav className="auth-tabs">
-        <a href={`/${lang}/login`}    className="auth-tab">Iniciar Sesión</a>
-        <a href={`/${lang}/register`} className="auth-tab auth-tab--active">Registrarme</a>
+        <a href={`/${lang}/login`}    className="auth-tab">{t.tabLogin}</a>
+        <a href={`/${lang}/register`} className="auth-tab auth-tab--active">{t.tabRegister}</a>
       </nav>
 
       <Alert type={alert?.type ?? 'error'} message={alert?.message ?? null} />
@@ -89,9 +154,9 @@ export default function RegisterForm({ lang = 'es' }: Props) {
       <form className="register-form" onSubmit={handleSubmit} noValidate>
         <InputField
           id="username"
-          label="Nombre de usuario"
+          label={t.usernameLabel}
           type="text"
-          placeholder="tu_usuario"
+          placeholder={t.usernamePlaceholder}
           icon="person"
           required
           autoComplete="username"
@@ -101,9 +166,9 @@ export default function RegisterForm({ lang = 'es' }: Props) {
 
         <InputField
           id="email"
-          label="Correo electrónico"
+          label={t.emailLabel}
           type="email"
-          placeholder="tu@correo.com"
+          placeholder={t.emailPlaceholder}
           icon="mail"
           required
           autoComplete="email"
@@ -111,42 +176,18 @@ export default function RegisterForm({ lang = 'es' }: Props) {
           onChange={setEmail}
         />
 
-        <InputField
-          id="password"
-          label="Contraseña"
-          type="password"
-          placeholder="Mínimo 6 caracteres"
-          icon="lock"
-          required
-          autoComplete="new-password"
-          value={password}
-          onChange={setPassword}
-        />
-
-        <InputField
-          id="confirm"
-          label="Confirmá la contraseña"
-          type="password"
-          placeholder="Repetí tu contraseña"
-          icon="lock_check"
-          required
-          autoComplete="new-password"
-          value={confirm}
-          onChange={setConfirm}
-        />
-
         <button
           type="submit"
           disabled={loading}
           className={`submit-btn${loading ? ' loading' : ''}`}
         >
-          {loading ? <span className="btn-spinner" /> : 'Crear cuenta'}
+          {loading ? <span className="btn-spinner" /> : t.submitButton}
         </button>
       </form>
 
       <p className="login-hint">
-        ¿Ya tenés una cuenta?{' '}
-        <a href={`/${lang}/login`} className="login-link">Iniciá sesión aquí</a>
+        {t.hasAccount}{' '}
+        <a href={`/${lang}/login`} className="login-link">{t.loginHere}</a>
       </p>
 
       <style>{`

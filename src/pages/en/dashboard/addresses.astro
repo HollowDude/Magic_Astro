@@ -1,0 +1,14 @@
+---
+export const prerender = false;
+
+import DashboardLayout from '@/layouts/DashboardLayout.astro';
+import AddressManager from '@/components/dashboard/AddressManager';
+import { getSession } from '@/services/session.service';
+
+const session = await getSession(Astro.cookies);
+if (!session) return Astro.redirect('/en/login?redirect=/en/dashboard/addresses');
+---
+
+<DashboardLayout title="Address Book — Maggy Flowers" lang="en" activeSection="addresses">
+  <AddressManager lang="en" client:load />
+</DashboardLayout>

@@ -45,6 +45,7 @@ const PRODUCT_CONFIGS = {
       'variations',
     ],
     variationFields: [
+      'drupal_internal__variation_id',
       'sku',
       'price',
       'title',
