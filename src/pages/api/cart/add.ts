@@ -2,6 +2,7 @@ import type { APIRoute } from 'astro';
 import { addToCart, getCart, updateCartItem, fetchRibbonColors, resolveRibbonColorUuid, ribbonColorDefFromUuid } from '@/services/nodehive/nodehive.cart';
 import type { RibbonColorDef } from '@/services/nodehive/nodehive.cart';
 import { nodehiveFetch } from '@/services/nodehive/nodehive.client';
+import { getVariationStockByInternalId } from '@/services/nodehive/nodehive.stock';
 import { relayCartCookie } from './cookie-helper';
 
 interface AdditionInput {
@@ -249,6 +250,46 @@ export const POST: APIRoute = async ({ request, cookies }) => {
 
   const cartResult = await getCart(decoded);
   const currentCart = (cartResult.data ?? []) as any[];
+
+  // ── Stock validation ──────────────────────────────────────────────────────
+  const variationIdsToCheck = new Map<number, { item: CartItemInput; existingQty: number }>();
+  for (const item of items) {
+    const inputQty = item.quantity ?? 1;
+    const vid = item.purchased_entity_id;
+    if (!vid) continue;
+
+    let existingQty = 0;
+    for (const order of currentCart) {
+      for (const oi of order.order_items ?? []) {
+        if (oi.purchased_entity?.variation_id === vid) {
+          existingQty += parseFloat(oi.quantity) || 0;
+        }
+      }
+    }
+    variationIdsToCheck.set(vid, { item, existingQty });
+  }
+
+  if (variationIdsToCheck.size > 0) {
+    const stockMap = await getVariationStockByInternalId(Array.from(variationIdsToCheck.keys()));
+    const stockErrors: Array<{ variationId: number; available: number; requested: number }> = [];
+    for (const [vid, { item, existingQty }] of variationIdsToCheck) {
+      const available = stockMap.get(vid) ?? 0;
+      const requested = existingQty + (item.quantity ?? 1);
+      if (requested > available) {
+        stockErrors.push({ variationId: vid, available, requested });
+      }
+    }
+    if (stockErrors.length > 0) {
+      return new Response(JSON.stringify({
+        ok: false,
+        error: 'INSUFFICIENT_STOCK',
+        details: stockErrors,
+      }), {
+        status: 409,
+        headers: { 'Content-Type': 'application/json' },
+      });
+    }
+  }
 
   const existingUuids = currentCart
     .flatMap((o: any) => o.order_items ?? [])

@@ -16,6 +16,9 @@ export interface VariationData {
   tipo: string | null;
   thumbnail: string | null;
   drupalUuid?: string | null;
+  stock: number;
+  lowStock: boolean;
+  inStock: boolean;
 }
 
 export interface ProductCardData {
@@ -32,6 +35,9 @@ export interface ProductCardData {
   category: string | null;
   ocasiones: string[];
   variationId: number | null;
+  stock: number;
+  lowStock: boolean;
+  inStock: boolean;
   variations: VariationData[];
 }
 
@@ -81,6 +87,9 @@ export default function ProductCard({ product, lang = 'es', href, isLoggedIn = f
       tipo: product.tipo,
       thumbnail: product.thumbnail,
       drupalUuid: null,
+      stock: product.stock,
+      lowStock: product.lowStock,
+      inStock: product.inStock,
     }];
   }, [product]);
 
@@ -150,7 +159,7 @@ export default function ProductCard({ product, lang = 'es', href, isLoggedIn = f
       )}
 
       {/* Contenedor de Imagen */}
-      <div className="relative aspect-[4/5] overflow-hidden bg-blush shrink-0">
+      <div className={`relative aspect-[4/5] overflow-hidden bg-blush shrink-0 ${!activeVar.inStock ? 'opacity-60' : ''}`}>
         {activeVar.thumbnail ? (
           <img
             src={activeVar.thumbnail}
@@ -166,11 +175,19 @@ export default function ProductCard({ product, lang = 'es', href, isLoggedIn = f
           </div>
         )}
 
-        {product.badge && (
+        {!activeVar.inStock ? (
+          <span className="absolute top-3 left-3 px-2.5 py-1 font-body text-[0.6875rem] font-bold uppercase tracking-widest bg-red-500 text-white rounded-full shadow-md z-20">
+            {t(lang, 'product.out_of_stock')}
+          </span>
+        ) : activeVar.lowStock ? (
+          <span className="absolute top-3 left-3 px-2.5 py-1 font-body text-[0.6875rem] font-bold uppercase tracking-widest bg-amber-400 text-amber-900 rounded-full shadow-md z-20">
+            {t(lang, 'product.low_stock').replace('{n}', String(activeVar.stock))}
+          </span>
+        ) : product.badge ? (
           <span className="absolute top-3 left-3 px-2.5 py-1 font-body text-[0.6875rem] font-bold uppercase tracking-widest bg-primary text-white rounded-full shadow-md">
             {product.badge}
           </span>
-        )}
+        ) : null}
 
         {/* Badge de tipo: arriba derecha */}
         {activeVar.tipo && (() => {
@@ -281,7 +298,7 @@ export default function ProductCard({ product, lang = 'es', href, isLoggedIn = f
           onClick={handleAddToCart}
           className="relative z-20 w-full h-10.5 bg-primary text-white rounded-lg font-body text-sm font-bold flex items-center justify-center gap-2 transition-all duration-200 hover:brightness-110 cursor-pointer disabled:opacity-70 disabled:cursor-not-allowed"
           type="button"
-          disabled={isAdding}
+          disabled={isAdding || !activeVar.inStock}
         >
           {isAdding ? (
             <>

@@ -1,5 +1,6 @@
 import type { APIRoute } from 'astro';
 import { getSession } from '@/services/session.service';
+import { getVariationStockByInternalId } from '@/services/nodehive/nodehive.stock';
 
 const GATEWAY_ID = 'paypal_checkout';
 
@@ -162,6 +163,52 @@ export const POST: APIRoute = async ({ request, cookies }) => {
       throw new Error(`Drupal PATCH failed (${patchRes.status})`);
     }
 
+    // ── Stock validation: re-check before payment ──
+    try {
+      const orderItemsRes = await fetch(
+        `${baseUrl}/en/jsonapi/commerce_order/default/${orderUuid}?include=order_items&fields[commerce_order--default]=drupal_internal__order_id&fields[commerce_order_item--default]=quantity,purchased_entity`,
+        {
+          headers: {
+            Accept: 'application/vnd.api+json',
+            ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {}),
+          },
+        },
+      );
+      if (orderItemsRes.ok) {
+        const orderJson = await orderItemsRes.json();
+        const variationQtys = new Map<number, number>();
+        for (const inc of orderJson?.included ?? []) {
+          if (inc?.type !== 'commerce_order_item--default') continue;
+          const vid = inc?.relationships?.purchased_entity?.data?.meta?.drupal_internal__target_id;
+          if (!vid) continue;
+          const qty = parseFloat(inc?.attributes?.quantity ?? '0') || 0;
+          variationQtys.set(vid, (variationQtys.get(vid) ?? 0) + qty);
+        }
+        if (variationQtys.size > 0) {
+          const stockMap = await getVariationStockByInternalId(Array.from(variationQtys.keys()));
+          const stockErrors: Array<{ variationId: number; available: number; requested: number }> = [];
+          for (const [vid, requested] of variationQtys) {
+            const available = stockMap.get(vid) ?? 0;
+            if (requested > available) {
+              stockErrors.push({ variationId: vid, available, requested });
+            }
+          }
+          if (stockErrors.length > 0) {
+            return new Response(JSON.stringify({
+              ok: false,
+              error: 'STOCK_CHANGED',
+              items: stockErrors,
+            }), {
+              status: 409,
+              headers: { 'Content-Type': 'application/json' },
+            });
+          }
+        }
+      }
+    } catch (e) {
+      console.warn('[place-order] Stock validation error (non-blocking):', e);
+    }
+
     let approvalUrl: string | null = null;
     let paypalOrderId: string | null = null;
 
@@ -204,7 +251,12 @@ export const POST: APIRoute = async ({ request, cookies }) => {
 
       const createData = await createRes.json();
       paypalOrderId = createData.id;
-      const isSandbox = baseUrl.includes('127.0.0.1') || baseUrl.includes('localhost') || baseUrl.includes('magback.lombaoestudios.com');
+      const paypalEnv = (import.meta.env.PAYPAL_ENVIRONMENT as string)?.toLowerCase();
+      const isSandbox = paypalEnv === 'live'
+        ? false
+        : paypalEnv === 'sandbox'
+        ? true
+        : baseUrl.includes('127.0.0.1') || baseUrl.includes('localhost') || baseUrl.includes('magback.lombaoestudios.com');
       approvalUrl = isSandbox
         ? `https://www.sandbox.paypal.com/checkoutnow?token=${paypalOrderId}`
         : `https://www.paypal.com/checkoutnow?token=${paypalOrderId}`;

@@ -3,7 +3,7 @@
 import { DrupalJsonApiParams } from 'drupal-jsonapi-params';
 import Jsona from 'jsona';
 import { nodehiveFetch } from './nodehive.client';
-import { getProductThumbnail, getVariationGallery } from '@/types/nodehive';
+import { getProductThumbnail, getVariationGallery, getVariationStock, isLowStock, isVariationInStock } from '@/types/nodehive';
 import type { FlowerProduct } from '@/types/nodehive';
 import type { Lang } from '../../i18n/ui';
 
@@ -38,6 +38,7 @@ function buildBaseParams(p: DrupalJsonApiParams): void {
       'field_color',
       'field_gallery_of_photos',
       'field_type',
+      'field_stock',
     ])
    .addFields('file--file',                      ['filename', 'uri', 'filemime'])
    .addFields('media--image',                    ['name', 'field_media_image'])
@@ -105,6 +106,9 @@ export async function getProductDetailPageData(
     images: string[]; badge: null; tag: string | null; tipo: string | null;
     colorName: string | null; colorHex: string | null; category: string | null;
     variationId: number | null;
+    stock: number;
+    lowStock: boolean;
+    inStock: boolean;
     allVariations: Array<{
       variationId: number | null;
       drupalUuid: string | null;
@@ -113,6 +117,9 @@ export async function getProductDetailPageData(
       tipo: string | null;
       images: string[];
       price: string;
+      stock: number;
+      lowStock: boolean;
+      inStock: boolean;
     }>;
   };
   relatedProducts: Array<{
@@ -121,6 +128,9 @@ export async function getProductDetailPageData(
     colorName: string | null; colorHex: string | null; category: string | null;
     ocasiones: string[];
     variationId: number | null;
+    stock: number;
+    lowStock: boolean;
+    inStock: boolean;
     variations: Array<{
       variationId: number | null;
       drupalUuid: string | null;
@@ -128,6 +138,9 @@ export async function getProductDetailPageData(
       colorHex: string | null;
       tipo: string | null;
       thumbnail: string | null;
+      stock: number;
+      lowStock: boolean;
+      inStock: boolean;
     }>;
   }>;
 } | null> {
@@ -157,6 +170,9 @@ export async function getProductDetailPageData(
     colorHex:    variation?.field_color?.field_color_hex       ?? null,
     category:    product.field_category?.name                  ?? null,
     variationId: variation?.drupal_internal__variation_id      ?? null,
+    stock:        getVariationStock(variation),
+    lowStock:     isLowStock(variation),
+    inStock:      isVariationInStock(variation),
       allVariations: (Array.isArray(product.variations) ? product.variations : []).map(v => ({
         variationId: v?.drupal_internal__variation_id ?? null,
         drupalUuid: v?.id ?? null,
@@ -165,6 +181,9 @@ export async function getProductDetailPageData(
         tipo: (v?.field_type ?? null)?.toLowerCase() ?? null,
         images: v ? getVariationGallery(v, NODEHIVE_BASE_URL) : [],
         price: v?.price?.formatted ?? '',
+        stock: getVariationStock(v),
+        lowStock: isLowStock(v),
+        inStock: isVariationInStock(v),
       })),
   };
 
@@ -196,6 +215,9 @@ export async function getProductDetailPageData(
           return [];
         })(),
       variationId: v?.drupal_internal__variation_id      ?? null,
+      stock:        getVariationStock(v),
+      lowStock:     isLowStock(v),
+      inStock:      isVariationInStock(v),
       variations: (Array.isArray(p.variations) ? p.variations : []).map(variation => ({
         variationId: variation?.drupal_internal__variation_id ?? null,
         drupalUuid: variation?.id ?? null,
@@ -206,6 +228,9 @@ export async function getProductDetailPageData(
           const gallery = variation ? getVariationGallery(variation, NODEHIVE_BASE_URL) : [];
           return gallery[0] ?? null;
         })(),
+        stock: getVariationStock(variation),
+        lowStock: isLowStock(variation),
+        inStock: isVariationInStock(variation),
       })),
     };
   });

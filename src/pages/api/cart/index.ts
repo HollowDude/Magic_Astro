@@ -3,6 +3,7 @@ import { getCart, fetchRibbonColors, ribbonColorDefFromUuid, type CartOrder, typ
 import type { RibbonColorDef } from '@/services/nodehive/nodehive.cart';
 import { nodehiveFetch } from '@/services/nodehive/nodehive.client';
 import { getSession } from '@/services/session.service';
+import { getVariationStockByInternalId } from '@/services/nodehive/nodehive.stock';
 import { relayCartCookie } from './cookie-helper';
 
 const NODEHIVE_BASE_URL = import.meta.env.NODEHIVE_BASE_URL as string;
@@ -37,6 +38,7 @@ interface CartItemDisplay {
   ribbonColor: RibbonColorInfo | null;
   additions: AdditionDisplay[];
   isAddition: boolean;
+  availableStock: number;
 }
 
 interface CartApiResponse {
@@ -414,10 +416,20 @@ export const GET: APIRoute = async ({ cookies, url }) => {
 
   const ribbonColors = await fetchRibbonColors();
 
-  const [thumbnailMap, customizationMap, { additionsByParentId, additionProductByOrderItem }] = await Promise.all([
+  // Collect variation IDs for stock check
+  const variationIdsForStock = new Set<number>();
+  for (const cart of activeCarts) {
+    for (const item of cart.order_items ?? []) {
+      const vid = item.purchased_entity?.variation_id;
+      if (vid) variationIdsForStock.add(vid);
+    }
+  }
+
+  const [thumbnailMap, customizationMap, { additionsByParentId, additionProductByOrderItem }, stockMap] = await Promise.all([
     getVariationThumbnailMap(Array.from(variationUuids)),
     fetchCustomizations(orderUuids, ribbonColors, decoded, accessToken),
     fetchAdditionsData(orderUuids, additionByProductId, decoded, accessToken),
+    getVariationStockByInternalId(Array.from(variationIdsForStock)),
   ]);
 
   // Fetch translated addition titles
@@ -467,6 +479,7 @@ export const GET: APIRoute = async ({ cookies, url }) => {
         ribbonColor: cust?.ribbonColor ?? null,
         additions: resolvedAdditions,
         isAddition: additionItemIdSet.has(item.order_item_id),
+        availableStock: stockMap.get(item.purchased_entity?.variation_id ?? -1) ?? 0,
       };
     }),
   );

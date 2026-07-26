@@ -52,6 +52,7 @@ const PRODUCT_CONFIGS = {
       'field_color',
       'field_gallery_of_photos',
       'field_type',
+      'field_stock',
     ],
     relatedFields: {
       'file--file':                   ['filename', 'uri', 'filemime'],

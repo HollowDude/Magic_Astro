@@ -1,5 +1,6 @@
 import type { APIRoute } from 'astro';
 import { getSession } from '@/services/session.service';
+import { getVariationStockByInternalId } from '@/services/nodehive/nodehive.stock';
 
 const GATEWAY_ID = 'paypal_checkout';
 
@@ -43,6 +44,48 @@ export const POST: APIRoute = async ({ request, cookies }) => {
       throw new Error('Internal order ID not found');
     }
 
+    // ── Stock validation: re-check before capturing payment ──
+    try {
+      const orderItemsRes = await fetch(
+        `${baseUrl}/en/jsonapi/commerce_order/default/${drupalOrderUuid}?include=order_items&fields[commerce_order--default]=drupal_internal__order_id&fields[commerce_order_item--default]=quantity,purchased_entity`,
+        {
+          headers: {
+            Accept: 'application/vnd.api+json',
+            Authorization: `Bearer ${accessToken}`,
+          },
+        },
+      );
+      if (orderItemsRes.ok) {
+        const orderJson = await orderItemsRes.json();
+        const variationQtys = new Map<number, number>();
+        for (const inc of orderJson?.included ?? []) {
+          if (inc?.type !== 'commerce_order_item--default') continue;
+          const vid = inc?.relationships?.purchased_entity?.data?.meta?.drupal_internal__target_id;
+          if (!vid) continue;
+          const qty = parseFloat(inc?.attributes?.quantity ?? '0') || 0;
+          variationQtys.set(vid, (variationQtys.get(vid) ?? 0) + qty);
+        }
+        if (variationQtys.size > 0) {
+          const stockMap = await getVariationStockByInternalId(Array.from(variationQtys.keys()));
+          for (const [vid, requested] of variationQtys) {
+            const available = stockMap.get(vid) ?? 0;
+            if (requested > available) {
+              return new Response(JSON.stringify({
+                ok: false,
+                error: 'STOCK_CHANGED',
+                items: [{ variationId: vid, available, requested }],
+              }), {
+                status: 409,
+                headers: { 'Content-Type': 'application/json' },
+              });
+            }
+          }
+        }
+      }
+    } catch (e) {
+      console.warn('[paypal-capture] Stock validation error (non-blocking):', e);
+    }
+
     const approveRes = await fetch(
       `${baseUrl}/commerce-paypal/checkout-approve/${GATEWAY_ID}/${internalId}?_format=json`,
       {
@@ -61,7 +104,13 @@ export const POST: APIRoute = async ({ request, cookies }) => {
 
     const approveData = await approveRes.json();
     if (!approveRes.ok) {
-      throw new Error(approveData.message ?? `Capture failed (${approveRes.status})`);
+      return new Response(JSON.stringify({
+        ok: false,
+        error: approveData.message ?? 'Payment failed at the payment server',
+      }), {
+        status: 200,
+        headers: { 'Content-Type': 'application/json' },
+      });
     }
 
     // ── Transition order state to "fulfillment" (En proceso) ──

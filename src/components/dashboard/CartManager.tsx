@@ -26,6 +26,7 @@ interface CartItem {
   ribbonColor: RibbonColorInfo | null;
   additions: CartItemAddition[];
   isAddition: boolean;
+  availableStock: number;
 }
 
 interface CartData {
@@ -87,6 +88,8 @@ const T: Record<string, Record<string, string>> = {
     checkout_in_progress: 'Tu carrito está en proceso de pago',
     checkout_in_progress_desc: 'Tienes un pedido en proceso. Puedes continuarlo o cancelarlo.',
     continue_checkout: 'Continuar checkout',
+    max_stock_reached: 'Solo quedan {n} disponibles',
+    max_stock_reached_title: 'Stock máximo alcanzado',
   },
   en: {
     title: 'My Cart',
@@ -123,6 +126,8 @@ const T: Record<string, Record<string, string>> = {
     checkout_in_progress: 'Your cart is being processed',
     checkout_in_progress_desc: 'You have an order in progress. You can continue or cancel it.',
     continue_checkout: 'Continue checkout',
+    max_stock_reached: 'Only {n} available',
+    max_stock_reached_title: 'Max stock reached',
   },
 };
 
@@ -227,7 +232,7 @@ export default function CartManager({ lang }: Props) {
       const res = await fetch(`/api/cart/items/${item.itemId}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ order_id: item.orderId, quantity: newQty }),
+        body: JSON.stringify({ order_id: item.orderId, quantity: newQty, variationId: item.variationId }),
       });
       if (!res.ok) throw new Error('Failed');
     } catch {
@@ -479,13 +484,18 @@ export default function CartManager({ lang }: Props) {
                           </span>
                           <button
                             onClick={() => updateQuantity(item, item.quantity + 1)}
-                            disabled={isUpdating}
+                            disabled={isUpdating || item.quantity >= item.availableStock}
                             className="flex items-center justify-center w-7 h-7 rounded-full bg-blush text-headline border-none cursor-pointer transition-colors hover:bg-primary/15 disabled:opacity-30 disabled:cursor-not-allowed"
                             aria-label="Increase quantity"
                           >
                             <span className="material-symbols-outlined !text-sm leading-none">add</span>
                           </button>
                         </div>
+                        {item.quantity >= item.availableStock && (
+                          <p className="font-body text-[11px] text-amber-700 mt-1 text-center">
+                            {t(lang, 'max_stock_reached').replace('{n}', String(item.availableStock))}
+                          </p>
+                        )}
                       </td>
                       <td className="px-5 py-4 text-right hidden sm:table-cell align-middle">
                         <span className="font-body text-sm font-bold text-headline">{item.totalPrice}</span>

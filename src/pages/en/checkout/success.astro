@@ -172,8 +172,17 @@ const storeAddress = contactData?.address
 <HomeLayout title="Order confirmed — Maggy Flowers" lang={lang}>
   <div class="scp-page">
 
-    {/* ── Confirmation header ── */}
-    <div class="scp-hero">
+    {/* ── Loading hero (visible during PayPal capture) ── */}
+    <div class="scp-hero scp-hero--loading" id="hero-loading" style={paypalToken ? {} : {display:'none'}}>
+      <div class="scp-icon-wrap">
+        <span class="scp-spinner"></span>
+      </div>
+      <h1 class="scp-title">{lang === 'es' ? 'Procesando tu pago…' : 'Processing your payment…'}</h1>
+      <p class="scp-subtitle">{lang === 'es' ? 'Por favor espera, estamos confirmando tu pago con PayPal.' : 'Please wait while we confirm your payment with PayPal.'}</p>
+    </div>
+
+    {/* ── Success hero ── */}
+    <div class="scp-hero scp-hero--success" id="hero-success" style={paypalToken ? {display:'none'} : {}}>
       <div class="scp-icon-wrap">
         <span class="material-symbols-outlined scp-icon">check_circle</span>
       </div>
@@ -187,7 +196,26 @@ const storeAddress = contactData?.address
       )}
     </div>
 
-    <div class="scp-body">
+    {/* ── Error hero ── */}
+    <div class="scp-hero scp-hero--error" id="hero-error" style="display:none">
+      <div class="scp-icon-wrap scp-icon-wrap--error">
+        <span class="material-symbols-outlined scp-icon scp-icon--error">cancel</span>
+      </div>
+      <h1 class="scp-title">{lang === 'es' ? 'Pago no completado' : 'Payment failed'}</h1>
+      <p class="scp-subtitle scp-error-text" id="error-text">{lang === 'es' ? 'No se pudo procesar el pago.' : 'Your payment could not be processed.'}</p>
+      <div class="scp-error-actions">
+        <a href={`/${lang}/checkout`} class="btn-primary scp-btn-retry">
+          <span class="material-symbols-outlined" style="font-size:1.125rem">refresh</span>
+          {lang === 'es' ? 'Intentar de nuevo' : 'Try again'}
+        </a>
+        <a href={`/${lang}/cart`} class="scp-link-orders">
+          <span class="material-symbols-outlined" style="font-size:1rem">shopping_cart</span>
+          {lang === 'es' ? 'Volver al carrito' : 'Back to cart'}
+        </a>
+      </div>
+    </div>
+
+    <div class="scp-body" id="order-body" style={paypalToken ? {display:'none'} : {}}>
 
       {/* ── Main column ── */}
       <div class="scp-main">
@@ -366,6 +394,12 @@ const storeAddress = contactData?.address
   const drupalOrderUuid = params.get('orderUuid') || params.get('orderId');
   const payerId = params.get('PayerID');
 
+  const heroLoading = document.getElementById('hero-loading');
+  const heroSuccess = document.getElementById('hero-success');
+  const heroError = document.getElementById('hero-error');
+  const errorText = document.getElementById('error-text');
+  const orderBody = document.getElementById('order-body');
+
   if (paypalToken && drupalOrderUuid) {
     fetch('/api/checkout/paypal-capture', {
       method: 'POST',
@@ -375,7 +409,25 @@ const storeAddress = contactData?.address
         drupalOrderUuid,
         payerId,
       }),
-    }).catch(() => {});
+    })
+      .then(r => r.json())
+      .then(data => {
+        if (heroLoading) heroLoading.style.display = 'none';
+        if (data && data.ok) {
+          if (heroSuccess) heroSuccess.style.display = '';
+          if (orderBody) orderBody.style.display = '';
+        } else {
+          if (heroError) heroError.style.display = '';
+          if (errorText) errorText.textContent = (data && data.error) || 'Payment could not be processed.';
+        }
+      })
+      .catch(() => {
+        if (heroLoading) heroLoading.style.display = 'none';
+        if (heroError) heroError.style.display = '';
+        if (errorText) errorText.textContent = 'A network error occurred. Please try again.';
+      });
+  } else {
+    if (heroLoading) heroLoading.style.display = 'none';
   }
 </script>
 
@@ -612,5 +664,44 @@ const storeAddress = contactData?.address
     .scp-body { grid-template-columns: 1fr; }
     .scp-sidebar { order: -1; }
     .scp-main { order: 1; }
+  }
+
+  /* ── Loading spinner ── */
+  .scp-spinner {
+    display: inline-block;
+    width: 2.75rem; height: 2.75rem;
+    border: 3px solid color-mix(in srgb, var(--primary) 20%, transparent);
+    border-top-color: var(--primary);
+    border-radius: 50%;
+    animation: scp-spin 0.7s linear infinite;
+  }
+  @keyframes scp-spin {
+    to { transform: rotate(360deg); }
+  }
+
+  /* ── Error hero ── */
+  .scp-icon-wrap--error {
+    background: color-mix(in srgb, #e74c3c 10%, transparent);
+  }
+  .scp-icon--error {
+    color: #e74c3c !important;
+  }
+  .scp-error-actions {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.75rem;
+    margin-top: 0.5rem;
+  }
+  .scp-btn-retry {
+    min-width: 14rem;
+    height: 3.125rem;
+    font-size: 0.9375rem;
+    font-weight: 700;
+    border-radius: 0.75rem;
+    box-shadow: 0 4px 16px color-mix(in srgb, var(--primary) 30%, transparent);
+  }
+  .scp-error-text {
+    color: #e74c3c !important;
   }
 </style>

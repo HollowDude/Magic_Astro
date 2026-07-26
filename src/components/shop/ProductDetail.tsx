@@ -23,6 +23,9 @@ export interface ProductDetailData {
   colorHex: string | null;
   category: string | null;
   variationId: number | null;
+  stock: number;
+  lowStock: boolean;
+  inStock: boolean;
   allVariations: VariationDetailData[];
 }
 
@@ -34,6 +37,9 @@ export interface VariationDetailData {
   tipo: string | null;
   images: string[];
   price: string;
+  stock: number;
+  lowStock: boolean;
+  inStock: boolean;
 }
 
 interface Props {
@@ -90,6 +96,7 @@ export default function ProductDetail({ product, lang, isLoggedIn, selectedVaria
   const [cardError, setCardError] = useState(false);
   const [ribbonColors, setRibbonColors] = useState<RibbonColorDef[]>([]);
   const [selectedAdditions, setSelectedAdditions] = useState<SelectedAddition[]>([]);
+  const [quantity, setQuantity] = useState(1);
 
   useEffect(() => {
     fetch('/api/ribbon-colors')
@@ -154,6 +161,10 @@ export default function ProductDetail({ product, lang, isLoggedIn, selectedVaria
     window.history.replaceState(null, '', url.toString());
   }, [activeVarIndex, allVariations]);
 
+  useEffect(() => {
+    setQuantity(1);
+  }, [activeVarIndex]);
+
   const handleMouseMove = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
     const rect = e.currentTarget.getBoundingClientRect();
     const x = Math.max(0, Math.min(100, ((e.clientX - rect.left) / rect.width) * 100));
@@ -211,7 +222,7 @@ export default function ProductDetail({ product, lang, isLoggedIn, selectedVaria
       const body = [{
         purchased_entity_type: 'commerce_product_variation',
         purchased_entity_id: activeVar.variationId,
-        quantity: 1,
+        quantity,
         combine: true,
       }] as any[];
 
@@ -344,6 +355,16 @@ export default function ProductDetail({ product, lang, isLoggedIn, selectedVaria
           {selectedAdditions.length > 0 && (
             <span className="font-body text-[0.8125rem] text-muted">
               +{t(lang, 'product.additions.in_cart').replace('{n}', String(selectedAdditions.length))}
+            </span>
+          )}
+          {!activeVar?.inStock && (
+            <span className="px-3 py-1 rounded-full bg-red-100 border border-red-200 font-body text-xs font-bold text-red-600 uppercase tracking-wide">
+              {t(lang, 'product.out_of_stock')}
+            </span>
+          )}
+          {activeVar?.lowStock && activeVar?.inStock && (
+            <span className="px-3 py-1 rounded-full bg-amber-100 border border-amber-200 font-body text-xs font-bold text-amber-700 whitespace-nowrap">
+              {t(lang, 'product.low_stock').replace('{n}', String(activeVar.stock))}
             </span>
           )}
         </div>
@@ -520,15 +541,54 @@ export default function ProductDetail({ product, lang, isLoggedIn, selectedVaria
           onChange={setSelectedAdditions}
         />
 
+        {/* ═══ Selector de cantidad ═══ */}
+        {activeVar?.inStock && (
+          <div className="flex items-center gap-3">
+            <p className="font-body text-sm font-semibold text-headline whitespace-nowrap">
+              {t(lang, 'product.quantity')}:
+            </p>
+            <div className="flex items-center border border-border rounded-xl overflow-hidden">
+              <button
+                type="button"
+                onClick={() => setQuantity(q => Math.max(1, q - 1))}
+                disabled={quantity <= 1}
+                className="w-10 h-10 flex items-center justify-center font-body text-lg font-bold text-headline bg-white hover:bg-blush transition-colors cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed border-r border-border"
+                aria-label="Decrease quantity"
+              >
+                –
+              </button>
+              <span className="w-14 h-10 flex items-center justify-center font-body text-base font-bold text-headline bg-white select-none">
+                {quantity}
+              </span>
+              <button
+                type="button"
+                onClick={() => setQuantity(q => Math.min(activeVar.stock, q + 1))}
+                disabled={quantity >= activeVar.stock}
+                className="w-10 h-10 flex items-center justify-center font-body text-lg font-bold text-headline bg-white hover:bg-blush transition-colors cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed border-l border-border"
+                aria-label="Increase quantity"
+              >
+                +
+              </button>
+            </div>
+            {activeVar.lowStock && (
+              <span className="font-body text-xs text-amber-700">
+                {t(lang, 'product.max_available').replace('{n}', String(activeVar.stock))}
+              </span>
+            )}
+          </div>
+        )}
+
         {/* Botones de acción */}
         <div className="flex flex-col sm:flex-row gap-3">
           <button
             onClick={handleAddToCart}
             className="flex-1 btn-primary h-13 shadow-[0_4px_16px_var(--primary-alpha-35)] cursor-pointer disabled:opacity-70 disabled:cursor-not-allowed"
             type="button"
-            disabled={isAdding}
+            disabled={isAdding || !activeVar?.inStock || quantity > activeVar.stock}
           >
-            {isAdding ? (
+            {!activeVar?.inStock ? (
+              <>{t(lang, 'product.out_of_stock')}</>
+            ) : isAdding ? (
               <>
                 <span className="w-4 h-4 rounded-full border-2 border-white/40 border-t-white animate-spin" />
                 {lang === 'es' ? 'Agregando...' : 'Adding...'}

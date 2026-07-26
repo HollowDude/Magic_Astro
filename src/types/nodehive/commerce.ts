@@ -42,6 +42,7 @@ export interface FlowerVariation extends CommerceVariationBase {
   field_color: ColorTerm | null;
   field_gallery_of_photos: NodeHiveMedia[];
   field_type: FlowerType | null;
+  field_stock: number;
 }
 
 /**
@@ -99,4 +100,19 @@ export function getVariationGallery(
   return (variation.field_gallery_of_photos ?? [])
     .map((m) => nodehiveMediaUrl(m, baseUrl))
     .filter((url): url is string => url !== null);
+}
+
+export const LOW_STOCK_THRESHOLD = 3;
+
+export function getVariationStock(variation: FlowerVariation | undefined | null): number {
+  return Math.max(0, variation?.field_stock ?? 0);
+}
+
+export function isVariationInStock(variation: FlowerVariation | undefined | null): boolean {
+  return getVariationStock(variation) > 0;
+}
+
+export function isLowStock(variation: FlowerVariation | undefined | null): boolean {
+  const stock = getVariationStock(variation);
+  return stock > 0 && stock <= LOW_STOCK_THRESHOLD;
 }
