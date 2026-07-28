@@ -159,12 +159,12 @@ export default function ProductCard({ product, lang = 'es', href, isLoggedIn = f
       )}
 
       {/* Contenedor de Imagen */}
-      <div className={`relative aspect-[4/5] overflow-hidden bg-blush shrink-0 ${!activeVar.inStock ? 'opacity-60' : ''}`}>
+      <div className="relative aspect-[4/5] overflow-hidden bg-blush shrink-0">
         {activeVar.thumbnail ? (
           <img
             src={activeVar.thumbnail}
             alt={product.title}
-            className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+            className={`w-full h-full object-cover transition-transform duration-500 group-hover:scale-105 ${!activeVar.inStock ? 'opacity-60' : ''}`}
             loading="lazy"
           />
         ) : (
@@ -221,7 +221,7 @@ export default function ProductCard({ product, lang = 'es', href, isLoggedIn = f
         {/* Tag */}
         {product.tag && (
           <span
-            className={`absolute left-3 px-2.5 py-1 font-body text-[0.6875rem] font-bold uppercase tracking-widest bg-amber-200/92 text-amber-900 rounded-full shadow-sm ${
+            className={`absolute left-3 px-2.5 py-1 font-body text-[0.6875rem] font-bold uppercase tracking-widest bg-amber-200/92 text-amber-900 rounded-full shadow-sm z-10 ${
               product.badge ? 'top-12' : 'top-3'
             }`}
           >
@@ -276,21 +276,7 @@ export default function ProductCard({ product, lang = 'es', href, isLoggedIn = f
             </h3>
           </div>
           <span className="font-body text-base font-bold text-headline whitespace-nowrap shrink-0">
-            {hasActiveColor ? (
-              <>
-                {product.price || t(lang, 'shop.price_on_request')}
-                <div
-                  className="absolute bottom-4 left-4 w-4.5 h-4.5 rounded-full shadow-sm transition-transform duration-200 group-hover:scale-115"
-                  title={activeVar.colorName ?? undefined}
-                  style={{
-                    background: resolvedHex || 'var(--muted)',
-                    border: `2px solid ${resolvedHex ? 'rgba(0,0,0,0.15)' : 'var(--border)'}`,
-                  }}
-                />
-              </>
-            ) : (
-              product.price || t(lang, 'shop.price_on_request')
-            )}
+            {product.price || t(lang, 'shop.price_on_request')}
           </span>
         </div>
 
